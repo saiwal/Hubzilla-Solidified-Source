@@ -1,10 +1,11 @@
 import { createSignal } from "solid-js";
-import { fetchNetworkStream } from "./api";
+import { fetchNetworkStream, toggleVerb, postComment } from "./api";
 import { buildThreadTree } from "../../core/utils/thread";
 import type { ThreadNode } from "../../core/utils/thread";
 
 const [posts, setPosts] = createSignal<ThreadNode[]>([]);
 const [loading, setLoading] = createSignal(false);
+const [profileUid, setProfileUid] = createSignal<number>(0);
 
 export async function loadNetwork() {
   setLoading(true);
@@ -12,6 +13,7 @@ export async function loadNetwork() {
     const data = await fetchNetworkStream();
     const threads = buildThreadTree(data);
     setPosts(threads);
+    if (data.length && data[0].profileUid) setProfileUid(data[0].profileUid);
   } catch (err) {
     console.error(err);
   } finally {
@@ -19,4 +21,79 @@ export async function loadNetwork() {
   }
 }
 
-export { posts, loading };
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+function updateNode(
+  nodes: ThreadNode[],
+  mid: string,
+  updater: (n: ThreadNode) => ThreadNode
+): ThreadNode[] {
+  return nodes.map((n) => {
+    if (n.mid === mid) return updater(n);
+    if (n.children.length)
+      return { ...n, children: updateNode(n.children, mid, updater) };
+    return n;
+  });
+}
+
+// ─── Actions ────────────────────────────────────────────────────────────────
+
+export async function handleLike(mid: string, iid: number) {
+  setPosts((prev) =>
+    updateNode(prev, mid, (n) => ({ ...n, likeCount: n.likeCount + 1 }))
+  );
+  try {
+    await toggleVerb(iid, 'like');
+  } catch (err) {
+    setPosts((prev) =>
+      updateNode(prev, mid, (n) => ({ ...n, likeCount: Math.max(0, n.likeCount - 1) }))
+    );
+    console.error('Like failed', err);
+  }
+}
+
+export async function handleDislike(mid: string, iid: number) {
+  setPosts((prev) =>
+    updateNode(prev, mid, (n) => ({ ...n, dislikeCount: n.dislikeCount + 1 }))
+  );
+  try {
+    await toggleVerb(iid, 'dislike');
+  } catch (err) {
+    setPosts((prev) =>
+      updateNode(prev, mid, (n) => ({ ...n, dislikeCount: Math.max(0, n.dislikeCount - 1) }))
+    );
+    console.error('Dislike failed', err);
+  }
+}
+
+export async function handleRepeat(mid: string, iid: number) {
+  setPosts((prev) =>
+    updateNode(prev, mid, (n) => ({ ...n, repeatCount: n.repeatCount + 1 }))
+  );
+  try {
+    await toggleVerb(iid, 'announce');
+  } catch (err) {
+    setPosts((prev) =>
+      updateNode(prev, mid, (n) => ({ ...n, repeatCount: Math.max(0, n.repeatCount - 1) }))
+    );
+    console.error('Repeat failed', err);
+  }
+}
+
+export async function handleComment(
+  parentMid: string,
+  parentIid: number,
+  body: string
+): Promise<void> {
+  const newComment = await postComment({ body, parent_iid: parentIid, profile_uid: profileUid() });
+  const newNode: ThreadNode = { ...newComment, children: [] };
+
+  setPosts((prev) =>
+    updateNode(prev, parentMid, (n) => ({
+      ...n,
+      children: [...n.children, newNode],
+    }))
+  );
+}
+
+export { posts, loading, profileUid };

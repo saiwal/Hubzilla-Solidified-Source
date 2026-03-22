@@ -19,6 +19,8 @@ export function mapActivityToPost(activity: any): Post {
 
   return {
     id:           activity.uuid,
+    iid:          activity.iid ? Number(activity.iid) : undefined,
+    profileUid:   activity.profile_uid ? Number(activity.profile_uid) : undefined,
     mid:          activity.mid,            // was: activity.message_id
     parent_mid:   activity.parent_mid,     // was: activity.message_parent
     thr_parent:   activity.thr_parent,     // was: activity.message_parent
@@ -34,6 +36,7 @@ export function mapActivityToPost(activity: any): Post {
     edited:       activity.edited,
     verb:         activity.verb,
     obj_type:     activity.obj_type,       // was: activity.object_type
+    item_thread_top: activity.item_thread_top ?? 0,
     flags:        activity.flags ?? [],
     permalink:    activity.permalink ?? '',
     likeCount:    activity.like_count ?? 0,

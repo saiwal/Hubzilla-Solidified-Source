@@ -1,12 +1,10 @@
 import { For } from "solid-js";
-import type { ThreadNode } from "../../core/utils/thread";
+import type { ThreadNode } from "../core/utils/thread";
 import PostCard from "./PostCard";
 
 export default function CommentThread(props: { comments: ThreadNode[] }) {
-  if (!props.comments.length) return null;
-
   return (
-    <div style={{ "margin-left": "0.5rem", "margin-top": "1rem" }}>
+    <div class="mt-3 ml-4 pl-4 border-l-2 border-zinc-300 dark:border-zinc-700 space-y-3">
       <For each={props.comments}>
         {(comment) => <PostCard post={comment} />}
       </For>

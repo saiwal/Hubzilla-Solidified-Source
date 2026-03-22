@@ -13,21 +13,23 @@ export function buildThreadTree(posts: Post[]): ThreadNode[] {
   });
 
   map.forEach((node) => {
-    // Root: message_id === message_top (self-referential)
-    const isRoot = node.mid === node.top_mid;
+    // Use item_thread_top flag as the authoritative root signal —
+    // top_mid / message_top is unreliable depending on server response shape
+    const isRoot = node.item_thread_top === 1 || node.mid === node.top_mid;
 
     if (isRoot) {
       roots.push(node);
       return;
     }
 
-    // Use thr_parent first, fall back to parent_mid (mirrors get_item_children)
+    // thr_parent is the direct parent mid in Hubzilla's DB
     const parentKey = node.thr_parent || node.parent_mid;
     const parent = map.get(parentKey);
 
     if (parent) {
       parent.children.push(node);
     } else {
+      // Parent not in map (filtered out etc.) — treat as root
       roots.push(node);
     }
   });

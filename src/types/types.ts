@@ -1,9 +1,11 @@
 export interface Post {
   id: string;
-  mid: string; // full message_id URL
-  parent_mid: string; // direct parent message_id URL
-  thr_parent: string; // same as parent_mid from this API
-  top_mid: string; // thread root message_id URL
+  iid?: number;        // local integer item id — used by /like/{iid}
+  profileUid?: number;  // local channel uid — used by /item comment POST
+  mid: string;
+  parent_mid: string;
+  thr_parent: string;
+  top_mid: string;
   parent: string;
   body: string;
   title: string;
@@ -15,6 +17,7 @@ export interface Post {
   edited?: string;
   verb?: string;
   obj_type?: string;
+  item_thread_top: number;
   flags: string[];
   permalink: string;
   children: Post[];
