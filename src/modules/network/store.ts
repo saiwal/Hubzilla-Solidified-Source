@@ -83,17 +83,53 @@ export async function handleRepeat(mid: string, iid: number) {
 export async function handleComment(
   parentMid: string,
   parentIid: number,
-  body: string
+  body: string,
+  authorName: string,
+  authorAvatar: string,
 ): Promise<void> {
-  const newComment = await postComment({ body, parent_iid: parentIid, profile_uid: profileUid() });
-  const newNode: ThreadNode = { ...newComment, children: [] };
+  // Optimistically append the comment immediately
+  const tempComment: ThreadNode = {
+    id: crypto.randomUUID(),
+    mid: crypto.randomUUID(),
+    parent_mid: parentMid,
+    thr_parent: parentMid,
+    top_mid: parentMid,
+    parent: parentMid,
+    body,
+    title: '',
+    authorName,
+    authorAvatar,
+    authorUrl: '',
+    created: new Date().toISOString().replace('T', ' ').slice(0, 19),
+    verb: 'Create',
+    obj_type: 'Note',
+    flags: [],
+    permalink: '',
+    likeCount: 0,
+    dislikeCount: 0,
+    repeatCount: 0,
+    item_thread_top: 0,
+    children: [],
+  };
 
-  setPosts((prev) =>
-    updateNode(prev, parentMid, (n) => ({
+  setPosts(prev =>
+    updateNode(prev, parentMid, n => ({
       ...n,
-      children: [...n.children, newNode],
+      children: [...n.children, tempComment],
     }))
   );
+
+  // Fire and forget — server saves it in background
+  postComment({ body, parent_iid: parentIid, profile_uid: profileUid() }).catch(err => {
+    console.error('Comment failed', err);
+    // Roll back on failure
+    setPosts(prev =>
+      updateNode(prev, parentMid, n => ({
+        ...n,
+        children: n.children.filter(c => c.mid !== tempComment.mid),
+      }))
+    );
+  });
 }
 
 export { posts, loading, profileUid };

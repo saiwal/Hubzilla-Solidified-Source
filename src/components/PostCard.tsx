@@ -34,7 +34,7 @@ export default function PostCard(props: { post: ThreadNode }) {
     setSubmitting(true);
     setActionError(null);
     try {
-      await handleComment(props.post.mid, props.post.iid!, body);
+      await handleComment(props.post.mid, props.post.iid!, body, props.post.authorName, props.post.authorAvatar);
       setReplyBody("");
       setReplyOpen(false);
     } catch {
