@@ -22,6 +22,9 @@ export interface Post {
   permalink: string;
   children: Post[];
   likeCount: number;
+  viewerLiked: boolean;
+  viewerDisliked: boolean;
+  viewerRepeated: boolean;
   dislikeCount: number;
   repeatCount: number;
 }

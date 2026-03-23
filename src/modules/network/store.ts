@@ -7,6 +7,9 @@ const [posts, setPosts] = createSignal<ThreadNode[]>([]);
 const [loading, setLoading] = createSignal(false);
 const [profileUid, setProfileUid] = createSignal<number>(0);
 
+// Tracks which (mid:verb) the user has already activated — used to detect toggles
+const activated = new Set<string>();
+
 export async function loadNetwork() {
   setLoading(true);
   try {
@@ -14,6 +17,13 @@ export async function loadNetwork() {
     const threads = buildThreadTree(data);
     setPosts(threads);
     if (data.length && data[0].profileUid) setProfileUid(data[0].profileUid);
+    // Pre-populate activated set from server data
+    activated.clear();
+    data.forEach(p => {
+      if (p.viewerLiked)    activated.add(`${p.mid}:like`);
+      if (p.viewerDisliked) activated.add(`${p.mid}:dislike`);
+      if (p.viewerRepeated) activated.add(`${p.mid}:announce`);
+    });
   } catch (err) {
     console.error(err);
   } finally {
@@ -39,42 +49,55 @@ function updateNode(
 // ─── Actions ────────────────────────────────────────────────────────────────
 
 export async function handleLike(mid: string, iid: number) {
+  const key = `${mid}:like`;
+  const isUndo = activated.has(key);
+  isUndo ? activated.delete(key) : activated.add(key);
   setPosts((prev) =>
-    updateNode(prev, mid, (n) => ({ ...n, likeCount: n.likeCount + 1 }))
+    updateNode(prev, mid, (n) => ({ ...n, likeCount: n.likeCount + (isUndo ? -1 : 1) }))
   );
   try {
     await toggleVerb(iid, 'like');
   } catch (err) {
+    // Roll back
+    isUndo ? activated.add(key) : activated.delete(key);
     setPosts((prev) =>
-      updateNode(prev, mid, (n) => ({ ...n, likeCount: Math.max(0, n.likeCount - 1) }))
+      updateNode(prev, mid, (n) => ({ ...n, likeCount: n.likeCount + (isUndo ? 1 : -1) }))
     );
     console.error('Like failed', err);
   }
 }
 
 export async function handleDislike(mid: string, iid: number) {
+  const key = `${mid}:dislike`;
+  const isUndo = activated.has(key);
+  isUndo ? activated.delete(key) : activated.add(key);
   setPosts((prev) =>
-    updateNode(prev, mid, (n) => ({ ...n, dislikeCount: n.dislikeCount + 1 }))
+    updateNode(prev, mid, (n) => ({ ...n, dislikeCount: n.dislikeCount + (isUndo ? -1 : 1) }))
   );
   try {
     await toggleVerb(iid, 'dislike');
   } catch (err) {
+    isUndo ? activated.add(key) : activated.delete(key);
     setPosts((prev) =>
-      updateNode(prev, mid, (n) => ({ ...n, dislikeCount: Math.max(0, n.dislikeCount - 1) }))
+      updateNode(prev, mid, (n) => ({ ...n, dislikeCount: n.dislikeCount + (isUndo ? 1 : -1) }))
     );
     console.error('Dislike failed', err);
   }
 }
 
 export async function handleRepeat(mid: string, iid: number) {
+  const key = `${mid}:announce`;
+  const isUndo = activated.has(key);
+  isUndo ? activated.delete(key) : activated.add(key);
   setPosts((prev) =>
-    updateNode(prev, mid, (n) => ({ ...n, repeatCount: n.repeatCount + 1 }))
+    updateNode(prev, mid, (n) => ({ ...n, repeatCount: n.repeatCount + (isUndo ? -1 : 1) }))
   );
   try {
     await toggleVerb(iid, 'announce');
   } catch (err) {
+    isUndo ? activated.add(key) : activated.delete(key);
     setPosts((prev) =>
-      updateNode(prev, mid, (n) => ({ ...n, repeatCount: Math.max(0, n.repeatCount - 1) }))
+      updateNode(prev, mid, (n) => ({ ...n, repeatCount: n.repeatCount + (isUndo ? 1 : -1) }))
     );
     console.error('Repeat failed', err);
   }
@@ -108,6 +131,9 @@ export async function handleComment(
     likeCount: 0,
     dislikeCount: 0,
     repeatCount: 0,
+    viewerLiked: false,
+    viewerDisliked: false,
+    viewerRepeated: false,
     item_thread_top: 0,
     children: [],
   };
