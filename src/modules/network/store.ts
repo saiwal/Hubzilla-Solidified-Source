@@ -1,19 +1,22 @@
 import { createSignal } from "solid-js";
 import { fetchNetworkStream, toggleVerb, postComment } from "./api";
+import type { NetworkParams } from "./api";
 import { buildThreadTree } from "../../core/utils/thread";
 import type { ThreadNode } from "../../core/utils/thread";
 
 const [posts, setPosts] = createSignal<ThreadNode[]>([]);
 const [loading, setLoading] = createSignal(false);
 const [profileUid, setProfileUid] = createSignal<number>(0);
+const [params, setParams] = createSignal<NetworkParams>({});
 
 // Tracks which (mid:verb) the user has already activated — used to detect toggles
 const activated = new Set<string>();
 
-export async function loadNetwork() {
+export async function loadNetwork(newParams?: NetworkParams) {
+  if (newParams !== undefined) setParams(newParams);
   setLoading(true);
   try {
-    const data = await fetchNetworkStream();
+    const data = await fetchNetworkStream(params());
     const threads = buildThreadTree(data);
     setPosts(threads);
     if (data.length && data[0].profileUid) setProfileUid(data[0].profileUid);

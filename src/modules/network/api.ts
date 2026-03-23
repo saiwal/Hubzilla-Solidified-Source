@@ -13,8 +13,32 @@ function shouldDisplay(a: any): boolean {
   return true;
 }
 
-export async function fetchNetworkStream(): Promise<Post[]> {
-  const activities = await moduleGet<any[]>("network?format=json");
+export type NetworkParams = {
+  start?: number;
+  order?: 'created' | 'commented' | 'unthreaded';
+  search?: string;
+  tag?: string;
+  cat?: string;
+  verb?: string;
+  gid?: number;
+  cid?: number;
+  xchan?: string;
+  net?: string;
+  star?: 1;
+  conv?: 1;
+  dm?: 1;
+  cmin?: number;
+  cmax?: number;
+  dend?: string;
+  dbegin?: string;
+};
+
+export async function fetchNetworkStream(params: NetworkParams = {}): Promise<Post[]> {
+  const qs = new URLSearchParams({ format: 'json' });
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== '') qs.set(k, String(v));
+  });
+  const activities = await moduleGet<any[]>(`network?${qs.toString()}`);
   return activities
     .filter(shouldDisplay)
     .map(mapActivityToPost);
@@ -36,12 +60,18 @@ export async function toggleVerb(
   }
 }
 
+/** Fetch a single thread by its root iid — used to refresh after commenting */
+export async function fetchThread(rootIid: number): Promise<Post[]> {
+  const activities = await moduleGet<any[]>(`network?format=json&thread=${rootIid}`);
+  return activities.map(mapActivityToPost);
+}
+
 /** Post a comment on a thread item */
 export async function postComment(params: {
   body: string;
   parent_iid: number;   // integer id of the direct parent item
   profile_uid: number;  // local channel id of the logged-in user
-}): Promise<Post> {
+}): Promise<Post | null> {
   const formData = new URLSearchParams();
   formData.set('type', 'net-comment');
   formData.set('profile_uid', String(params.profile_uid));
@@ -61,5 +91,7 @@ export async function postComment(params: {
 
   if (!res.ok) throw new Error(`Comment failed: ${res.status}`);
   const data = await res.json();
+  // Hubzilla returns {cancel:1, reload:"..."} on success — not the new item
+  if (data.cancel) return null;
   return mapActivityToPost(data);
 }
