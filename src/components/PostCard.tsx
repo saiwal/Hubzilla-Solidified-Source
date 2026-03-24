@@ -59,7 +59,7 @@ export default function PostCard(props: { post: ThreadNode }) {
           class="rounded-full object-cover ring-1 ring-zinc-200 dark:ring-zinc-700"
         />
         <div class="flex flex-col">
-          <span class="font-semibold text-zinc-900 dark:text-zinc-100">{props.post.authorName}</span>
+          <a href={props.post.authorUrl} class="font-semibold text-zinc-900 dark:text-zinc-100 hover:underline">{props.post.authorName}</a>
           <span class="text-sm text-zinc-500 dark:text-zinc-400">
             {new Date(props.post.created).toLocaleString()}
           </span>
