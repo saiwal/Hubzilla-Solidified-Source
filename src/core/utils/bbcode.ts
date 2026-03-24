@@ -12,12 +12,10 @@ const rules: [RegExp, string][] = [
   [/\[img=(.*?)\](.*?)\[\/img\]/gi, '<img src="$1" alt="$2" />'],
   [/\[color=(.*?)\](.*?)\[\/color\]/gi, '<span style="color:$1">$2</span>'],
   [/\[size=(.*?)\](.*?)\[\/size\]/gi,   '<span style="font-size:$1">$2</span>'],
-  // Hubzilla-specific
   [/\[zrl=(.*?)\](.*?)\[\/zrl\]/gi, '<a href="$1">$2</a>'],
   [/\[zmg\](.*?)\[\/zmg\]/gi,    '<img src="$1" alt="" />'],
   [/\[spoiler\](.*?)\[\/spoiler\]/gis, '<details><summary>Spoiler</summary>$1</details>'],
   [/\[abstract\](.*?)\[\/abstract\]/gis, '<p class="abstract">$1</p>'],
-	// In bbcode.ts, add this rule first (before other rules)
 	[/\[crypt\].*?\[\/crypt\]/gis, '<div class="encrypted-message">🔒 Encrypted message</div>'],
 ];
 

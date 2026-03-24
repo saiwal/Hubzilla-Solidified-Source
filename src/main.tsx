@@ -11,21 +11,25 @@ function RedirectToRoot() {
   navigate("/", { replace: true });
   return null;
 }
+
 const modules = import.meta.glob<{
   default: Component;
 }>("./modules/**/routes.tsx");
 
-const routes = [ 
-	...Object.entries(modules).map(([path, loader]) => {
-  const match = path.match(/\.\/modules\/([^/]+)\/routes\.tsx$/);
-  const name = match?.[1] ?? "";
+const ChannelPage = lazy(() => import("./modules/channel/routes"));
 
-  return {
-    path: name === "dashboard" ? "/" : `/${name}`,
-    component: lazy(loader),
-  };
-}),
-	{ path: "*", component: RedirectToRoot },
+const routes = [
+  ...Object.entries(modules).map(([path, loader]) => {
+    const match = path.match(/\.\/modules\/([^/]+)\/routes\.tsx$/);
+    const name = match?.[1] ?? "";
+    return {
+      path: name === "dashboard" ? "/" : `/${name}`,
+      component: lazy(loader),
+    };
+  }),
+  // Parameterised channel route — must come before the wildcard
+  { path: "/channel/:nick", component: ChannelPage },
+  { path: "*", component: RedirectToRoot },
 ];
 
 render(

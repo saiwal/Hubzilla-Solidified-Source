@@ -1,32 +1,51 @@
 import { createSignal } from "solid-js";
 import type { ThreadNode } from "../core/utils/thread";
 import CommentThread from "./CommentThread";
-import { handleLike, handleDislike, handleRepeat, handleComment } from "../modules/network/store";
 import { BiRegularLike, BiRegularDislike, BiRegularShareAlt, BiRegularChat, BiRegularSend, BiRegularChevronDown, BiRegularChevronUp } from "solid-icons/bi";
+import {
+  handleLike as networkLike,
+  handleDislike as networkDislike,
+  handleRepeat as networkRepeat,
+  handleComment as networkComment,
+} from "../modules/network/store";
 
-export default function PostCard(props: { post: ThreadNode }) {
+export interface PostActions {
+  onLike:    (mid: string, iid: number) => Promise<void>;
+  onDislike: (mid: string, iid: number) => Promise<void>;
+  onRepeat:  (mid: string, iid: number) => Promise<void>;
+  onComment: (parentMid: string, parentIid: number, body: string, authorName: string, authorAvatar: string) => Promise<void>;
+}
 
-  const [replyOpen, setReplyOpen] = createSignal(false);
+const networkActions: PostActions = {
+  onLike:    networkLike,
+  onDislike: networkDislike,
+  onRepeat:  networkRepeat,
+  onComment: networkComment,
+};
+
+export default function PostCard(props: { post: ThreadNode; actions?: PostActions }) {
+  const getActions = () => props.actions ?? networkActions;
+  const [replyOpen, setReplyOpen]     = createSignal(false);
   const [showComments, setShowComments] = createSignal(false);
-  const [replyBody, setReplyBody] = createSignal("");
-  const [submitting, setSubmitting] = createSignal(false);
+  const [replyBody, setReplyBody]     = createSignal("");
+  const [submitting, setSubmitting]   = createSignal(false);
   const [actionError, setActionError] = createSignal<string | null>(null);
 
   async function onLike() {
     setActionError(null);
-    try { await handleLike(props.post.mid, props.post.iid!); }
+    try { await getActions().onLike(props.post.mid, props.post.iid!); }
     catch { setActionError("Like failed"); }
   }
 
   async function onDislike() {
     setActionError(null);
-    try { await handleDislike(props.post.mid, props.post.iid!); }
+    try { await getActions().onDislike(props.post.mid, props.post.iid!); }
     catch { setActionError("Dislike failed"); }
   }
 
   async function onRepeat() {
     setActionError(null);
-    try { await handleRepeat(props.post.mid, props.post.iid!); }
+    try { await getActions().onRepeat(props.post.mid, props.post.iid!); }
     catch { setActionError("Repeat failed"); }
   }
 
@@ -36,7 +55,13 @@ export default function PostCard(props: { post: ThreadNode }) {
     setSubmitting(true);
     setActionError(null);
     try {
-      await handleComment(props.post.mid, props.post.iid!, body, props.post.authorName, props.post.authorAvatar);
+      await getActions().onComment(
+        props.post.mid,
+        props.post.iid!,
+        body,
+        props.post.authorName,
+        props.post.authorAvatar,
+      );
       setReplyBody("");
       setReplyOpen(false);
       setShowComments(true);
@@ -107,10 +132,9 @@ export default function PostCard(props: { post: ThreadNode }) {
           activeClass="text-green-500"
         />
 
-        {/* Comments toggle */}
         {props.post.children.length > 0 && (
           <button
-            onClick={() => setShowComments((v) => !v)}
+            onClick={() => setShowComments(v => !v)}
             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
                    text-zinc-500 dark:text-zinc-400
                    hover:bg-zinc-100 dark:hover:bg-zinc-800
@@ -123,9 +147,8 @@ export default function PostCard(props: { post: ThreadNode }) {
           </button>
         )}
 
-        {/* Reply button */}
         <button
-          onClick={() => { setReplyOpen((v) => !v); setShowComments(true); }}
+          onClick={() => { setReplyOpen(v => !v); setShowComments(true); }}
           class="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
                  text-zinc-500 dark:text-zinc-400
                  hover:bg-zinc-100 dark:hover:bg-zinc-800
@@ -143,7 +166,7 @@ export default function PostCard(props: { post: ThreadNode }) {
         <div class="mt-3 flex flex-col gap-2">
           <textarea
             value={replyBody()}
-            onInput={(e) => setReplyBody(e.currentTarget.value)}
+            onInput={e => setReplyBody(e.currentTarget.value)}
             placeholder="Write a reply…"
             rows={3}
             class="w-full rounded-xl border border-zinc-300 dark:border-zinc-700
@@ -177,13 +200,12 @@ export default function PostCard(props: { post: ThreadNode }) {
         </div>
       )}
 
-      {/* Nested comments */}
       <CommentThread comments={props.post.children} show={showComments()} />
     </div>
   );
 }
 
-// ─── Tiny reusable action button ────────────────────────────────────────────
+// ─── Tiny reusable action button ─────────────────────────────────────────────
 function ActionBtn(props: {
   icon: any;
   count: number;
@@ -199,10 +221,7 @@ function ActionBtn(props: {
       class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
               transition-colors select-none
               hover:bg-zinc-100 dark:hover:bg-zinc-800
-              ${props.active
-                ? props.activeClass
-                : "text-zinc-500 dark:text-zinc-400"
-              }`}
+              ${props.active ? props.activeClass : "text-zinc-500 dark:text-zinc-400"}`}
     >
       {props.icon}
       <span>{props.count}</span>

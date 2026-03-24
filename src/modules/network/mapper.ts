@@ -16,7 +16,7 @@ export function shouldDisplayActivity(activity: any): boolean {
 
 export function mapActivityToPost(activity: any): Post {
   const body = sanitizeHtml(bbcodeToHtml(activity.body ?? ''));
-
+console.log('raw body:', activity.body);
   return {
     id:           activity.uuid,
     iid:          activity.iid ? Number(activity.iid) : undefined,
