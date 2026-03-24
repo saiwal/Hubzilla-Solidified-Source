@@ -16,6 +16,17 @@ const [newPosts, setNewPosts] = createSignal<ThreadNode[]>([]);
 const [profileUid, setProfileUid] = createSignal<number>(0);
 const [params, setParams] = createSignal<NetworkParams>({});
 
+export type ViewMode = 'feed' | 'masonry' | 'list' | 'inbox';
+const saved = localStorage.getItem('network-view') as ViewMode | null;
+const [viewMode, setViewMode] = createSignal<ViewMode>(saved ?? 'feed');
+
+// wrap setViewMode
+export function changeView(v: ViewMode) {
+  localStorage.setItem('network-view', v);
+  setViewMode(v);
+}
+export { viewMode, setViewMode };
+
 let currentOffset = 0;
 let pollTimer: ReturnType<typeof setTimeout> | null = null;
 const activated = new Set<string>();

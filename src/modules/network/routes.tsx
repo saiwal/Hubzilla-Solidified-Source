@@ -2,6 +2,9 @@ import { onMount, onCleanup, Show, For } from "solid-js";
 import { posts, loadNetwork, loading, loadMore, loadingMore, hasMore, newPosts, flushNewPosts } from "./store";
 import StreamList from "../../components/StreamList";
 import StreamFilters from "./StreamFilters";
+import type { ViewMode } from './store';
+import { setViewMode } from './store';
+import ViewSwitcher from "../../components/ViewSwitcher";
 
 function PostPlaceholder() {
   return (
@@ -39,7 +42,8 @@ export default function Network() {
       // StreamFilters calls loadNetwork on mount via its own apply(),
     // but we still need an initial load with defaults if filters haven't fired yet
     loadNetwork({ order: "created" });
-
+		const view = 'feed';
+		if (view) setViewMode(view as ViewMode);
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) loadMore(); },
       { rootMargin: "200px" }
@@ -51,6 +55,7 @@ export default function Network() {
   return (
     <div class="relative">
       <StreamFilters />
+			<ViewSwitcher />
       {/* New posts banner */}
       <Show when={newPosts().length > 0}>
         <div class="sticky top-2 z-10 flex justify-center">
