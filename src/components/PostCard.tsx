@@ -2,10 +2,12 @@ import { createSignal } from "solid-js";
 import type { ThreadNode } from "../core/utils/thread";
 import CommentThread from "./CommentThread";
 import { handleLike, handleDislike, handleRepeat, handleComment } from "../modules/network/store";
+import { BiRegularLike, BiRegularDislike, BiRegularShareAlt, BiRegularChat, BiRegularSend, BiRegularChevronDown, BiRegularChevronUp } from "solid-icons/bi";
 
 export default function PostCard(props: { post: ThreadNode }) {
 
   const [replyOpen, setReplyOpen] = createSignal(false);
+  const [showComments, setShowComments] = createSignal(false);
   const [replyBody, setReplyBody] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
   const [actionError, setActionError] = createSignal<string | null>(null);
@@ -37,6 +39,7 @@ export default function PostCard(props: { post: ThreadNode }) {
       await handleComment(props.post.mid, props.post.iid!, body, props.post.authorName, props.post.authorAvatar);
       setReplyBody("");
       setReplyOpen(false);
+      setShowComments(true);
     } catch {
       setActionError("Comment failed — please try again.");
     } finally {
@@ -75,35 +78,54 @@ export default function PostCard(props: { post: ThreadNode }) {
       )}
 
       {/* Action bar */}
-      <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center gap-2 flex-wrap">
+      <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center gap-1 flex-wrap">
 
         <ActionBtn
-          icon="👍"
+          icon={<BiRegularLike size={17} />}
           count={props.post.likeCount}
           label="Like"
           onClick={onLike}
+          active={props.post.viewerLiked}
           activeClass="text-blue-500"
         />
 
         <ActionBtn
-          icon="👎"
+          icon={<BiRegularDislike size={17} />}
           count={props.post.dislikeCount}
           label="Dislike"
           onClick={onDislike}
+          active={props.post.viewerDisliked}
           activeClass="text-red-500"
         />
 
         <ActionBtn
-          icon="🔁"
+          icon={<BiRegularShareAlt size={17} />}
           count={props.post.repeatCount}
           label="Repeat"
           onClick={onRepeat}
+          active={props.post.viewerRepeated}
           activeClass="text-green-500"
         />
 
-        {/* Reply toggle */}
+        {/* Comments toggle */}
+        {props.post.children.length > 0 && (
+          <button
+            onClick={() => setShowComments((v) => !v)}
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                   text-zinc-500 dark:text-zinc-400
+                   hover:bg-zinc-100 dark:hover:bg-zinc-800
+                   hover:text-zinc-800 dark:hover:text-zinc-100
+                   transition-colors"
+            title="Toggle comments"
+          >
+            {showComments() ? <BiRegularChevronUp size={17} /> : <BiRegularChevronDown size={17} />}
+            <span>{props.post.children.length} comment{props.post.children.length !== 1 ? "s" : ""}</span>
+          </button>
+        )}
+
+        {/* Reply button */}
         <button
-          onClick={() => setReplyOpen((v) => !v)}
+          onClick={() => { setReplyOpen((v) => !v); setShowComments(true); }}
           class="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
                  text-zinc-500 dark:text-zinc-400
                  hover:bg-zinc-100 dark:hover:bg-zinc-800
@@ -111,11 +133,8 @@ export default function PostCard(props: { post: ThreadNode }) {
                  transition-colors"
           title="Reply"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
-               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-          </svg>
-          <span>Reply{props.post.children.length > 0 ? ` (${props.post.children.length})` : ""}</span>
+          <BiRegularChat size={17} />
+          <span>Reply</span>
         </button>
       </div>
 
@@ -146,11 +165,12 @@ export default function PostCard(props: { post: ThreadNode }) {
             <button
               onClick={submitComment}
               disabled={submitting() || !replyBody().trim()}
-              class="px-4 py-1.5 text-sm font-medium rounded-lg
+              class="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium rounded-lg
                      bg-blue-500 hover:bg-blue-600 active:bg-blue-700
                      disabled:opacity-50 disabled:cursor-not-allowed
                      text-white transition-colors"
             >
+              <BiRegularSend size={15} />
               {submitting() ? "Sending…" : "Send"}
             </button>
           </div>
@@ -158,17 +178,18 @@ export default function PostCard(props: { post: ThreadNode }) {
       )}
 
       {/* Nested comments */}
-      <CommentThread comments={props.post.children} />
+      <CommentThread comments={props.post.children} show={showComments()} />
     </div>
   );
 }
 
 // ─── Tiny reusable action button ────────────────────────────────────────────
 function ActionBtn(props: {
-  icon: string;
+  icon: any;
   count: number;
   label: string;
   onClick: () => void;
+  active?: boolean;
   activeClass: string;
 }) {
   return (
@@ -176,12 +197,14 @@ function ActionBtn(props: {
       onClick={props.onClick}
       title={props.label}
       class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
-              text-zinc-500 dark:text-zinc-400
+              transition-colors select-none
               hover:bg-zinc-100 dark:hover:bg-zinc-800
-              hover:${props.activeClass}
-              transition-colors select-none`}
+              ${props.active
+                ? props.activeClass
+                : "text-zinc-500 dark:text-zinc-400"
+              }`}
     >
-      <span>{props.icon}</span>
+      {props.icon}
       <span>{props.count}</span>
     </button>
   );
