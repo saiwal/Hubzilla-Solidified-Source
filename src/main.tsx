@@ -17,6 +17,7 @@ const modules = import.meta.glob<{
 }>("./modules/**/routes.tsx");
 
 const ChannelPage = lazy(() => import("./modules/channel/routes"));
+const PhotosPage  = lazy(() => import("./modules/photos/routes"));
 
 const routes = [
   ...Object.entries(modules).map(([path, loader]) => {
@@ -27,8 +28,11 @@ const routes = [
       component: lazy(loader),
     };
   }),
-  // Parameterised channel route — must come before the wildcard
-  { path: "/channel/:nick", component: ChannelPage },
+  // Parameterised routes — must come before the wildcard
+  { path: "/channel/:nick",                 component: ChannelPage },
+  { path: "/photos/:nick",                 component: PhotosPage },
+  { path: "/photos/:datatype/:datum",       component: PhotosPage  },
+  { path: "/photos/:nick/:datatype/:datum", component: PhotosPage  },
   { path: "*", component: RedirectToRoot },
 ];
 
