@@ -33,17 +33,18 @@ export type NetworkParams = {
   dbegin?: string;
 };
 
+// api.ts — fetchNetworkStream
 export async function fetchNetworkStream(params: NetworkParams = {}): Promise<Post[]> {
   const qs = new URLSearchParams({ format: 'json' });
   Object.entries(params).forEach(([k, v]) => {
     if (v !== undefined && v !== '') qs.set(k, String(v));
   });
-  const activities = await moduleGet<any[]>(`network?${qs.toString()}`);
+  const raw = await moduleGet<any>(`network?${qs.toString()}`);
+  const activities: any[] = Array.isArray(raw) ? raw : [];
   return activities
     .filter(shouldDisplay)
     .map(mapActivityToPost);
 }
-
 /** Toggle like / dislike / announce (repeat) on a post.
  *  Hubzilla's handler: GET /like/{iid}?verb=…&conv_mode=&page_mode=client&reload=0
  *  iid is the local integer item id returned by the network JSON hook.

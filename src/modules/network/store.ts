@@ -5,7 +5,7 @@ import { buildThreadTree } from "../../core/utils/thread";
 import type { ThreadNode } from "../../core/utils/thread";
 import type { Post } from "../../types/types";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 const POLL_INTERVAL = 30_000;
 
 const [posts, setPosts] = createSignal<ThreadNode[]>([]);
@@ -23,8 +23,8 @@ const activated = new Set<string>();
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function registerActivated(data: Post[]) {
-  data.forEach(p => {
-    if (p.viewerLiked)    activated.add(`${p.mid}:like`);
+  data.forEach((p) => {
+    if (p.viewerLiked) activated.add(`${p.mid}:like`);
     if (p.viewerDisliked) activated.add(`${p.mid}:dislike`);
     if (p.viewerRepeated) activated.add(`${p.mid}:announce`);
   });
@@ -33,7 +33,7 @@ function registerActivated(data: Post[]) {
 function updateNode(
   nodes: ThreadNode[],
   mid: string,
-  updater: (n: ThreadNode) => ThreadNode
+  updater: (n: ThreadNode) => ThreadNode,
 ): ThreadNode[] {
   return nodes.map((n) => {
     if (n.mid === mid) return updater(n);
@@ -56,8 +56,8 @@ export async function loadNetwork(newParams?: NetworkParams) {
     const threads = buildThreadTree(data);
     setPosts(threads);
     setNewPosts([]);
-    currentOffset = data.length;
-    setHasMore(data.length === PAGE_SIZE);
+    currentOffset += threads.length;
+    setHasMore(threads.length === PAGE_SIZE);
     if (data.length && data[0].profileUid) setProfileUid(data[0].profileUid);
     activated.clear();
     registerActivated(data);
@@ -75,13 +75,19 @@ export async function loadMore() {
   if (loadingMore() || !hasMore()) return;
   setLoadingMore(true);
   try {
-    const data = await fetchNetworkStream({ ...params(), start: currentOffset });
-    if (!data.length) { setHasMore(false); return; }
+    const data = await fetchNetworkStream({
+      ...params(),
+      start: currentOffset,
+    });
+    if (!data.length) {
+      setHasMore(false);
+      return;
+    }
     const threads = buildThreadTree(data);
-    const existingMids = new Set(posts().map(t => t.mid));
-    const fresh = threads.filter(t => !existingMids.has(t.mid));
-    setPosts(prev => [...prev, ...fresh]);
-    currentOffset += data.length;
+    const existingMids = new Set(posts().map((t) => t.mid));
+    const fresh = threads.filter((t) => !existingMids.has(t.mid));
+    setPosts((prev) => [...prev, ...fresh]);
+    currentOffset += threads.length;
     setHasMore(data.length === PAGE_SIZE);
     registerActivated(data);
   } catch (err) {
@@ -97,7 +103,7 @@ function startPolling() {
   stopPolling();
   const schedule = () => {
     pollTimer = setTimeout(async () => {
-      if (document.visibilityState === 'visible') await checkForNew();
+      if (document.visibilityState === "visible") await checkForNew();
       schedule();
     }, POLL_INTERVAL);
   };
@@ -105,33 +111,36 @@ function startPolling() {
 }
 
 function stopPolling() {
-  if (pollTimer !== null) { clearTimeout(pollTimer); pollTimer = null; }
+  if (pollTimer !== null) {
+    clearTimeout(pollTimer);
+    pollTimer = null;
+  }
 }
 
 async function checkForNew() {
   const topPost = newPosts()[0] ?? posts()[0];
   if (!topPost) return;
   // Add 1s to avoid re-fetching the top post itself
-  const topDate = new Date(topPost.created.replace(' ', 'T') + 'Z');
+  const topDate = new Date(topPost.created.replace(" ", "T") + "Z");
   topDate.setSeconds(topDate.getSeconds() + 1);
-  const dbegin = topDate.toISOString().slice(0, 19).replace('T', ' ');
+  const dbegin = topDate.toISOString().slice(0, 19).replace("T", " ");
   try {
     const data = await fetchNetworkStream({ ...params(), start: 0, dbegin });
     if (!data.length) return;
     const threads = buildThreadTree(data);
     const existingMids = new Set([
-      ...posts().map(t => t.mid),
-      ...newPosts().map(t => t.mid),
+      ...posts().map((t) => t.mid),
+      ...newPosts().map((t) => t.mid),
     ]);
-    const fresh = threads.filter(t => !existingMids.has(t.mid));
-    if (fresh.length) setNewPosts(prev => [...fresh, ...prev]);
+    const fresh = threads.filter((t) => !existingMids.has(t.mid));
+    if (fresh.length) setNewPosts((prev) => [...fresh, ...prev]);
   } catch (err) {
-    console.error('Poll failed', err);
+    console.error("Poll failed", err);
   }
 }
 
 export function flushNewPosts() {
-  setPosts(prev => [...newPosts(), ...prev]);
+  setPosts((prev) => [...newPosts(), ...prev]);
   setNewPosts([]);
 }
 
@@ -141,13 +150,23 @@ export async function handleLike(mid: string, iid: number) {
   const key = `${mid}:like`;
   const isUndo = activated.has(key);
   isUndo ? activated.delete(key) : activated.add(key);
-  setPosts(prev => updateNode(prev, mid, n => ({ ...n, likeCount: n.likeCount + (isUndo ? -1 : 1) })));
+  setPosts((prev) =>
+    updateNode(prev, mid, (n) => ({
+      ...n,
+      likeCount: n.likeCount + (isUndo ? -1 : 1),
+    })),
+  );
   try {
-    await toggleVerb(iid, 'like');
+    await toggleVerb(iid, "like");
   } catch (err) {
     isUndo ? activated.add(key) : activated.delete(key);
-    setPosts(prev => updateNode(prev, mid, n => ({ ...n, likeCount: n.likeCount + (isUndo ? 1 : -1) })));
-    console.error('Like failed', err);
+    setPosts((prev) =>
+      updateNode(prev, mid, (n) => ({
+        ...n,
+        likeCount: n.likeCount + (isUndo ? 1 : -1),
+      })),
+    );
+    console.error("Like failed", err);
   }
 }
 
@@ -155,13 +174,23 @@ export async function handleDislike(mid: string, iid: number) {
   const key = `${mid}:dislike`;
   const isUndo = activated.has(key);
   isUndo ? activated.delete(key) : activated.add(key);
-  setPosts(prev => updateNode(prev, mid, n => ({ ...n, dislikeCount: n.dislikeCount + (isUndo ? -1 : 1) })));
+  setPosts((prev) =>
+    updateNode(prev, mid, (n) => ({
+      ...n,
+      dislikeCount: n.dislikeCount + (isUndo ? -1 : 1),
+    })),
+  );
   try {
-    await toggleVerb(iid, 'dislike');
+    await toggleVerb(iid, "dislike");
   } catch (err) {
     isUndo ? activated.add(key) : activated.delete(key);
-    setPosts(prev => updateNode(prev, mid, n => ({ ...n, dislikeCount: n.dislikeCount + (isUndo ? 1 : -1) })));
-    console.error('Dislike failed', err);
+    setPosts((prev) =>
+      updateNode(prev, mid, (n) => ({
+        ...n,
+        dislikeCount: n.dislikeCount + (isUndo ? 1 : -1),
+      })),
+    );
+    console.error("Dislike failed", err);
   }
 }
 
@@ -169,13 +198,23 @@ export async function handleRepeat(mid: string, iid: number) {
   const key = `${mid}:announce`;
   const isUndo = activated.has(key);
   isUndo ? activated.delete(key) : activated.add(key);
-  setPosts(prev => updateNode(prev, mid, n => ({ ...n, repeatCount: n.repeatCount + (isUndo ? -1 : 1) })));
+  setPosts((prev) =>
+    updateNode(prev, mid, (n) => ({
+      ...n,
+      repeatCount: n.repeatCount + (isUndo ? -1 : 1),
+    })),
+  );
   try {
-    await toggleVerb(iid, 'announce');
+    await toggleVerb(iid, "announce");
   } catch (err) {
     isUndo ? activated.add(key) : activated.delete(key);
-    setPosts(prev => updateNode(prev, mid, n => ({ ...n, repeatCount: n.repeatCount + (isUndo ? 1 : -1) })));
-    console.error('Repeat failed', err);
+    setPosts((prev) =>
+      updateNode(prev, mid, (n) => ({
+        ...n,
+        repeatCount: n.repeatCount + (isUndo ? 1 : -1),
+      })),
+    );
+    console.error("Repeat failed", err);
   }
 }
 
@@ -194,15 +233,15 @@ export async function handleComment(
     top_mid: parentMid,
     parent: parentMid,
     body,
-    title: '',
+    title: "",
     authorName,
     authorAvatar,
-    authorUrl: '',
-    created: new Date().toISOString().replace('T', ' ').slice(0, 19),
-    verb: 'Create',
-    obj_type: 'Note',
+    authorUrl: "",
+    created: new Date().toISOString().replace("T", " ").slice(0, 19),
+    verb: "Create",
+    obj_type: "Note",
     flags: [],
-    permalink: '',
+    permalink: "",
     likeCount: 0,
     dislikeCount: 0,
     repeatCount: 0,
@@ -213,16 +252,24 @@ export async function handleComment(
     children: [],
   };
 
-  setPosts(prev => updateNode(prev, parentMid, n => ({
-    ...n, children: [...n.children, tempComment],
-  })));
+  setPosts((prev) =>
+    updateNode(prev, parentMid, (n) => ({
+      ...n,
+      children: [...n.children, tempComment],
+    })),
+  );
 
-  postComment({ body, parent_iid: parentIid, profile_uid: profileUid() }).catch(err => {
-    console.error('Comment failed', err);
-    setPosts(prev => updateNode(prev, parentMid, n => ({
-      ...n, children: n.children.filter(c => c.mid !== tempComment.mid),
-    })));
-  });
+  postComment({ body, parent_iid: parentIid, profile_uid: profileUid() }).catch(
+    (err) => {
+      console.error("Comment failed", err);
+      setPosts((prev) =>
+        updateNode(prev, parentMid, (n) => ({
+          ...n,
+          children: n.children.filter((c) => c.mid !== tempComment.mid),
+        })),
+      );
+    },
+  );
 }
 
 export { posts, loading, loadingMore, hasMore, newPosts, profileUid };
