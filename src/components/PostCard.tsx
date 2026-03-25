@@ -90,6 +90,11 @@ export default function PostCard(props: { post: ThreadNode; actions?: PostAction
           </span>
         </div>
       </div>
+      {/* Title */}
+<div
+  class="mt-6 text-md md:text-lg font-bold tracking-tight text-zinc-900 dark:text-white leading-tight"
+  innerHTML={props.post.title}
+/>
 
       {/* Body */}
       <div
