@@ -11,6 +11,7 @@ import { For, Show } from "solid-js";
 import PostCard from "../../components/PostCard";
 import type { PostActions } from "../../components/PostCard";
 import type { ChannelParams } from "./api";
+import { PostPlaceholder } from "../network/routes"
 
 const actions: PostActions = {
   onLike:    handleLike,
@@ -46,7 +47,9 @@ export default function Channel() {
   return (
     <>
       <Show when={loading()}>
-        <p class="text-sm text-zinc-500 dark:text-zinc-400 py-4 text-center">Loading…</p>
+				<For each={Array(5).fill(0)}>
+          {() => <PostPlaceholder />}
+        </For>
       </Show>
 
       <Show when={!loading() && posts().length === 0}>

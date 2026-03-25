@@ -6,9 +6,9 @@ import type { ViewMode } from './store';
 import { setViewMode } from './store';
 import ViewSwitcher from "../../components/ViewSwitcher";
 
-function PostPlaceholder() {
+export function PostPlaceholder() {
   return (
-    <div class="animate-pulse bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 mb-4 shadow-sm">
+    <div class="animate-pulse bg-white dark:bg-gray-800 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 mb-4 shadow-sm">
       {/* Header */}
       <div class="flex items-start gap-3">
         <div class="w-11 h-11 rounded-full bg-zinc-200 dark:bg-zinc-700 shrink-0 ring-1 ring-zinc-200 dark:ring-zinc-700" />

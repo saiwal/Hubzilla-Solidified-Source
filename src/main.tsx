@@ -5,6 +5,9 @@ import { For, lazy, Suspense } from "solid-js";
 import type { Component } from "solid-js";
 import Layout from "./app/layout/Layout";
 import { useNavigate } from "@solidjs/router";
+import { loadSiteConfig } from "./core/store/siteConfig";
+
+loadSiteConfig();
 
 function RedirectToRoot() {
   const navigate = useNavigate();
@@ -29,10 +32,10 @@ const routes = [
     };
   }),
   // Parameterised routes — must come before the wildcard
-  { path: "/channel/:nick",                 component: ChannelPage },
-  { path: "/photos/:nick",                 component: PhotosPage },
-  { path: "/photos/:datatype/:datum",       component: PhotosPage  },
-  { path: "/photos/:nick/:datatype/:datum", component: PhotosPage  },
+  { path: "/channel/:nick",                         component: ChannelPage },
+  { path: "/photos/:nick",                          component: PhotosPage  },
+  { path: "/photos/:nick/album/:datum",             component: PhotosPage  },
+  { path: "/photos/:nick/image/:datum",             component: PhotosPage  },
   { path: "*", component: RedirectToRoot },
 ];
 
