@@ -1,6 +1,6 @@
 // notificationService.ts
 
-export type NotificationType = "dm" | "home" | "intros" | "files";
+export type NotificationType = "dm" | "home" | "intros" | "files" | "network";
 
 export interface NotificationItem {
   notify_id: string;
@@ -14,7 +14,15 @@ export interface NotificationItem {
   hclass: string;
   thread_top: boolean;
   unseen: boolean;
+  // network-stream extras
+  mids?: string;
+  body?: string;
+  private_forum?: boolean;
 }
+
+/** Fired on document when a new top-level network post arrives in real-time.
+ *  Listeners (e.g. your stream page) can use this to inject the post live. */
+export type NetworkStreamEvent = CustomEvent<NotificationItem>;
 
 export interface NotificationBucket {
   count: number;
@@ -48,7 +56,7 @@ export class NotificationService {
   constructor(onPayload: PayloadHandler, onToast: ToastHandler) {
     this.onPayload = onPayload;
     this.onToast = onToast;
-    this.offset = { dm: 0, home: 0, intros: 0, files: 0 };
+    this.offset = { dm: 0, home: 0, intros: 0, files: 0, network: 0 };
     this.isActive = false;
     this.rmids = [];
     this.fallbackInterval = null;
@@ -154,6 +162,19 @@ export class NotificationService {
   ) {
     payload.notice?.notifications.forEach((m) => this.onToast(m, "danger"));
     payload.info?.notifications.forEach((m) => this.onToast(m, "info"));
+
+    // For real-time network notifications, fire the stream event so any
+    // page-level stream listener can prepend the post immediately.
+    if (!replace && !followup && payload.network?.notifications.length) {
+      payload.network.notifications
+        .filter((n) => n.thread_top)
+        .forEach((n) => {
+          document.dispatchEvent(
+            new CustomEvent("hz:handleNetworkNotificationsItems", { detail: n })
+          );
+        });
+    }
+
     this.onPayload(payload, replace, followup);
   }
 

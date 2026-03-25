@@ -10,11 +10,12 @@ export interface PanelState {
   hasMore: boolean;
   loading: boolean;
   open: boolean;
+  threadTopOnly: boolean; // network panel: show only top-level posts
 }
 
 export type NotificationsStore = Record<NotificationType, PanelState>;
 
-const TYPES: NotificationType[] = ["dm", "home", "intros", "files"];
+const TYPES: NotificationType[] = ["dm", "home", "intros", "files", "network"];
 
 const defaultPanel = (): PanelState => ({
   count: 0,
@@ -22,6 +23,7 @@ const defaultPanel = (): PanelState => ({
   hasMore: true,
   loading: false,
   open: false,
+  threadTopOnly: false,
 });
 
 export function useNotifications() {
@@ -108,12 +110,17 @@ export function useNotifications() {
     );
   };
 
+  const toggleThreadTop = (type: NotificationType) => {
+    setStore(type, "threadTopOnly", (v) => !v);
+  };
+
   return {
     store,
     toasts,
     togglePanel,
     handleScroll,
     markRead,
+    toggleThreadTop,
     formatCount: (n: number) => svc.formatCount(n),
   };
 }
