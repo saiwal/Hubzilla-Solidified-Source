@@ -1,9 +1,6 @@
 import { createSignal } from "solid-js";
 import { moduleGet } from "../api/client";
-import { buildNav } from "../nav/buildNav";
-import type { NavItemConfig } from "../../app/layout/nav.config";
 
-export const [navItems, setNavItems] = createSignal<NavItemConfig[]>([]);
 export interface SiteInfo {
   site_name: string;
   banner: string;         // HTML banner string
@@ -29,7 +26,6 @@ export async function loadSiteConfig() {
       moduleGet<PConfig>("pconfig?format=json").catch(() => ({})), // needs auth, may 401
     ]);
     setPconfig(pc);
-		setNavItems();
   } catch (err) {
     console.error("Failed to load site config", err);
   } finally {
