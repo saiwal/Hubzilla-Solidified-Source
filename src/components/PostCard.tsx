@@ -73,7 +73,7 @@ export default function PostCard(props: { post: ThreadNode; actions?: PostAction
   }
 
   return (
-    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 mb-4 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div class="bg-white dark:bg-gray-800  border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 mb-4 shadow-sm hover:shadow-md transition-shadow duration-200">
 
       {/* Header */}
       <div class="flex items-start gap-3">
