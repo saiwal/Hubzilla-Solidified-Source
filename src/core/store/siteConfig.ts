@@ -1,20 +1,13 @@
 import { createSignal } from "solid-js";
 import { moduleGet } from "../api/client";
 
-export interface SiteInfo {
-  site_name: string;
-  banner: string;         // HTML banner string
-  logo: string;           // URL
-  description: string;
-  register_policy: number;
-  openid_provider: boolean;
-  // add more as needed
-}
+type AppConfigMap = Record<string, Record<string, string | number | boolean>>;
 
-export interface PConfig {
-  // per-user prefs — keyed by app/key
-  [app: string]: Record<string, string | number | boolean>;
-}
+export type PConfig = AppConfigMap & {
+  uid?: number;
+  channel_nick?: string;
+  is_local?: boolean;
+};
 
 const [pconfig, setPconfig]   = createSignal<PConfig>({});
 const [configLoaded, setConfigLoaded] = createSignal(false);

@@ -213,7 +213,7 @@ export default function StreamFilters() {
           </label>
 
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Min comments</span>
+            <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Min Affinity</span>
             <input
               type="number"
               min="0"
@@ -226,11 +226,11 @@ export default function StreamFilters() {
           </label>
 
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Max comments</span>
+            <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Max Affinity</span>
             <input
               type="number"
               min="0"
-              placeholder="∞"
+              placeholder="100"
               value={cmax()}
               onInput={e => setCmax(e.currentTarget.value)}
               onBlur={apply}

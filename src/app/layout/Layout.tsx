@@ -1,9 +1,11 @@
 import { type ParentComponent, createSignal, Show } from "solid-js";
 import { For } from "solid-js";
 import NavItem from "./NavItem";
+import PostComposer from "../../modules/post/Postcomposer";
 import { useNav } from "./useNav";
 import ThemeToggle from "./ThemeToggle";
 import NotificationsAside from "../../components/NotificationsAside";
+import { pconfig, configLoaded } from "../../core/store/siteConfig";
 
 const Layout: ParentComponent = (props) => {
   const [rightOpen, setRightOpen] = createSignal(false);
@@ -28,6 +30,9 @@ const Layout: ParentComponent = (props) => {
 
         {/* Main Content */}
         <main class="flex-1 overflow-y-auto p-4 lg:p-6 pb-20 lg:pb-6">
+          <Show when={configLoaded() && pconfig().uid}>
+            <PostComposer profileUid={pconfig().uid!} />
+          </Show>
           {props.children}
         </main>
 
