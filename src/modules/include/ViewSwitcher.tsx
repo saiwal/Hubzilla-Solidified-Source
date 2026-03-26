@@ -1,6 +1,6 @@
 // components/ViewSwitcher.tsx
-import { setViewMode, viewMode } from '../modules/network/store';
-import type { ViewMode } from '../modules/network/store';
+import { setViewMode, viewMode } from '../network/store';
+import type { ViewMode } from '../network/store';
 import { For } from 'solid-js';
 
 const views: { id: ViewMode; label: string }[]  = [

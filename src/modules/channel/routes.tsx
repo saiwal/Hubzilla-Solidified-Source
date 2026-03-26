@@ -8,8 +8,8 @@ import {
   handleComment,
 } from "./store";
 import { For, Show } from "solid-js";
-import PostCard from "../../components/PostCard";
-import type { PostActions } from "../../components/PostCard";
+import PostCard from "../include/post/PostCard";
+import type { PostActions } from "../include/post/PostCard";
 import type { ChannelParams } from "./api";
 import { PostPlaceholder } from "../network/routes"
 

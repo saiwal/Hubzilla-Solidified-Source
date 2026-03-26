@@ -1,5 +1,5 @@
 import { createSignal } from "solid-js";
-import type { ThreadNode } from "../core/utils/thread";
+import type { ThreadNode } from "../../../core/utils/thread";
 import CommentThread from "./CommentThread";
 import { BiRegularLike, BiRegularDislike, BiRegularShareAlt, BiRegularChat, BiRegularSend, BiRegularChevronDown, BiRegularChevronUp } from "solid-icons/bi";
 import {
@@ -7,7 +7,7 @@ import {
   handleDislike as networkDislike,
   handleRepeat as networkRepeat,
   handleComment as networkComment,
-} from "../modules/network/store";
+} from "../../network/store";
 
 export interface PostActions {
   onLike:    (mid: string, iid: number) => Promise<void>;

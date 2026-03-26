@@ -122,7 +122,7 @@ export default function StreamFilters() {
 
         {/* Flag toggles */}
         <ToggleChip active={star()} onClick={() => toggleFlag(star, setStar)} label="⭐ Starred" />
-        <ToggleChip active={conv()} onClick={() => toggleFlag(conv, setConv)} label="💬 Conversations" />
+        <ToggleChip active={conv()} onClick={() => toggleFlag(conv, setConv)} label="💬 Personal Posts" />
         <ToggleChip active={dm()}   onClick={() => toggleFlag(dm,   setDm)}   label="✉️ DMs" />
 
         {/* Spacer */}

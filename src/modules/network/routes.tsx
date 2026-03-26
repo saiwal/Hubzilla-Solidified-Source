@@ -1,10 +1,10 @@
 import { onMount, onCleanup, Show, For } from "solid-js";
 import { posts, loadNetwork, loading, loadMore, loadingMore, hasMore, newPosts, flushNewPosts } from "./store";
-import StreamList from "../../components/StreamList";
+import StreamList from "../include/feedviews/StreamList";
 import StreamFilters from "./StreamFilters";
 import type { ViewMode } from './store';
 import { setViewMode } from './store';
-import ViewSwitcher from "../../components/ViewSwitcher";
+import ViewSwitcher from "../include/ViewSwitcher";
 
 export function PostPlaceholder() {
   return (

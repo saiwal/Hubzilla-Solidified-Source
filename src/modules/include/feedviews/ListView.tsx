@@ -1,7 +1,7 @@
 // components/views/ListView.tsx
 import { For, Show } from 'solid-js';
-import type { ThreadNode } from '../../core/utils/thread';
-import { handleLike, handleRepeat } from '../../modules/network/store';
+import type { ThreadNode } from '../../../core/utils/thread';
+import { handleLike, handleRepeat } from '../../network/store';
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();

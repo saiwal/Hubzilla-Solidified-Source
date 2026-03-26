@@ -1,7 +1,7 @@
 // components/views/MasonryView.tsx
 import { For, Show } from 'solid-js';
-import type { ThreadNode } from '../../core/utils/thread';
-import { handleLike, handleRepeat } from '../../modules/network/store';
+import type { ThreadNode } from '../../../core/utils/thread';
+import { handleLike, handleRepeat } from '../../network/store';
 
 function MasonryCard(props: { post: ThreadNode }) {
   const p = props.post;

@@ -1,12 +1,12 @@
 import { For } from "solid-js";
-import type { ThreadNode } from "../core/utils/thread";
-import PostCard from "./PostCard";
+import type { ThreadNode } from "../../../core/utils/thread";
+import PostCard from "../post/PostCard";
 import { Match, Switch } from 'solid-js';
-import { viewMode } from '../modules/network/store';
+import { viewMode } from '../../network/store';
 // import FeedView from './views/FeedView';
-import MasonryView from './views/MasonryView';
-import ListView from './views/ListView';
-import InboxView from './views/InboxView';
+import MasonryView from '../feedviews/MasonryView';
+import ListView from '../feedviews/ListView';
+import InboxView from '../feedviews/InboxView';
 // export default function StreamList(props: { posts: ThreadNode[] }) {
 //   return (
 //     <For each={props.posts}>

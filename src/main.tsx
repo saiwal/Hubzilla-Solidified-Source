@@ -3,7 +3,7 @@ import { render } from "solid-js/web";
 import { Router, Route } from "@solidjs/router";
 import { For, lazy, Suspense } from "solid-js";
 import type { Component } from "solid-js";
-import Layout from "./app/layout/Layout";
+import Layout from "./layout/Layout";
 import { useNavigate } from "@solidjs/router";
 import { loadSiteConfig } from "./core/store/siteConfig";
 

@@ -1,11 +1,11 @@
 import { type ParentComponent, createSignal, Show } from "solid-js";
 import { For } from "solid-js";
-import NavItem from "./NavItem";
-import PostComposer from "../../modules/post/Postcomposer";
-import { useNav } from "./useNav";
-import ThemeToggle from "./ThemeToggle";
-import NotificationsAside from "../../components/NotificationsAside";
-import { pconfig, configLoaded } from "../../core/store/siteConfig";
+import NavItem from "./nav/NavItem";
+import PostComposer from "../modules/include/post/Postcomposer";
+import { useNav } from "./nav/useNav";
+import ThemeToggle from "./nav/ThemeToggle";
+import NotificationsAside from "../modules/include/notifications/NotificationsAside";
+import { pconfig, configLoaded } from "../core/store/siteConfig";
 
 const Layout: ParentComponent = (props) => {
   const [rightOpen, setRightOpen] = createSignal(false);

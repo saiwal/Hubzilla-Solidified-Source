@@ -1,7 +1,7 @@
 // components/views/FeedView.tsx
 import { For, Show, createSignal } from 'solid-js';
-import type { ThreadNode } from '../../core/utils/thread';
-import { handleLike, handleDislike, handleRepeat, handleComment } from '../../modules/network/store';
+import type { ThreadNode } from '../../../core/utils/thread';
+import { handleLike, handleDislike, handleRepeat, handleComment } from '../../network/store';
 
 function ActionBar(props: { post: ThreadNode }) {
   const p = props.post;
