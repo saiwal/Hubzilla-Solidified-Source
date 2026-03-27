@@ -1,8 +1,7 @@
-import { useTheme } from "../../core/theme/theme";
+import { useTheme } from "../hooks/useTheme";
 
 const ThemeToggle = () => {
   const { theme, toggle } = useTheme();
-
   return (
     <button
       onClick={toggle}
