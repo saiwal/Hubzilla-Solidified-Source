@@ -2,7 +2,7 @@ import { For } from "solid-js";
 import type { ThreadNode } from "../../../../shared/hooks/thread";
 import PostCard from "../../../../shared/ui/PostCard";
 import { Match, Switch } from 'solid-js';
-import { viewMode } from '../../../dashboard/store/store';
+import { viewMode } from '../../../network/store/store';
 // import FeedView from './views/FeedView';
 import MasonryView from '../feedviews/MasonryView';
 import ListView from '../feedviews/ListView';

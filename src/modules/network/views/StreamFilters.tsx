@@ -1,4 +1,4 @@
-import { createSignal, Show, batch, JSX } from "solid-js";
+import { createSignal, Show, batch, type JSX } from "solid-js";
 import { useSearchParams } from "@solidjs/router";
 import { loadNetwork } from "../store/store";
 import type { NetworkParams } from "../api/api";

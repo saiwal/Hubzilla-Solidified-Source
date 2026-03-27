@@ -7,7 +7,7 @@ import {
   handleDislike as networkDislike,
   handleRepeat as networkRepeat,
   handleComment as networkComment,
-} from "../../modules/dashboard/store/store";
+} from "../../modules/network/store/store";
 
 export interface PostActions {
   onLike:    (mid: string, iid: number) => Promise<void>;

@@ -2,6 +2,7 @@ import { lazy, For } from "solid-js";
 import { Router, Route, useNavigate } from "@solidjs/router";
 import Layout from "./Layout";
 import { getRoutes } from "./router";
+import { I18nProvider } from "./i18n";
 
 import.meta.glob("./modules/*/index.ts", { eager: true });
 
@@ -13,6 +14,7 @@ function Redirect(props: { to: string }) {
 
 export default function App() {
   return (
+  <I18nProvider>
     <Router>
       <Route path="/" component={Layout}>
         <Route path="/" component={() => <Redirect to="/hq" />} />
@@ -21,5 +23,6 @@ export default function App() {
         </For>
       </Route>
     </Router>
+  </I18nProvider>
   );
 }
