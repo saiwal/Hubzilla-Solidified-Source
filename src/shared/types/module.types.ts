@@ -1,15 +1,5 @@
 import { type Component } from "solid-js";
 
-export interface WidgetDef {
-  id: string;
-  name: string;
-  description?: string;
-  defaultSlot: SlotName;
-  component: () => Promise<{ default: Component }>;
-}
-
-export type SlotName = "left" | "main" | "right";
-
 export interface NavItemDef {
   label: string;
   icon: string;
@@ -17,11 +7,16 @@ export interface NavItemDef {
   href: string;
 }
 
+export interface SlotsDef {
+  right?: () => Promise<{ default: Component }>;
+  leftBottom?: () => Promise<{ default: Component }>;
+}
+
 export interface ModuleDef {
   id: string;
   routes: RouteDef[];
   navItem: NavItemDef;
-  widgets?: WidgetDef[];
+  slots?: SlotsDef;
   permissions?: string[];
 }
 

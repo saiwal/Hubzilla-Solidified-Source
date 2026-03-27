@@ -1,4 +1,5 @@
-import { type ParentComponent, createSignal, Show, For } from "solid-js";
+import { type ParentComponent, createSignal, Show } from "solid-js";
+import { For } from "solid-js";
 import NavItem from "./shared/ui/NavItem";
 import { useNav } from "./shared/hooks/useNav";
 import ThemeToggle from "./shared/ui/ThemeToggle";
@@ -22,9 +23,9 @@ const Layout: ParentComponent = (props) => {
               {(item) => <NavItem {...item} />}
             </For>
           </nav>
-          <div class="space-y-1 mt-4">
-                  <ThemeToggle />
-          </div>
+          {/* optional module-injected widget below nav */}
+          <Slot name="leftBottom" />
+          <ThemeToggle />
         </aside>
 
         {/* Main Content */}
