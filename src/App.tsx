@@ -3,7 +3,7 @@ import { Router, Route, useNavigate } from "@solidjs/router";
 import Layout from "./Layout";
 import { getRoutes } from "./router";
 
-import "./modules/dashboard/index";
+import.meta.glob("./modules/*/index.ts", { eager: true });
 
 function Redirect(props: { to: string }) {
   const navigate = useNavigate();
