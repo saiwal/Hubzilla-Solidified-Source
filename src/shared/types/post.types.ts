@@ -1,7 +1,8 @@
 export interface Post {
   id: string;
-  iid?: number;        // local integer item id — used by /like/{iid}
-  profileUid?: number;  // local channel uid — used by /item comment POST
+  iid?: number; // local integer item id — used by /like/{iid}
+  uuid: string;
+  profileUid?: number; // local channel uid — used by /item comment POST
   mid: string;
   parent_mid: string;
   thr_parent: string;

@@ -16,13 +16,13 @@ const [newPosts, setNewPosts] = createSignal<ThreadNode[]>([]);
 const [profileUid, setProfileUid] = createSignal<number>(0);
 const [params, setParams] = createSignal<NetworkParams>({});
 
-export type ViewMode = 'feed' | 'masonry' | 'list' | 'inbox';
-const saved = localStorage.getItem('network-view') as ViewMode | null;
-const [viewMode, setViewMode] = createSignal<ViewMode>(saved ?? 'feed');
+export type ViewMode = "feed" | "masonry" | "list" | "inbox";
+const saved = localStorage.getItem("network-view") as ViewMode | null;
+const [viewMode, setViewMode] = createSignal<ViewMode>(saved ?? "feed");
 
 // wrap setViewMode
 export function changeView(v: ViewMode) {
-  localStorage.setItem('network-view', v);
+  localStorage.setItem("network-view", v);
   setViewMode(v);
 }
 export { viewMode, setViewMode };
@@ -237,6 +237,7 @@ export async function handleComment(
   authorAvatar: string,
 ): Promise<void> {
   const tempComment: ThreadNode = {
+    uuid: crypto.randomUUID(),
     id: crypto.randomUUID(),
     mid: crypto.randomUUID(),
     parent_mid: parentMid,
