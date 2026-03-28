@@ -1,7 +1,7 @@
 import { type Component } from "solid-js";
 
 export interface NavItemDef {
-  label: string;
+  label: string  | (() => string);
   icon: string;
   path: string;
   href: string;
