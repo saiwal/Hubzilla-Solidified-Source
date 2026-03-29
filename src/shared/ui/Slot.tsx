@@ -1,36 +1,38 @@
-import { type Component, createResource, For, Show, Suspense } from "solid-js";
+import { type Component, lazy, createMemo, For } from "solid-js";
+import { useLocation } from "@solidjs/router";
 import { resolveSlot } from "../../module-registry";
 import type { SlotsDef } from "../types/module.types";
 
 interface SlotProps {
   name: keyof SlotsDef;
   moduleId?: string;
-  fallback?: Component;
 }
 
-function SlotEntry(props: { loader: () => Promise<{ default: Component }> }) {
-  const [mod] = createResource(props.loader);
+type SlotLoader = () => Promise<{ default: Component }>;
+
+const Slot: Component<SlotProps> = (props) => {
+  const location = useLocation();
+
+  const activeModuleId = () => {
+    if (props.moduleId) return props.moduleId;
+    const segment = location.pathname.split("/").filter(Boolean)[0];
+    return segment ?? "";
+  };
+
+  const widgets = createMemo(() => {
+    const loader = resolveSlot(props.name, activeModuleId());
+    if (!loader) return [];
+    const loaders = Array.isArray(loader) ? loader : [loader];
+    return loaders.map((l: SlotLoader) =>
+      lazy(l as () => Promise<{ default: Component }>)
+    );
+  });
+
   return (
-    <Suspense fallback={<div class="p-4 text-sm text-gray-400">Loading...</div>}>
-      <Show when={mod()}>
-        {(m) => {
-          const C = m().default;
-          return <C />;
-        }}
-      </Show>
-    </Suspense>
-  );
-}
-
-export default function Slot(props: SlotProps) {
-  const raw = resolveSlot(props.name, props.moduleId);
-  if (!raw) return null;
-
-  const loaders = Array.isArray(raw) ? raw : [raw];
-
-  return (
-    <For each={loaders}>
-      {(loader) => <SlotEntry loader={loader} />}
+    <For each={widgets()}>
+      {(Widget) => <Widget />}
     </For>
   );
-}
+};
+
+export default Slot;

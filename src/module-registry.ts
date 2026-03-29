@@ -1,4 +1,4 @@
-import { createSignal, type Component} from "solid-js";
+import { createSignal } from "solid-js";
 import type { ModuleDef, RouteDef, NavItemDef, SlotsDef } from "./shared/types/module.types";
 
 const modules = new Map<string, ModuleDef>();
@@ -26,20 +26,15 @@ export function getRoutes() {
 }
 export function resolveSlot(slot: keyof SlotsDef, moduleId?: string) {
   if (moduleId) {
-    const s = modules.get(moduleId)?.slots?.[slot];
-    return s ?? null;
+    // Only return this module's slot — no fallback to other modules
+    return modules.get(moduleId)?.slots?.[slot] ?? null;
   }
-  // collect from ALL modules that provide this slot, flatten into a single array
-  const loaders: (() => Promise<{ default: Component }>)[] = [];
+  // No moduleId = global slot (e.g. leftBottom), collect all
   for (const mod of modules.values()) {
-    const s = mod.slots?.[slot];
-    if (!s) continue;
-    if (Array.isArray(s)) loaders.push(...s);
-    else loaders.push(s);
+    if (mod.slots?.[slot]) return mod.slots[slot];
   }
-  return loaders.length > 0 ? loaders : null;
+  return null;
 }
-
 export function getModule(id: string) {
   return modules.get(id) ?? null;
 }
