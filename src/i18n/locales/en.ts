@@ -1,6 +1,6 @@
 export type RawDictionary = {
   nav: {
-		dashboard: string;
+		hq: string;
     network: string;
     channel: string;
     photos: string;
@@ -14,7 +14,7 @@ export type RawDictionary = {
 
 export const dict: RawDictionary = {
   nav: {
-		dashboard: "Dashboard",
+		hq : "HQ",
     network: "Network",
     channel: "Channel",
     photos: "Photos",

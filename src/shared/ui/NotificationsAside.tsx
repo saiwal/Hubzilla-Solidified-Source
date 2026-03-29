@@ -273,7 +273,7 @@ export default function NotificationsAside() {
   const [activeUuid, setActiveUuid] = createSignal<string | null>(null);
 
   return (
-    <div class="flex flex-col h-full">
+    <div class="flex flex-col ">
       <h2 class="text-lg font-bold mb-4 px-1">Notifications</h2>
       <div class="fixed top-4 right-4 z-50 space-y-2 pointer-events-none">
         <For each={toasts}>

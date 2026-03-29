@@ -2,7 +2,7 @@ import type { RawDictionary } from "./en";
 
 export const dict: RawDictionary = {
   nav: {
-    dashboard: "Armaturenbrett",
+    hq: "HQ",
 		network: "Netzwerk",
     channel: "Kanal",
     photos: "Fotos",
