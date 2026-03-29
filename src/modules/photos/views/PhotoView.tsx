@@ -13,14 +13,7 @@ import {
   handleDislike,
   handleComment,
 } from "../store/store";
-import {
-  BiRegularLike,
-  BiRegularDislike,
-  BiRegularChat,
-  BiRegularSend,
-  BiRegularChevronLeft,
-  BiRegularChevronRight,
-} from "solid-icons/bi";
+import { MdFillChat, MdFillChevron_left, MdFillChevron_right, MdFillSend, MdOutlineThumb_down, MdOutlineThumb_up } from "solid-icons/md";
 
 // URL shapes (nick always present):
 //   /photos/:nick                   → summary
@@ -83,7 +76,7 @@ function PhotoGrid() {
             onClick={() => navigate(`/photos/${params.nick ?? ""}`)}
             class="text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 flex items-center gap-1 transition-colors"
           >
-            <BiRegularChevronLeft size={16} />
+            <MdFillChevron_left size={16} />
             All photos
           </button>
           <span class="text-zinc-300 dark:text-zinc-600">/</span>
@@ -164,7 +157,7 @@ function ImageView(props: { profileUid: number }) {
           onClick={() => navigate(`/photos/${params.nick ?? ""}`)}
           class="text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 flex items-center gap-1 transition-colors"
         >
-          <BiRegularChevronLeft size={16} />
+          <MdFillChevron_left size={16} />
           Back
         </button>
         <Show when={d()?.album}>
@@ -189,7 +182,7 @@ function ImageView(props: { profileUid: number }) {
             class="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full
                    bg-black/40 hover:bg-black/60 text-white transition-colors"
           >
-            <BiRegularChevronLeft size={22} />
+            <MdFillChevron_left size={22} />
           </A>
         </Show>
         <Show when={nextPath()}>
@@ -198,7 +191,7 @@ function ImageView(props: { profileUid: number }) {
             class="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full
                    bg-black/40 hover:bg-black/60 text-white transition-colors"
           >
-            <BiRegularChevronRight size={22} />
+            <MdFillChevron_right size={22} />
           </A>
         </Show>
       </div>
@@ -221,7 +214,7 @@ function ImageView(props: { profileUid: number }) {
                     hover:bg-zinc-100 dark:hover:bg-zinc-800
                     ${d()?.viewer_liked ? "text-blue-500" : "text-zinc-500 dark:text-zinc-400"}`}
           >
-            <BiRegularLike size={17} />
+            <MdOutlineThumb_up size={17} />
             <span>{d()?.like_count ?? 0}</span>
           </button>
 
@@ -231,7 +224,7 @@ function ImageView(props: { profileUid: number }) {
                     hover:bg-zinc-100 dark:hover:bg-zinc-800
                     ${d()?.viewer_disliked ? "text-red-500" : "text-zinc-500 dark:text-zinc-400"}`}
           >
-            <BiRegularDislike size={17} />
+            <MdOutlineThumb_down size={17} />
             <span>{d()?.dislike_count ?? 0}</span>
           </button>
 
@@ -242,7 +235,7 @@ function ImageView(props: { profileUid: number }) {
                      text-zinc-500 dark:text-zinc-400
                      hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
             >
-              <BiRegularChat size={17} />
+              <MdFillChat size={17} />
               <span>Comment</span>
             </button>
           </Show>
@@ -278,7 +271,7 @@ function ImageView(props: { profileUid: number }) {
                 class="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium rounded-lg
                        bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white transition-colors"
               >
-                <BiRegularSend size={15} />
+                <MdFillSend size={15} />
                 {submitting() ? "Sending…" : "Send"}
               </button>
             </div>

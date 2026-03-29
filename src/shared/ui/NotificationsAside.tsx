@@ -2,14 +2,8 @@ import { For, Show, type JSX, createSignal } from "solid-js";
 import { Portal } from "solid-js/web";
 import { useNotifications } from "../hooks/useNotifications";
 import type { NotificationType } from "../hooks/notificationService";
-import {
-  BiRegularAt,
-  BiRegularCalendar,
-  BiRegularComment,
-  BiRegularGlobe,
-  BiRegularUserPlus,
-} from "solid-icons/bi";
 import PostDetailModal from "./PostDetailModal";
+import { MdFillAlternate_email, MdFillCalendar_month, MdFillMail, MdFillPublic, MdFillWaving_hand } from "solid-icons/md";
 
 const PANELS: {
   type: NotificationType;
@@ -20,31 +14,31 @@ const PANELS: {
   {
     type: "network",
     label: "Public Stream",
-    icon: <BiRegularGlobe size={17} />,
+    icon: <MdFillPublic size={17} />,
     hasFilter: true,
   },
   {
     type: "dm",
     label: "Direct Messages",
-    icon: <BiRegularComment size={17} />,
+    icon: <MdFillMail size={17} />,
     hasFilter: false,
   },
   {
     type: "home",
     label: "Mentions",
-    icon: <BiRegularAt size={17} />,
+    icon: <MdFillAlternate_email size={17} />,
     hasFilter: false,
   },
   {
     type: "intros",
     label: "Friend Requests",
-    icon: <BiRegularUserPlus size={17} />,
+    icon: <MdFillWaving_hand size={17} />,
     hasFilter: false,
   },
   {
     type: "files",
     label: "System / Files",
-    icon: <BiRegularCalendar size={17} />,
+    icon: <MdFillCalendar_month size={17} />,
     hasFilter: false,
   },
 ];

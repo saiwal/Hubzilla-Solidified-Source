@@ -1,8 +1,8 @@
 import { createSignal, Show, batch, type JSX } from "solid-js";
 import { useSearchParams } from "@solidjs/router";
-import { loadNetwork } from "../store/store";
+import { loadNetwork, loading } from "../store/store";
 import type { NetworkParams } from "../api/api";
-import { BiRegularEnvelope, BiRegularUser, BiSolidStar } from "solid-icons/bi";
+import { MdFillFilter_list, MdFillMail, MdFillPerson, MdFillRefresh, MdFillSearch, MdFillStar } from "solid-icons/md";
 
 type Order = NonNullable<NetworkParams["order"]>;
 
@@ -106,6 +106,16 @@ export default function StreamFilters() {
     <div class="mb-4 space-y-2">
       {/* Row 1: order + toggles + search + expand */}
       <div class="flex items-center gap-2 flex-wrap">
+        <button
+          onClick={() => loadNetwork()}
+          disabled={loading()}
+          title="Refresh"
+          class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+        >
+          <span class={loading() ? "animate-spin inline-block" : ""}>
+            <MdFillRefresh size={18} />
+          </span>
+        </button>
         {/* Segmented order control */}
         <div class="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden shrink-0">
           {ORDER_OPTIONS.map((opt) => (
@@ -127,17 +137,17 @@ export default function StreamFilters() {
         <ToggleChip
           active={star()}
           onClick={() => toggleFlag(star, setStar)}
-          label={<BiSolidStar size={17} />}
+          label={<MdFillStar size={17} />}
         />
         <ToggleChip
           active={conv()}
           onClick={() => toggleFlag(conv, setConv)}
-          label={<BiRegularUser size={17} />}
+          label={<MdFillPerson size={17} />}
         />
         <ToggleChip
           active={dm()}
           onClick={() => toggleFlag(dm, setDm)}
-          label={<BiRegularEnvelope size={17} />}
+          label={<MdFillMail size={17} />}
         />
 
         {/* Spacer */}
@@ -145,19 +155,9 @@ export default function StreamFilters() {
 
         {/* Search */}
         <div class="relative">
-          <svg
-            class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
-            />
-          </svg>
+          <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400">
+            <MdFillSearch size={14} />
+          </span>
           <input
             type="search"
             placeholder="Search…"
@@ -179,20 +179,7 @@ export default function StreamFilters() {
                 : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
             }`}
         >
-          <svg
-            class="w-3.5 h-3.5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M3 4h18M7 8h10M11 12h2M11 16h2"
-            />
-          </svg>
-          Filters
+          <MdFillFilter_list size={14} />
           <Show when={hasAdvanced()}>
             <span class="w-1.5 h-1.5 rounded-full bg-blue-500" />
           </Show>

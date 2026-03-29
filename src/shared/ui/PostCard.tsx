@@ -1,13 +1,13 @@
 import { createSignal } from "solid-js";
 import type { ThreadNode } from "../../shared/hooks/thread";
 import CommentThread from "./CommentThread";
-import { BiRegularLike, BiRegularDislike, BiRegularShareAlt, BiRegularChat, BiRegularSend, BiRegularChevronDown, BiRegularChevronUp } from "solid-icons/bi";
 import {
   handleLike as networkLike,
   handleDislike as networkDislike,
   handleRepeat as networkRepeat,
   handleComment as networkComment,
 } from "../../modules/network/store/store";
+import { MdFillChat, MdFillKeyboard_arrow_down, MdFillKeyboard_arrow_up, MdFillSend, MdFillShare, MdOutlineThumb_down, MdOutlineThumb_up } from "solid-icons/md";
 
 export interface PostActions {
   onLike:    (mid: string, iid: number) => Promise<void>;
@@ -111,7 +111,7 @@ export default function PostCard(props: { post: ThreadNode; actions?: PostAction
       <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center gap-1 flex-wrap">
 
         <ActionBtn
-          icon={<BiRegularLike size={17} />}
+          icon={<MdOutlineThumb_up size={17} />}
           count={props.post.likeCount}
           label="Like"
           onClick={onLike}
@@ -120,7 +120,7 @@ export default function PostCard(props: { post: ThreadNode; actions?: PostAction
         />
 
         <ActionBtn
-          icon={<BiRegularDislike size={17} />}
+          icon={<MdOutlineThumb_down size={17} />}
           count={props.post.dislikeCount}
           label="Dislike"
           onClick={onDislike}
@@ -129,7 +129,7 @@ export default function PostCard(props: { post: ThreadNode; actions?: PostAction
         />
 
         <ActionBtn
-          icon={<BiRegularShareAlt size={17} />}
+          icon={<MdFillShare size={17} />}
           count={props.post.repeatCount}
           label="Repeat"
           onClick={onRepeat}
@@ -147,7 +147,7 @@ export default function PostCard(props: { post: ThreadNode; actions?: PostAction
                    transition-colors"
             title="Toggle comments"
           >
-            {showComments() ? <BiRegularChevronUp size={17} /> : <BiRegularChevronDown size={17} />}
+            {showComments() ? <MdFillKeyboard_arrow_up size={17} /> : <MdFillKeyboard_arrow_down size={17} />}
             <span>{props.post.children.length} comment{props.post.children.length !== 1 ? "s" : ""}</span>
           </button>
         )}
@@ -161,7 +161,7 @@ export default function PostCard(props: { post: ThreadNode; actions?: PostAction
                  transition-colors"
           title="Reply"
         >
-          <BiRegularChat size={17} />
+          <MdFillChat size={17} />
           <span>Reply</span>
         </button>
       </div>
@@ -198,7 +198,7 @@ export default function PostCard(props: { post: ThreadNode; actions?: PostAction
                      disabled:opacity-50 disabled:cursor-not-allowed
                      text-white transition-colors"
             >
-              <BiRegularSend size={15} />
+              <MdFillSend size={15} />
               {submitting() ? "Sending…" : "Send"}
             </button>
           </div>
