@@ -1,4 +1,4 @@
-import { type Component, createResource, Show, Suspense } from "solid-js";
+import { type Component, createResource, For, Show, Suspense } from "solid-js";
 import { resolveSlot } from "../../module-registry";
 import type { SlotsDef } from "../types/module.types";
 
@@ -8,12 +8,8 @@ interface SlotProps {
   fallback?: Component;
 }
 
-export default function Slot(props: SlotProps) {
-  const loader = resolveSlot(props.name, props.moduleId);
-  if (!loader) return null;
-
-  const [mod] = createResource(loader);
-
+function SlotEntry(props: { loader: () => Promise<{ default: Component }> }) {
+  const [mod] = createResource(props.loader);
   return (
     <Suspense fallback={<div class="p-4 text-sm text-gray-400">Loading...</div>}>
       <Show when={mod()}>
@@ -23,5 +19,18 @@ export default function Slot(props: SlotProps) {
         }}
       </Show>
     </Suspense>
+  );
+}
+
+export default function Slot(props: SlotProps) {
+  const raw = resolveSlot(props.name, props.moduleId);
+  if (!raw) return null;
+
+  const loaders = Array.isArray(raw) ? raw : [raw];
+
+  return (
+    <For each={loaders}>
+      {(loader) => <SlotEntry loader={loader} />}
+    </For>
   );
 }

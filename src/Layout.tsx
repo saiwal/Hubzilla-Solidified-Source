@@ -1,5 +1,6 @@
-import { type ParentComponent, createSignal, Show } from "solid-js";
+import { type ParentComponent, createSignal, Show, createMemo } from "solid-js";
 import { For } from "solid-js";
+import { useLocation } from "@solidjs/router";
 import NavItem from "./shared/ui/NavItem";
 import { useNav } from "./shared/hooks/useNav";
 import ThemeToggle from "./shared/ui/ThemeToggle";
@@ -10,6 +11,14 @@ const Layout: ParentComponent = (props) => {
   const [rightOpen, setRightOpen] = createSignal(false);
   const [navOpen, setNavOpen] = createSignal(false);
   const navItems = useNav();
+  const location = useLocation();
+
+  // Derive active module id from first path segment: "/channel/nick" → "channel"
+  const activeModuleId = createMemo(() => {
+    const segment = location.pathname.split("/").filter(Boolean)[0];
+    return segment ?? "";
+  });
+
   const closeAll = () => {
     setRightOpen(false);
     setNavOpen(false);
@@ -24,8 +33,7 @@ const Layout: ParentComponent = (props) => {
           <nav class="space-y-2 flex-1 overflow-y-auto">
             <For each={navItems()}>{(item) => <NavItem {...item} />}</For>
           </nav>
-          {/* optional module-injected widget below nav */}
-          <Slot name="leftBottom" />
+          <Slot name="leftBottom" moduleId={activeModuleId()} />
           <LanguageSwitcher />
           <ThemeToggle />
         </aside>
@@ -45,7 +53,7 @@ const Layout: ParentComponent = (props) => {
           ${rightOpen() ? "translate-x-0" : "translate-x-full"}
         `}
         >
-          <Slot name="right" />
+          <Slot name="right" moduleId={activeModuleId()} />
         </aside>
 
         {/* Backdrop */}
@@ -88,18 +96,8 @@ const Layout: ParentComponent = (props) => {
             }}
             class={`p-2 rounded-lg transition-colors ${navOpen() ? "bg-gray-200 dark:bg-gray-700" : "hover:bg-gray-100 dark:hover:bg-gray-700"}`}
           >
-            <svg
-              class="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M3 12h18M3 6h18M3 18h18"
-              />
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12h18M3 6h18M3 18h18" />
             </svg>
           </button>
           <button
@@ -109,18 +107,8 @@ const Layout: ParentComponent = (props) => {
             }}
             class={`p-2 rounded-lg transition-colors ${rightOpen() ? "bg-gray-200 dark:bg-gray-700" : "hover:bg-gray-100 dark:hover:bg-gray-700"}`}
           >
-            <svg
-              class="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 6h7M13 12h7M13 18h7M4 6h1M4 12h1M4 18h1"
-              />
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 6h7M13 12h7M13 18h7M4 6h1M4 12h1M4 18h1" />
             </svg>
           </button>
         </nav>
@@ -132,18 +120,8 @@ const Layout: ParentComponent = (props) => {
                  border border-gray-200 dark:border-gray-700 hidden lg:flex xl:hidden
                  items-center justify-center transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
         >
-          <svg
-            class="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M13 6h7M13 12h7M13 18h7M4 6h1M4 12h1M4 18h1"
-            />
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 6h7M13 12h7M13 18h7M4 6h1M4 12h1M4 18h1" />
           </svg>
         </button>
       </div>

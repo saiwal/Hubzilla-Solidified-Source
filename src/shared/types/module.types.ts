@@ -1,15 +1,17 @@
 import { type Component } from "solid-js";
 
 export interface NavItemDef {
-  label: string  | (() => string);
+  label: string | (() => string);
   icon: string;
   path: string;
   href: string;
 }
 
+type SlotLoader = () => Promise<{ default: Component }>;
+
 export interface SlotsDef {
-  right?: () => Promise<{ default: Component }>;
-  leftBottom?: () => Promise<{ default: Component }>;
+  right?: SlotLoader | SlotLoader[];
+  leftBottom?: SlotLoader | SlotLoader[];
 }
 
 export interface ModuleDef {
