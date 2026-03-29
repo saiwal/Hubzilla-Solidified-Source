@@ -2,8 +2,8 @@
 import { type Component, createResource, Show } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import PostCard, { type PostActions } from './PostCard';
-import type { ThreadNode } from '../hooks/thread';
-import { buildThreadTree } from '../hooks/thread';
+import type { ThreadNode } from '../lib/thread';
+import { buildThreadTree } from '../lib/thread';
 import type { Post } from '../types/post.types';
 
 interface DisplayResponse {

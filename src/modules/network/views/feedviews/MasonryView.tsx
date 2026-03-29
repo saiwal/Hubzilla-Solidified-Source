@@ -1,6 +1,6 @@
 // components/views/MasonryView.tsx
 import { For, Show, createSignal } from 'solid-js';
-import type { ThreadNode } from '../../../../shared/hooks/thread';
+import type { ThreadNode } from '../../../../shared/lib/thread';
 import { handleLike, handleRepeat } from '../../../network/store/store';
 import PostDetailModal from '../../../../shared/views/PostDetailModal';
 

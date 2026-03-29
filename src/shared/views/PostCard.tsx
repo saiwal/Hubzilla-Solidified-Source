@@ -1,5 +1,5 @@
 import { createSignal } from "solid-js";
-import type { ThreadNode } from "../../shared/hooks/thread";
+import type { ThreadNode } from "../lib/thread";
 import CommentThread from "./CommentThread";
 import {
   handleLike as networkLike,

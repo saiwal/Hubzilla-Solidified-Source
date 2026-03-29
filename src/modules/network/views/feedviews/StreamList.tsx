@@ -1,5 +1,5 @@
 import { For } from "solid-js";
-import type { ThreadNode } from "../../../../shared/hooks/thread";
+import type { ThreadNode } from "../../../../shared/lib/thread";
 import PostCard from "../../../../shared/views/PostCard";
 import { Match, Switch } from 'solid-js';
 import { viewMode } from '../../../network/store/store';

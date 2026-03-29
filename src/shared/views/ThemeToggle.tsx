@@ -1,5 +1,5 @@
 import { MdFillDark_mode, MdFillLight_mode } from "solid-icons/md";
-import { useTheme } from "../hooks/useTheme";
+import { useTheme } from "../lib/useTheme";
 
 const ThemeToggle = () => {
   const { theme, toggle } = useTheme();

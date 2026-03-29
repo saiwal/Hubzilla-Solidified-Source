@@ -1,7 +1,7 @@
 import { For, Show, type JSX, createSignal } from "solid-js";
 import { Portal } from "solid-js/web";
-import { useNotifications } from "../hooks/useNotifications";
-import type { NotificationType } from "../hooks/notificationService";
+import { useNotifications } from "../lib/useNotifications";
+import type { NotificationType } from "../lib/notificationService";
 import PostDetailModal from "./PostDetailModal";
 import { MdFillAlternate_email, MdFillCalendar_month, MdFillMail, MdFillPublic, MdFillWaving_hand } from "solid-icons/md";
 

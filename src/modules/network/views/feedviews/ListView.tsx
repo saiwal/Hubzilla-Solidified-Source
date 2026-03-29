@@ -1,6 +1,6 @@
 // components/views/ListView.tsx
 import { For, Show } from 'solid-js';
-import type { ThreadNode } from '../../../../shared/hooks/thread';
+import type { ThreadNode } from '../../../../shared/lib/thread';
 import { handleLike , handleRepeat} from '../../../network/store/store';
 
 

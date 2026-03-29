@@ -1,8 +1,8 @@
 import { createSignal } from "solid-js";
 import { fetchNetworkStream, toggleVerb, postComment } from "../api/api";
 import type { NetworkParams } from "../api/api";
-import { buildThreadTree } from "../../../shared/hooks/thread";
-import type { ThreadNode } from "../../../shared/hooks/thread";
+import { buildThreadTree } from "../../../shared/lib/thread";
+import type { ThreadNode } from "../../../shared/lib/thread";
 import type { Post } from "../../../shared/types/post.types";
 
 const PAGE_SIZE = 10;

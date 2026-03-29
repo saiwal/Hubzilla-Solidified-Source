@@ -5,7 +5,7 @@ import {
   postComment as apiPostComment,
   type ChannelParams,
 } from "../api/api";
-import { buildThreadTree, type ThreadNode } from "../../../shared/hooks/thread";
+import { buildThreadTree, type ThreadNode } from "../../../shared/lib/thread";
 // import { toggleVerb, postComment as apiPostComment } from "../api/api";
 
 const [posts, setPosts] = createSignal<ThreadNode[]>([]);

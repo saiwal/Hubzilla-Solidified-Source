@@ -1,6 +1,6 @@
 import { moduleGet } from "../../../shared/api/client";
 import type { Post } from "../../../shared/types/post.types.ts";
-import { mapActivityToPost } from "../../../shared/hooks/activity.mapper";
+import { mapActivityToPost } from "../../../shared/lib/activity.mapper.ts";
 
 const HIDDEN_VERBS = new Set(['Like', 'Dislike', 'Announce', 'Accept', 'Reject', 'TentativeAccept']);
 

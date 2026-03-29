@@ -1,6 +1,6 @@
 // mappers/activity.mapper.ts
-import { sanitizeHtml } from "../../shared/hooks/sanitize";
-import { bbcodeToHtml } from "../../shared/hooks/bbcode";
+import { sanitizeHtml } from "../../shared/lib/sanitize";
+import { bbcodeToHtml } from "../../shared/lib/bbcode";
 import type { Post } from "../../shared/types/post.types";
 
 // Verbs that represent actual displayable content

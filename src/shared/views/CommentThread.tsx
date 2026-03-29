@@ -1,5 +1,5 @@
 import { For } from "solid-js";
-import type { ThreadNode } from "../../shared/hooks/thread";
+import type { ThreadNode } from "../lib/thread";
 import PostCard from "./PostCard";
 
 export default function CommentThread(props: { comments: ThreadNode[]; show: boolean }) {

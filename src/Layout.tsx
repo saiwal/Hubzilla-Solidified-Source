@@ -2,7 +2,7 @@ import { type ParentComponent, createSignal, Show, createMemo } from "solid-js";
 import { For } from "solid-js";
 import { useLocation } from "@solidjs/router";
 import NavItem from "./shared/views/NavItem";
-import { useNav } from "./shared/hooks/useNav";
+import { useNav } from "./shared/lib/useNav";
 import ThemeToggle from "./shared/views/ThemeToggle";
 import LanguageSwitcher from "./shared/views/LanguageSwitcher";
 import Slot from "./shared/views/Slot";
