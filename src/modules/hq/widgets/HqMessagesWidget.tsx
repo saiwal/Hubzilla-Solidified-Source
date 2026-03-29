@@ -1,4 +1,4 @@
-import PostDetailModal from '../../../shared/ui/PostDetailModal';
+import PostDetailModal from '../../../shared/views/PostDetailModal';
 import {
   createSignal,
   createEffect,

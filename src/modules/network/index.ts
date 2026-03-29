@@ -13,7 +13,7 @@ registerModule({
     href: "/network",
   },
   slots: {
-    right: () => import("../../shared/ui/NotificationsAside"),
+    right: () => import("../../shared/views/NotificationsAside"),
   },
   permissions: [],
 });

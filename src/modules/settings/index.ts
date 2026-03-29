@@ -11,7 +11,7 @@ registerModule({
     href: "/settings",
   },
   slots: {
-    right: () => import("../../shared/ui/NotificationsAside"),
+    right: () => import("../../shared/views/NotificationsAside"),
   },
   permissions: [],
 });

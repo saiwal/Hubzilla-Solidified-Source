@@ -2,7 +2,7 @@
 import { For, Show, createSignal } from 'solid-js';
 import type { ThreadNode } from '../../../../shared/hooks/thread';
 import { handleLike, handleRepeat } from '../../../network/store/store';
-import PostDetailModal from '../../../../shared/ui/PostDetailModal';
+import PostDetailModal from '../../../../shared/views/PostDetailModal';
 
 function MasonryCard(props: { post: ThreadNode }) {
   const p = props.post;

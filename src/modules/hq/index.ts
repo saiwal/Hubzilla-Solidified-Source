@@ -12,7 +12,7 @@ registerModule({
   },
   slots: {
     right: [
-      () => import("../../shared/ui/NotificationsAside"),
+      () => import("../../shared/views/NotificationsAside"),
       () => import("./widgets/HqMessagesWidget"),
 			() => import("./widgets/ComposerWidget"),
     ],
