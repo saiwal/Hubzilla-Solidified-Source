@@ -14,6 +14,7 @@ registerModule({
     right: [
       () => import("../../shared/ui/NotificationsAside"),
       () => import("./widgets/HqMessagesWidget"),
+			() => import("./widgets/ComposerWidget"),
     ],
   },
   permissions: [],

@@ -49,7 +49,7 @@ const Layout: ParentComponent = (props) => {
           fixed inset-y-0 right-0 z-40 w-64 shrink-0
           bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 p-4 overflow-y-auto
           transform transition-transform duration-300 ease-in-out
-          xl:relative xl:translate-x-0 xl:block
+          xl:relative xl:translate-x-0 xl:block space-y-4
           ${rightOpen() ? "translate-x-0" : "translate-x-full"}
         `}
         >
@@ -96,8 +96,18 @@ const Layout: ParentComponent = (props) => {
             }}
             class={`p-2 rounded-lg transition-colors ${navOpen() ? "bg-gray-200 dark:bg-gray-700" : "hover:bg-gray-100 dark:hover:bg-gray-700"}`}
           >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12h18M3 6h18M3 18h18" />
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 12h18M3 6h18M3 18h18"
+              />
             </svg>
           </button>
           <button
@@ -107,8 +117,18 @@ const Layout: ParentComponent = (props) => {
             }}
             class={`p-2 rounded-lg transition-colors ${rightOpen() ? "bg-gray-200 dark:bg-gray-700" : "hover:bg-gray-100 dark:hover:bg-gray-700"}`}
           >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 6h7M13 12h7M13 18h7M4 6h1M4 12h1M4 18h1" />
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 6h7M13 12h7M13 18h7M4 6h1M4 12h1M4 18h1"
+              />
             </svg>
           </button>
         </nav>
@@ -120,8 +140,18 @@ const Layout: ParentComponent = (props) => {
                  border border-gray-200 dark:border-gray-700 hidden lg:flex xl:hidden
                  items-center justify-center transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 6h7M13 12h7M13 18h7M4 6h1M4 12h1M4 18h1" />
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 6h7M13 12h7M13 18h7M4 6h1M4 12h1M4 18h1"
+            />
           </svg>
         </button>
       </div>

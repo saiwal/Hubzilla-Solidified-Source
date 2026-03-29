@@ -79,40 +79,28 @@ const TABS: { type: MessageType; label: string; icon: string }[] = [
 
 const MessageItem: Component<{ entry: MessageEntry }> = (props) => {
   const e = props.entry;
-
   const [showModal, setShowModal] = createSignal(false);
   return (
-    <div 
+    <div
       onclick={() => setShowModal(true)}
-      class="flex gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700/60 transition-colors relative group"
+      class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700/60 transition-colors relative group cursor-pointer"
     >
-      <img
-        src={e.author_img}
-        loading="lazy"
-        class="w-9 h-9 rounded-full shrink-0 mt-0.5 object-cover bg-gray-200 dark:bg-gray-600"
-        onError={(ev) => { (ev.target as HTMLImageElement).style.display = "none"; }}
-      />
-      <div class="min-w-0 flex-1">
-        <div class="flex items-center justify-between gap-2 mb-0.5">
-          <span class="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">
-            {e.author_name}
-          </span>
-          <span class="text-xs text-gray-400 dark:text-gray-500 shrink-0">
-            {timeAgo(e.created)}
-          </span>
-        </div>
-        <div class="text-xs text-gray-400 dark:text-gray-500 truncate mb-1">
-          {e.author_addr}
-        </div>
-        <div class="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
-          {e.summary}
-        </div>
-        <Show when={e.info}>
-          <div class="text-xs text-gray-400 dark:text-gray-500 mt-1 truncate">
-            {e.info}
-          </div>
-        </Show>
+      <div class="flex items-center justify-between gap-2 mb-1">
+        <span class="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">
+          {e.author_name}
+        </span>
+        <span class="text-xs text-gray-400 dark:text-gray-500 shrink-0">
+          {timeAgo(e.created)}
+        </span>
       </div>
+      <div class="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+        {e.summary}
+      </div>
+      <Show when={e.info}>
+        <div class="text-xs text-gray-400 dark:text-gray-500 mt-1 truncate">
+          {e.info}
+        </div>
+      </Show>
       <Show when={e.unseen_count > 0}>
         <span class={`absolute bottom-3 right-3 text-xs font-medium px-1.5 py-0.5 rounded-full border
           ${e.unseen_class === "danger"
@@ -122,14 +110,12 @@ const MessageItem: Component<{ entry: MessageEntry }> = (props) => {
           {e.unseen_count}
         </span>
       </Show>
-<Show when={showModal()}>
+      <Show when={showModal()}>
         <PostDetailModal uuid={e.b64mid} onClose={() => setShowModal(false)} />
       </Show>
-
     </div>
   );
 };
-
 // ── Main widget ──────────────────────────────────────────────────────────────
 
 export default function HqMessagesWidget() {
@@ -222,7 +208,6 @@ export default function HqMessagesWidget() {
               <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={tab.icon} />
               </svg>
-              <span class="hidden sm:inline">{tab.label}</span>
             </button>
           )}
         </For>
