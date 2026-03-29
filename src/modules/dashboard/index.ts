@@ -15,3 +15,4 @@ registerModule({
   },
   permissions: [],
 });
+
