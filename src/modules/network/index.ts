@@ -11,6 +11,7 @@ registerModule({
     icon: "grid",
     path: "/network",
     href: "/network",
+		context: "owner", 
   },
   slots: {
     right: () => import("../../shared/views/NotificationsAside"),

@@ -1,10 +1,13 @@
 import { type Component } from "solid-js";
 
+export type NavContext = "owner" | "local" | "remote" | "anonymous" | "all";
+
 export interface NavItemDef {
   label: string | (() => string);
   icon: string;
   path: string;
-  href: string;
+  href: string | (() => string);
+  context?: NavContext | NavContext[]; // single or array of allowed roles
 }
 
 type SlotLoader = () => Promise<{ default: Component }>;
@@ -12,6 +15,8 @@ type SlotLoader = () => Promise<{ default: Component }>;
 export interface SlotsDef {
   right?: SlotLoader | SlotLoader[];
   leftBottom?: SlotLoader | SlotLoader[];
+  mainTop?: SlotLoader | SlotLoader[];
+  rightVisitor?: SlotLoader | SlotLoader[];
 }
 
 export interface ModuleDef {

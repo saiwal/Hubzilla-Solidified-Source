@@ -20,21 +20,21 @@ async function fetchAuthState(): Promise<AuthState> {
   const data = await res.json();
   if (data.error) return ANONYMOUS;
 
-  const nick = data.channel_nick ?? "";
+  const nick = data.channel ?? "";
   const uid = Number(data.uid ?? 0);
-  const isLocal = Boolean(data.is_local);
+  // No is_local field — if uid > 0 and channel is set, it's a local user
+  const isLocal = uid > 0 && nick !== "";
 
   return {
     isLocal,
-    isLoggedIn: nick !== "",   // remote visitors have a nick too
+    isLoggedIn: nick !== "",
     nick,
     uid,
   };
 }
-
 // Singleton resource — fetched once at boot, shared across the app
 const [authState] = createResource<AuthState>(fetchAuthState, {
-  initialValue: ANONYMOUS,
+  // initialValue: ANONYMOUS,
 });
 
 export function useAuth() {

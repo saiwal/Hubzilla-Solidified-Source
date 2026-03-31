@@ -1,6 +1,25 @@
+import { createMemo } from "solid-js";
 import { getNavItems } from "../../module-registry";
+import { useViewerRole, type ViewerRole } from "../store/site-config";
+import { useAuth } from "../store/auth-store";
+import type { NavItemDef } from "../types/module.types";
 
-// now just a thin wrapper — nav is driven by registered modules
+function isVisible(item: NavItemDef, role: ViewerRole): boolean {
+  const ctx = item.context ?? "local";
+  const allowed = Array.isArray(ctx) ? ctx : [ctx];
+  console.log("isVisible:", { label: item.label, allowed, role, result: allowed.includes("all") || allowed.includes(role) });
+  if (allowed.includes("all")) return true;
+  return allowed.includes(role);
+}
+
 export function useNav() {
-  return getNavItems();
+  const auth = useAuth();
+  const role = useViewerRole();
+  const allItems = getNavItems();
+
+  return createMemo(() => {
+    const a = auth();
+    if (!a) return []; // still loading
+    return allItems().filter((item) => isVisible(item, role()));
+  });
 }

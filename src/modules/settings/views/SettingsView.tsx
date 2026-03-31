@@ -11,6 +11,7 @@ export default function Settings() {
     const data = Object.fromEntries(new FormData(form));
     setSaving(true);
     try {
+			const prevTheme = settings()?.theme;
       await saveDisplaySettings({
 				theme:           String(data.theme),
         thread_allow:    Number(data.thread_allow),
@@ -21,8 +22,12 @@ export default function Settings() {
         start_menu:      Number(data.start_menu),
         user_scalable:   Number(data.user_scalable),
       });
-      refetch();
-    } finally {
+			if (String(data.theme) !== prevTheme) {
+				window.location.reload();
+      } else {
+				refetch();
+			}
+	    } finally {
       setSaving(false);
     }
   }

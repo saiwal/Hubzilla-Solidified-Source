@@ -1,4 +1,4 @@
-import { createSignal, Show, batch, type JSX } from "solid-js";
+import { createSignal, Show, type JSX } from "solid-js";
 import { useSearchParams } from "@solidjs/router";
 import { loadNetwork, loading } from "../store/store";
 import type { NetworkParams } from "../api/api";
@@ -12,22 +12,29 @@ const ORDER_OPTIONS: { value: Order; label: string }[] = [
   { value: "unthreaded", label: "All" },
 ];
 
-export default function StreamFilters() {
-  const [, setSearchParams] = useSearchParams();
+const str = (v: string | string[] | undefined): string =>
+  Array.isArray(v) ? (v[0] ?? "") : (v ?? "");
 
-  const [order, setOrder] = createSignal<Order>("created");
-  const [search, setSearch] = createSignal("");
-  const [tag, setTag] = createSignal("");
-  const [star, setStar] = createSignal(false);
-  const [conv, setConv] = createSignal(false);
-  const [dm, setDm] = createSignal(false);
-  const [dbegin, setDbegin] = createSignal("");
-  const [dend, setDend] = createSignal("");
-  const [cmin, setCmin] = createSignal("");
-  const [cmax, setCmax] = createSignal("");
+export default function StreamFilters() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [expanded, setExpanded] = createSignal(false);
 
+  const order = (): Order => (str(searchParams.order) as Order) || "created";
+  const search = () => str(searchParams.search);
+  const tag = () => str(searchParams.tag);
+  const star = () => searchParams.star === "1";
+  const conv = () => searchParams.conv === "1";
+  const dm = () => searchParams.dm === "1";
+  const dbegin = () => str(searchParams.dbegin);
+  const dend = () => str(searchParams.dend);
+  const cmin = () => str(searchParams.cmin);
+  const cmax = () => str(searchParams.cmax);
+
   let searchTimer: ReturnType<typeof setTimeout>;
+
+  function sp(overrides: Record<string, string | undefined>) {
+    setSearchParams({ ...overrides }, { replace: true });
+  }
 
   function buildParams(): NetworkParams {
     const p: NetworkParams = { order: order() };
@@ -44,67 +51,41 @@ export default function StreamFilters() {
   }
 
   function apply() {
-    const p = buildParams();
-    // Sync to URL
-    const sp: Record<string, string> = { order: order() };
-    if (p.search) sp.search = p.search;
-    if (p.tag) sp.tag = p.tag;
-    if (p.star) sp.star = "1";
-    if (p.conv) sp.conv = "1";
-    if (p.dm) sp.dm = "1";
-    if (p.dbegin) sp.dbegin = p.dbegin;
-    if (p.dend) sp.dend = p.dend;
-    if (p.cmin) sp.cmin = String(p.cmin);
-    if (p.cmax) sp.cmax = String(p.cmax);
-    setSearchParams(sp);
-    loadNetwork(p);
+    loadNetwork(buildParams());
   }
 
   function setOrderAndApply(o: Order) {
-    setOrder(o);
-    // createEffect would be async — call apply() after state settles
+    sp({ order: o });
     setTimeout(apply, 0);
   }
 
-  function toggleFlag(get: () => boolean, set: (v: boolean) => void) {
-    set(!get());
+  function toggleFlag(key: string, current: boolean) {
+    sp({ [key]: current ? undefined : "1" });
     setTimeout(apply, 0);
   }
 
   function onSearchInput(val: string) {
-    setSearch(val);
+    sp({ search: val || undefined });
     clearTimeout(searchTimer);
     searchTimer = setTimeout(apply, 400);
   }
 
   function clearAll() {
-    batch(() => {
-      setOrder("created");
-      setSearch("");
-      setTag("");
-      setStar(false);
-      setConv(false);
-      setDm(false);
-      setDbegin("");
-      setDend("");
-      setCmin("");
-      setCmax("");
-    });
+    setSearchParams(
+      { order: undefined, search: undefined, tag: undefined,
+        star: undefined, conv: undefined, dm: undefined,
+        dbegin: undefined, dend: undefined, cmin: undefined, cmax: undefined },
+      { replace: true }
+    );
     setTimeout(apply, 0);
   }
 
   const hasAdvanced = () => tag() || dbegin() || dend() || cmin() || cmax();
   const hasAnyFilter = () =>
-    order() !== "created" ||
-    search() ||
-    star() ||
-    conv() ||
-    dm() ||
-    hasAdvanced();
+    order() !== "created" || search() || star() || conv() || dm() || hasAdvanced();
 
   return (
     <div class="mb-4 space-y-2">
-      {/* Row 1: order + toggles + search + expand */}
       <div class="flex items-center gap-2 flex-wrap">
         <button
           onClick={() => loadNetwork()}
@@ -116,16 +97,15 @@ export default function StreamFilters() {
             <MdFillRefresh size={18} />
           </span>
         </button>
-        {/* Segmented order control */}
+
         <div class="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden shrink-0">
           {ORDER_OPTIONS.map((opt) => (
             <button
               onClick={() => setOrderAndApply(opt.value)}
               class={`px-3 py-1.5 text-sm font-medium transition-colors
-                ${
-                  order() === opt.value
-                    ? "bg-blue-600 text-white"
-                    : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                ${order() === opt.value
+                  ? "bg-blue-600 text-white"
+                  : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                 }`}
             >
               {opt.label}
@@ -133,27 +113,12 @@ export default function StreamFilters() {
           ))}
         </div>
 
-        {/* Flag toggles */}
-        <ToggleChip
-          active={star()}
-          onClick={() => toggleFlag(star, setStar)}
-          label={<MdFillStar size={17} />}
-        />
-        <ToggleChip
-          active={conv()}
-          onClick={() => toggleFlag(conv, setConv)}
-          label={<MdFillPerson size={17} />}
-        />
-        <ToggleChip
-          active={dm()}
-          onClick={() => toggleFlag(dm, setDm)}
-          label={<MdFillMail size={17} />}
-        />
+        <ToggleChip active={star()} onClick={() => toggleFlag("star", star())} label={<MdFillStar size={17} />} />
+        <ToggleChip active={conv()} onClick={() => toggleFlag("conv", conv())} label={<MdFillPerson size={17} />} />
+        <ToggleChip active={dm()}   onClick={() => toggleFlag("dm",   dm())}   label={<MdFillMail size={17} />} />
 
-        {/* Spacer */}
         <div class="flex-1" />
 
-        {/* Search */}
         <div class="relative">
           <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400">
             <MdFillSearch size={14} />
@@ -169,14 +134,12 @@ export default function StreamFilters() {
           />
         </div>
 
-        {/* Advanced toggle */}
         <button
           onClick={() => setExpanded((e) => !e)}
           class={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border transition-colors
-            ${
-              expanded() || hasAdvanced()
-                ? "border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
-                : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+            ${expanded() || hasAdvanced()
+              ? "border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+              : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
             }`}
         >
           <MdFillFilter_list size={14} />
@@ -185,7 +148,6 @@ export default function StreamFilters() {
           </Show>
         </button>
 
-        {/* Clear all */}
         <Show when={hasAnyFilter()}>
           <button
             onClick={clearAll}
@@ -197,21 +159,16 @@ export default function StreamFilters() {
         </Show>
       </div>
 
-      {/* Row 2: advanced panel */}
       <Show when={expanded()}>
-        <div
-          class="flex flex-wrap gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/60
-                    border border-gray-200 dark:border-gray-700"
-        >
+        <div class="flex flex-wrap gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/60
+                    border border-gray-200 dark:border-gray-700">
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">
-              Tag
-            </span>
+            <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Tag</span>
             <input
               type="text"
               placeholder="e.g. solidjs"
               value={tag()}
-              onInput={(e) => setTag(e.currentTarget.value)}
+              onInput={(e) => { sp({ tag: e.currentTarget.value || undefined }); }}
               onBlur={apply}
               onKeyDown={(e) => e.key === "Enter" && apply()}
               class={inputCls}
@@ -219,60 +176,42 @@ export default function StreamFilters() {
           </label>
 
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">
-              From date
-            </span>
+            <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">From date</span>
             <input
               type="date"
               value={dbegin()}
-              onChange={(e) => {
-                setDbegin(e.currentTarget.value);
-                apply();
-              }}
+              onChange={(e) => { sp({ dbegin: e.currentTarget.value || undefined }); apply(); }}
               class={inputCls}
             />
           </label>
 
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">
-              To date
-            </span>
+            <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">To date</span>
             <input
               type="date"
               value={dend()}
-              onChange={(e) => {
-                setDend(e.currentTarget.value);
-                apply();
-              }}
+              onChange={(e) => { sp({ dend: e.currentTarget.value || undefined }); apply(); }}
               class={inputCls}
             />
           </label>
 
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">
-              Min Affinity
-            </span>
+            <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Min Affinity</span>
             <input
-              type="number"
-              min="0"
-              placeholder="0"
+              type="number" min="0" placeholder="0"
               value={cmin()}
-              onInput={(e) => setCmin(e.currentTarget.value)}
+              onInput={(e) => sp({ cmin: e.currentTarget.value || undefined })}
               onBlur={apply}
               class={`${inputCls} w-24`}
             />
           </label>
 
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">
-              Max Affinity
-            </span>
+            <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Max Affinity</span>
             <input
-              type="number"
-              min="0"
-              placeholder="100"
+              type="number" min="0" placeholder="100"
               value={cmax()}
-              onInput={(e) => setCmax(e.currentTarget.value)}
+              onInput={(e) => sp({ cmax: e.currentTarget.value || undefined })}
               onBlur={apply}
               class={`${inputCls} w-24`}
             />
@@ -296,10 +235,9 @@ function ToggleChip(props: {
     <button
       onClick={props.onClick}
       class={`px-3 py-1.5 text-sm rounded-lg border transition-colors shrink-0
-        ${
-          props.active
-            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-            : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+        ${props.active
+          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+          : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
         }`}
     >
       {props.label}

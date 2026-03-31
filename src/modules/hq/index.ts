@@ -9,6 +9,7 @@ registerModule({
     icon: "grid",
     path: "/hq",
     href: "/hq",
+		context: "owner",
   },
   slots: {
     right: [
@@ -16,6 +17,9 @@ registerModule({
       () => import("./widgets/HqMessagesWidget"),
 			() => import("./widgets/ComposerWidget"),
     ],
+		leftBottom: [
+			() => import("./widgets/ComposerWidget"),
+		]
   },
   permissions: [],
 });
