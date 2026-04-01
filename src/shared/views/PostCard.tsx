@@ -7,46 +7,72 @@ import {
   handleRepeat as networkRepeat,
   handleComment as networkComment,
 } from "../../modules/network/store/store";
-import { MdFillChat, MdFillKeyboard_arrow_down, MdFillKeyboard_arrow_up, MdFillSend, MdFillShare, MdOutlineThumb_down, MdOutlineThumb_up } from "solid-icons/md";
+import {
+  MdFillChat,
+  MdFillKeyboard_arrow_down,
+  MdFillKeyboard_arrow_up,
+  MdFillSend,
+  MdFillShare,
+  MdOutlineThumb_down,
+  MdOutlineThumb_up,
+} from "solid-icons/md";
 
 export interface PostActions {
-  onLike:    (mid: string, iid: number) => Promise<void>;
+  onLike: (mid: string, iid: number) => Promise<void>;
   onDislike: (mid: string, iid: number) => Promise<void>;
-  onRepeat:  (mid: string, iid: number) => Promise<void>;
-  onComment: (parentMid: string, parentIid: number, body: string, authorName: string, authorAvatar: string) => Promise<void>;
+  onRepeat: (mid: string, iid: number) => Promise<void>;
+  onComment: (
+    parentMid: string,
+    parentIid: number,
+    body: string,
+    authorName: string,
+    authorAvatar: string,
+  ) => Promise<void>;
 }
 
 const networkActions: PostActions = {
-  onLike:    networkLike,
+  onLike: networkLike,
   onDislike: networkDislike,
-  onRepeat:  networkRepeat,
+  onRepeat: networkRepeat,
   onComment: networkComment,
 };
 
-export default function PostCard(props: { post: ThreadNode; actions?: PostActions }) {
+export default function PostCard(props: {
+  post: ThreadNode;
+  actions?: PostActions;
+}) {
   const getActions = () => props.actions ?? networkActions;
-  const [replyOpen, setReplyOpen]     = createSignal(false);
+  const [replyOpen, setReplyOpen] = createSignal(false);
   const [showComments, setShowComments] = createSignal(false);
-  const [replyBody, setReplyBody]     = createSignal("");
-  const [submitting, setSubmitting]   = createSignal(false);
+  const [replyBody, setReplyBody] = createSignal("");
+  const [submitting, setSubmitting] = createSignal(false);
   const [actionError, setActionError] = createSignal<string | null>(null);
 
   async function onLike() {
     setActionError(null);
-    try { await getActions().onLike(props.post.mid, props.post.iid!); }
-    catch { setActionError("Like failed"); }
+    try {
+      await getActions().onLike(props.post.mid, props.post.iid!);
+    } catch {
+      setActionError("Like failed");
+    }
   }
 
   async function onDislike() {
     setActionError(null);
-    try { await getActions().onDislike(props.post.mid, props.post.iid!); }
-    catch { setActionError("Dislike failed"); }
+    try {
+      await getActions().onDislike(props.post.mid, props.post.iid!);
+    } catch {
+      setActionError("Dislike failed");
+    }
   }
 
   async function onRepeat() {
     setActionError(null);
-    try { await getActions().onRepeat(props.post.mid, props.post.iid!); }
-    catch { setActionError("Repeat failed"); }
+    try {
+      await getActions().onRepeat(props.post.mid, props.post.iid!);
+    } catch {
+      setActionError("Repeat failed");
+    }
   }
 
   async function submitComment() {
@@ -74,7 +100,6 @@ export default function PostCard(props: { post: ThreadNode; actions?: PostAction
 
   return (
     <div class="bg-white dark:bg-gray-800  border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 mb-4 shadow-sm hover:shadow-md transition-shadow duration-200">
-
       {/* Header */}
       <div class="flex items-start gap-3">
         <img
@@ -84,21 +109,26 @@ export default function PostCard(props: { post: ThreadNode; actions?: PostAction
           class="rounded-full object-cover ring-1 ring-zinc-200 dark:ring-zinc-700"
         />
         <div class="flex flex-col">
-          <a href={props.post.authorUrl} class="font-semibold text-zinc-900 dark:text-zinc-100 hover:underline">{props.post.authorName}</a>
+          <a
+            href={props.post.authorUrl}
+            class="font-semibold text-zinc-900 dark:text-zinc-100 hover:underline"
+          >
+            {props.post.authorName}
+          </a>
           <span class="text-sm text-zinc-500 dark:text-zinc-400">
             {new Date(props.post.created).toLocaleString()}
           </span>
         </div>
       </div>
       {/* Title */}
-<div
-  class="mt-6 text-md md:text-lg font-bold tracking-tight text-zinc-900 dark:text-white leading-tight"
-  innerHTML={props.post.title}
-/>
+      <div
+        class="mt-6 text-md md:text-lg font-bold tracking-tight text-zinc-900 dark:text-white leading-tight"
+        innerHTML={props.post.title}
+      />
 
       {/* Body */}
       <div
-        class="mt-4 text-zinc-800 dark:text-zinc-200 leading-relaxed prose prose-zinc dark:prose-invert max-w-none"
+        class="mt-4 text-zinc-800 dark:text-zinc-200 leading-relaxed prose prose-zinc dark:prose-invert max-w-none break-all"
         innerHTML={props.post.body}
       />
 
@@ -109,7 +139,6 @@ export default function PostCard(props: { post: ThreadNode; actions?: PostAction
 
       {/* Action bar */}
       <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center gap-1 flex-wrap">
-
         <ActionBtn
           icon={<MdOutlineThumb_up size={17} />}
           count={props.post.likeCount}
@@ -139,7 +168,7 @@ export default function PostCard(props: { post: ThreadNode; actions?: PostAction
 
         {props.post.children.length > 0 && (
           <button
-            onClick={() => setShowComments(v => !v)}
+            onClick={() => setShowComments((v) => !v)}
             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
                    text-zinc-500 dark:text-zinc-400
                    hover:bg-zinc-100 dark:hover:bg-zinc-800
@@ -147,13 +176,23 @@ export default function PostCard(props: { post: ThreadNode; actions?: PostAction
                    transition-colors"
             title="Toggle comments"
           >
-            {showComments() ? <MdFillKeyboard_arrow_up size={17} /> : <MdFillKeyboard_arrow_down size={17} />}
-            <span>{props.post.children.length} comment{props.post.children.length !== 1 ? "s" : ""}</span>
+            {showComments() ? (
+              <MdFillKeyboard_arrow_up size={17} />
+            ) : (
+              <MdFillKeyboard_arrow_down size={17} />
+            )}
+            <span>
+              {props.post.children.length} comment
+              {props.post.children.length !== 1 ? "s" : ""}
+            </span>
           </button>
         )}
 
         <button
-          onClick={() => { setReplyOpen(v => !v); setShowComments(true); }}
+          onClick={() => {
+            setReplyOpen((v) => !v);
+            setShowComments(true);
+          }}
           class="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
                  text-zinc-500 dark:text-zinc-400
                  hover:bg-zinc-100 dark:hover:bg-zinc-800
@@ -171,7 +210,7 @@ export default function PostCard(props: { post: ThreadNode; actions?: PostAction
         <div class="mt-3 flex flex-col gap-2">
           <textarea
             value={replyBody()}
-            onInput={e => setReplyBody(e.currentTarget.value)}
+            onInput={(e) => setReplyBody(e.currentTarget.value)}
             placeholder="Write a reply…"
             rows={3}
             class="w-full rounded-xl border border-zinc-300 dark:border-zinc-700
@@ -183,7 +222,10 @@ export default function PostCard(props: { post: ThreadNode; actions?: PostAction
           />
           <div class="flex justify-end gap-2">
             <button
-              onClick={() => { setReplyOpen(false); setReplyBody(""); }}
+              onClick={() => {
+                setReplyOpen(false);
+                setReplyBody("");
+              }}
               class="px-3 py-1.5 text-sm rounded-lg
                      text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800
                      transition-colors"

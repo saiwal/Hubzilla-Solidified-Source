@@ -1,8 +1,8 @@
 // components/views/ListView.tsx
-import { For, Show } from 'solid-js';
+import { For, Show, createSignal } from 'solid-js';
 import type { ThreadNode } from '../../../../shared/lib/thread';
 import { handleLike , handleRepeat} from '../../../network/store/store';
-
+import PostDetailModal from '../../../../shared/views/PostDetailModal';
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
@@ -12,9 +12,12 @@ function ListRow(props: { post: ThreadNode; index: number }) {
   const p = props.post;
   const preview = stripHtml(p.body).slice(0, 120);
   const replyCount = p.children.length;
+  const [showModal, setShowModal] = createSignal(false);
 
   return (
+		<>
     <div
+        onClick={() => setShowModal(true)}
       class="group flex items-center gap-3 px-4 py-2.5 border-b border-gray-100 dark:border-gray-800
              hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors cursor-pointer">
 
@@ -78,9 +81,43 @@ function ListRow(props: { post: ThreadNode; index: number }) {
         {p.created?.slice(5, 10)}
       </span>
     </div>
+			<Show when={showModal()}>
+        <PostDetailModal uuid={p.uuid} onClose={() => setShowModal(false)} />
+      </Show>
+				</>
   );
 }
 
+function ListRowPlaceholder() {
+  return (
+    <div class="flex items-center gap-3 px-4 py-2.5 border-b border-gray-100 dark:border-gray-800 animate-pulse">
+      {/* Avatar */}
+      <div class="w-6 h-6 rounded-full bg-zinc-200 dark:bg-zinc-700 shrink-0" />
+
+      {/* Author name column */}
+      <div class="w-28 shrink-0">
+        <div class="h-2.5 bg-zinc-200 dark:bg-zinc-700 rounded w-20" />
+      </div>
+
+      {/* Subject / body preview */}
+      <div class="flex-1 flex items-center gap-2 min-w-0">
+        <div class="h-2.5 bg-zinc-200 dark:bg-zinc-700 rounded w-24 shrink-0" />
+        <div class="h-2.5 bg-zinc-200 dark:bg-zinc-700 rounded flex-1" />
+      </div>
+
+      {/* Actions area */}
+      <div class="flex items-center gap-3 shrink-0">
+        <div class="h-2.5 bg-zinc-200 dark:bg-zinc-700 rounded w-6" />
+        <div class="h-2.5 bg-zinc-200 dark:bg-zinc-700 rounded w-6" />
+      </div>
+
+      {/* Date column */}
+      <div class="w-16 flex justify-end shrink-0">
+        <div class="h-2.5 bg-zinc-200 dark:bg-zinc-700 rounded w-10" />
+      </div>
+    </div>
+  );
+}
 export default function ListView(props: { posts: ThreadNode[] }) {
   return (
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700/50
@@ -96,6 +133,24 @@ export default function ListView(props: { posts: ThreadNode[] }) {
         <p class="text-center py-16 text-gray-400 text-sm">Nothing here yet.</p>
       }>
         {(post, i) => <ListRow post={post} index={i()}/>}
+      </For>
+    </div>
+  );
+}
+// Export so DashboardView can use it
+export function ListPlaceholder(props: { count?: number }) {
+  return (
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm overflow-hidden">
+      {/* Mirror the header row */}
+      <div class="flex items-center gap-3 px-4 py-2 border-b border-gray-100 dark:border-gray-700
+                  bg-gray-50 dark:bg-gray-800/80 text-[11px] text-gray-400 font-medium uppercase tracking-wide">
+        <span class="w-6 shrink-0"/>
+        <span class="w-28 shrink-0">From</span>
+        <span class="flex-1">Subject</span>
+        <span class="w-24 text-right shrink-0">Date</span>
+      </div>
+      <For each={Array(props.count ?? 8).fill(0)}>
+        {() => <ListRowPlaceholder />}
       </For>
     </div>
   );

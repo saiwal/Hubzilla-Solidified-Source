@@ -17,9 +17,9 @@ registerModule({
       () => import("./widgets/HqMessagesWidget"),
 			() => import("./widgets/ComposerWidget"),
     ],
-		leftBottom: [
-			() => import("./widgets/ComposerWidget"),
-		]
+		// leftBottom: [
+		// 	() => import("./widgets/ComposerWidget"),
+		// ]
   },
   permissions: [],
 });

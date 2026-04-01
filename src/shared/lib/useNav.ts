@@ -7,7 +7,6 @@ import type { NavItemDef } from "../types/module.types";
 function isVisible(item: NavItemDef, role: ViewerRole): boolean {
   const ctx = item.context ?? "local";
   const allowed = Array.isArray(ctx) ? ctx : [ctx];
-  console.log("isVisible:", { label: item.label, allowed, role, result: allowed.includes("all") || allowed.includes(role) });
   if (allowed.includes("all")) return true;
   return allowed.includes(role);
 }

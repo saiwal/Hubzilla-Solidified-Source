@@ -4,8 +4,8 @@ import type { NetworkParams } from "../api/api";
 import { buildThreadTree } from "../../../shared/lib/thread";
 import type { ThreadNode } from "../../../shared/lib/thread";
 import type { Post } from "../../../shared/types/post.types";
+import { pageSize } from "../../../shared/store/auth-store";
 
-const PAGE_SIZE = 10;
 const POLL_INTERVAL = 30_000;
 
 const [posts, setPosts] = createSignal<ThreadNode[]>([]);
@@ -17,15 +17,15 @@ const [profileUid, setProfileUid] = createSignal<number>(0);
 const [params, setParams] = createSignal<NetworkParams>({});
 
 export type ViewMode = "feed" | "masonry" | "list" | "inbox";
-const saved = localStorage.getItem("network-view") as ViewMode | null;
-const [viewMode, setViewMode] = createSignal<ViewMode>(saved ?? "feed");
 
+const storedView = (localStorage.getItem('network:viewMode') ?? 'feed') as ViewMode;
+const [viewMode, setViewMode] = createSignal<ViewMode>(storedView);
 // wrap setViewMode
 export function changeView(v: ViewMode) {
-  localStorage.setItem("network-view", v);
+  localStorage.setItem("network:viewMode", v);
   setViewMode(v);
 }
-export { viewMode, setViewMode };
+export { viewMode };
 
 let currentOffset = 0;
 let pollTimer: ReturnType<typeof setTimeout> | null = null;
@@ -54,8 +54,7 @@ function updateNode(
   });
 }
 
-// ─── Initial load ─────────────────────────────────────────────────────────────
-
+// ─── Initial load ──────────────────────────────────────────────────────────
 export async function loadNetwork(newParams?: NetworkParams) {
   if (newParams !== undefined) setParams(newParams);
   setLoading(true);
@@ -65,14 +64,17 @@ export async function loadNetwork(newParams?: NetworkParams) {
   try {
     const data = await fetchNetworkStream({ ...params(), start: 0 });
     const threads = buildThreadTree(data);
+    const rootCount = data.length;
     setPosts(threads);
     setNewPosts([]);
-    currentOffset += threads.length;
-    setHasMore(threads.length === PAGE_SIZE);
+    currentOffset = rootCount;
+    setHasMore(rootCount >= pageSize()); // ← >= instead of ===
     if (data.length && data[0].profileUid) setProfileUid(data[0].profileUid);
     activated.clear();
     registerActivated(data);
     startPolling();
+
+	console.log("loadNetwork done: rootCount=", rootCount, "pageSize=", pageSize(), "hasMore=", hasMore());
   } catch (err) {
     console.error(err);
   } finally {
@@ -80,9 +82,8 @@ export async function loadNetwork(newParams?: NetworkParams) {
   }
 }
 
-// ─── Load more (infinite scroll) ─────────────────────────────────────────────
-
 export async function loadMore() {
+  console.log("loadMore called: loadingMore=", loadingMore(), "hasMore=", hasMore());
   if (loadingMore() || !hasMore()) return;
   setLoadingMore(true);
   try {
@@ -90,16 +91,19 @@ export async function loadMore() {
       ...params(),
       start: currentOffset,
     });
+    console.log("loadMore: currentOffset", currentOffset, "data.length", data.length);
     if (!data.length) {
       setHasMore(false);
       return;
     }
+    const rootCount = data.filter((p) => p.item_thread_top === 1).length;
+		    console.log("loadMore: rootCount", rootCount, "pageSize()", pageSize());
     const threads = buildThreadTree(data);
     const existingMids = new Set(posts().map((t) => t.mid));
     const fresh = threads.filter((t) => !existingMids.has(t.mid));
     setPosts((prev) => [...prev, ...fresh]);
-    currentOffset += threads.length;
-    setHasMore(data.length === PAGE_SIZE);
+    currentOffset += rootCount;
+    setHasMore(rootCount >= pageSize()); // ← >= instead of ===
     registerActivated(data);
   } catch (err) {
     console.error(err);
@@ -107,11 +111,10 @@ export async function loadMore() {
     setLoadingMore(false);
   }
 }
-
 // ─── Polling for new posts ────────────────────────────────────────────────────
 
 function startPolling() {
-  stopPolling();
+	stopPolling();
   const schedule = () => {
     pollTimer = setTimeout(async () => {
       if (document.visibilityState === "visible") await checkForNew();
@@ -154,7 +157,11 @@ export function flushNewPosts() {
   setPosts((prev) => [...newPosts(), ...prev]);
   setNewPosts([]);
 }
-
+export function resetPosts() {
+  setPosts([]);
+  setHasMore(true);
+  // setOffset(0);
+}
 // ─── Actions ─────────────────────────────────────────────────────────────────
 
 export async function handleLike(mid: string, iid: number) {

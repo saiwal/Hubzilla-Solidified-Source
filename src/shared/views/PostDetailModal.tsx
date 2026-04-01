@@ -2,6 +2,8 @@
 import { type Component, createResource, Show } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import PostCard, { type PostActions } from './PostCard';
+import { bbcodeToHtml } from '../lib/bbcode';
+import { sanitizeHtml } from '../lib/sanitize';
 import type { ThreadNode } from '../lib/thread';
 import { buildThreadTree } from '../lib/thread';
 import type { Post } from '../types/post.types';
@@ -56,7 +58,7 @@ function rawToPost(r: RawItem): Post {
     thr_parent:      r.thr_parent,
     top_mid:         r.message_top,
     parent:          r.parent_mid,
-    body:            r.body,
+    body:            sanitizeHtml(bbcodeToHtml(r.body)),
     title:           r.title,
     authorName:      r.author.name,
     authorAvatar:    r.author.photo.src,

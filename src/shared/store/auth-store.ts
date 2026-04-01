@@ -1,17 +1,21 @@
 import { createResource } from "solid-js";
 
 export type AuthState = {
-  isLocal: boolean;       // true = native logged-in user
-  isLoggedIn: boolean;    // true = any authenticated user (local or remote)
-  nick: string;           // channel nick, "" if anonymous
-  uid: number;            // local channel id, 0 for visitors/anonymous
+  isLocal: boolean; // true = native logged-in user
+  isLoggedIn: boolean; // true = any authenticated user (local or remote)
+  isAdmin: boolean; // true = is administrator
+  nick: string; // channel nick, "" if anonymous
+  uid: number; // local channel id, 0 for visitors/anonymous
+  pageSize: number;
 };
 
 const ANONYMOUS: AuthState = {
   isLocal: false,
   isLoggedIn: false,
+  isAdmin: false,
   nick: "",
   uid: 0,
+  pageSize: 10,
 };
 
 async function fetchAuthState(): Promise<AuthState> {
@@ -20,6 +24,7 @@ async function fetchAuthState(): Promise<AuthState> {
   const data = await res.json();
   if (data.error) return ANONYMOUS;
 
+  const isAdmin = data.is_admin ?? false;
   const nick = data.channel ?? "";
   const uid = Number(data.uid ?? 0);
   // No is_local field — if uid > 0 and channel is set, it's a local user
@@ -28,8 +33,10 @@ async function fetchAuthState(): Promise<AuthState> {
   return {
     isLocal,
     isLoggedIn: nick !== "",
+    isAdmin,
     nick,
     uid,
+    pageSize: parseInt(data.system?.itemspage ?? "10", 10),
   };
 }
 // Singleton resource — fetched once at boot, shared across the app
@@ -52,4 +59,7 @@ export function isLoggedIn() {
 
 export function currentNick() {
   return authState()?.nick ?? "";
+}
+export function pageSize(): number {
+  return authState()?.pageSize ?? 10;
 }

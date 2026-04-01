@@ -1,5 +1,5 @@
 // components/ViewSwitcher.tsx
-import { setViewMode, viewMode } from '../store/store';
+import { changeView, viewMode } from '../store/store';
 import type { ViewMode } from '../store/store';
 import { For } from 'solid-js';
 
@@ -20,7 +20,7 @@ export default function ViewSwitcher() {
               ${viewMode() === v.id
                 ? 'bg-gray-200 dark:bg-gray-700 font-medium'
                 : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500'}`}
-            onClick={() => setViewMode(v.id)}
+            onClick={() => changeView(v.id)}
           >
             {v.label}
           </button>
