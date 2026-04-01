@@ -34,10 +34,29 @@ function splitIntoColumns<T>(items: T[], n: number): T[][] {
 
 // ── MasonryCard ───────────────────────────────────────────────────────────────
 
+/** Max height (px) before the body is collapsed */
+const COLLAPSED_MAX_PX = 180;
+
 function MasonryCard(props: { post: ThreadNode }) {
   const p = props.post;
   const replyCount = p.children.length;
   const [showModal, setShowModal] = createSignal(false);
+  const [expanded, setExpanded] = createSignal(false);
+
+  /** Reference to the body div so we can measure its natural height */
+  let bodyRef!: HTMLDivElement;
+  const [overflows, setOverflows] = createSignal(false);
+
+  onMount(() => {
+    // After the first paint, check whether the content is taller than the cap.
+    // We temporarily remove the max-height constraint to measure true scrollHeight.
+    const el = bodyRef;
+    const prev = el.style.maxHeight;
+    el.style.maxHeight = 'none';
+    const natural = el.scrollHeight;
+    el.style.maxHeight = prev;
+    setOverflows(natural > COLLAPSED_MAX_PX);
+  });
 
   return (
     <>
@@ -47,6 +66,7 @@ function MasonryCard(props: { post: ThreadNode }) {
                border border-gray-100 dark:border-gray-700/50
                rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
       >
+        {/* ── Author row ── */}
         <div class="flex items-center gap-2 mb-3">
           <Show when={p.authorAvatar} fallback={
             <div class="w-7 h-7 rounded-full bg-gradient-to-br from-violet-400 to-purple-600
@@ -62,18 +82,64 @@ function MasonryCard(props: { post: ThreadNode }) {
           </div>
         </div>
 
+        {/* ── Title ── */}
         <Show when={p.title}>
           <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2 leading-snug">{p.title}</p>
         </Show>
 
-        <div
-          class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed
-                 [&>p]:my-0.5 [&_img]:w-full [&_img]:rounded-lg [&_img]:mt-2 [&_img]:mb-1
-                 [&>blockquote]:border-l-2 [&>blockquote]:pl-2 [&>blockquote]:text-gray-400
-                 line-clamp-[12] break-all"
-          innerHTML={p.body}
-        />
+        {/* ── Body with height cap ── */}
+        <div class="relative">
+          <div
+            ref={bodyRef}
+            class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed
+                   [&>p]:my-0.5 [&_img]:w-full [&_img]:rounded-lg [&_img]:mt-2 [&_img]:mb-1
+                   [&>blockquote]:border-l-2 [&>blockquote]:pl-2 [&>blockquote]:text-gray-400
+                   break-all overflow-hidden transition-[max-height] duration-300 ease-in-out"
+            style={{
+              'max-height': expanded() ? '2000px' : `${COLLAPSED_MAX_PX}px`,
+            }}
+            innerHTML={p.body}
+          />
 
+          {/* Fade + expand button — only when content actually overflows */}
+          <Show when={overflows() && !expanded()}>
+            <div
+              class="absolute bottom-0 left-0 right-0 h-16
+                     bg-gradient-to-t from-white dark:from-gray-800 to-transparent
+                     flex items-end justify-center pb-1"
+              onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
+            >
+              <button
+                class="flex items-center gap-1 text-xs text-violet-600 dark:text-violet-400
+                       hover:text-violet-700 dark:hover:text-violet-300
+                       bg-white/90 dark:bg-gray-800/90 px-2 py-0.5 rounded-full
+                       border border-violet-200 dark:border-violet-700/50
+                       transition-colors"
+              >
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+                Show more
+              </button>
+            </div>
+          </Show>
+        </div>
+
+        {/* Collapse button — shown after expanding */}
+        <Show when={overflows() && expanded()}>
+          <button
+            class="flex items-center justify-center gap-1 text-xs text-violet-600 dark:text-violet-400
+                   hover:text-violet-700 dark:hover:text-violet-300 mt-1 w-full transition-colors"
+            onClick={(e) => { e.stopPropagation(); setExpanded(false); }}
+          >
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+            </svg>
+            Show less
+          </button>
+        </Show>
+
+        {/* ── Actions ── */}
         <div
           class="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/50"
           onClick={(e) => e.stopPropagation()}
