@@ -7,6 +7,7 @@ export type AuthState = {
   nick: string; // channel nick, "" if anonymous
   uid: number; // local channel id, 0 for visitors/anonymous
   pageSize: number;
+	updateInterval: number;
 };
 
 const ANONYMOUS: AuthState = {
@@ -16,6 +17,7 @@ const ANONYMOUS: AuthState = {
   nick: "",
   uid: 0,
   pageSize: 10,
+	updateInterval: 60,
 };
 
 async function fetchAuthState(): Promise<AuthState> {
@@ -37,6 +39,8 @@ async function fetchAuthState(): Promise<AuthState> {
     nick,
     uid,
     pageSize: parseInt(data.system?.itemspage ?? "10", 10),
+		updateInterval: parseInt(data.system?.update_interval ?? "60000", 10),
+
   };
 }
 // Singleton resource — fetched once at boot, shared across the app
@@ -62,4 +66,7 @@ export function currentNick() {
 }
 export function pageSize(): number {
   return authState()?.pageSize ?? 10;
+}
+export function updateInterval(): number{
+	return authState()?.updateInterval ?? 60000;
 }

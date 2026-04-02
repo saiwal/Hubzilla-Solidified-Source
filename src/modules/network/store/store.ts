@@ -4,9 +4,8 @@ import type { NetworkParams } from "../api/api";
 import { buildThreadTree } from "../../../shared/lib/thread";
 import type { ThreadNode } from "../../../shared/lib/thread";
 import type { Post } from "../../../shared/types/post.types";
-import { pageSize } from "../../../shared/store/auth-store";
+import { updateInterval, pageSize } from "../../../shared/store/auth-store";
 
-const POLL_INTERVAL = 30_000;
 
 const [posts, setPosts] = createSignal<ThreadNode[]>([]);
 const [loading, setLoading] = createSignal(false);
@@ -119,7 +118,7 @@ function startPolling() {
     pollTimer = setTimeout(async () => {
       if (document.visibilityState === "visible") await checkForNew();
       schedule();
-    }, POLL_INTERVAL);
+    }, updateInterval());
   };
   schedule();
 }

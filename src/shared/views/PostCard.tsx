@@ -16,6 +16,7 @@ import {
   MdOutlineThumb_down,
   MdOutlineThumb_up,
 } from "solid-icons/md";
+import { BiRegularPieChartAlt2 } from "solid-icons/bi";
 
 export interface PostActions {
   onLike: (mid: string, iid: number) => Promise<void>;
@@ -166,6 +167,20 @@ export default function PostCard(props: {
           activeClass="text-green-500"
         />
 
+        {(props.post.likeCount > 0 ||
+          props.post.dislikeCount > 0 ||
+          props.post.repeatCount > 0) && (
+          <button
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+           text-zinc-500 dark:text-zinc-400
+           hover:bg-zinc-100 dark:hover:bg-zinc-800
+           hover:text-zinc-800 dark:hover:text-zinc-100
+           transition-colors"
+            title="Post Statistics"
+          >
+            <BiRegularPieChartAlt2 size={17}/>
+          </button>
+        )}
         {props.post.children.length > 0 && (
           <button
             onClick={() => setShowComments((v) => !v)}
