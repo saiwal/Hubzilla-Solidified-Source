@@ -6,7 +6,7 @@ import {
   handleDislike as networkDislike,
   handleRepeat as networkRepeat,
   handleComment as networkComment,
-} from "../../modules/network/store/store";
+} from "@/modules/network/store/store";
 import {
   MdFillChat,
   MdFillKeyboard_arrow_down,
@@ -93,7 +93,7 @@ export default function PostCard(props: {
       setReplyOpen(false);
       setShowComments(true);
     } catch {
-      setActionError("Comment failed — please try again.");
+      setActionError("Comment failed please try again.");
     } finally {
       setSubmitting(false);
     }

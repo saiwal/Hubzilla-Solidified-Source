@@ -1,4 +1,4 @@
-import { useI18n, LOCALES, type Locale} from "../../i18n/index";
+import { useI18n, LOCALES, type Locale} from "@/i18n/index";
 import { createSignal, For, Show, onCleanup } from "solid-js";
 
 const LanguageSwitcher = () => {

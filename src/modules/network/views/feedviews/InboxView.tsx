@@ -1,7 +1,7 @@
 // components/views/InboxView.tsx
 import { For, Show, createSignal } from 'solid-js';
-import type { ThreadNode } from '../../../../shared/lib/thread';
-import { handleLike, handleComment } from '../../../network/store/store';
+import type { ThreadNode } from '@/shared/lib/thread';
+import { handleLike, handleComment } from '@/modules/network/store/store';
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();

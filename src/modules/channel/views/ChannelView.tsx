@@ -3,8 +3,8 @@ import { useParams, useSearchParams } from "@solidjs/router";
 import { posts, loading, loadChannel } from "../store/store";
 import { handleLike, handleDislike, handleRepeat, handleComment } from "../store/store";
 import { For, Show } from "solid-js";
-import PostCard from "../../../shared/views/PostCard";
-import type { PostActions } from "../../../shared/views/PostCard";
+import PostCard from "@/shared/views/PostCard";
+import type { PostActions } from "@/shared/views/PostCard";
 import type { ChannelParams } from "../api/api";
 
 export function PostPlaceholder() {

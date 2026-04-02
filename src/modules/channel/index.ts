@@ -1,6 +1,6 @@
-import { registerModule } from "../../module-registry";
-import { useI18n } from "../../i18n";
-import { usePageNick } from "../../shared/store/site-config";
+import { registerModule } from "@/module-registry";
+import { useI18n } from "@/i18n";
+import { usePageNick } from "@/shared/store/site-config";
 
 registerModule({
   id: "channel",

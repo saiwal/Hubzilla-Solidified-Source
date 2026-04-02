@@ -1,10 +1,10 @@
 import { createSignal } from "solid-js";
 import { fetchNetworkStream, toggleVerb, postComment } from "../api/api";
 import type { NetworkParams } from "../api/api";
-import { buildThreadTree } from "../../../shared/lib/thread";
-import type { ThreadNode } from "../../../shared/lib/thread";
-import type { Post } from "../../../shared/types/post.types";
-import { updateInterval, pageSize } from "../../../shared/store/auth-store";
+import { buildThreadTree } from "@/shared/lib/thread";
+import type { ThreadNode } from "@/shared/lib/thread";
+import type { Post } from "@/shared/types/post.types";
+import { updateInterval, pageSize } from "@/shared/store/auth-store";
 
 
 const [posts, setPosts] = createSignal<ThreadNode[]>([]);
@@ -102,7 +102,7 @@ export async function loadMore() {
     const fresh = threads.filter((t) => !existingMids.has(t.mid));
     setPosts((prev) => [...prev, ...fresh]);
     currentOffset += rootCount;
-    setHasMore(rootCount >= pageSize()); // ← >= instead of ===
+    setHasMore(rootCount >= pageSize());
     registerActivated(data);
   } catch (err) {
     console.error(err);

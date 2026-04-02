@@ -1,5 +1,5 @@
-import { registerModule } from "../../module-registry";
-import { useI18n } from "../../i18n";
+import { registerModule } from "@/module-registry";
+import { useI18n } from "@/i18n";
 
 registerModule({
   id: "network",

@@ -1,7 +1,7 @@
 import { A } from "@solidjs/router";
 import { createEffect, createSignal, Show, For } from "solid-js";
 import { useParams, useNavigate, useLocation } from "@solidjs/router";
-import { useAuth } from "../../../shared/store/auth-store";
+import { useAuth } from "@/shared/store/auth-store";
 import {
   photos, albumName, detail, loading,
   loadSummary, loadAlbum, loadImage,

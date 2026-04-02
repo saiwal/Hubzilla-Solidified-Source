@@ -1,7 +1,7 @@
 // mappers/activity.mapper.ts
-import { sanitizeHtml } from "../../shared/lib/sanitize";
-import { bbcodeToHtml } from "../../shared/lib/bbcode";
-import type { Post } from "../../shared/types/post.types";
+import { sanitizeHtml } from "@/shared/lib/sanitize";
+import { bbcodeToHtml } from "@/shared/lib/bbcode";
+import type { Post } from "@/shared/types/post.types";
 
 // Verbs that represent actual displayable content
 // const DISPLAYABLE_VERBS = new Set(['Create', 'Like', 'Dislike', 'Announce']);
@@ -15,7 +15,16 @@ export function shouldDisplayActivity(activity: any): boolean {
 }
 
 export function mapActivityToPost(activity: any): Post {
-  const body = sanitizeHtml(bbcodeToHtml(activity.body ?? ""));
+  let body = "";
+
+  try {
+    const raw = bbcodeToHtml(activity.body ?? "");
+    body = sanitizeHtml(typeof raw === "string" ? raw : "");
+  } catch (err) {
+    console.error("Body parse failed", activity.body, err);
+    body = "";
+  }
+  // const body = sanitizeHtml(bbcodeToHtml(activity.body ?? ""));
   return {
     id: activity.uuid,
     iid: activity.iid ? Number(activity.iid) : undefined,

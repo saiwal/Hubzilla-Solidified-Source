@@ -8,8 +8,8 @@
  */
 
 import { createSignal, type Component } from "solid-js";
-import { useAuth } from "../../../shared/store/auth-store";
-import PostComposer from "../../../shared/views/PostComposer";
+import { useAuth } from "@/shared/store/auth-store";
+import PostComposer from "@/shared/views/PostComposer";
 
 const ComposerWidget: Component = () => {
   const auth = useAuth();             // InitializedResource<AuthState>

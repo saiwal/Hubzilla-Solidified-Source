@@ -11,7 +11,7 @@ import {
   Match,
   onMount,
 } from "solid-js";
-import { useAuth } from "../../../shared/store/auth-store";
+import { useAuth } from "@/shared/store/auth-store";
 import {
   viewMode,
   posts,

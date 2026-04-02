@@ -1,6 +1,6 @@
 import { type Component, lazy, createMemo, For } from "solid-js";
 import { useLocation } from "@solidjs/router";
-import { resolveSlot } from "../../module-registry";
+import { resolveSlot } from "@/module-registry";
 import type { SlotsDef } from "../types/module.types";
 
 interface SlotProps {

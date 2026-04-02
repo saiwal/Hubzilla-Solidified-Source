@@ -1,4 +1,4 @@
-import { moduleGet } from "../../../shared/api/client";
+import { moduleGet } from "@/shared/api/client";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

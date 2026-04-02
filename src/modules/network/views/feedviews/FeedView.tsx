@@ -1,12 +1,12 @@
 // components/views/FeedView.tsx
 import { For, Show, createSignal } from "solid-js";
-import type { ThreadNode } from "../../../../shared/lib/thread";
+import type { ThreadNode } from "@/shared/lib/thread";
 import {
   handleLike,
   handleDislike,
   handleRepeat,
   handleComment,
-} from "../../../network/store/store";
+} from "@/modules/network/store/store";
 export function FeedPlaceholder() {
   return (
     <div class="animate-pulse bg-white dark:bg-gray-800 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 mb-4 shadow-sm">

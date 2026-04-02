@@ -1,8 +1,8 @@
 // components/views/ListView.tsx
 import { For, Show, createSignal } from 'solid-js';
-import type { ThreadNode } from '../../../../shared/lib/thread';
-import { handleLike , handleRepeat} from '../../../network/store/store';
-import PostDetailModal from '../../../../shared/views/PostDetailModal';
+import type { ThreadNode } from '@/shared/lib/thread';
+import { handleLike , handleRepeat} from '@/modules/network/store/store';
+import PostDetailModal from '@/shared/views/PostDetailModal';
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();

@@ -1,4 +1,4 @@
-import { moduleGet, modulePost } from "../../../shared/api/client";
+import { moduleGet, modulePost } from "@/shared/api/client";
 
 export interface DisplaySettings {
   theme: string;
@@ -17,5 +17,5 @@ export async function fetchDisplaySettings(): Promise<DisplaySettings> {
 }
 
 export async function saveDisplaySettings(data: Partial<DisplaySettings>): Promise<void> {
-  await modulePost("settings/display?format=json", data);
+  await modulePost("settings?format=json", data);
 }

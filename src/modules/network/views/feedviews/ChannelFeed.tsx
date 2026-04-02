@@ -1,6 +1,6 @@
 import { For } from "solid-js";
-import type { ThreadNode } from "../../../../shared/lib/thread";
-import PostCard from "../../../../shared/views/PostCard";
+import type { ThreadNode } from "@/shared/lib/thread";
+import PostCard from "@/shared/views/PostCard";
 
 export default function StreamList(props: { posts: ThreadNode[], onLoadOlder: () => void }) {
   return (

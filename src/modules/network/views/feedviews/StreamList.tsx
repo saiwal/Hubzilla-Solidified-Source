@@ -1,9 +1,8 @@
 import { For } from "solid-js";
-import type { ThreadNode } from "../../../../shared/lib/thread";
-import PostCard from "../../../../shared/views/PostCard";
+import type { ThreadNode } from "@/shared/lib/thread";
+import PostCard from "@/shared/views/PostCard";
 import { Match, Switch } from 'solid-js';
-import { viewMode } from '../../../network/store/store';
-// import FeedView from './views/FeedView';
+import { viewMode } from '@/modules/network/store/store';
 import MasonryView from '../feedviews/MasonryView';
 import ListView from '../feedviews/ListView';
 import InboxView from '../feedviews/InboxView';

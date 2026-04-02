@@ -1,5 +1,5 @@
 import { createMemo } from "solid-js";
-import { getNavItems } from "../../module-registry";
+import { getNavItems } from "@/module-registry";
 import { useViewerRole, type ViewerRole } from "../store/site-config";
 import { useAuth } from "../store/auth-store";
 import type { NavItemDef } from "../types/module.types";

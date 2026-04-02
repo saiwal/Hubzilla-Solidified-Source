@@ -1,6 +1,6 @@
-import { moduleGet } from "../../../shared/api/client";
-import { mapActivityToPost } from "../../../shared/lib/activity.mapper";
-import type { Post } from "../../../shared/types/post.types";
+import { moduleGet } from "@/shared/api/client";
+import { mapActivityToPost } from "@/shared/lib/activity.mapper";
+import type { Post } from "@/shared/types/post.types";
 
 export type ChannelParams = {
   start?:   number;

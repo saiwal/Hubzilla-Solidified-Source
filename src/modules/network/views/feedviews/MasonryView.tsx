@@ -1,8 +1,8 @@
 // components/views/MasonryView.tsx
 import { For, Show, createSignal, createMemo, onMount, onCleanup } from 'solid-js';
-import type { ThreadNode } from '../../../../shared/lib/thread';
-import { handleLike, handleRepeat } from '../../../network/store/store';
-import PostDetailModal from '../../../../shared/views/PostDetailModal';
+import type { ThreadNode } from '@/shared/lib/thread';
+import { handleLike, handleRepeat } from '@/modules/network/store/store';
+import PostDetailModal from '@/shared/views/PostDetailModal';
 
 // ── responsive column count ───────────────────────────────────────────────────
 
