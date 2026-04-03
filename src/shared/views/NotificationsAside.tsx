@@ -3,7 +3,13 @@ import { Portal } from "solid-js/web";
 import { useNotifications } from "../lib/useNotifications";
 import type { NotificationType } from "../lib/notificationService";
 import PostDetailModal from "./PostDetailModal";
-import { MdFillAlternate_email, MdFillCalendar_month, MdFillMail, MdFillPublic, MdFillWaving_hand } from "solid-icons/md";
+import {
+  MdFillAlternate_email,
+  MdFillCalendar_month,
+  MdFillMail,
+  MdFillPublic,
+  MdFillWaving_hand,
+} from "solid-icons/md";
 
 const PANELS: {
   type: NotificationType;
@@ -265,7 +271,13 @@ export default function NotificationsAside() {
   } = useNotifications();
 
   const [activeUuid, setActiveUuid] = createSignal<string | null>(null);
+  const visiblePanels = () =>
+    PANELS.filter((p) => {
+      const panel = store[p.type];
+      return panel.count > 0 || panel.loading;
+    });
 
+  const hasAnyPanels = () => visiblePanels().length > 0;
   return (
     <div class="flex flex-col ">
       <h2 class="text-lg font-bold mb-4 px-1">Notifications</h2>
@@ -283,23 +295,32 @@ export default function NotificationsAside() {
         </For>
       </div>
       <div class="flex-1 overflow-y-auto space-y-1">
-        <For each={PANELS}>
-          {(p) => (
-            <NotificationPanel
-              type={p.type}
-              label={p.label}
-              icon={p.icon}
-              hasFilter={p.hasFilter}
-              store={store}
-              togglePanel={togglePanel}
-              toggleThreadTop={toggleThreadTop}
-              handleScroll={handleScroll}
-              markRead={markRead}
-              formatCount={formatCount}
-              onOpenPost={setActiveUuid}
-            />
-          )}
-        </For>
+        <Show
+          when={hasAnyPanels()}
+          fallback={
+            <div class="flex flex-col items-center justify-center py-3 text-center">
+              <p class="text-sm text-gray-400">No notifications</p>
+            </div>
+          }
+        >
+          <For each={visiblePanels()}>
+            {(p) => (
+              <NotificationPanel
+                type={p.type}
+                label={p.label}
+                icon={p.icon}
+                hasFilter={p.hasFilter}
+                store={store}
+                togglePanel={togglePanel}
+                toggleThreadTop={toggleThreadTop}
+                handleScroll={handleScroll}
+                markRead={markRead}
+                formatCount={formatCount}
+                onOpenPost={setActiveUuid}
+              />
+            )}
+          </For>
+        </Show>
       </div>
       <Show when={activeUuid()}>
         <Portal>
