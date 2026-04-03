@@ -3,6 +3,7 @@ import { For, Show, createSignal } from 'solid-js';
 import type { ThreadNode } from '@/shared/lib/thread';
 import { handleLike , handleRepeat} from '@/modules/network/store/store';
 import PostDetailModal from '@/shared/views/PostDetailModal';
+import formatPostDate from '@/shared/lib/date';
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
@@ -78,7 +79,7 @@ function ListRow(props: { post: ThreadNode; index: number }) {
 
       {/* Date */}
       <span class="text-[11px] text-gray-400 shrink-0 w-16 text-right">
-        {p.created?.slice(5, 10)}
+        {formatPostDate(p.created)}
       </span>
     </div>
 			<Show when={showModal()}>

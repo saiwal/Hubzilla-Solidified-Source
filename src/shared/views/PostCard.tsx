@@ -1,6 +1,7 @@
 import { createSignal } from "solid-js";
 import type { ThreadNode } from "../lib/thread";
 import CommentThread from "./CommentThread";
+import formatPostDate from "../lib/date";
 import {
   handleLike as networkLike,
   handleDislike as networkDislike,
@@ -117,7 +118,7 @@ export default function PostCard(props: {
             {props.post.authorName}
           </a>
           <span class="text-sm text-zinc-500 dark:text-zinc-400">
-            {new Date(props.post.created).toLocaleString()}
+  {formatPostDate(props.post.created)}
           </span>
         </div>
       </div>

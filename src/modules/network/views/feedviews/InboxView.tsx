@@ -2,6 +2,7 @@
 import { For, Show, createSignal } from 'solid-js';
 import type { ThreadNode } from '@/shared/lib/thread';
 import { handleLike, handleComment } from '@/modules/network/store/store';
+import formatPostDate from '@/shared/lib/date';
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
@@ -157,7 +158,7 @@ function InboxRow(props: { thread: ThreadNode }) {
 
         {/* Date */}
         <span class="text-[11px] text-gray-400 w-14 text-right shrink-0">
-          {p.created?.slice(5, 10)}
+          {formatPostDate(p.created)}
         </span>
 
         {/* Chevron */}

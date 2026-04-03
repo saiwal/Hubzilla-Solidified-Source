@@ -3,6 +3,7 @@ import { For, Show, createSignal, createMemo, onMount, onCleanup } from 'solid-j
 import type { ThreadNode } from '@/shared/lib/thread';
 import { handleLike, handleRepeat } from '@/modules/network/store/store';
 import PostDetailModal from '@/shared/views/PostDetailModal';
+import formatPostDate from '@/shared/lib/date';
 
 // ── responsive column count ───────────────────────────────────────────────────
 
@@ -78,7 +79,7 @@ function MasonryCard(props: { post: ThreadNode }) {
           </Show>
           <div class="min-w-0">
             <p class="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">{p.authorName}</p>
-            <p class="text-xs text-gray-400">{p.created?.slice(0, 10)}</p>
+            <p class="text-xs text-gray-400">  {formatPostDate(p.created)}</p>
           </div>
         </div>
 
