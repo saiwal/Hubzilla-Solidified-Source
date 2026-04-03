@@ -19,7 +19,7 @@ const PANELS: {
 }[] = [
   {
     type: "network",
-    label: "Public Stream",
+    label: "Network",
     icon: <MdFillPublic size={17} />,
     hasFilter: true,
   },
@@ -47,6 +47,13 @@ const PANELS: {
     icon: <MdFillCalendar_month size={17} />,
     hasFilter: false,
   },
+		{
+    type: "pubs",
+    label: "Public Stream",
+    icon: <MdFillCalendar_month size={17} />,
+    hasFilter: false,
+  },
+
 ];
 
 function extractDisplayUuid(url: string): string | null {
