@@ -3,7 +3,7 @@ import { createMemo } from "solid-js";
 import { useLocation } from "@solidjs/router";
 import { useAuth } from "./auth-store";
 
-export type ViewerRole = "owner" | "local" | "remote" | "anonymous";
+export type ViewerRole = "owner" | "local" | "remote" | "anonymous" | "admin";
 
 /**
  * Derives the *subject* nick from the current URL.
@@ -42,6 +42,7 @@ export function useViewerRole(): () => ViewerRole {
     if (!a) return "anonymous";
     if (!a.isLoggedIn) return "anonymous";
     if (!a.isLocal) return "remote";
+    // if (a.isAdmin) return "admin";
     // On a channel page, check if it's their own
     if (subjectNick()) {
       return a.nick === subjectNick() ? "owner" : "local";
@@ -68,4 +69,8 @@ export function usePageNick(): () => string {
     if (urlNick) return urlNick; // always prefer the URL nick
     return auth()?.nick ?? ""; // fall back to logged-in user's nick
   });
+}
+export function useIsAdmin(): () => boolean {
+  const auth = useAuth();
+  return createMemo(() => auth()?.isAdmin ?? false);
 }

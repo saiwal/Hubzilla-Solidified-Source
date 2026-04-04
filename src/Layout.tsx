@@ -51,7 +51,6 @@ const Layout: ParentComponent = (props) => {
           {/* ── Left Sidebar ── */}
           <aside class="hidden lg:flex lg:flex-col w-64 shrink-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-4">
             <h2 class="text-xl font-bold mb-6">Hubzilla</h2>
-
             <nav class="space-y-2 flex-1 overflow-y-auto">
               <For each={navItems()}>{(item) => <NavItem {...item} />}</For>
             </nav>

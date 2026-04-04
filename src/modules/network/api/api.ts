@@ -1,4 +1,4 @@
-import { moduleGet } from "@/shared/api/client";
+import { moduleGet } from "@/shared/lib/api";
 import type { Post } from "@/shared/types/post.types.ts";
 import { mapActivityToPost } from "@/shared/lib/activity.mapper.ts";
 

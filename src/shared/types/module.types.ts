@@ -1,6 +1,12 @@
 import { type Component } from "solid-js";
 
-export type NavContext = "owner" | "local" | "remote" | "anonymous" | "all";
+export type NavContext =
+  | "owner"
+  | "local"
+  | "remote"
+  | "anonymous"
+  | "all"
+  | "admin";
 
 export interface NavItemDef {
   label: string | (() => string);

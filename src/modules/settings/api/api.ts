@@ -1,4 +1,4 @@
-import { moduleGet, modulePost } from "@/shared/api/client";
+import { moduleGet, modulePost } from "@/shared/lib/api";
 import type { DisplaySettings, PrivacySettings, NotificationSettings } from "../store/types";
 
 // ── Display ──────────────────────────────────────────────────────────────────
