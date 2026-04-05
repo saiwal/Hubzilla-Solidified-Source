@@ -44,7 +44,7 @@ export type AclConnection = {
 };
 
 export async function fetchConnections(): Promise<AclConnection[]> {
-  const res = await fetch('/acl?format=json&type=c&start=0&count=500');
+  const res = await fetch('/acl');
   if (!res.ok) return [];
   const data = await res.json();
   return (data.items ?? []).filter((i: AclConnection) => i.type === 'c');
