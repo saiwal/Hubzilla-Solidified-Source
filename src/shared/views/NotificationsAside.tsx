@@ -53,6 +53,13 @@ const PANELS: {
     icon: <MdFillCalendar_month size={17} />,
     hasFilter: false,
   },
+{
+    type: "notify",
+    label: "Notices",
+    icon: <MdFillCalendar_month size={17} />,
+    hasFilter: false,
+  },
+
 
 ];
 
