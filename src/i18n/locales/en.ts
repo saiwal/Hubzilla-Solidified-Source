@@ -27,7 +27,7 @@ export const dict: RawDictionary = {
     articles: "Articles",
     calendar: "Calendar",
     cart: "Cart",
-    chat: "Chat",
+    chat: "Chatrooms",
     directory: "Directory",
     files: "Files",
     help: "Help",
