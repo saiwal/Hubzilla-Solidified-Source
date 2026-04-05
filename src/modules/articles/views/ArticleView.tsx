@@ -1,5 +1,5 @@
 export default function ArticleView() {
 	return (
-	<h1>hey</h1>
+	<h1>Coming Soon...</h1>
 	)
 }
