@@ -33,7 +33,7 @@ export type NetworkParams = {
   dbegin?: string;
 };
 
-export type AclConnection = {
+export type AclEntry = {
   type: 'c' | 'g';
   name: string;
   nick: string;
@@ -43,11 +43,11 @@ export type AclConnection = {
   photo?: string;
 };
 
-export async function fetchConnections(): Promise<AclConnection[]> {
+export async function fetchConnections(): Promise<AclEntry[]> {
   const res = await fetch('/acl');
   if (!res.ok) return [];
   const data = await res.json();
-  return (data.items ?? []).filter((i: AclConnection) => i.type === 'c');
+  return (data.items ?? []);
 }
 
 export async function fetchNetworkStream(params: NetworkParams = {}): Promise<Post[]> {
