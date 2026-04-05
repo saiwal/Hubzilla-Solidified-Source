@@ -1,7 +1,7 @@
-import { createSignal, Show, type JSX } from "solid-js";
+import { createSignal, Show, For, createResource, type JSX } from "solid-js";
 import { useSearchParams } from "@solidjs/router";
 import { loadNetwork, loading } from "../store/store";
-import type { NetworkParams } from "../api/api";
+import { fetchConnections, type AclConnection, type NetworkParams } from "../api/api";
 import { MdFillFilter_list, MdFillMail, MdFillPerson, MdFillRefresh, MdFillSearch, MdFillStar } from "solid-icons/md";
 
 type Order = NonNullable<NetworkParams["order"]>;
@@ -19,6 +19,10 @@ export default function StreamFilters() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [expanded, setExpanded] = createSignal(false);
 
+  const [connInput, setConnInput] = createSignal("");
+  const [connSuggestOpen, setConnSuggestOpen] = createSignal(false);
+  const [connections] = createResource(fetchConnections);
+
   const order = (): Order => (str(searchParams.order) as Order) || "created";
   const search = () => str(searchParams.search);
   const tag = () => str(searchParams.tag);
@@ -29,6 +33,8 @@ export default function StreamFilters() {
   const dend = () => str(searchParams.dend);
   const cmin = () => str(searchParams.cmin);
   const cmax = () => str(searchParams.cmax);
+  const xchan = () => str(searchParams.xchan);
+  const xchanLabel = () => str(searchParams.xchan_label);
 
   let searchTimer: ReturnType<typeof setTimeout>;
 
@@ -47,6 +53,7 @@ export default function StreamFilters() {
     if (dend()) p.dend = dend();
     if (cmin()) p.cmin = Number(cmin());
     if (cmax()) p.cmax = Number(cmax());
+    if (xchan()) p.xchan = xchan();
     return p;
   }
 
@@ -70,23 +77,64 @@ export default function StreamFilters() {
     searchTimer = setTimeout(apply, 400);
   }
 
+  // ── Connection filter ──────────────────────────────────────────────────────
+
+  const suggestions = () => {
+    const q = connInput().toLowerCase().trim();
+    if (!q || connections.loading) return [];
+    return (connections() ?? [])
+      .filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.nick.toLowerCase().includes(q) ||
+          c.link.toLowerCase().includes(q)
+      )
+      .slice(0, 8);
+  };
+
+  function selectConnection(c: AclConnection) {
+    // xchan is the portable identity key Hubzilla's network endpoint accepts
+    sp({ xchan: c.xid, xchan_label: c.name });
+    setConnInput("");
+    setConnSuggestOpen(false);
+    setTimeout(apply, 0);
+  }
+
+  function clearConnection() {
+    sp({ xchan: undefined, xchan_label: undefined });
+    setConnInput("");
+    setTimeout(apply, 0);
+  }
+
+  function onConnBlur() {
+    setTimeout(() => setConnSuggestOpen(false), 150);
+  }
+
+  // ── Clear all ──────────────────────────────────────────────────────────────
+
   function clearAll() {
     setSearchParams(
-      { order: undefined, search: undefined, tag: undefined,
+      {
+        order: undefined, search: undefined, tag: undefined,
         star: undefined, conv: undefined, dm: undefined,
-        dbegin: undefined, dend: undefined, cmin: undefined, cmax: undefined },
+        dbegin: undefined, dend: undefined, cmin: undefined, cmax: undefined,
+        xchan: undefined, xchan_label: undefined,
+      },
       { replace: true }
     );
+    setConnInput("");
     setTimeout(apply, 0);
   }
 
   const hasAdvanced = () => tag() || dbegin() || dend() || cmin() || cmax();
   const hasAnyFilter = () =>
-    order() !== "created" || search() || star() || conv() || dm() || hasAdvanced();
+    order() !== "created" || search() || star() || conv() || dm() || hasAdvanced() || xchan();
 
   return (
     <div class="mb-4 space-y-2">
       <div class="flex items-center gap-2 flex-wrap">
+
+        {/* Refresh */}
         <button
           onClick={() => loadNetwork()}
           disabled={loading()}
@@ -98,6 +146,7 @@ export default function StreamFilters() {
           </span>
         </button>
 
+        {/* Order tabs */}
         <div class="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden shrink-0">
           {ORDER_OPTIONS.map((opt) => (
             <button
@@ -113,12 +162,77 @@ export default function StreamFilters() {
           ))}
         </div>
 
+        {/* Toggle chips */}
         <ToggleChip active={star()} onClick={() => toggleFlag("star", star())} label={<MdFillStar size={17} />} />
         <ToggleChip active={conv()} onClick={() => toggleFlag("conv", conv())} label={<MdFillPerson size={17} />} />
         <ToggleChip active={dm()}   onClick={() => toggleFlag("dm",   dm())}   label={<MdFillMail size={17} />} />
 
         <div class="flex-1" />
 
+        {/* ── Connection filter ── */}
+        <Show
+          when={xchan()}
+          fallback={
+            <div class="relative">
+              <input
+                type="text"
+                placeholder="Filter by connection…"
+                value={connInput()}
+                onInput={(e) => {
+                  setConnInput(e.currentTarget.value);
+                  setConnSuggestOpen(true);
+                }}
+                onFocus={() => connInput() && setConnSuggestOpen(true)}
+                onBlur={onConnBlur}
+                class={`${inputCls} w-44`}
+              />
+              <Show when={connSuggestOpen() && suggestions().length > 0}>
+                <ul class="absolute z-50 top-full mt-1 left-0 w-64 max-h-60 overflow-y-auto
+                           rounded-lg border border-gray-200 dark:border-gray-700
+                           bg-white dark:bg-gray-800 shadow-lg py-1">
+                  <For each={suggestions()}>
+                    {(c) => (
+                      <li>
+                        <button
+                          onMouseDown={() => selectConnection(c)}
+                          class="w-full flex items-center gap-2.5 px-3 py-1.5 text-sm text-left
+                                 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        >
+                          <Show when={c.photo}>
+                            <img
+                              src={c.photo}
+                              alt=""
+                              class="w-6 h-6 rounded-full shrink-0 object-cover bg-gray-200 dark:bg-gray-700"
+                            />
+                          </Show>
+                          <span class="flex flex-col min-w-0">
+                            <span class="truncate font-medium text-gray-900 dark:text-gray-100">{c.name}</span>
+                            <span class="truncate text-xs text-gray-400">{c.link || c.nick}</span>
+                          </span>
+                        </button>
+                      </li>
+                    )}
+                  </For>
+                </ul>
+              </Show>
+            </div>
+          }
+        >
+          {/* Active chip */}
+          <span class="flex items-center gap-1.5 px-2.5 py-1.5 text-sm rounded-lg
+                        border border-blue-500 bg-blue-50 dark:bg-blue-900/20
+                        text-blue-700 dark:text-blue-300 max-w-[180px]">
+            <MdFillPerson size={14} class="shrink-0" />
+            <span class="truncate">{xchanLabel() || xchan()}</span>
+            <button
+              onClick={clearConnection}
+              class="shrink-0 ml-0.5 hover:text-blue-900 dark:hover:text-blue-100 transition-colors"
+              title="Remove filter"
+            >✕</button>
+          </span>
+        </Show>
+
+        {/* Text search */}
         <div class="relative">
           <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400">
             <MdFillSearch size={14} />
@@ -134,6 +248,7 @@ export default function StreamFilters() {
           />
         </div>
 
+        {/* Advanced toggle */}
         <button
           onClick={() => setExpanded((e) => !e)}
           class={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border transition-colors
@@ -159,6 +274,7 @@ export default function StreamFilters() {
         </Show>
       </div>
 
+      {/* Advanced panel */}
       <Show when={expanded()}>
         <div class="flex flex-wrap gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/60
                     border border-gray-200 dark:border-gray-700">

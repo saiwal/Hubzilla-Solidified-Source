@@ -33,7 +33,23 @@ export type NetworkParams = {
   dbegin?: string;
 };
 
-// api.ts — fetchNetworkStream
+export type AclConnection = {
+  type: 'c' | 'g';
+  name: string;
+  nick: string;
+  id: string | number;
+  xid: string;
+  link: string;
+  photo?: string;
+};
+
+export async function fetchConnections(): Promise<AclConnection[]> {
+  const res = await fetch('/acl?format=json&type=c&start=0&count=500');
+  if (!res.ok) return [];
+  const data = await res.json();
+  return (data.items ?? []).filter((i: AclConnection) => i.type === 'c');
+}
+
 export async function fetchNetworkStream(params: NetworkParams = {}): Promise<Post[]> {
   const qs = new URLSearchParams({ format: 'json' });
   Object.entries(params).forEach(([k, v]) => {
@@ -45,10 +61,7 @@ export async function fetchNetworkStream(params: NetworkParams = {}): Promise<Po
     .filter(shouldDisplay)
     .map(mapActivityToPost);
 }
-/** Toggle like / dislike / announce (repeat) on a post.
- *  Hubzilla's handler: GET /like/{iid}?verb=…&conv_mode=&page_mode=client&reload=0
- *  iid is the local integer item id returned by the network JSON hook.
- */
+
 export async function toggleVerb(
   iid: number,
   verb: 'like' | 'dislike' | 'announce',
@@ -61,17 +74,15 @@ export async function toggleVerb(
   }
 }
 
-/** Fetch a single thread by its root iid — used to refresh after commenting */
 export async function fetchThread(rootIid: number): Promise<Post[]> {
   const activities = await moduleGet<any[]>(`network?format=json&thread=${rootIid}`);
   return activities.map(mapActivityToPost);
 }
 
-/** Post a comment on a thread item */
 export async function postComment(params: {
   body: string;
-  parent_iid: number;   // integer id of the direct parent item
-  profile_uid: number;  // local channel id of the logged-in user
+  parent_iid: number;
+  profile_uid: number;
 }): Promise<Post | null> {
   const formData = new URLSearchParams();
   formData.set('type', 'net-comment');
@@ -82,17 +93,14 @@ export async function postComment(params: {
   formData.set('jsreload', '');
   formData.set('preview', '0');
   formData.set('conv_mode', '');
-
   const res = await fetch('/item', {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: formData.toString(),
   });
-
   if (!res.ok) throw new Error(`Comment failed: ${res.status}`);
   const data = await res.json();
-  // Hubzilla returns {cancel:1, reload:"..."} on success — not the new item
   if (data.cancel) return null;
   return mapActivityToPost(data);
 }
