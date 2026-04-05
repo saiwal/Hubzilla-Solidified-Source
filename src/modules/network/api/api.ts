@@ -33,6 +33,15 @@ export type NetworkParams = {
   dbegin?: string;
 };
 
+export type AclConnection = {
+  type: 'c' | 'g';
+  name: string;
+  nick: string;
+  id: string | number;
+  xid: string;
+  link: string;
+  photo?: string;
+};
 export type AclEntry = {
   type: 'c' | 'g';
   name: string;
@@ -43,7 +52,7 @@ export type AclEntry = {
   photo?: string;
 };
 
-export async function fetchConnections(): Promise<AclEntry[]> {
+export async function fetchConnections(): Promise<AclConnection[]> {
   const res = await fetch('/acl');
   if (!res.ok) return [];
   const data = await res.json();

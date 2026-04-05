@@ -1,7 +1,7 @@
 import { createSignal, Show, For, createResource, type JSX } from "solid-js";
 import { useSearchParams } from "@solidjs/router";
 import { loadNetwork, loading } from "../store/store";
-import { fetchConnections, type AclEntry, type NetworkParams } from "../api/api";
+import { fetchConnections, type AclConnection, type NetworkParams } from "../api/api";
 import { MdFillFilter_list, MdFillMail, MdFillPerson, MdFillRefresh, MdFillSearch, MdFillStar } from "solid-icons/md";
 
 type Order = NonNullable<NetworkParams["order"]>;
@@ -86,13 +86,12 @@ export default function StreamFilters() {
       .filter(
         (c) =>
           c.name.toLowerCase().includes(q) ||
-          c.nick.toLowerCase().includes(q) ||
           c.link.toLowerCase().includes(q)
       )
       .slice(0, 8);
   };
 
-  function selectConnection(c: AclEntry) {
+  function selectConnection(c: AclConnection) {
     // xchan is the portable identity key Hubzilla's network endpoint accepts
     sp({ xchan: c.xid, xchan_label: c.name });
     setConnInput("");

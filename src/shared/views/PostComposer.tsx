@@ -716,10 +716,11 @@ const PostComposer: Component<ComposerProps> = (props) => {
   // ── ACL helpers ───────────────────────────────────────────────────────────
   function toggleEntry(entry: AclEntry, list: "allow" | "deny") {
     const key = entryKey(entry);
-    const [setSet]     = list === "allow"
-      ? [setAllowEntries]
-      : [setDenyEntries];
+    const [getSet, setSet]     = list === "allow"
+      ? [allowEntries, setAllowEntries]
+      : [denyEntries,  setDenyEntries];
     const setOther = list === "allow" ? setDenyEntries : setAllowEntries;
+		getSet();
 
     // Toggle in target list
     setSet(prev => {
@@ -946,7 +947,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
                 class={
                   "flex-1 overflow-y-auto px-4 py-3.5 text-sm leading-relaxed " +
                   "text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-900 " +
-                  "focus:outline-none min-h-[180px] transition-colors " +
+                  "focus:outline-none min-h-65 transition-colors " +
                   "[&_strong]:font-bold [&_em]:italic [&_u]:underline [&_s]:line-through " +
                   "[&_h1]:text-2xl [&_h1]:font-bold [&_h1]:my-2 " +
                   "[&_h2]:text-xl  [&_h2]:font-bold [&_h2]:my-2 " +
