@@ -5,6 +5,7 @@ export const dict: RawDictionary = {
     articles: "Artikel",
     calendar: "Kalender",
     cart: "Warenkorb",
+		chat: "Chat",
     directory: "Verzeichnis",
     files: "Dateien",
     help: "Hilfe",

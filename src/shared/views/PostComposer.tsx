@@ -59,14 +59,18 @@ function bbToHtml(raw: string): string {
   s = s.replace(
     /\[list=1\]([\s\S]*?)\[\/list\]/gi,
     (_m, inner) =>
-      `<ol data-bb="ol">${inner.replace(/\[\*\]([\s\S]*?)(?=\[\*\]|\[\/list\]|$)/gi,
-        (_m2: string, item: string) => `<li>${item.trim()}</li>`)}</ol>`
+      `<ol data-bb="ol">${inner.replace(
+        /\[\*\]([\s\S]*?)(?=\[\*\]|\[\/list\]|$)/gi,
+        (_m2: string, item: string) => `<li>${item.trim()}</li>`,
+      )}</ol>`,
   );
   s = s.replace(
     /\[list\]([\s\S]*?)\[\/list\]/gi,
     (_m, inner) =>
-      `<ul data-bb="ul">${inner.replace(/\[\*\]([\s\S]*?)(?=\[\*\]|\[\/list\]|$)/gi,
-        (_m2: string, item: string) => `<li>${item.trim()}</li>`)}</ul>`
+      `<ul data-bb="ul">${inner.replace(
+        /\[\*\]([\s\S]*?)(?=\[\*\]|\[\/list\]|$)/gi,
+        (_m2: string, item: string) => `<li>${item.trim()}</li>`,
+      )}</ul>`,
   );
 
   s = s.replace(/\[table\]([\s\S]*?)\[\/table\]/gi, (_m, inner) => {
@@ -74,44 +78,75 @@ function bbToHtml(raw: string): string {
       /\[tr\]([\s\S]*?)\[\/tr\]/gi,
       (_mr: string, row: string) => {
         const cells = row
-          .replace(/\[th\]([\s\S]*?)\[\/th\]/gi, (_mc: string, c: string) => `<th data-bb="th">${c}</th>`)
-          .replace(/\[td\]([\s\S]*?)\[\/td\]/gi, (_mc: string, c: string) => `<td data-bb="td">${c}</td>`);
+          .replace(
+            /\[th\]([\s\S]*?)\[\/th\]/gi,
+            (_mc: string, c: string) => `<th data-bb="th">${c}</th>`,
+          )
+          .replace(
+            /\[td\]([\s\S]*?)\[\/td\]/gi,
+            (_mc: string, c: string) => `<td data-bb="td">${c}</td>`,
+          );
         return `<tr data-bb="tr">${cells}</tr>`;
-      }
+      },
     );
     return `<table data-bb="table">${rows}</table>`;
   });
 
-  s = s.replace(/\[code\]([\s\S]*?)\[\/code\]/gi, `<pre data-bb="code"><code>$1</code></pre>`);
+  s = s.replace(
+    /\[code\]([\s\S]*?)\[\/code\]/gi,
+    `<pre data-bb="code"><code>$1</code></pre>`,
+  );
 
   s = s
-    .replace(/\[quote\]([\s\S]*?)\[\/quote\]/gi,
-      `<blockquote data-bb="quote">$1</blockquote>`)
-    .replace(/\[spoiler\]([\s\S]*?)\[\/spoiler\]/gi,
-      `<details data-bb="spoiler"><summary>Spoiler</summary>$1</details>`);
+    .replace(
+      /\[quote\]([\s\S]*?)\[\/quote\]/gi,
+      `<blockquote data-bb="quote">$1</blockquote>`,
+    )
+    .replace(
+      /\[spoiler\]([\s\S]*?)\[\/spoiler\]/gi,
+      `<details data-bb="spoiler"><summary>Spoiler</summary>$1</details>`,
+    );
 
   s = s.replace(/\[hr\]/gi, `<hr data-bb="hr" />`);
 
   s = s
-    .replace(/\[b\]([\s\S]*?)\[\/b\]/gi,        `<strong>$1</strong>`)
-    .replace(/\[i\]([\s\S]*?)\[\/i\]/gi,         `<em>$1</em>`)
-    .replace(/\[u\]([\s\S]*?)\[\/u\]/gi,         `<u>$1</u>`)
-    .replace(/\[s\]([\s\S]*?)\[\/s\]/gi,         `<s>$1</s>`)
-    .replace(/\[icode\]([\s\S]*?)\[\/icode\]/gi, `<code data-bb="icode">$1</code>`)
-    .replace(/\[size=(\d+)\]([\s\S]*?)\[\/size\]/gi,
-      `<span data-bb="size" data-size="$1" style="font-size:$1px">$2</span>`)
-    .replace(/\[color=([^\]]+)\]([\s\S]*?)\[\/color\]/gi,
-      `<span data-bb="color" data-color="$1" style="color:$1">$2</span>`)
-    .replace(/\[url=([^\]]+)\]([\s\S]*?)\[\/url\]/gi,
-      `<a href="$1" data-bb="url" data-url="$1" target="_blank" rel="noopener">$2</a>`)
-    .replace(/\[url\]([\s\S]*?)\[\/url\]/gi,
-      `<a href="$1" data-bb="url-plain" target="_blank" rel="noopener">$1</a>`)
-    .replace(/\[img\]([\s\S]*?)\[\/img\]/gi,
-      `<img src="$1" data-bb="img" class="max-w-full rounded my-1" />`)
-    .replace(/\[video\]([\s\S]*?)\[\/video\]/gi,
-      `<video src="$1" data-bb="video" controls class="max-w-full my-1"></video>`);
+    .replace(/\[b\]([\s\S]*?)\[\/b\]/gi, `<strong>$1</strong>`)
+    .replace(/\[i\]([\s\S]*?)\[\/i\]/gi, `<em>$1</em>`)
+    .replace(/\[u\]([\s\S]*?)\[\/u\]/gi, `<u>$1</u>`)
+    .replace(/\[s\]([\s\S]*?)\[\/s\]/gi, `<s>$1</s>`)
+    .replace(
+      /\[icode\]([\s\S]*?)\[\/icode\]/gi,
+      `<code data-bb="icode">$1</code>`,
+    )
+    .replace(
+      /\[size=(\d+)\]([\s\S]*?)\[\/size\]/gi,
+      `<span data-bb="size" data-size="$1" style="font-size:$1px">$2</span>`,
+    )
+    .replace(
+      /\[color=([^\]]+)\]([\s\S]*?)\[\/color\]/gi,
+      `<span data-bb="color" data-color="$1" style="color:$1">$2</span>`,
+    )
+    .replace(
+      /\[url=([^\]]+)\]([\s\S]*?)\[\/url\]/gi,
+      `<a href="$1" data-bb="url" data-url="$1" target="_blank" rel="noopener">$2</a>`,
+    )
+    .replace(
+      /\[url\]([\s\S]*?)\[\/url\]/gi,
+      `<a href="$1" data-bb="url-plain" target="_blank" rel="noopener">$1</a>`,
+    )
+    .replace(
+      /\[img\]([\s\S]*?)\[\/img\]/gi,
+      `<img src="$1" data-bb="img" class="max-w-full rounded my-1" />`,
+    )
+    .replace(
+      /\[video\]([\s\S]*?)\[\/video\]/gi,
+      `<video src="$1" data-bb="video" controls class="max-w-full my-1"></video>`,
+    );
 
-  s = s.replace(/\n/g, "<br/>");
+  s = s.replace(
+    /\n(?!<\/(h[123]|ul|ol|li|blockquote|pre|table|tr|td|th|details|hr)>)/gi,
+    "<br/>",
+  );
   return s;
 }
 
@@ -123,44 +158,54 @@ function htmlToBb(html: string): string {
     if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? "";
     if (node.nodeType !== Node.ELEMENT_NODE) return "";
 
-    const el    = node as Element;
-    const tag   = el.tagName.toLowerCase();
+    const el = node as Element;
+    const tag = el.tagName.toLowerCase();
     const inner = Array.from(el.childNodes).map(walk).join("");
-    const bb    = el.getAttribute("data-bb");
+    const bb = el.getAttribute("data-bb");
 
-    if (bb === "h1")      return `[h1]${inner}[/h1]\n`;
-    if (bb === "h2")      return `[h2]${inner}[/h2]\n`;
-    if (bb === "h3")      return `[h3]${inner}[/h3]\n`;
+    if (bb === "h1") return `[h1]${inner}[/h1]\n`;
+    if (bb === "h2") return `[h2]${inner}[/h2]\n`;
+    if (bb === "h3") return `[h3]${inner}[/h3]\n`;
     if (bb === "ol") {
-      const items = Array.from(el.querySelectorAll("li")).map(li => `[*]${li.textContent ?? ""}`).join("\n");
+      const items = Array.from(el.querySelectorAll("li"))
+        .map((li) => `[*]${li.textContent ?? ""}`)
+        .join("\n");
       return `[list=1]\n${items}\n[/list]\n`;
     }
     if (bb === "ul") {
-      const items = Array.from(el.querySelectorAll("li")).map(li => `[*]${li.textContent ?? ""}`).join("\n");
+      const items = Array.from(el.querySelectorAll("li"))
+        .map((li) => `[*]${li.textContent ?? ""}`)
+        .join("\n");
       return `[list]\n${items}\n[/list]\n`;
     }
     if (bb === "table") {
-      const rows = Array.from(el.querySelectorAll("tr")).map(tr => {
-        const cells = Array.from(tr.children).map(cell => {
-          const t = cell.tagName.toLowerCase();
-          return t === "th" ? `[th]${cell.textContent}[/th]` : `[td]${cell.textContent}[/td]`;
-        }).join("");
-        return `[tr]${cells}[/tr]`;
-      }).join("\n");
+      const rows = Array.from(el.querySelectorAll("tr"))
+        .map((tr) => {
+          const cells = Array.from(tr.children)
+            .map((cell) => {
+              const t = cell.tagName.toLowerCase();
+              return t === "th"
+                ? `[th]${cell.textContent}[/th]`
+                : `[td]${cell.textContent}[/td]`;
+            })
+            .join("");
+          return `[tr]${cells}[/tr]`;
+        })
+        .join("\n");
       return `[table]\n${rows}\n[/table]\n`;
     }
-    if (bb === "code")    return `[code]${inner}[/code]\n`;
-    if (bb === "icode")   return `[icode]${inner}[/icode]`;
-    if (bb === "quote")   return `[quote]${inner}[/quote]\n`;
+    if (bb === "code") return `[code]${inner}[/code]\n`;
+    if (bb === "icode") return `[icode]${inner}[/icode]`;
+    if (bb === "quote") return `[quote]${inner}[/quote]\n`;
     if (bb === "spoiler") return `[spoiler]${inner}[/spoiler]\n`;
-    if (bb === "hr")      return `[hr]\n`;
+    if (bb === "hr") return `[hr]\n`;
     if (bb === "url") {
       const url = el.getAttribute("data-url") ?? el.getAttribute("href") ?? "";
       return `[url=${url}]${inner}[/url]`;
     }
     if (bb === "url-plain") return `[url]${inner}[/url]`;
-    if (bb === "img")     return `[img]${el.getAttribute("src") ?? ""}[/img]`;
-    if (bb === "video")   return `[video]${el.getAttribute("src") ?? ""}[/video]`;
+    if (bb === "img") return `[img]${el.getAttribute("src") ?? ""}[/img]`;
+    if (bb === "video") return `[video]${el.getAttribute("src") ?? ""}[/video]`;
     if (bb === "size") {
       const sz = el.getAttribute("data-size") ?? "";
       return `[size=${sz}]${inner}[/size]`;
@@ -171,40 +216,51 @@ function htmlToBb(html: string): string {
     }
 
     if (tag === "strong" || tag === "b") return `[b]${inner}[/b]`;
-    if (tag === "em"     || tag === "i") return `[i]${inner}[/i]`;
-    if (tag === "u")                     return `[u]${inner}[/u]`;
-    if (tag === "s" || tag === "strike" || tag === "del") return `[s]${inner}[/s]`;
-    if (tag === "code")                  return `[icode]${inner}[/icode]`;
-    if (tag === "br")                    return "\n";
-    if (tag === "p")                     return inner + "\n";
-    if (tag === "div")                   return inner + (inner.endsWith("\n") ? "" : "\n");
-    if (tag === "h1")                    return `[h1]${inner}[/h1]\n`;
-    if (tag === "h2")                    return `[h2]${inner}[/h2]\n`;
-    if (tag === "h3")                    return `[h3]${inner}[/h3]\n`;
+    if (tag === "em" || tag === "i") return `[i]${inner}[/i]`;
+    if (tag === "u") return `[u]${inner}[/u]`;
+    if (tag === "s" || tag === "strike" || tag === "del")
+      return `[s]${inner}[/s]`;
+    if (tag === "code") return `[icode]${inner}[/icode]`;
+    if (tag === "br") return "\n";
+    if (tag === "p") return inner + "\n";
+    if (tag === "div") return inner + (inner.endsWith("\n") ? "" : "\n");
+    if (tag === "h1") return `[h1]${inner}[/h1]\n`;
+    if (tag === "h2") return `[h2]${inner}[/h2]\n`;
+    if (tag === "h3") return `[h3]${inner}[/h3]\n`;
     if (tag === "ul") {
-      const items = Array.from(el.children).map(li => `[*]${walk(li)}`).join("\n");
+      const items = Array.from(el.children)
+        .map((li) => `[*]${walk(li)}`)
+        .join("\n");
       return `[list]\n${items}\n[/list]\n`;
     }
     if (tag === "ol") {
-      const items = Array.from(el.children).map(li => `[*]${walk(li)}`).join("\n");
+      const items = Array.from(el.children)
+        .map((li) => `[*]${walk(li)}`)
+        .join("\n");
       return `[list=1]\n${items}\n[/list]\n`;
     }
-    if (tag === "li")         return inner;
+    if (tag === "li") return inner;
     if (tag === "blockquote") return `[quote]${inner}[/quote]\n`;
-    if (tag === "pre")        return `[code]${inner}[/code]\n`;
-    if (tag === "hr")         return `[hr]\n`;
+    if (tag === "pre") return `[code]${inner}[/code]\n`;
+    if (tag === "hr") return `[hr]\n`;
     if (tag === "a") {
       const href = el.getAttribute("href") ?? "";
-      return inner === href ? `[url]${href}[/url]` : `[url=${href}]${inner}[/url]`;
+      return inner === href
+        ? `[url]${href}[/url]`
+        : `[url=${href}]${inner}[/url]`;
     }
-    if (tag === "img")     return `[img]${el.getAttribute("src") ?? ""}[/img]`;
+    if (tag === "img") return `[img]${el.getAttribute("src") ?? ""}[/img]`;
     if (tag === "details") return `[spoiler]${inner}[/spoiler]\n`;
     if (tag === "summary") return "";
 
     return inner;
   }
 
-  return Array.from(tmp.childNodes).map(walk).join("").replace(/\n+$/, "");
+  return Array.from(tmp.childNodes)
+    .map(walk)
+    .join("")
+    .replace(/\n{3,}/g, "\n\n") // collapse 3+ newlines to max 2
+    .replace(/\n+$/, "");
 }
 
 // ─── WYSIWYG helpers ──────────────────────────────────────────────────────────
@@ -248,41 +304,84 @@ interface ToolbarItem {
 }
 
 const TOOLBAR: ToolbarItem[] = [
-  { title: "Bold",          icon: "B", cmd: "bold",          tag: "b", labelClass: "font-bold" },
-  { title: "Italic",        icon: "I", cmd: "italic",        tag: "i", labelClass: "italic" },
-  { title: "Underline",     icon: "U", cmd: "underline",     tag: "u", labelClass: "underline" },
-  { title: "Strikethrough", icon: "S", cmd: "strikeThrough", tag: "s", labelClass: "line-through" },
-  { title: "Heading 1", icon: "H1", tag: "h1", divider: true,
-    action: (mode, insertBb) => mode === "wysiwyg"
-      ? wrapSelection(`<h1 data-bb="h1">`, "</h1>")
-      : insertBb("[h1]", "[/h1]", "Heading"),
+  { title: "Bold", icon: "B", cmd: "bold", tag: "b", labelClass: "font-bold" },
+  { title: "Italic", icon: "I", cmd: "italic", tag: "i", labelClass: "italic" },
+  {
+    title: "Underline",
+    icon: "U",
+    cmd: "underline",
+    tag: "u",
+    labelClass: "underline",
   },
-  { title: "Heading 2", icon: "H2", tag: "h2",
-    action: (mode, insertBb) => mode === "wysiwyg"
-      ? wrapSelection(`<h2 data-bb="h2">`, "</h2>")
-      : insertBb("[h2]", "[/h2]", "Heading"),
+  {
+    title: "Strikethrough",
+    icon: "S",
+    cmd: "strikeThrough",
+    tag: "s",
+    labelClass: "line-through",
   },
-  { title: "Heading 3", icon: "H3", tag: "h3",
-    action: (mode, insertBb) => mode === "wysiwyg"
-      ? wrapSelection(`<h3 data-bb="h3">`, "</h3>")
-      : insertBb("[h3]", "[/h3]", "Heading"),
+  {
+    title: "Heading 1",
+    icon: "H1",
+    tag: "h1",
+    divider: true,
+    action: (mode, insertBb) =>
+      mode === "wysiwyg"
+        ? wrapSelection(`<h1 data-bb="h1">`, "</h1>")
+        : insertBb("[h1]", "[/h1]", "Heading"),
   },
-  { title: "Unordered list", icon: "• —", tag: "list", divider: true,
-    action: (mode, insertBb) => mode === "wysiwyg"
-      ? insertHtmlAtCursor(`<ul data-bb="ul"><li>Item</li></ul>`)
-      : insertBb("[list]\n[*]", "\n[/list]", "Item"),
+  {
+    title: "Heading 2",
+    icon: "H2",
+    tag: "h2",
+    action: (mode, insertBb) =>
+      mode === "wysiwyg"
+        ? wrapSelection(`<h2 data-bb="h2">`, "</h2>")
+        : insertBb("[h2]", "[/h2]", "Heading"),
   },
-  { title: "Ordered list", icon: "1. —", tag: "list=1",
-    action: (mode, insertBb) => mode === "wysiwyg"
-      ? insertHtmlAtCursor(`<ol data-bb="ol"><li>Item</li></ol>`)
-      : insertBb("[list=1]\n[*]", "\n[/list]", "Item"),
+  {
+    title: "Heading 3",
+    icon: "H3",
+    tag: "h3",
+    action: (mode, insertBb) =>
+      mode === "wysiwyg"
+        ? wrapSelection(`<h3 data-bb="h3">`, "</h3>")
+        : insertBb("[h3]", "[/h3]", "Heading"),
   },
-  { title: "Quote", icon: "❝", tag: "quote", block: true, divider: true,
-    action: (mode, insertBb) => mode === "wysiwyg"
-      ? wrapSelection(`<blockquote data-bb="quote">`, `</blockquote>`)
-      : insertBb("[quote]\n", "\n[/quote]"),
+  {
+    title: "Unordered list",
+    icon: "• —",
+    tag: "list",
+    divider: true,
+    action: (mode, insertBb) =>
+      mode === "wysiwyg"
+        ? insertHtmlAtCursor(`<ul data-bb="ul"><li>Item</li></ul>`)
+        : insertBb("[list]\n[*]", "\n[/list]", "Item"),
   },
-  { title: "Code block", icon: "</>", tag: "code",
+  {
+    title: "Ordered list",
+    icon: "1. —",
+    tag: "list=1",
+    action: (mode, insertBb) =>
+      mode === "wysiwyg"
+        ? insertHtmlAtCursor(`<ol data-bb="ol"><li>Item</li></ol>`)
+        : insertBb("[list=1]\n[*]", "\n[/list]", "Item"),
+  },
+  {
+    title: "Quote",
+    icon: "❝",
+    tag: "quote",
+    block: true,
+    divider: true,
+    action: (mode, insertBb) =>
+      mode === "wysiwyg"
+        ? wrapSelection(`<blockquote data-bb="quote">`, `</blockquote>`)
+        : insertBb("[quote]\n", "\n[/quote]"),
+  },
+  {
+    title: "Code block",
+    icon: "</>",
+    tag: "code",
     action: (mode, insertBb) => {
       if (mode === "wysiwyg") {
         const text = window.getSelection()?.toString() || "code here";
@@ -292,92 +391,140 @@ const TOOLBAR: ToolbarItem[] = [
       }
     },
   },
-  { title: "Inline code", icon: "`…`", tag: "icode",
-    action: (mode, insertBb) => mode === "wysiwyg"
-      ? wrapSelection(`<code data-bb="icode">`, `</code>`)
-      : insertBb("[icode]", "[/icode]"),
+  {
+    title: "Inline code",
+    icon: "`…`",
+    tag: "icode",
+    action: (mode, insertBb) =>
+      mode === "wysiwyg"
+        ? wrapSelection(`<code data-bb="icode">`, `</code>`)
+        : insertBb("[icode]", "[/icode]"),
   },
-  { title: "Spoiler", icon: "⚠", tag: "spoiler",
+  {
+    title: "Spoiler",
+    icon: "⚠",
+    tag: "spoiler",
     action: (mode, insertBb) => {
       if (mode === "wysiwyg") {
         const text = window.getSelection()?.toString() || "hidden content";
-        insertHtmlAtCursor(`<details data-bb="spoiler"><summary>Spoiler</summary>${text}</details>`);
+        insertHtmlAtCursor(
+          `<details data-bb="spoiler"><summary>Spoiler</summary>${text}</details>`,
+        );
       } else {
         insertBb("[spoiler]\n", "\n[/spoiler]");
       }
     },
   },
-  { title: "Horizontal rule", icon: "—",
-    action: (mode, insertBb) => mode === "wysiwyg"
-      ? insertHtmlAtCursor(`<hr data-bb="hr" />`)
-      : insertBb("[hr]", "", ""),
+  {
+    title: "Horizontal rule",
+    icon: "—",
+    action: (mode, insertBb) =>
+      mode === "wysiwyg"
+        ? insertHtmlAtCursor(`<hr data-bb="hr" />`)
+        : insertBb("[hr]", "", ""),
   },
-  { title: "Link", icon: "🔗", divider: true,
+  {
+    title: "Link",
+    icon: "🔗",
+    divider: true,
     action: (mode, insertBb) => {
       const url = window.prompt("URL:", "https://");
       if (!url) return;
       if (mode === "wysiwyg") {
         const text = window.getSelection()?.toString() || url;
-        insertHtmlAtCursor(`<a href="${url}" data-bb="url" data-url="${url}" target="_blank" rel="noopener">${text}</a>`);
+        insertHtmlAtCursor(
+          `<a href="${url}" data-bb="url" data-url="${url}" target="_blank" rel="noopener">${text}</a>`,
+        );
       } else {
-        const sel = document.querySelector<HTMLTextAreaElement>("#hz-source-ta");
-        const selText = sel ? sel.value.slice(sel.selectionStart, sel.selectionEnd) : "";
-        selText ? insertBb(`[url=${url}]`, "[/url]") : insertBb("[url]", "[/url]", url);
+        const sel =
+          document.querySelector<HTMLTextAreaElement>("#hz-source-ta");
+        const selText = sel
+          ? sel.value.slice(sel.selectionStart, sel.selectionEnd)
+          : "";
+        selText
+          ? insertBb(`[url=${url}]`, "[/url]")
+          : insertBb("[url]", "[/url]", url);
       }
     },
   },
-  { title: "Image", icon: "🖼",
+  {
+    title: "Image",
+    icon: "🖼",
     action: (mode, insertBb) => {
       const url = window.prompt("Image URL:", "https://");
       if (!url) return;
       mode === "wysiwyg"
-        ? insertHtmlAtCursor(`<img src="${url}" data-bb="img" class="max-w-full rounded my-1" />`)
+        ? insertHtmlAtCursor(
+            `<img src="${url}" data-bb="img" class="max-w-full rounded my-1" />`,
+          )
         : insertBb("[img]", "[/img]", url);
     },
   },
-  { title: "Video", icon: "▶",
+  {
+    title: "Video",
+    icon: "▶",
     action: (mode, insertBb) => {
       const url = window.prompt("Video URL:", "https://");
       if (!url) return;
       mode === "wysiwyg"
-        ? insertHtmlAtCursor(`<video src="${url}" data-bb="video" controls class="max-w-full my-1"></video>`)
+        ? insertHtmlAtCursor(
+            `<video src="${url}" data-bb="video" controls class="max-w-full my-1"></video>`,
+          )
         : insertBb("[video]", "[/video]", url);
     },
   },
-  { title: "Text size", icon: "Aa", divider: true,
+  {
+    title: "Text size",
+    icon: "Aa",
+    divider: true,
     action: (mode, insertBb) => {
       const size = window.prompt("Font size in px (e.g. 18):", "18");
       if (!size || isNaN(Number(size))) return;
       mode === "wysiwyg"
-        ? wrapSelection(`<span data-bb="size" data-size="${size}" style="font-size:${size}px">`, `</span>`)
+        ? wrapSelection(
+            `<span data-bb="size" data-size="${size}" style="font-size:${size}px">`,
+            `</span>`,
+          )
         : insertBb(`[size=${size}]`, "[/size]");
     },
   },
-  { title: "Text color", icon: "A🎨",
+  {
+    title: "Text color",
+    icon: "A🎨",
     action: (mode, insertBb) => {
       const color = window.prompt("Color (name or #hex):", "#e74c3c");
       if (!color) return;
       mode === "wysiwyg"
-        ? wrapSelection(`<span data-bb="color" data-color="${color}" style="color:${color}">`, `</span>`)
+        ? wrapSelection(
+            `<span data-bb="color" data-color="${color}" style="color:${color}">`,
+            `</span>`,
+          )
         : insertBb(`[color=${color}]`, "[/color]");
     },
   },
-  { title: "Table", icon: "⊞", divider: true,
+  {
+    title: "Table",
+    icon: "⊞",
+    divider: true,
     action: (mode, insertBb) => {
       const rows = parseInt(window.prompt("Rows:", "2") ?? "2", 10) || 2;
       const cols = parseInt(window.prompt("Columns:", "2") ?? "2", 10) || 2;
       if (mode === "wysiwyg") {
         const trs = Array.from({ length: rows }, (_, r) => {
-          const tds = Array.from({ length: cols }, (_, c) =>
-            `<td data-bb="td">${r === 0 ? `Header ${c + 1}` : `Cell ${r},${c + 1}`}</td>`
+          const tds = Array.from(
+            { length: cols },
+            (_, c) =>
+              `<td data-bb="td">${r === 0 ? `Header ${c + 1}` : `Cell ${r},${c + 1}`}</td>`,
           ).join("");
           return `<tr data-bb="tr">${tds}</tr>`;
         }).join("");
         insertHtmlAtCursor(`<table data-bb="table">${trs}</table>`);
       } else {
         const trs = Array.from({ length: rows }, (_, r) => {
-          const tds = Array.from({ length: cols }, (_, c) =>
-            `[td]${r === 0 ? `Header ${c + 1}` : `Cell ${r},${c + 1}`}[/td]`
+          const tds = Array.from(
+            { length: cols },
+            (_, c) =>
+              `[td]${r === 0 ? `Header ${c + 1}` : `Cell ${r},${c + 1}`}[/td]`,
           ).join("");
           return `[tr]${tds}[/tr]`;
         }).join("\n");
@@ -385,15 +532,22 @@ const TOOLBAR: ToolbarItem[] = [
       }
     },
   },
-  { title: "Mention", icon: "@", divider: true,
-    action: (mode, insertBb) => mode === "wysiwyg"
-      ? insertHtmlAtCursor("@nick@domain")
-      : insertBb("@", "", "nick@domain"),
+  {
+    title: "Mention",
+    icon: "@",
+    divider: true,
+    action: (mode, insertBb) =>
+      mode === "wysiwyg"
+        ? insertHtmlAtCursor("@nick@domain")
+        : insertBb("@", "", "nick@domain"),
   },
-  { title: "Hashtag", icon: "#",
-    action: (mode, insertBb) => mode === "wysiwyg"
-      ? insertHtmlAtCursor("#tag")
-      : insertBb("#", "", "tag"),
+  {
+    title: "Hashtag",
+    icon: "#",
+    action: (mode, insertBb) =>
+      mode === "wysiwyg"
+        ? insertHtmlAtCursor("#tag")
+        : insertBb("#", "", "tag"),
   },
 ];
 
@@ -401,11 +555,29 @@ const TOOLBAR: ToolbarItem[] = [
 
 const DRAFT_KEY = "hz_composer_draft";
 function loadDraft(): Record<string, string> {
-  try { return JSON.parse(localStorage.getItem(DRAFT_KEY) ?? "{}") as Record<string, string>; }
-  catch { return {}; }
+  try {
+    return JSON.parse(localStorage.getItem(DRAFT_KEY) ?? "{}") as Record<
+      string,
+      string
+    >;
+  } catch {
+    return {};
+  }
 }
-function saveDraft(data: object) { try { localStorage.setItem(DRAFT_KEY, JSON.stringify(data)); } catch { /**/ } }
-function clearDraft()            { try { localStorage.removeItem(DRAFT_KEY); }                   catch { /**/ } }
+function saveDraft(data: object) {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+  } catch {
+    /**/
+  }
+}
+function clearDraft() {
+  try {
+    localStorage.removeItem(DRAFT_KEY);
+  } catch {
+    /**/
+  }
+}
 
 // ─── ACL Picker ───────────────────────────────────────────────────────────────
 
@@ -432,31 +604,32 @@ const AclPicker: Component<AclPickerProps> = (props) => {
     const q = query().toLowerCase().trim();
     const all = connections() ?? [];
     if (!q) return all;
-    return all.filter(c =>
-      c.name.toLowerCase().includes(q) ||
-      (c.nick ?? "").toLowerCase().includes(q) ||
-      (c.link ?? "").toLowerCase().includes(q)
+    return all.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        (c.nick ?? "").toLowerCase().includes(q) ||
+        (c.link ?? "").toLowerCase().includes(q),
     );
   };
 
   const totalSelected = () => props.allowEntries.size + props.denyEntries.size;
 
   const modeLabel: Record<AclMode, string> = {
-    public:      "🌐 Public",
+    public: "🌐 Public",
     connections: "🔒 Connections",
-    custom:      `🤫 Custom${totalSelected() > 0 ? ` (${totalSelected()})` : ""}`,
+    custom: `🤫 Custom${totalSelected() > 0 ? ` (${totalSelected()})` : ""}`,
   };
 
   return (
     <div class="relative shrink-0">
       {/* Mode pills */}
       <div class="flex items-center gap-1">
-        {(["public", "connections", "custom"] as AclMode[]).map(m => (
+        {(["public", "connections", "custom"] as AclMode[]).map((m) => (
           <button
             type="button"
             onClick={() => {
               props.onModeChange(m);
-              if (m === "custom") setOpen(o => !o);
+              if (m === "custom") setOpen((o) => !o);
               else setOpen(false);
             }}
             class={
@@ -474,14 +647,13 @@ const AclPicker: Component<AclPickerProps> = (props) => {
       {/* Dropdown */}
       <Show when={open() && props.mode === "custom"}>
         <div class="absolute bottom-full mb-2 left-0 z-50 w-80 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl overflow-hidden flex flex-col max-h-96">
-
           {/* Search */}
           <div class="px-3 py-2 border-b border-gray-100 dark:border-gray-800 shrink-0">
             <input
               type="text"
               placeholder="Search connections & groups…"
               value={query()}
-              onInput={e => setQuery(e.currentTarget.value)}
+              onInput={(e) => setQuery(e.currentTarget.value)}
               class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-700
                      bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200
                      placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
@@ -492,35 +664,47 @@ const AclPicker: Component<AclPickerProps> = (props) => {
           <Show when={totalSelected() > 0}>
             <div class="flex flex-wrap gap-1 px-3 py-2 border-b border-gray-100 dark:border-gray-800 shrink-0 max-h-24 overflow-y-auto">
               <For each={[...props.allowEntries]}>
-                {key => {
-                  const conn = (connections() ?? []).find(c => entryKey(c) === key);
+                {(key) => {
+                  const conn = (connections() ?? []).find(
+                    (c) => entryKey(c) === key,
+                  );
                   return (
-                    <span class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs
+                    <span
+                      class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs
                                  bg-green-50 dark:bg-green-500/10 border border-green-300 dark:border-green-600
-                                 text-green-700 dark:text-green-300">
+                                 text-green-700 dark:text-green-300"
+                    >
                       ✓ {conn?.name ?? key.slice(0, 14) + "…"}
                       <button
                         type="button"
                         onClick={() => conn && props.onToggle(conn, "allow")}
                         class="hover:text-green-900 dark:hover:text-green-100 leading-none"
-                      >✕</button>
+                      >
+                        ✕
+                      </button>
                     </span>
                   );
                 }}
               </For>
               <For each={[...props.denyEntries]}>
-                {key => {
-                  const conn = (connections() ?? []).find(c => entryKey(c) === key);
+                {(key) => {
+                  const conn = (connections() ?? []).find(
+                    (c) => entryKey(c) === key,
+                  );
                   return (
-                    <span class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs
+                    <span
+                      class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs
                                  bg-red-50 dark:bg-red-500/10 border border-red-300 dark:border-red-600
-                                 text-red-700 dark:text-red-300">
+                                 text-red-700 dark:text-red-300"
+                    >
                       ✕ {conn?.name ?? key.slice(0, 14) + "…"}
                       <button
                         type="button"
                         onClick={() => conn && props.onToggle(conn, "deny")}
                         class="hover:text-red-900 dark:hover:text-red-100 leading-none"
-                      >✕</button>
+                      >
+                        ✕
+                      </button>
                     </span>
                   );
                 }}
@@ -537,25 +721,31 @@ const AclPicker: Component<AclPickerProps> = (props) => {
 
           {/* Legend */}
           <div class="flex items-center gap-4 px-3 py-1.5 border-b border-gray-100 dark:border-gray-800 shrink-0">
-            <span class="text-[10px] text-gray-400">Row = allow &nbsp;|&nbsp; ✕ button = deny</span>
+            <span class="text-[10px] text-gray-400">
+              Row = allow &nbsp;|&nbsp; ✕ button = deny
+            </span>
             <span class="flex items-center gap-1 text-[10px] text-green-600 dark:text-green-400 ml-auto">
-              <span class="w-2 h-2 rounded-full bg-green-400 inline-block" /> allowed
+              <span class="w-2 h-2 rounded-full bg-green-400 inline-block" />{" "}
+              allowed
             </span>
             <span class="flex items-center gap-1 text-[10px] text-red-500 dark:text-red-400">
-              <span class="w-2 h-2 rounded-full bg-red-400 inline-block" /> denied
+              <span class="w-2 h-2 rounded-full bg-red-400 inline-block" />{" "}
+              denied
             </span>
           </div>
 
           {/* List */}
           <ul class="overflow-y-auto flex-1 py-1">
             <Show when={connections.loading}>
-              <li class="px-4 py-3 text-xs text-gray-400 text-center">Loading…</li>
+              <li class="px-4 py-3 text-xs text-gray-400 text-center">
+                Loading…
+              </li>
             </Show>
             <For each={filtered()}>
               {(c) => {
                 const key = entryKey(c);
                 const isAllowed = () => props.allowEntries.has(key);
-                const isDenied  = () => props.denyEntries.has(key);
+                const isDenied = () => props.denyEntries.has(key);
                 return (
                   <li class="flex items-center gap-1 pr-2">
                     {/* Main row — click = toggle allow */}
@@ -572,25 +762,37 @@ const AclPicker: Component<AclPickerProps> = (props) => {
                       }
                     >
                       {/* Avatar */}
-                      <Show when={c.photo} fallback={
-                        <span class="w-6 h-6 rounded-full shrink-0 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[10px] text-gray-500">
-                          {c.type === "g" ? "g" : "?"}
-                        </span>
-                      }>
-                        <img src={c.photo} alt="" class="w-6 h-6 rounded-full shrink-0 object-cover bg-gray-200 dark:bg-gray-700" />
+                      <Show
+                        when={c.photo}
+                        fallback={
+                          <span class="w-6 h-6 rounded-full shrink-0 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[10px] text-gray-500">
+                            {c.type === "g" ? "g" : "?"}
+                          </span>
+                        }
+                      >
+                        <img
+                          src={c.photo}
+                          alt=""
+                          class="w-6 h-6 rounded-full shrink-0 object-cover bg-gray-200 dark:bg-gray-700"
+                        />
                       </Show>
 
                       <span class="flex flex-col min-w-0 flex-1">
                         <span class="truncate text-xs font-medium text-gray-800 dark:text-gray-200">
-                          {c.type === "g" ? "👥 " : ""}{c.name}
+                          {c.type === "g" ? "👥 " : ""}
+                          {c.name}
                         </span>
                         <Show when={c.link}>
-                          <span class="truncate text-[10px] text-gray-400">{c.link}</span>
+                          <span class="truncate text-[10px] text-gray-400">
+                            {c.link}
+                          </span>
                         </Show>
                       </span>
 
                       <Show when={isAllowed()}>
-                        <span class="text-green-500 text-xs shrink-0 font-bold">✓</span>
+                        <span class="text-green-500 text-xs shrink-0 font-bold">
+                          ✓
+                        </span>
                       </Show>
                     </button>
 
@@ -624,23 +826,29 @@ const AclPicker: Component<AclPickerProps> = (props) => {
 const PostComposer: Component<ComposerProps> = (props) => {
   const draft = loadDraft();
 
-  const [title,        setTitle]        = createSignal(draft.title    ?? "");
-  const [summary,      setSummary]      = createSignal(draft.summary   ?? "");
-  const [category,     setCategory]     = createSignal(draft.category ?? "");
-  const [body,         setBody]         = createSignal(props.initialBody ?? draft.body ?? "");
-  const [aclMode,      setAclMode]      = createSignal<AclMode>((draft.aclMode as AclMode) ?? "public");
-  const [allowEntries, setAllowEntries] = createSignal<Set<string>>(new Set<string>());
-  const [denyEntries,  setDenyEntries]  = createSignal<Set<string>>(new Set<string>());
-  const [expiry,       setExpiry]       = createSignal("");
-  const [tab,          setTab]          = createSignal<"wysiwyg" | "source">("wysiwyg");
-  const [fullscreen,   setFullscreen]   = createSignal(false);
-  const [showExtra,    setShowExtra]    = createSignal(false);
-  const [submitting,   setSubmitting]   = createSignal(false);
-  const [error,        setError]        = createSignal("");
+  const [title, setTitle] = createSignal(draft.title ?? "");
+  const [summary, setSummary] = createSignal(draft.summary ?? "");
+  const [category, setCategory] = createSignal(draft.category ?? "");
+  const [body, setBody] = createSignal(props.initialBody ?? draft.body ?? "");
+  const [aclMode, setAclMode] = createSignal<AclMode>(
+    (draft.aclMode as AclMode) ?? "public",
+  );
+  const [allowEntries, setAllowEntries] = createSignal<Set<string>>(
+    new Set<string>(),
+  );
+  const [denyEntries, setDenyEntries] = createSignal<Set<string>>(
+    new Set<string>(),
+  );
+  const [expiry, setExpiry] = createSignal("");
+  const [tab, setTab] = createSignal<"wysiwyg" | "source">("wysiwyg");
+  const [fullscreen, setFullscreen] = createSignal(false);
+  const [showExtra, setShowExtra] = createSignal(false);
+  const [submitting, setSubmitting] = createSignal(false);
+  const [error, setError] = createSignal("");
 
   const charCount = () => body().length;
 
-  let editorRef!:   HTMLDivElement;
+  let editorRef!: HTMLDivElement;
   let textareaRef!: HTMLTextAreaElement;
 
   // ── WYSIWYG ↔ body sync ────────────────────────────────────────────────────
@@ -652,21 +860,31 @@ const PostComposer: Component<ComposerProps> = (props) => {
     }
   });
 
-  function handleTabChange(next: "wysiwyg" | "source") {
-    if (next === "source" && tab() === "wysiwyg" && editorRef) {
-      setBody(htmlToBb(editorRef.innerHTML));
-    }
-    setTab(next);
-  }
 
+function handleTabChange(next: "wysiwyg" | "source") {
+  if (next === "source" && tab() === "wysiwyg" && editorRef) {
+    clearTimeout(inputTimer);
+    setBody(htmlToBb(editorRef.innerHTML));
+  }
+  setTab(next);
+}
+  let inputTimer: ReturnType<typeof setTimeout>;
   function onEditorInput() {
-    if (editorRef) setBody(htmlToBb(editorRef.innerHTML));
+    clearTimeout(inputTimer);
+    inputTimer = setTimeout(() => {
+      if (editorRef) setBody(htmlToBb(editorRef.innerHTML));
+    }, 300);
   }
-
   // ── Draft auto-save ────────────────────────────────────────────────────────
   let draftTimer: ReturnType<typeof setTimeout> | undefined;
   createEffect(() => {
-    const snap = { title: title(), summary: summary(), category: category(), body: body(), aclMode: aclMode() };
+    const snap = {
+      title: title(),
+      summary: summary(),
+      category: category(),
+      body: body(),
+      aclMode: aclMode(),
+    };
     clearTimeout(draftTimer);
     draftTimer = setTimeout(() => saveDraft(snap), 800);
   });
@@ -674,12 +892,17 @@ const PostComposer: Component<ComposerProps> = (props) => {
 
   // ── Keyboard shortcuts ─────────────────────────────────────────────────────
   function onKey(e: KeyboardEvent) {
-    if (e.key === "Escape") { props.onClose(); return; }
-    if (e.ctrlKey && e.key === "Enter") { void handleSubmit(); }
+    if (e.key === "Escape") {
+      props.onClose();
+      return;
+    }
+    if (e.ctrlKey && e.key === "Enter") {
+      void handleSubmit();
+    }
   }
   createEffect(() => {
     if (props.open) window.addEventListener("keydown", onKey);
-    else            window.removeEventListener("keydown", onKey);
+    else window.removeEventListener("keydown", onKey);
   });
   onCleanup(() => window.removeEventListener("keydown", onKey));
 
@@ -688,15 +911,16 @@ const PostComposer: Component<ComposerProps> = (props) => {
     const ta = textareaRef;
     if (!ta) return;
     const start = ta.selectionStart;
-    const end   = ta.selectionEnd;
-    const sel   = ta.value.slice(start, end) || defaultText;
-    const next  = ta.value.slice(0, start) + open + sel + close + ta.value.slice(end);
+    const end = ta.selectionEnd;
+    const sel = ta.value.slice(start, end) || defaultText;
+    const next =
+      ta.value.slice(0, start) + open + sel + close + ta.value.slice(end);
     setBody(next);
     requestAnimationFrame(() => {
       ta.focus();
       ta.setSelectionRange(
         start + open.length + sel.length + close.length,
-        start + open.length + sel.length + close.length
+        start + open.length + sel.length + close.length,
       );
     });
   }
@@ -704,32 +928,39 @@ const PostComposer: Component<ComposerProps> = (props) => {
   // ── Toolbar dispatch ───────────────────────────────────────────────────────
   function handleToolbar(item: ToolbarItem) {
     const mode = tab();
-    if (item.action) { item.action(mode, insertBb); return; }
-    if (mode === "wysiwyg" && item.cmd) { document.execCommand(item.cmd, false); return; }
+    if (item.action) {
+      item.action(mode, insertBb);
+      return;
+    }
+    if (mode === "wysiwyg" && item.cmd) {
+      document.execCommand(item.cmd, false);
+      return;
+    }
     if (mode === "source" && item.tag) {
       item.block
         ? insertBb(`[${item.tag}]\n`, `\n[/${item.tag}]`)
-        : insertBb(`[${item.tag}]`,   `[/${item.tag}]`);
+        : insertBb(`[${item.tag}]`, `[/${item.tag}]`);
     }
   }
 
   // ── ACL helpers ───────────────────────────────────────────────────────────
   function toggleEntry(entry: AclEntry, list: "allow" | "deny") {
     const key = entryKey(entry);
-    const [getSet, setSet]     = list === "allow"
-      ? [allowEntries, setAllowEntries]
-      : [denyEntries,  setDenyEntries];
+    const [getSet, setSet] =
+      list === "allow"
+        ? [allowEntries, setAllowEntries]
+        : [denyEntries, setDenyEntries];
     const setOther = list === "allow" ? setDenyEntries : setAllowEntries;
-		getSet();
+    getSet();
 
     // Toggle in target list
-    setSet(prev => {
+    setSet((prev) => {
       const next = new Set(prev);
       next.has(key) ? next.delete(key) : next.add(key);
       return next;
     });
     // Remove from opposite list (can't allow and deny simultaneously)
-    setOther(prev => {
+    setOther((prev) => {
       const next = new Set(prev);
       next.delete(key);
       return next;
@@ -743,20 +974,24 @@ const PostComposer: Component<ComposerProps> = (props) => {
 
   // ── Submit ─────────────────────────────────────────────────────────────────
   async function handleSubmit() {
-    if (tab() === "wysiwyg" && editorRef) setBody(htmlToBb(editorRef.innerHTML));
-    if (!body().trim()) { setError("Post body is required."); return; }
+    if (tab() === "wysiwyg" && editorRef)
+      setBody(htmlToBb(editorRef.innerHTML));
+    if (!body().trim()) {
+      setError("Post body is required.");
+      return;
+    }
     setError("");
     setSubmitting(true);
 
     const fd = new FormData();
-    fd.append("body",        body());
-    fd.append("title",       title());
-    fd.append("summary",     summary());
-    fd.append("category",    category());
-    fd.append("mimetype",    "text/bbcode");
-    fd.append("obj_type",    "Note");
+    fd.append("body", body());
+    fd.append("title", title());
+    fd.append("summary", summary());
+    fd.append("category", category());
+    fd.append("mimetype", "text/bbcode");
+    fd.append("obj_type", "Note");
     fd.append("profile_uid", String(props.profileUid));
-    fd.append("type",        props.parentId ? "net-comment" : "wall");
+    fd.append("type", props.parentId ? "net-comment" : "wall");
     if (props.parentId) fd.append("parent", String(props.parentId));
     if (expiry()) fd.append("expire", expiry());
     fd.append("return", "");
@@ -765,15 +1000,15 @@ const PostComposer: Component<ComposerProps> = (props) => {
     const mode = aclMode();
     if (mode === "public") {
       fd.append("contact_allow", "");
-      fd.append("group_allow",   "");
-      fd.append("contact_deny",  "");
-      fd.append("group_deny",    "");
+      fd.append("group_allow", "");
+      fd.append("contact_deny", "");
+      fd.append("group_deny", "");
     } else if (mode === "connections") {
       fd.append("contact_allow", "");
-      fd.append("group_allow",   "");
-      fd.append("contact_deny",  "");
-      fd.append("group_deny",    "");
-      fd.append("visibility",    "1");
+      fd.append("group_allow", "");
+      fd.append("contact_deny", "");
+      fd.append("group_deny", "");
+      fd.append("visibility", "1");
     } else {
       // Custom — require at least one allow entry
       if (allowEntries().size === 0) {
@@ -786,26 +1021,43 @@ const PostComposer: Component<ComposerProps> = (props) => {
         const [type, ...rest] = key.split(":");
         const xid = rest.join(":");
         if (type === "c") fd.append("contact_allow[]", xid);
-        if (type === "g") fd.append("group_allow[]",   xid);
+        if (type === "g") fd.append("group_allow[]", xid);
       }
       // Append deny entries split by type
       for (const key of denyEntries()) {
         const [type, ...rest] = key.split(":");
         const xid = rest.join(":");
         if (type === "c") fd.append("contact_deny[]", xid);
-        if (type === "g") fd.append("group_deny[]",   xid);
+        if (type === "g") fd.append("group_deny[]", xid);
       }
     }
 
     try {
-      const res = await fetch("/item", { method: "POST", credentials: "include", body: fd });
+      const res = await fetch("/item", {
+        method: "POST",
+        credentials: "include",
+        body: fd,
+      });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json().catch(() => ({})) as { success?: number; cancel?: number; id?: number };
-      if (json.cancel)   { setError("Post cancelled by server (duplicate or plugin)."); return; }
-      if (!json.success) { setError("Server reported failure. Check Hubzilla logs."); return; }
+      const json = (await res.json().catch(() => ({}))) as {
+        success?: number;
+        cancel?: number;
+        id?: number;
+      };
+      if (json.cancel) {
+        setError("Post cancelled by server (duplicate or plugin).");
+        return;
+      }
+      if (!json.success) {
+        setError("Server reported failure. Check Hubzilla logs.");
+        return;
+      }
 
       clearDraft();
-      setBody(""); setTitle(""); setSummary(""); setCategory("");
+      setBody("");
+      setTitle("");
+      setSummary("");
+      setCategory("");
       setAclMode("public");
       setAllowEntries(() => new Set<string>());
       setDenyEntries(() => new Set<string>());
@@ -825,7 +1077,9 @@ const PostComposer: Component<ComposerProps> = (props) => {
       <Portal mount={document.body}>
         <div
           class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-          onClick={(e) => { if (e.target === e.currentTarget) props.onClose(); }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) props.onClose();
+          }}
         >
           <div
             class={
@@ -839,32 +1093,57 @@ const PostComposer: Component<ComposerProps> = (props) => {
             aria-modal="true"
             aria-label="Post composer"
           >
-
             {/* ── Header ── */}
             <header class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 shrink-0">
               <span class="text-xs font-semibold tracking-widest uppercase text-gray-400 dark:text-gray-500 select-none">
                 {props.parentId ? "Reply" : "New Post"}
               </span>
               <div class="flex items-center gap-1">
-                <button type="button" title={fullscreen() ? "Exit fullscreen" : "Fullscreen"}
-                  onClick={() => setFullscreen(f => !f)}
+                <button
+                  type="button"
+                  title={fullscreen() ? "Exit fullscreen" : "Fullscreen"}
+                  onClick={() => setFullscreen((f) => !f)}
                   class="p-1.5 rounded-md text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
-                  <Show when={fullscreen()} fallback={
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
-                    </svg>
-                  }>
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                  <Show
+                    when={fullscreen()}
+                    fallback={
+                      <svg
+                        class="w-4 h-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                      </svg>
+                    }
+                  >
+                    <svg
+                      class="w-4 h-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
                     </svg>
                   </Show>
                 </button>
-                <button type="button" title="Close (Esc)" onClick={props.onClose}
+                <button
+                  type="button"
+                  title="Close (Esc)"
+                  onClick={props.onClose}
                   class="p-1.5 rounded-md text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
-                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M18 6 6 18M6 6l12 12"/>
+                  <svg
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M18 6 6 18M6 6l12 12" />
                   </svg>
                 </button>
               </div>
@@ -872,8 +1151,10 @@ const PostComposer: Component<ComposerProps> = (props) => {
 
             {/* ── Tab bar ── */}
             <div class="flex items-center px-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
-              {(["wysiwyg", "source"] as const).map(t => (
-                <button type="button" onClick={() => handleTabChange(t)}
+              {(["wysiwyg", "source"] as const).map((t) => (
+                <button
+                  type="button"
+                  onClick={() => handleTabChange(t)}
                   class={
                     "px-3 py-2.5 text-xs font-medium border-b-2 -mb-px transition-colors " +
                     (tab() === t
@@ -885,7 +1166,9 @@ const PostComposer: Component<ComposerProps> = (props) => {
                 </button>
               ))}
               <div class="flex-1" />
-              <button type="button" onClick={() => setShowExtra(v => !v)}
+              <button
+                type="button"
+                onClick={() => setShowExtra((v) => !v)}
                 class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors py-2.5 px-1 select-none"
               >
                 {showExtra() ? "▲ Less" : "▼ More fields"}
@@ -897,16 +1180,28 @@ const PostComposer: Component<ComposerProps> = (props) => {
               <div class="flex flex-col border-b border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-800 shrink-0">
                 {(
                   [
-                    { placeholder: "Title (optional)",              value: title,    set: setTitle },
-                    { placeholder: "Summary / abstract (optional)", value: summary,  set: setSummary },
-                    { placeholder: "Categories (comma-separated)",  value: category, set: setCategory },
+                    {
+                      placeholder: "Title (optional)",
+                      value: title,
+                      set: setTitle,
+                    },
+                    {
+                      placeholder: "Summary / abstract (optional)",
+                      value: summary,
+                      set: setSummary,
+                    },
+                    {
+                      placeholder: "Categories (comma-separated)",
+                      value: category,
+                      set: setCategory,
+                    },
                   ] as const
-                ).map(f => (
+                ).map((f) => (
                   <input
                     class="w-full px-4 py-2.5 text-sm bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:bg-gray-50 dark:focus:bg-gray-800/50 transition-colors"
                     placeholder={f.placeholder}
                     value={f.value()}
-                    onInput={e => f.set(e.currentTarget.value)}
+                    onInput={(e) => f.set(e.currentTarget.value)}
                   />
                 ))}
               </div>
@@ -914,9 +1209,10 @@ const PostComposer: Component<ComposerProps> = (props) => {
 
             {/* ── Content area ── */}
             <div class="flex flex-col flex-1 overflow-hidden min-h-0">
-
               {/* Toolbar */}
-              <div role="toolbar" aria-label="Formatting"
+              <div
+                role="toolbar"
+                aria-label="Formatting"
                 class="flex flex-wrap gap-0.5 px-2 py-1.5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 shrink-0"
               >
                 <For each={TOOLBAR}>
@@ -928,7 +1224,10 @@ const PostComposer: Component<ComposerProps> = (props) => {
                       <button
                         type="button"
                         title={item.title}
-                        onMouseDown={(e) => { e.preventDefault(); handleToolbar(item); }}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleToolbar(item);
+                        }}
                         class="min-w-[28px] px-1.5 py-1 rounded text-xs font-mono font-medium text-gray-500 dark:text-gray-400 border border-transparent hover:border-gray-300 dark:hover:border-gray-600 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-100 transition-all text-center whitespace-nowrap"
                       >
                         <span class={item.labelClass ?? ""}>{item.icon}</span>
@@ -993,7 +1292,6 @@ const PostComposer: Component<ComposerProps> = (props) => {
 
             {/* ── Footer ── */}
             <footer class="flex flex-wrap items-center gap-2 px-3.5 py-2.5 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 shrink-0">
-
               {/* ACL Picker */}
               <AclPicker
                 mode={aclMode()}
@@ -1006,7 +1304,12 @@ const PostComposer: Component<ComposerProps> = (props) => {
 
               {/* Expiry */}
               <div class="hidden sm:flex items-center gap-1.5 min-w-0">
-                <span class="text-gray-400 dark:text-gray-500 text-xs shrink-0" title="Post expiry">⏱</span>
+                <span
+                  class="text-gray-400 dark:text-gray-500 text-xs shrink-0"
+                  title="Post expiry"
+                >
+                  ⏱
+                </span>
                 <input
                   type="datetime-local"
                   value={expiry()}
@@ -1037,7 +1340,6 @@ const PostComposer: Component<ComposerProps> = (props) => {
                 {error()}
               </div>
             </Show>
-
           </div>
         </div>
       </Portal>

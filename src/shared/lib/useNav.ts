@@ -6,12 +6,12 @@ export function useNav() {
   const role = useViewerRole();
   const isAdmin = useIsAdmin();
   const allItems = getNavItems();
-
   return createMemo(() =>
     allItems().filter((item) => {
       if (!item.context) return true;
-      if (item.context === "admin") return isAdmin();
-      return item.context === role() || item.context === "all";
-    })
+      const ctx = Array.isArray(item.context) ? item.context : [item.context];
+      if (ctx.includes("admin")) return isAdmin();
+      return ctx.includes(role()) || ctx.includes("all");
+    }),
   );
 }

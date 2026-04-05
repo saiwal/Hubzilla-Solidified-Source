@@ -9,6 +9,7 @@ import {
   MdFillMail,
   MdFillPublic,
   MdFillWaving_hand,
+  MdOutlineNotifications,
 } from "solid-icons/md";
 
 const PANELS: {
@@ -56,7 +57,7 @@ const PANELS: {
 {
     type: "notify",
     label: "Notices",
-    icon: <MdFillCalendar_month size={17} />,
+    icon: <MdOutlineNotifications size={17} />,
     hasFilter: false,
   },
 
