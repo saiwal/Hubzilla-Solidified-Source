@@ -1,16 +1,21 @@
 import { defineConfig } from "vite";
+import { viteStaticCopy } from "vite-plugin-static-copy";
 import solid from "vite-plugin-solid";
 import path from "path";
 
 export default defineConfig({
-  plugins: [solid()],
+  plugins: [
+    solid(),
+    viteStaticCopy({
+      targets: [{ src: "src/docs", dest: "./" }],
+    }),  ],
   build: {
-    // Output directly to your Hubzilla theme asset folder
     outDir: path.resolve(
       __dirname,
       "../hz-ddev/core/extend/theme/utsukta-themes/solidified/assets",
     ),
     emptyOutDir: true,
+    watch: {},
 
     rollupOptions: {
       output: {

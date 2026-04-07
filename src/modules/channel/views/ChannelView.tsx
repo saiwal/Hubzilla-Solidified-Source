@@ -6,6 +6,7 @@ import { For, Show } from "solid-js";
 import PostCard from "@/shared/views/PostCard";
 import type { PostActions } from "@/shared/views/PostCard";
 import type { ChannelParams } from "../api/api";
+import ProfileView from "./ProfileView";
 
 export function PostPlaceholder() {
   return (
@@ -66,6 +67,7 @@ export default function ChannelView() {
 
   return (
     <>
+			<ProfileView />
       <Show when={loading()}>
         <For each={Array(5).fill(0)}>
           {() => <PostPlaceholder />}

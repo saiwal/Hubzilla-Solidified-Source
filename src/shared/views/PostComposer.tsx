@@ -28,7 +28,8 @@ import {
 import { Portal } from "solid-js/web";
 import { fetchConnections } from "@/modules/network/api/api";
 import type { AclEntry } from "@/modules/network/api/api";
-
+import { helpable } from "@/shared/lib/helpable";
+void helpable;
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface ComposerProps {
@@ -831,7 +832,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
   const [category, setCategory] = createSignal(draft.category ?? "");
   const [body, setBody] = createSignal(props.initialBody ?? draft.body ?? "");
   const [aclMode, setAclMode] = createSignal<AclMode>(
-    (draft.aclMode as AclMode) ?? "public",
+    (draft.aclMode as AclMode) ?? "connections",
   );
   const [allowEntries, setAllowEntries] = createSignal<Set<string>>(
     new Set<string>(),
@@ -860,14 +861,13 @@ const PostComposer: Component<ComposerProps> = (props) => {
     }
   });
 
-
-function handleTabChange(next: "wysiwyg" | "source") {
-  if (next === "source" && tab() === "wysiwyg" && editorRef) {
-    clearTimeout(inputTimer);
-    setBody(htmlToBb(editorRef.innerHTML));
+  function handleTabChange(next: "wysiwyg" | "source") {
+    if (next === "source" && tab() === "wysiwyg" && editorRef) {
+      clearTimeout(inputTimer);
+      setBody(htmlToBb(editorRef.innerHTML));
+    }
+    setTab(next);
   }
-  setTab(next);
-}
   let inputTimer: ReturnType<typeof setTimeout>;
   function onEditorInput() {
     clearTimeout(inputTimer);
@@ -1077,6 +1077,7 @@ function handleTabChange(next: "wysiwyg" | "source") {
       <Portal mount={document.body}>
         <div
           class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          use:helpable="shared/post-composer"
           onClick={(e) => {
             if (e.target === e.currentTarget) props.onClose();
           }}

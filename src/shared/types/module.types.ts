@@ -23,6 +23,7 @@ export interface SlotsDef {
   leftBottom?: SlotLoader | SlotLoader[];
   mainTop?: SlotLoader | SlotLoader[];
   rightVisitor?: SlotLoader | SlotLoader[];
+ help?: () => Promise<{ default: Component }>;
 }
 
 export interface ModuleDef {

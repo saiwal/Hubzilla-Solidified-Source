@@ -1,9 +1,4 @@
-import {
-  type ParentComponent,
-  createSignal,
-  Show,
-  createMemo,
-} from "solid-js";
+import { type ParentComponent, createSignal, Show, createMemo } from "solid-js";
 import { For } from "solid-js";
 import { useLocation } from "@solidjs/router";
 import NavItem from "./shared/views/NavItem";
@@ -13,6 +8,8 @@ import LanguageSwitcher from "./shared/views/LanguageSwitcher";
 import Slot from "./shared/views/Slot";
 import RemoteAuthBanner from "./shared/views/RemoteAuthBanner";
 import { useViewerRole, useSubjectNick } from "./shared/store/site-config";
+import HelpOverlay from "./shared/views/HelpOverlay";
+import HelpTrigger from "./shared/views/HelpTrigger";
 
 const Layout: ParentComponent = (props) => {
   const [rightOpen, setRightOpen] = createSignal(false);
@@ -43,6 +40,7 @@ const Layout: ParentComponent = (props) => {
     viewerRole() === "owner" || viewerRole() === "local";
   return (
     <div class="fixed inset-0 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+      <HelpOverlay />
       <div class="flex h-full flex-col">
         {/* ── Remote / anonymous banner ── */}
         <RemoteAuthBanner role={viewerRole()} subjectNick={subjectNick()} />
@@ -62,6 +60,7 @@ const Layout: ParentComponent = (props) => {
 
             <LanguageSwitcher />
             <ThemeToggle />
+						<HelpTrigger />
           </aside>
 
           {/* ── Main Content ── */}

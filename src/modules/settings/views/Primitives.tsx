@@ -1,26 +1,34 @@
 import type { Component, JSX } from "solid-js";
 import { Show } from "solid-js";
+import HelpTip from "@/shared/views/HelpTip";
 
 // ── SettingRow ────────────────────────────────────────────────────────────────
 // Mirrors the flex justify-between pattern from the existing SettingsView.
 export const SettingRow: Component<{
   label: string;
   hint?: string;
+  help?: string;
   children: JSX.Element;
 }> = (props) => (
   <div class="flex items-center justify-between gap-4 py-1">
     <div class="flex flex-col gap-0.5">
-      <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-        {props.label}
-      </span>
+      <div class="flex items-center gap-1.5">
+        <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          {props.label}
+        </span>
+        <Show when={props.help}>
+          <HelpTip text={props.help!} />
+        </Show>
+      </div>
       <Show when={props.hint}>
-        <span class="text-xs text-zinc-400 dark:text-zinc-500">{props.hint}</span>
+        <span class="text-xs text-zinc-400 dark:text-zinc-500">
+          {props.hint}
+        </span>
       </Show>
     </div>
     {props.children}
   </div>
 );
-
 // ── FieldSelect ───────────────────────────────────────────────────────────────
 export const fieldSelectClass =
   "rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500";
