@@ -4,12 +4,10 @@ import { MasonryPlaceholder } from "./feedviews/MasonryView";
 import { FeedPlaceholder } from "./feedviews/FeedView";
 import {
   createEffect,
-  onCleanup,
   Show,
   For,
   Switch,
   Match,
-  onMount,
 } from "solid-js";
 import { useAuth } from "@/shared/store/auth-store";
 import {
@@ -40,21 +38,21 @@ export default function DashboardView() {
     resetPosts();
     loadNetwork({ order: "created" });
   });
-  onMount(() => {
-    const container =
-      document.querySelector("main.overflow-y-auto") ??
-      document.querySelector("main");
+  // onMount(() => {
+    // const container =
+      // document.querySelector("main.overflow-y-auto") ??
+      // document.querySelector("main");
+    //
+    // const handleScroll = () => {
+    //   const { scrollTop, scrollHeight, clientHeight } = container!;
+    //   if (scrollHeight - scrollTop - clientHeight < 300) {
+    //     loadMore();
+    //   }
+    // };
 
-    const handleScroll = () => {
-      const { scrollTop, scrollHeight, clientHeight } = container!;
-      if (scrollHeight - scrollTop - clientHeight < 300) {
-        loadMore();
-      }
-    };
-
-    container?.addEventListener("scroll", handleScroll, { passive: true });
-    onCleanup(() => container?.removeEventListener("scroll", handleScroll));
-  });
+    // container?.addEventListener("scroll", handleScroll, { passive: true });
+    // onCleanup(() => container?.removeEventListener("scroll", handleScroll));
+  // });
   return (
     <div class="relative">
       <StreamFilters />
@@ -89,6 +87,11 @@ export default function DashboardView() {
         }
       >
         <StreamList posts={posts()} />
+        <Show when={hasMore()}>
+          <p class="text-center py-4 text-sm text-gray-500" onclick={loadMore}>
+					load more
+					</p>	
+        </Show>
 
         <Show when={loadingMore()}>
           <p class="text-center py-4 text-sm text-gray-500">Loading more…</p>
