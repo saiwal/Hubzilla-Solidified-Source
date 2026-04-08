@@ -15,7 +15,7 @@ export interface PanelState {
 
 export type NotificationsStore = Record<NotificationType, PanelState>;
 
-const TYPES: NotificationType[] = ["dm", "home", "intros", "files", "network", "pubs", "notify"];
+const TYPES: NotificationType[] = ["dm", "home", "intros", "files", "network", "pubs", "notify", "all_events"];
 
 const defaultPanel = (): PanelState => ({
   count: 0,

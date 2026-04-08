@@ -1,6 +1,6 @@
 // notificationService.ts
 
-export type NotificationType = "dm" | "home" | "intros" | "files" | "network" | "pubs" | "notify";
+export type NotificationType = "dm" | "home" | "intros" | "files" | "network" | "pubs" | "notify" | "all_events";
 
 export interface NotificationItem {
   notify_id: string;
@@ -56,7 +56,7 @@ export class NotificationService {
   constructor(onPayload: PayloadHandler, onToast: ToastHandler) {
     this.onPayload = onPayload;
     this.onToast = onToast;
-    this.offset = { dm: 0, home: 0, intros: 0, files: 0, network: 0, pubs: 0, notify: 0 };
+    this.offset = { dm: 0, home: 0, intros: 0, files: 0, network: 0, pubs: 0, notify: 0, all_events: 0 };
     this.isActive = false;
     this.rmids = [];
     this.fallbackInterval = null;

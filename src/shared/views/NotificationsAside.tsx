@@ -6,8 +6,9 @@ import PostDetailModal from "./PostDetailModal";
 import {
   MdFillAlternate_email,
   MdFillCalendar_month,
+  MdFillGroups,
   MdFillMail,
-  MdFillPublic,
+	MdFillPublic,
   MdFillWaving_hand,
   MdOutlineNotifications,
 } from "solid-icons/md";
@@ -51,7 +52,7 @@ const PANELS: {
 		{
     type: "pubs",
     label: "Public Stream",
-    icon: <MdFillCalendar_month size={17} />,
+    icon: <MdFillGroups size={17} />,
     hasFilter: false,
   },
 {
@@ -60,6 +61,13 @@ const PANELS: {
     icon: <MdOutlineNotifications size={17} />,
     hasFilter: false,
   },
+		{
+    type: "all_events",
+    label: "Events",
+    icon: <MdFillCalendar_month size={17} />,
+    hasFilter: false,
+  },
+
 
 
 ];
