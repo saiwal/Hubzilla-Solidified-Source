@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     solid(),
     viteStaticCopy({
-      targets: [{ src: "src/docs", dest: "./" }],
+      targets: [{ src: "src/docs", dest: "../" }],
     }),  ],
   build: {
     outDir: path.resolve(

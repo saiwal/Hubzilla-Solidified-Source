@@ -32,7 +32,7 @@ export default function HelpOverlay() {
             onClick={exit}
           >
             <div
-              class="w-full max-w-lg bg-white dark:bg-gray-800 rounded-xl
+              class="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl
                      border border-gray-200 dark:border-gray-700 overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >

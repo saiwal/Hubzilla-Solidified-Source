@@ -13,10 +13,10 @@ export function useDocs(path: string) {
   return createResource(
     () => locale(),
     async (lang) => {
-      const res = await fetch(`/view/theme/solidified/assets/docs/${lang}/${path}.txt`);
+      const res = await fetch(`/view/theme/solidified/docs/${lang}/${path}.txt`);
       if (!res.ok) {
 				console.log("Failed");
-        const fallback = await fetch(`/view/theme/solidified/assets/docs/en/${path}.txt`);
+        const fallback = await fetch(`/view/theme/solidified/docs/en/${path}.txt`);
         if (!fallback.ok) return null;
         return fallback.text();
       }
