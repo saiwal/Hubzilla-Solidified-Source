@@ -4,7 +4,7 @@ import type { NetworkParams } from "../api/api";
 import { buildThreadTree } from "@/shared/lib/thread";
 import type { ThreadNode } from "@/shared/lib/thread";
 import type { Post } from "@/shared/types/post.types";
-import { updateInterval, pageSize } from "@/shared/store/auth-store";
+import { updateInterval } from "@/shared/store/auth-store";
 
 
 const [posts, setPosts] = createSignal<ThreadNode[]>([]);
@@ -31,7 +31,35 @@ let pollTimer: ReturnType<typeof setTimeout> | null = null;
 const activated = new Set<string>();
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
+function postToThreadNode(p: Post): ThreadNode {
+  return {
+    uuid: p.uuid,
+    id: p.id,
+    mid: p.mid,
+    parent_mid: p.parent_mid,
+    thr_parent: p.thr_parent,
+    top_mid: p.top_mid,
+    parent: p.parent_mid,
+    body: p.body,
+    title: p.title,
+    authorName: p.authorName,
+    authorAvatar: p.authorAvatar,
+    authorUrl: p.authorUrl,
+    created: p.created,
+    verb: p.verb,
+    obj_type: p.obj_type,
+    flags: p.flags,
+    permalink: p.permalink,
+    likeCount: p.likeCount,
+    dislikeCount: p.dislikeCount,
+    repeatCount: p.repeatCount,
+    viewerLiked: p.viewerLiked,
+    viewerDisliked: p.viewerDisliked,
+    viewerRepeated: p.viewerRepeated,
+    item_thread_top: p.item_thread_top,
+    children: [],
+  };
+}
 function registerActivated(data: Post[]) {
   data.forEach((p) => {
     if (p.viewerLiked) activated.add(`${p.mid}:like`);
@@ -61,19 +89,21 @@ export async function loadNetwork(newParams?: NetworkParams) {
   currentOffset = 0;
   stopPolling();
   try {
-    const data = await fetchNetworkStream({ ...params(), start: 0 });
-    const threads = buildThreadTree(data);
-    const rootCount = data.length;
+    const result = await fetchNetworkStream({ ...params(), start: 0 });
+    // in nouveau every item is flat, no thread tree needed
+    const threads = result.nouveau
+      ? result.items.map(postToThreadNode)
+      : buildThreadTree(result.items);
     setPosts(threads);
     setNewPosts([]);
-    currentOffset = rootCount;
-    setHasMore(rootCount >= pageSize()); // ← >= instead of ===
-    if (data.length && data[0].profileUid) setProfileUid(data[0].profileUid);
+    currentOffset = result.rootCount;
+    setHasMore(result.rootCount >= result.limit);
+    if (result.items.length && result.items[0].profileUid) {
+      setProfileUid(result.items[0].profileUid);
+    }
     activated.clear();
-    registerActivated(data);
+    registerActivated(result.items);
     startPolling();
-
-	console.log("loadNetwork done: rootCount=", rootCount, "pageSize=", pageSize(), "hasMore=", hasMore());
   } catch (err) {
     console.error(err);
   } finally {
@@ -82,28 +112,23 @@ export async function loadNetwork(newParams?: NetworkParams) {
 }
 
 export async function loadMore() {
-  console.log("loadMore called: loadingMore=", loadingMore(), "hasMore=", hasMore());
   if (loadingMore() || !hasMore()) return;
   setLoadingMore(true);
   try {
-    const data = await fetchNetworkStream({
-      ...params(),
-      start: currentOffset,
-    });
-    console.log("loadMore: currentOffset", currentOffset, "data.length", data.length);
-    if (!data.length) {
+    const result = await fetchNetworkStream({ ...params(), start: currentOffset });
+    if (!result.items.length) {
       setHasMore(false);
       return;
     }
-    const rootCount = data.filter((p) => p.item_thread_top === 1).length;
-		    console.log("loadMore: rootCount", rootCount, "pageSize()", pageSize());
-    const threads = buildThreadTree(data);
+    const threads = result.nouveau
+      ? result.items.map(postToThreadNode)
+      : buildThreadTree(result.items);
     const existingMids = new Set(posts().map((t) => t.mid));
     const fresh = threads.filter((t) => !existingMids.has(t.mid));
     setPosts((prev) => [...prev, ...fresh]);
-    currentOffset += rootCount;
-    setHasMore(rootCount >= pageSize());
-    registerActivated(data);
+    currentOffset += result.rootCount;
+    setHasMore(result.rootCount >= result.limit);
+    registerActivated(result.items);
   } catch (err) {
     console.error(err);
   } finally {
@@ -130,27 +155,7 @@ function stopPolling() {
   }
 }
 
-async function checkForNew() {
-  const topPost = newPosts()[0] ?? posts()[0];
-  if (!topPost) return;
-  // Add 1s to avoid re-fetching the top post itself
-  const topDate = new Date(topPost.created.replace(" ", "T") + "Z");
-  topDate.setSeconds(topDate.getSeconds() + 1);
-  const dbegin = topDate.toISOString().slice(0, 19).replace("T", " ");
-  try {
-    const data = await fetchNetworkStream({ ...params(), start: 0, dbegin });
-    if (!data.length) return;
-    const threads = buildThreadTree(data);
-    const existingMids = new Set([
-      ...posts().map((t) => t.mid),
-      ...newPosts().map((t) => t.mid),
-    ]);
-    const fresh = threads.filter((t) => !existingMids.has(t.mid));
-    if (fresh.length) setNewPosts((prev) => [...fresh, ...prev]);
-  } catch (err) {
-    console.error("Poll failed", err);
-  }
-}
+
 
 export function flushNewPosts() {
   setPosts((prev) => [...newPosts(), ...prev]);
@@ -289,5 +294,27 @@ export async function handleComment(
     },
   );
 }
-
+async function checkForNew() {
+  const topPost = newPosts()[0] ?? posts()[0];
+  if (!topPost) return;
+  const topDate = new Date(topPost.created.replace(" ", "T") + "Z");
+  topDate.setSeconds(topDate.getSeconds() + 1);
+  const dbegin = topDate.toISOString().slice(0, 19).replace("T", " ");
+  try {
+    const result = await fetchNetworkStream({ ...params(), start: 0, dbegin });
+    if (!result.items.length) return;
+    const threads = result.nouveau
+      ? result.items.map(postToThreadNode)
+      : buildThreadTree(result.items);
+    const existingMids = new Set([
+      ...posts().map((t) => t.mid),
+      ...newPosts().map((t) => t.mid),
+    ]);
+    const fresh = threads.filter((t) => !existingMids.has(t.mid));
+    if (fresh.length) setNewPosts((prev) => [...fresh, ...prev]);
+  } catch (err) {
+    console.error("Poll failed", err);
+  }
+}
 export { posts, loading, loadingMore, hasMore, newPosts, profileUid };
+

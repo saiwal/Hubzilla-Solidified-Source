@@ -24,15 +24,19 @@ export type NetworkParams = {
   cid?: number;
   xchan?: string;
   net?: string;
+  pf?: 1;
   star?: 1;
+  liked?: 1;
   conv?: 1;
   dm?: 1;
+  spam?: 1;
+  unseen?: 1;
+  nouveau?: 1;
   cmin?: number;
   cmax?: number;
   dend?: string;
   dbegin?: string;
 };
-
 export type AclConnection = {
   type: 'c' | 'g';
   name: string;
@@ -59,18 +63,26 @@ export async function fetchConnections(): Promise<AclConnection[]> {
   return (data.items ?? []);
 }
 
-export async function fetchNetworkStream(params: NetworkParams = {}): Promise<Post[]> {
+export type NetworkStreamResult = {
+  items: Post[];
+  rootCount: number;
+  limit: number;
+  nouveau: boolean;
+};
+
+export async function fetchNetworkStream(params: NetworkParams = {}): Promise<NetworkStreamResult> {
   const qs = new URLSearchParams({ format: 'json' });
   Object.entries(params).forEach(([k, v]) => {
     if (v !== undefined && v !== '') qs.set(k, String(v));
   });
   const raw = await moduleGet<any>(`network?${qs.toString()}`);
-  const activities: any[] = Array.isArray(raw) ? raw : [];
-  return activities
-    .filter(shouldDisplay)
-    .map(mapActivityToPost);
+  const activities: any[] = Array.isArray(raw) ? raw : (raw?.items ?? []);
+  const rootCount: number = raw?.meta?.root_count ?? activities.filter((a: any) => a.item_thread_top === 1).length;
+  const limit: number = raw?.meta?.limit ?? 10;
+  const nouveau: boolean = raw?.meta?.nouveau ?? false;
+  const items = activities.filter(shouldDisplay).map(mapActivityToPost);
+  return { items, rootCount, limit, nouveau };
 }
-
 export async function toggleVerb(
   iid: number,
   verb: 'like' | 'dislike' | 'announce',

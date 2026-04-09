@@ -86,17 +86,24 @@ export default function DashboardView() {
           </Switch>
         }
       >
+
         <StreamList posts={posts()} />
-        <Show when={hasMore()}>
-          <p class="text-center py-4 text-sm text-gray-500" onclick={loadMore}>
-					load more
-					</p>	
-        </Show>
-
-        <Show when={loadingMore()}>
-          <p class="text-center py-4 text-sm text-gray-500">Loading more…</p>
-        </Show>
-
+<Show when={loadingMore()}>
+  <p class="text-center py-4 text-sm text-gray-500">Loading more…</p>
+</Show>
+<Show when={hasMore() && !loadingMore()}>
+  <div class="flex justify-center py-4">
+    <button
+      onClick={loadMore}
+      class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700
+             bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300
+             hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+    >
+      Load more
+    </button>
+  </div>
+</Show>
+      
         <Show when={!hasMore() && posts().length > 0}>
           <p class="text-center py-4 text-sm text-gray-400">
             You're all caught up
