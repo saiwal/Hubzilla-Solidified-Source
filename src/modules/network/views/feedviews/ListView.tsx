@@ -142,14 +142,6 @@ export default function ListView(props: { posts: ThreadNode[] }) {
 export function ListPlaceholder(props: { count?: number }) {
   return (
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm overflow-hidden">
-      {/* Mirror the header row */}
-      <div class="flex items-center gap-3 px-4 py-2 border-b border-gray-100 dark:border-gray-700
-                  bg-gray-50 dark:bg-gray-800/80 text-[11px] text-gray-400 font-medium uppercase tracking-wide">
-        <span class="w-6 shrink-0"/>
-        <span class="w-28 shrink-0">From</span>
-        <span class="flex-1">Subject</span>
-        <span class="w-24 text-right shrink-0">Date</span>
-      </div>
       <For each={Array(props.count ?? 8).fill(0)}>
         {() => <ListRowPlaceholder />}
       </For>

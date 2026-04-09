@@ -1,14 +1,8 @@
 import StreamList from "./feedviews/StreamList";
 import { ListPlaceholder } from "./feedviews/ListView";
-import { MasonryPlaceholder } from "./feedviews/MasonryView";
+import { MasonryPlaceholder, MasonryLoadingPlaceholder } from "./feedviews/MasonryView";
 import { FeedPlaceholder } from "./feedviews/FeedView";
-import {
-  createEffect,
-  Show,
-  For,
-  Switch,
-  Match,
-} from "solid-js";
+import { createEffect, Show, For, Switch, Match } from "solid-js";
 import { useAuth } from "@/shared/store/auth-store";
 import {
   viewMode,
@@ -25,7 +19,6 @@ import {
 import StreamFilters from "./StreamFilters";
 import ViewSwitcher from "./ViewSwitcher";
 
-
 export default function DashboardView() {
   const auth = useAuth();
   let initialized = false;
@@ -38,21 +31,7 @@ export default function DashboardView() {
     resetPosts();
     loadNetwork({ order: "created" });
   });
-  // onMount(() => {
-    // const container =
-      // document.querySelector("main.overflow-y-auto") ??
-      // document.querySelector("main");
-    //
-    // const handleScroll = () => {
-    //   const { scrollTop, scrollHeight, clientHeight } = container!;
-    //   if (scrollHeight - scrollTop - clientHeight < 300) {
-    //     loadMore();
-    //   }
-    // };
 
-    // container?.addEventListener("scroll", handleScroll, { passive: true });
-    // onCleanup(() => container?.removeEventListener("scroll", handleScroll));
-  // });
   return (
     <div class="relative">
       <StreamFilters />
@@ -86,24 +65,35 @@ export default function DashboardView() {
           </Switch>
         }
       >
-
         <StreamList posts={posts()} />
-<Show when={loadingMore()}>
-  <p class="text-center py-4 text-sm text-gray-500">Loading more…</p>
-</Show>
-<Show when={hasMore() && !loadingMore()}>
-  <div class="flex justify-center py-4">
-    <button
-      onClick={loadMore}
-      class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700
+        <Show when={loadingMore()}>
+          <p class="text-center py-4 text-sm text-gray-500">
+            <Switch>
+              <Match when={viewMode() === "list" || viewMode() === "inbox"}>
+                <ListPlaceholder count={8} />
+              </Match>
+              <Match when={viewMode() === "masonry"}>
+                <MasonryPlaceholder count={12} />
+              </Match>
+              <Match when={true}>
+                <For each={Array(5).fill(0)}>{() => <FeedPlaceholder />}</For>
+              </Match>
+            </Switch>
+          </p>
+        </Show>
+        <Show when={hasMore() && !loadingMore()}>
+          <div class="flex justify-center py-4">
+            <button
+              onClick={loadMore}
+              class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700
              bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300
              hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-    >
-      Load more
-    </button>
-  </div>
-</Show>
-      
+            >
+              Load more
+            </button>
+          </div>
+        </Show>
+
         <Show when={!hasMore() && posts().length > 0}>
           <p class="text-center py-4 text-sm text-gray-400">
             You're all caught up

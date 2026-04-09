@@ -95,7 +95,7 @@ function MasonryCard(props: { post: ThreadNode }) {
             class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed
                    [&>p]:my-0.5 [&_img]:w-full [&_img]:rounded-lg [&_img]:mt-2 [&_img]:mb-1
                    [&>blockquote]:border-l-2 [&>blockquote]:pl-2 [&>blockquote]:text-gray-400
-                   break-all overflow-hidden transition-[max-height] duration-300 ease-in-out"
+                   wrap-anywhere overflow-hidden transition-[max-height] duration-300 ease-in-out"
             style={{
               'max-height': expanded() ? '2000px' : `${COLLAPSED_MAX_PX}px`,
             }}
