@@ -1,6 +1,6 @@
 import StreamList from "./feedviews/StreamList";
 import { ListPlaceholder } from "./feedviews/ListView";
-import { MasonryPlaceholder, MasonryLoadingPlaceholder } from "./feedviews/MasonryView";
+import { MasonryPlaceholder } from "./feedviews/MasonryView";
 import { FeedPlaceholder } from "./feedviews/FeedView";
 import { createEffect, Show, For, Switch, Match } from "solid-js";
 import { useAuth } from "@/shared/store/auth-store";

@@ -36,7 +36,7 @@ function splitIntoColumns<T>(items: T[], n: number): T[][] {
 // ── MasonryCard ───────────────────────────────────────────────────────────────
 
 /** Max height (px) before the body is collapsed */
-const COLLAPSED_MAX_PX = 180;
+const COLLAPSED_MAX_PX = 400;
 
 function MasonryCard(props: { post: ThreadNode }) {
   const p = props.post;

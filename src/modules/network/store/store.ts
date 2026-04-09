@@ -6,7 +6,6 @@ import type { ThreadNode } from "@/shared/lib/thread";
 import type { Post } from "@/shared/types/post.types";
 import { updateInterval } from "@/shared/store/auth-store";
 
-
 const [posts, setPosts] = createSignal<ThreadNode[]>([]);
 const [loading, setLoading] = createSignal(false);
 const [loadingMore, setLoadingMore] = createSignal(false);
@@ -154,8 +153,6 @@ function stopPolling() {
     pollTimer = null;
   }
 }
-
-
 
 export function flushNewPosts() {
   setPosts((prev) => [...newPosts(), ...prev]);
