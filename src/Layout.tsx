@@ -146,6 +146,12 @@ const Layout: ParentComponent = (props) => {
                   </span>
                 )}
               </For>
+            <LanguageSwitcher />
+						<div class="flex items-center justify-evenly mt-2">
+            <ThemeToggle />
+						<HelpTrigger />
+						</div>
+
             </nav>
           </div>
 
