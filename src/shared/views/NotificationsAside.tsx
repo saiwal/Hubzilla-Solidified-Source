@@ -8,7 +8,7 @@ import {
   MdFillCalendar_month,
   MdFillGroups,
   MdFillMail,
-	MdFillPublic,
+  MdFillPublic,
   MdFillWaving_hand,
   MdOutlineNotifications,
 } from "solid-icons/md";
@@ -20,10 +20,22 @@ const PANELS: {
   hasFilter: boolean;
 }[] = [
   {
+    type: "pubs",
+    label: "Public Stream",
+    icon: <MdFillGroups size={17} />,
+    hasFilter: false,
+  },
+  {
     type: "network",
     label: "Network",
     icon: <MdFillPublic size={17} />,
     hasFilter: true,
+  },
+  {
+    type: "notify",
+    label: "Notices",
+    icon: <MdOutlineNotifications size={17} />,
+    hasFilter: false,
   },
   {
     type: "dm",
@@ -49,27 +61,12 @@ const PANELS: {
     icon: <MdFillCalendar_month size={17} />,
     hasFilter: false,
   },
-		{
-    type: "pubs",
-    label: "Public Stream",
-    icon: <MdFillGroups size={17} />,
-    hasFilter: false,
-  },
-{
-    type: "notify",
-    label: "Notices",
-    icon: <MdOutlineNotifications size={17} />,
-    hasFilter: false,
-  },
-		{
+  {
     type: "all_events",
     label: "Events",
     icon: <MdFillCalendar_month size={17} />,
     hasFilter: false,
   },
-
-
-
 ];
 
 function extractDisplayUuid(url: string): string | null {
@@ -303,7 +300,6 @@ export default function NotificationsAside() {
   const hasAnyPanels = () => visiblePanels().length > 0;
   return (
     <div class="flex flex-col ">
-      <h2 class="text-lg font-bold mb-4 px-1">Notifications</h2>
       <div class="fixed top-4 right-4 z-50 space-y-2 pointer-events-none">
         <For each={toasts}>
           {(t) => (
