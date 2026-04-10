@@ -59,8 +59,10 @@ const Layout: ParentComponent = (props) => {
             </Show>
 
             <LanguageSwitcher />
+						<div class="flex items-center justify-evenly mt-2">
             <ThemeToggle />
 						<HelpTrigger />
+						</div>
           </aside>
 
           {/* ── Main Content ── */}
