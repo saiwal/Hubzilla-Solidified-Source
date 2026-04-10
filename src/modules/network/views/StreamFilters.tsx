@@ -14,6 +14,8 @@ import {
   MdFillSearch,
   MdFillStar,
 } from "solid-icons/md";
+import { helpable } from "@/shared/lib/helpable";
+void helpable;
 
 type Order = NonNullable<NetworkParams["order"]>;
 
@@ -162,7 +164,7 @@ export default function StreamFilters() {
     gid();
 
   return (
-    <div class="mb-4 space-y-2">
+    <div class="mb-4 space-y-2" use:helpable="network/index.activity-filters">
       <div class="flex items-center gap-2 flex-wrap">
         {/* Refresh */}
         <button

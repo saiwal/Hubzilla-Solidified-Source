@@ -85,7 +85,7 @@ export async function fetchNetworkStream(params: NetworkParams = {}): Promise<Ne
 }
 export async function toggleVerb(
   iid: number,
-  verb: 'like' | 'dislike',
+  verb: 'like' | 'dislike' | 'announce',
 ): Promise<void> {
   const url = `/like/${iid}?verb=${verb}&conv_mode=&page_mode=client&reload=0`;
   const res = await fetch(url, { method: 'GET', credentials: 'include' });
@@ -94,18 +94,7 @@ export async function toggleVerb(
     throw new Error(`${verb} failed: ${res.status} ${text}`);
   }
 }
-export async function toggleAnnounce(
-	mid: string,
-	parent: string,
-  verb: 'announce',
-): Promise<void> {
-  const url = `/request?verb=${verb}&mid=${mid}&parent=${parent}`;
-  const res = await fetch(url, { method: 'GET', credentials: 'include' });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`${verb} failed: ${res.status} ${text}`);
-  }
-}
+
 export async function fetchThread(rootIid: number): Promise<Post[]> {
   const activities = await moduleGet<any[]>(`network?format=json&thread=${rootIid}`);
   return activities.map(mapActivityToPost);

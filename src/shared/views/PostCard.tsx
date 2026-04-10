@@ -118,22 +118,50 @@ export default function PostCard(props: {
             {props.post.authorName}
           </a>
           <span class="text-sm text-zinc-500 dark:text-zinc-400">
-  {formatPostDate(props.post.created)}
+            {formatPostDate(props.post.created)}
           </span>
         </div>
       </div>
       {/* Title */}
       <div
-        class="mt-6 text-md md:text-lg font-bold tracking-tight text-zinc-900 dark:text-white leading-tight"
+        class="mt-6 prose prose-zinc dark:prose-invert max-w-none
+         [&>*]:font-bold [&>*]:tracking-tight [&>*]:text-lg"
         innerHTML={props.post.title}
       />
 
       {/* Body */}
+
+      {/* Body */}
       <div
-        class="mt-4 text-zinc-800 dark:text-zinc-200 leading-relaxed prose prose-zinc dark:prose-invert max-w-none break-all"
+        class="mt-4 prose prose-sm prose-zinc dark:prose-invert max-w-none
+         prose-a:text-blue-500 prose-a:no-underline hover:prose-a:underline
+         prose-blockquote:not-italic prose-blockquote:border-zinc-300
+         prose-code:bg-zinc-100 dark:prose-code:bg-zinc-700
+         prose-code:px-1 prose-code:rounded prose-code:text-sm
+         prose-img:rounded-lg prose-img:my-2
+         break-words
+         [&_.bb-share]:mt-3 [&_.bb-share]:rounded-xl [&_.bb-share]:border
+         [&_.bb-share]:border-zinc-200 [&_.bb-share]:dark:border-zinc-700
+         [&_.bb-share]:bg-zinc-50 [&_.bb-share]:dark:bg-zinc-800/60
+         [&_.bb-share]:overflow-hidden
+         [&_.bb-share_br]:hidden
+         [&_.bb-share-header]:flex [&_.bb-share-header]:items-center
+         [&_.bb-share-header]:gap-2 [&_.bb-share-header]:px-3 [&_.bb-share-header]:py-2
+         [&_.bb-share-header]:text-xs [&_.bb-share-header]:text-zinc-500
+         [&_.bb-share-header]:dark:text-zinc-400
+         [&_.bb-share-header]:border-b [&_.bb-share-header]:border-zinc-200
+         [&_.bb-share-header]:dark:border-zinc-700
+         [&_.share-avatar]:!w-6 [&_.share-avatar]:!h-6 [&_.share-avatar]:rounded-full
+         [&_.share-avatar]:object-cover [&_.share-avatar]:shrink-0 [&_.share-avatar]:!my-0
+         [&_.bb-share-header_a]:font-medium [&_.bb-share-header_a]:text-zinc-700
+         [&_.bb-share-header_a]:dark:text-zinc-300 [&_.bb-share-header_a:hover]:underline
+         [&_.bb-share-content]:block [&_.bb-share-content]:px-3 [&_.bb-share-content]:py-2.5
+         [&_.bb-share-content]:text-sm [&_.bb-share-content]:text-zinc-700
+         [&_.bb-share-content]:dark:text-zinc-300
+         [&_.bb-share-content]:!border-l-0 [&_.bb-share-content]:!pl-0
+         [&_.bb-share-content]:!not-italic [&_.bb-share-content]:!text-inherit"
         innerHTML={props.post.body}
       />
-
       {/* Error */}
       {actionError() && (
         <p class="mt-2 text-xs text-red-500">{actionError()}</p>
@@ -179,7 +207,7 @@ export default function PostCard(props: {
            transition-colors"
             title="Post Statistics"
           >
-            <BiRegularPieChartAlt2 size={17}/>
+            <BiRegularPieChartAlt2 size={17} />
           </button>
         )}
         {props.post.children.length > 0 && (

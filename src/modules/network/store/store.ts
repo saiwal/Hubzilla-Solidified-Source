@@ -1,5 +1,5 @@
 import { createSignal } from "solid-js";
-import { fetchNetworkStream, toggleVerb, postComment, toggleAnnounce } from "../api/api";
+import { fetchNetworkStream, toggleVerb, postComment } from "../api/api";
 import type { NetworkParams } from "../api/api";
 import { buildThreadTree } from "@/shared/lib/thread";
 import type { ThreadNode } from "@/shared/lib/thread";
@@ -154,6 +154,7 @@ function stopPolling() {
   }
 }
 
+
 export function flushNewPosts() {
   setPosts((prev) => [...newPosts(), ...prev]);
   setNewPosts([]);
@@ -213,7 +214,7 @@ export async function handleDislike(mid: string, iid: number) {
   }
 }
 
-export async function handleRepeat(mid: string, parent:string) {
+export async function handleRepeat(mid: string, iid: number) {
   const key = `${mid}:announce`;
   const isUndo = activated.has(key);
   isUndo ? activated.delete(key) : activated.add(key);
@@ -224,7 +225,7 @@ export async function handleRepeat(mid: string, parent:string) {
     })),
   );
   try {
-    await toggleAnnounce(mid, parent, "announce");
+    await toggleVerb(iid, "announce");
   } catch (err) {
     isUndo ? activated.add(key) : activated.delete(key);
     setPosts((prev) =>
