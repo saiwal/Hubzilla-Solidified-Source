@@ -30,7 +30,7 @@ export default function formatPostDate(dateStr: string) {
     );
   return date.toLocaleString(undefined, {
     day: "numeric",
-    month: "long",
+    month: "short",
     hour: "numeric",
     minute: "2-digit",
   });
