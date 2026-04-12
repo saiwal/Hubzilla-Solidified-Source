@@ -16,6 +16,14 @@ export type RawDictionary = {
     admin: string;
     webpages: string;
     wiki: string;
+    // action items
+    profile: string;
+    edit_profile: string;
+    channels: string;
+    logout: string;
+    login: string;
+    remote_login: string;
+    register: string;
   };
   layout: {
     title: string;
@@ -40,6 +48,14 @@ export const dict: RawDictionary = {
     admin: "Admin",
     webpages: "Webpages",
     wiki: "Wiki",
+    // action items
+    profile: "Profile",
+    edit_profile: "Edit Profile",
+    channels: "Channels",
+    logout: "Logout",
+    login: "Login",
+    remote_login: "Remote Login",
+    register: "Register",
   },
   layout: {
     title: "Hubzilla",

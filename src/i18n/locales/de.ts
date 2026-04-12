@@ -1,11 +1,11 @@
 import type { RawDictionary } from "./en";
-
+// de.ts
 export const dict: RawDictionary = {
   nav: {
     articles: "Artikel",
     calendar: "Kalender",
     cart: "Warenkorb",
-		chat: "Chatrooms",
+    chat: "Chaträume",
     directory: "Verzeichnis",
     files: "Dateien",
     help: "Hilfe",
@@ -18,6 +18,13 @@ export const dict: RawDictionary = {
     admin: "Admin",
     webpages: "Webseiten",
     wiki: "Wiki",
+    profile: "Profil",
+    edit_profile: "Profil bearbeiten",
+    channels: "Kanäle",
+    logout: "Abmelden",
+    login: "Anmelden",
+    remote_login: "Remote-Anmeldung",
+    register: "Registrieren",
   },
   layout: {
     title: "Hubzilla",
