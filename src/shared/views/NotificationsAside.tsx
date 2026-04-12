@@ -301,7 +301,7 @@ export default function NotificationsAside() {
   return (
     <div class="flex flex-col ">
       <div class="fixed top-4 right-4 z-50 space-y-2 pointer-events-none">
-        <For each={toasts}>
+        <For each={toasts()}>
           {(t) => (
             <div
               class={`px-4 py-2 rounded-lg text-sm text-white shadow-lg ${

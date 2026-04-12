@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { createSignal, onMount, onCleanup } from "solid-js";
 import type { ThreadNode } from "../lib/thread";
 import CommentThread from "./CommentThread";
 import formatPostDate from "../lib/date";
@@ -8,6 +8,7 @@ import {
   handleRepeat as networkRepeat,
   handleComment as networkComment,
 } from "@/modules/network/store/store";
+import { markItemSeen } from "@/shared/lib/markSeen";
 import {
   MdFillChat,
   MdFillKeyboard_arrow_down,
@@ -42,6 +43,7 @@ const networkActions: PostActions = {
 export default function PostCard(props: {
   post: ThreadNode;
   actions?: PostActions;
+  onSeen?: (iid: number) => void;
 }) {
   const getActions = () => props.actions ?? networkActions;
   const [replyOpen, setReplyOpen] = createSignal(false);
@@ -49,6 +51,26 @@ export default function PostCard(props: {
   const [replyBody, setReplyBody] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
   const [actionError, setActionError] = createSignal<string | null>(null);
+
+  let cardRef!: HTMLDivElement;
+
+  onMount(() => {
+    const iid = props.post.iid;
+    if (!iid) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          observer.disconnect();
+          markItemSeen(iid);
+          props.onSeen?.(iid);
+        }
+      },
+      { threshold: 0.5 },
+    );
+    observer.observe(cardRef);
+    onCleanup(() => observer.disconnect());
+  });
 
   async function onLike() {
     setActionError(null);
@@ -101,7 +123,10 @@ export default function PostCard(props: {
   }
 
   return (
-    <div class="bg-white dark:bg-gray-800  border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 mb-4 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div
+      ref={cardRef}
+      class="bg-white dark:bg-gray-800 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 mb-4 shadow-sm hover:shadow-md transition-shadow duration-200"
+    >
       {/* Header */}
       <div class="flex items-start gap-3">
         <img
@@ -111,7 +136,7 @@ export default function PostCard(props: {
           class="rounded-full object-cover ring-1 ring-zinc-200 dark:ring-zinc-700"
         />
         <div class="flex flex-col">
-          <a
+         <a 
             href={props.post.authorUrl}
             class="font-semibold text-zinc-900 dark:text-zinc-100 hover:underline"
           >
@@ -122,14 +147,13 @@ export default function PostCard(props: {
           </span>
         </div>
       </div>
+
       {/* Title */}
       <div
         class="mt-6 prose prose-zinc dark:prose-invert max-w-none
          [&>*]:font-bold [&>*]:tracking-tight [&>*]:text-lg"
         innerHTML={props.post.title}
       />
-
-      {/* Body */}
 
       {/* Body */}
       <div
@@ -162,6 +186,7 @@ export default function PostCard(props: {
          [&_.bb-share-content]:!not-italic [&_.bb-share-content]:!text-inherit"
         innerHTML={props.post.body}
       />
+
       {/* Error */}
       {actionError() && (
         <p class="mt-2 text-xs text-red-500">{actionError()}</p>
@@ -177,7 +202,6 @@ export default function PostCard(props: {
           active={props.post.viewerLiked}
           activeClass="text-blue-500"
         />
-
         <ActionBtn
           icon={<MdOutlineThumb_down size={17} />}
           count={props.post.dislikeCount}
@@ -186,7 +210,6 @@ export default function PostCard(props: {
           active={props.post.viewerDisliked}
           activeClass="text-red-500"
         />
-
         <ActionBtn
           icon={<MdFillShare size={17} />}
           count={props.post.repeatCount}
@@ -201,15 +224,16 @@ export default function PostCard(props: {
           props.post.repeatCount > 0) && (
           <button
             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
-           text-zinc-500 dark:text-zinc-400
-           hover:bg-zinc-100 dark:hover:bg-zinc-800
-           hover:text-zinc-800 dark:hover:text-zinc-100
-           transition-colors"
+                   text-zinc-500 dark:text-zinc-400
+                   hover:bg-zinc-100 dark:hover:bg-zinc-800
+                   hover:text-zinc-800 dark:hover:text-zinc-100
+                   transition-colors"
             title="Post Statistics"
           >
             <BiRegularPieChartAlt2 size={17} />
           </button>
         )}
+
         {props.post.children.length > 0 && (
           <button
             onClick={() => setShowComments((v) => !v)}
@@ -296,7 +320,6 @@ export default function PostCard(props: {
   );
 }
 
-// ─── Tiny reusable action button ─────────────────────────────────────────────
 function ActionBtn(props: {
   icon: any;
   count: number;

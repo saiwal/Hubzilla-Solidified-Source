@@ -177,9 +177,15 @@ export class NotificationService {
 
     this.onPayload(payload, replace, followup);
   }
-
+/** Immediately POSTs to Hubzilla's native notify/seen endpoint. */
+  markSeen(id: string): void {
+    // Hubzilla's /notify/seen/<id> just needs a GET; it redirects but we
+    // don't follow — fire-and-forget is fine here.
+    fetch(`/notify/seen/${id}`, { redirect: "manual" }).catch(() => {});
+  }
   markRead(id: string) {
     this.rmids.push(id);
+		this.markSeen(id);
   }
 
   formatCount(n: number) {

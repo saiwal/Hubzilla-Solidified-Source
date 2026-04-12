@@ -1,3 +1,4 @@
+import type { RawDictionary } from "./en";
 export const dict: RawDictionary = {
   nav: {
     articles: "लेख",
