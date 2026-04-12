@@ -19,6 +19,7 @@ import {
   MdOutlineThumb_up,
 } from "solid-icons/md";
 import { BiRegularPieChartAlt2 } from "solid-icons/bi";
+import { useI18n } from "@/i18n";
 
 export interface PostActions {
   onLike: (mid: string, iid: number) => Promise<void>;
@@ -51,7 +52,7 @@ export default function PostCard(props: {
   const [replyBody, setReplyBody] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
   const [actionError, setActionError] = createSignal<string | null>(null);
-
+	const { locale } = useI18n();
   let cardRef!: HTMLDivElement;
 
   onMount(() => {
@@ -142,8 +143,8 @@ export default function PostCard(props: {
           >
             {props.post.authorName}
           </a>
-          <span class="text-sm text-zinc-500 dark:text-zinc-400">
-            {formatPostDate(props.post.created)}
+          <span class="text-sm text-zinc-500 dark:text-zinc-400" title={new Date(props.post.created + "Z").toLocaleString(locale())}>
+            {formatPostDate(props.post.created, locale())}
           </span>
         </div>
       </div>

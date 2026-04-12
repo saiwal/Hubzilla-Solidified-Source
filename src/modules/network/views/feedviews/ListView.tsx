@@ -4,6 +4,7 @@ import type { ThreadNode } from '@/shared/lib/thread';
 import { handleLike , handleRepeat} from '@/modules/network/store/store';
 import PostDetailModal from '@/shared/views/PostDetailModal';
 import formatPostDate from '@/shared/lib/date';
+import { useI18n } from '@/i18n';
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
@@ -14,7 +15,7 @@ function ListRow(props: { post: ThreadNode; index: number }) {
   const preview = stripHtml(p.body).slice(0, 120);
   const replyCount = p.children.length;
   const [showModal, setShowModal] = createSignal(false);
-
+	const { locale } = useI18n();
   return (
 		<>
     <div
@@ -78,8 +79,8 @@ function ListRow(props: { post: ThreadNode; index: number }) {
       </div>
 
       {/* Date */}
-      <span class="text-[11px] text-gray-400 shrink-0 w-16 text-right">
-        {formatPostDate(p.created)}
+      <span class="text-[11px] text-gray-400 shrink-0 w-16 text-right" title={new Date(p.created + "Z").toLocaleString(locale())}>
+        {formatPostDate(p.created, locale())}
       </span>
     </div>
 			<Show when={showModal()}>

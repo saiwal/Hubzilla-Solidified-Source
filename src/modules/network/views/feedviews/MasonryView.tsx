@@ -11,6 +11,7 @@ import type { ThreadNode } from "@/shared/lib/thread";
 import { handleLike, handleRepeat } from "@/modules/network/store/store";
 import PostDetailModal from "@/shared/views/PostDetailModal";
 import formatPostDate from "@/shared/lib/date";
+import { useI18n } from "@/i18n";
 
 // ── responsive column count ───────────────────────────────────────────────────
 
@@ -54,6 +55,7 @@ function MasonryCard(props: { post: ThreadNode }) {
   /** Reference to the body div so we can measure its natural height */
   let bodyRef!: HTMLDivElement;
   const [overflows, setOverflows] = createSignal(false);
+	const { locale } = useI18n();
 
   onMount(() => {
     // After the first paint, check whether the content is taller than the cap.
@@ -97,7 +99,7 @@ function MasonryCard(props: { post: ThreadNode }) {
             <p class="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">
               {p.authorName}
             </p>
-            <p class="text-xs text-gray-400"> {formatPostDate(p.created)}</p>
+            <p class="text-xs text-gray-400" title={new Date(p.created + "Z").toLocaleString(locale())}> {formatPostDate(p.created, locale())}</p>
           </div>
         </div>
 

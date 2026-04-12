@@ -3,6 +3,7 @@ import { For, Show, createSignal } from "solid-js";
 import type { ThreadNode } from "@/shared/lib/thread";
 import { handleLike, handleComment } from "@/modules/network/store/store";
 import formatPostDate from "@/shared/lib/date";
+import { useI18n } from "@/i18n";
 
 function stripHtml(html: string): string {
   return html
@@ -151,7 +152,7 @@ function InboxRow(props: { thread: ThreadNode }) {
   ];
   const replyCount = flattenThread(p).length - 1;
   const preview = stripHtml(p.body).slice(0, 100);
-
+	const { locale } = useI18n();
   return (
     <div class="border-b border-gray-100 dark:border-gray-800 last:border-0">
       <button
@@ -226,8 +227,8 @@ function InboxRow(props: { thread: ThreadNode }) {
         </Show>
 
         {/* Date */}
-        <span class="text-[11px] text-gray-400 w-14 text-right shrink-0">
-          {formatPostDate(p.created)}
+        <span class="text-[11px] text-gray-400 w-14 text-right shrink-0" title={new Date(p.created + "Z").toLocaleString(locale())}>
+          {formatPostDate(p.created, locale())}
         </span>
 
         {/* Chevron */}
