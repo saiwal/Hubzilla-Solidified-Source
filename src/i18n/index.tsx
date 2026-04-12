@@ -3,17 +3,19 @@ import type { ParentComponent } from "solid-js";
 import * as i18n from "@solid-primitives/i18n";
 import { dict as en } from "./locales/en";
 import { dict as de } from "./locales/de";
+import { dict as hi } from "./locales/hi";
 import type { RawDictionary } from "./locales/en";
 
-export type Locale = "en" | "de";
+export type Locale = "en" | "de" | "hi";
 
 export const LOCALES: { value: Locale; label: string; flag: string }[] = [
   { value: "en", label: "English", flag: "🇬🇧" },
   { value: "de", label: "Deutsch", flag: "🇩🇪" },
+  { value: "hi", label: "Hindi", flag: "🇮🇳" }
 ];
 type Dictionary = i18n.Flatten<RawDictionary>;
 
-const dictionaries: Record<Locale, RawDictionary> = { en, de };
+const dictionaries: Record<Locale, RawDictionary> = { en, de, hi };
 
 // Context holds the translator fn + locale signal
 type I18nCtx = {
