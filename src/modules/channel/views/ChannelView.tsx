@@ -7,6 +7,7 @@ import PostCard from "@/shared/views/PostCard";
 import type { PostActions } from "@/shared/views/PostCard";
 import type { ChannelParams } from "../api/api";
 import ProfileView from "./ProfileView";
+import ChannelTabBar from "@/shared/views/ChannelTabBar";
 
 export function PostPlaceholder() {
   return (
@@ -40,7 +41,7 @@ const actions: PostActions = {
 };
 
 export default function ChannelView() {
-  const params = useParams<{ nick?: string }>();
+	const params = useParams<{ nick: string }>();
   const [searchParams] = useSearchParams();
 
   // createEffect re-runs whenever params.nick or any searchParam changes,
@@ -67,6 +68,7 @@ export default function ChannelView() {
 
   return (
     <>
+			<ChannelTabBar nick={() => params.nick} />
 			<ProfileView />
       <Show when={loading()}>
         <For each={Array(5).fill(0)}>

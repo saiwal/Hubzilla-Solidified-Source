@@ -2,7 +2,7 @@ import { type ParentComponent, createSignal, Show, createMemo } from "solid-js";
 import { For } from "solid-js";
 import { useLocation } from "@solidjs/router";
 import NavItem from "./shared/views/NavItem";
-import { useNav } from "./shared/lib/useNav";
+import { useNav, useNavActionItems } from "./shared/lib/useNav";
 import ThemeToggle from "./shared/views/ThemeToggle";
 import LanguageSwitcher from "./shared/views/LanguageSwitcher";
 import Slot from "./shared/views/Slot";
@@ -15,6 +15,7 @@ const Layout: ParentComponent = (props) => {
   const [rightOpen, setRightOpen] = createSignal(false);
   const [navOpen, setNavOpen] = createSignal(false);
   const navItems = useNav();
+  const actionItems = useNavActionItems();
   const location = useLocation();
 
   const viewerRole = useViewerRole();
@@ -53,16 +54,19 @@ const Layout: ParentComponent = (props) => {
               <For each={navItems()}>{(item) => <NavItem {...item} />}</For>
             </nav>
 
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-2 space-y-1">
+              <For each={actionItems()}>{(item) => <NavItem {...item} />}</For>
+            </div>
             {/* Only render owner-specific bottom slot for local users */}
             <Show when={isLocalUser()}>
               <Slot name="leftBottom" moduleId={activeModuleId()} />
             </Show>
 
             <LanguageSwitcher />
-						<div class="flex items-center justify-evenly mt-2">
-            <ThemeToggle />
-						<HelpTrigger />
-						</div>
+            <div class="flex items-center justify-evenly mt-2">
+              <ThemeToggle />
+              <HelpTrigger />
+            </div>
           </aside>
 
           {/* ── Main Content ── */}
@@ -146,12 +150,15 @@ const Layout: ParentComponent = (props) => {
                   </span>
                 )}
               </For>
-            <LanguageSwitcher />
-						<div class="flex items-center justify-evenly mt-2">
-            <ThemeToggle />
-						<HelpTrigger />
-						</div>
 
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-2 space-y-1">
+              <For each={actionItems()}>{(item) => <NavItem {...item} />}</For>
+							</div>
+              <LanguageSwitcher />
+              <div class="flex items-center justify-evenly mt-2">
+                <ThemeToggle />
+                <HelpTrigger />
+              </div>
             </nav>
           </div>
 
