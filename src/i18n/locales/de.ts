@@ -29,4 +29,10 @@ export const dict: RawDictionary = {
   layout: {
     title: "Hubzilla",
   },
+  ui: {
+    show_more: "Mehr anzeigen",
+    show_less: "Weniger anzeigen",
+    reply: "Antwort",
+    replies: "Antworten",
+  },
 };

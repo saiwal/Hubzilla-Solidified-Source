@@ -28,6 +28,12 @@ export type RawDictionary = {
   layout: {
     title: string;
   };
+  ui: {
+    show_more: string;
+    show_less: string;
+    reply: string;
+    replies: string;
+  };
 };
 
 export const dict: RawDictionary = {
@@ -59,5 +65,11 @@ export const dict: RawDictionary = {
   },
   layout: {
     title: "Hubzilla",
+  },
+  ui: {
+    show_more: "Show more",
+    show_less: "Show less",
+    reply: "reply",
+    replies: "replies",
   },
 };

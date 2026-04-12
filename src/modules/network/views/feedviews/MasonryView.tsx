@@ -55,7 +55,7 @@ function MasonryCard(props: { post: ThreadNode }) {
   /** Reference to the body div so we can measure its natural height */
   let bodyRef!: HTMLDivElement;
   const [overflows, setOverflows] = createSignal(false);
-	const { locale } = useI18n();
+  const { locale, t } = useI18n();
 
   onMount(() => {
     // After the first paint, check whether the content is taller than the cap.
@@ -99,7 +99,13 @@ function MasonryCard(props: { post: ThreadNode }) {
             <p class="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">
               {p.authorName}
             </p>
-            <p class="text-xs text-gray-400" title={new Date(p.created + "Z").toLocaleString(locale())}> {formatPostDate(p.created, locale())}</p>
+            <p
+              class="text-xs text-gray-400"
+              title={new Date(p.created + "Z").toLocaleString(locale())}
+            >
+              {" "}
+              {formatPostDate(p.created, locale())}
+            </p>
           </div>
         </div>
 
@@ -175,7 +181,7 @@ function MasonryCard(props: { post: ThreadNode }) {
                     d="M19 9l-7 7-7-7"
                   />
                 </svg>
-                Show more
+                {t("ui.show_more")}
               </button>
             </div>
           </Show>
@@ -204,7 +210,7 @@ function MasonryCard(props: { post: ThreadNode }) {
                 d="M5 15l7-7 7 7"
               />
             </svg>
-            Show less
+            {t("ui.show_less")}
           </button>
         </Show>
 
@@ -263,7 +269,7 @@ function MasonryCard(props: { post: ThreadNode }) {
 
           <Show when={replyCount > 0}>
             <span class="ml-auto text-xs text-gray-400">
-              {replyCount} {replyCount === 1 ? "reply" : "replies"}
+              {replyCount} {replyCount === 1 ? t("ui.reply") : t("ui.replies")}
             </span>
           </Show>
         </div>

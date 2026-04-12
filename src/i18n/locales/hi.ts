@@ -29,4 +29,10 @@ export const dict: RawDictionary = {
   layout: {
     title: "हबज़िला",
   },
+  ui: {
+    show_more: "और दिखाएं",
+    show_less: "कम दिखाएं",
+    reply: "जवाब",
+    replies: "जवाब",
+  },
 };
