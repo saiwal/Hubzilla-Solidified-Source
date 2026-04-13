@@ -1,23 +1,18 @@
 import { createContext, useContext, createMemo, createSignal } from "solid-js";
 import type { ParentComponent } from "solid-js";
 import * as i18n from "@solid-primitives/i18n";
-import { dict as en } from "./locales/en";
-import { dict as de } from "./locales/de";
-import { dict as hi } from "./locales/hi";
-import type { RawDictionary } from "./locales/en";
+import { localeRegistry } from "./locales/index";
+import type { Locale, RawDictionary } from "./locales/index";
 
-export type Locale = "en" | "de" | "hi";
+export type { Locale };
 
-export const LOCALES: { value: Locale; label: string; flag: string }[] = [
-  { value: "en", label: "English", flag: "🇬🇧" },
-  { value: "de", label: "Deutsch", flag: "🇩🇪" },
-  { value: "hi", label: "Hindi", flag: "🇮🇳" }
-];
+export const LOCALES = (Object.entries(localeRegistry) as [
+  Locale,
+  { label: string; flag: string },
+][]).map(([value, { label, flag }]) => ({ value, label, flag }));
+
 type Dictionary = i18n.Flatten<RawDictionary>;
 
-const dictionaries: Record<Locale, RawDictionary> = { en, de, hi };
-
-// Context holds the translator fn + locale signal
 type I18nCtx = {
   t: i18n.Translator<Dictionary>;
   locale: () => Locale;
@@ -25,12 +20,16 @@ type I18nCtx = {
 };
 
 const I18nContext = createContext<I18nCtx>();
+const FALLBACK: Locale = "en";
 
 export const I18nProvider: ParentComponent = (props) => {
-  const saved = (localStorage.getItem("hz-locale") ?? "en") as Locale;
-  const [locale, setLocaleSignal] = createSignal<Locale>(saved);
+  const saved = localStorage.getItem("hz-locale") ?? FALLBACK;
+  const initial: Locale = saved in localeRegistry ? (saved as Locale) : FALLBACK;
 
-  const dict = createMemo(() => i18n.flatten(dictionaries[locale()]));
+  const [locale, setLocaleSignal] = createSignal<Locale>(initial);
+  const dict = createMemo(() =>
+    i18n.flatten(localeRegistry[locale()].dict)
+  );
   const t = i18n.translator(dict, i18n.resolveTemplate);
 
   const setLocale = (l: Locale) => {
@@ -50,4 +49,3 @@ export const useI18n = () => {
   if (!ctx) throw new Error("useI18n must be used within I18nProvider");
   return ctx;
 };
-
