@@ -21,7 +21,7 @@ const LanguageSwitcher = () => {
   onCleanup(() => document.removeEventListener("click", onDocClick));
 
   return (
-    <div ref={ref} class="relative">
+    <div ref={ref} class="relative mt-2">
       <button
         onClick={(e) => { e.stopPropagation(); setOpen(o => !o); }}
         class={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm
