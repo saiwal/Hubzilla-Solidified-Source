@@ -10,6 +10,7 @@ import {
 } from "@/modules/network/store/store";
 import { markItemSeen } from "@/shared/lib/markSeen";
 import {
+    MdFillBar_chart,
   MdFillChat,
   MdFillKeyboard_arrow_down,
   MdFillKeyboard_arrow_up,
@@ -18,7 +19,6 @@ import {
   MdOutlineThumb_down,
   MdOutlineThumb_up,
 } from "solid-icons/md";
-import { BiRegularPieChartAlt2 } from "solid-icons/bi";
 import { useI18n } from "@/i18n";
 
 export interface PostActions {
@@ -231,7 +231,7 @@ export default function PostCard(props: {
                    transition-colors"
             title="Post Statistics"
           >
-            <BiRegularPieChartAlt2 size={17} />
+            <MdFillBar_chart size={17} />
           </button>
         )}
 
