@@ -2,12 +2,18 @@
 
 import { createMemo } from "solid-js";
 import { useNavData } from "../store/nav-store";
-import { useAuth } from "../store/auth-store";
+// import { useAuth } from "../store/auth-store";
 import { getModule } from "../lib/module-registry";
 import type { NavItemDef } from "../types/module.types";
 import type { NavApp, NavActions } from "../lib/nav-api";
 import { useI18n } from "@/i18n";
-
+import { useViewerRole } from "../store/site-config";
+import type { ViewerRole } from "../store/site-config";
+type ActionMeta = {
+  label: string;
+  icon: string;
+  context: NavItemDef["context"];
+};
 // ── Bootstrap Icon → internal icon token ─────────────────────────────────────
 
 const BI_TO_ICON: Record<string, string> = {
@@ -38,7 +44,6 @@ function biToIcon(biName: string): string {
 }
 
 // ── Hubzilla app name → nav i18n key ─────────────────────────────────────────
-// Stable app names from Hubzilla mapped to keys in RawDictionary["nav"].
 
 const APP_NAME_TO_KEY: Record<string, string> = {
   "Network":   "network",
@@ -56,6 +61,17 @@ const APP_NAME_TO_KEY: Record<string, string> = {
   "Channel":   "channel",
 };
 
+// ── Role matching ─────────────────────────────────────────────────────────────
+
+function matchesRole(
+  context: NavItemDef["context"],
+  role: ViewerRole,
+): boolean {
+  if (context === "all") return true;
+  if (Array.isArray(context)) return (context as string[]).includes(role);
+  return context === role;
+}
+
 // ── URL helpers ───────────────────────────────────────────────────────────────
 
 function urlToPath(url: string): string {
@@ -71,6 +87,7 @@ function moduleSegment(url: string): string {
 }
 
 // ── Pinned app → NavItemDef ───────────────────────────────────────────────────
+
 function appToNavItem(
   app: NavApp,
   t: ReturnType<typeof useI18n>["t"],
@@ -91,30 +108,31 @@ function appToNavItem(
 }
 
 // ── useNav ────────────────────────────────────────────────────────────────────
-// Primary sidebar nav — pinned apps only (user-ordered, server-filtered).
 
 export function useNav(): () => NavItemDef[] {
-  const navData = useNavData();
-  const auth    = useAuth();
-  const { t }   = useI18n();
+  const navData    = useNavData();
+  const { t }      = useI18n();
+  const viewerRole = useViewerRole();
 
   return createMemo((): NavItemDef[] => {
-    if (!auth() || navData.loading) return [];
+    if (navData.loading) return [];
 
     const data   = navData();
     const viewer = data?.viewer;
     if (!data || !viewer) return [];
 
+    const role    = viewerRole();
     const baseurl = viewer.baseurl ?? "";
 
-    // Pinned only — take primary URL (before comma), substitute $baseurl
-    const items: NavItemDef[] = data.pinned.map((app) => {
-      const primaryUrl = app.url
-        .split(",")[0]
-        .trim()
-        .replace(/\$baseurl/g, baseurl);
-      return appToNavItem({ ...app, url: primaryUrl }, t);
-    });
+    const items: NavItemDef[] = data.pinned
+      .map((app) => {
+        const primaryUrl = app.url
+          .split(",")[0]
+          .trim()
+          .replace(/\$baseurl/g, baseurl);
+        return appToNavItem({ ...app, url: primaryUrl }, t);
+      })
+      .filter((item) => matchesRole(item.context, role));
 
     // Append admin item if viewer is admin and not already in pinned list
     if (viewer.is_admin) {
@@ -133,8 +151,6 @@ export function useNav(): () => NavItemDef[] {
 }
 
 // ── useNavActionItems ─────────────────────────────────────────────────────────
-// Secondary sidebar section: logout, settings, login, etc.
-// Render these below the pinned nav separated by a divider in Layout.tsx.
 
 const ACTION_ORDER = [
   "profile",
@@ -148,31 +164,29 @@ const ACTION_ORDER = [
 ] as const;
 
 type ActionKey = (typeof ACTION_ORDER)[number];
-
 export function useNavActionItems(): () => NavItemDef[] {
-  const navData = useNavData();
-  const { t }   = useI18n();
+  const navData    = useNavData();
+  const { t }      = useI18n();
+  const viewerRole = useViewerRole();
 
   return createMemo((): NavItemDef[] => {
     const actions = navData()?.actions as NavActions | undefined;
     if (!actions) return [];
 
-    const ACTION_META: Record<
-      ActionKey,
-      { label: string; icon: string; context: NavItemDef["context"] }
-    > = {
-      profile:      { label: t("nav.profile"),      icon: "person",   context: ["owner", "local"] },
-      profiles:     { label: t("nav.edit_profile"), icon: "edit",     context: ["owner", "local"] },
-      settings:     { label: t("nav.settings"),     icon: "settings", context: ["owner", "local"] },
-      manage:       { label: t("nav.channels"),     icon: "manage",   context: ["owner", "local"] },
-      logout:       { label: t("nav.logout"),       icon: "logout",   context: ["owner", "local", "remote"] },
-      login:        { label: t("nav.login"),        icon: "login",    context: "anonymous" },
-      remote_login: { label: t("nav.remote_login"), icon: "remote",   context: "anonymous" },
-      register:     { label: t("nav.register"),     icon: "register", context: "anonymous" },
-    };
-
-    return ACTION_ORDER.filter((key) => !!actions[key]).map(
-      (key): NavItemDef => {
+    const role = viewerRole();
+const ACTION_META: Record<ActionKey, ActionMeta> = {
+  profile:      { label: t("nav.profile"),      icon: "person",   context: ["owner", "local"] },
+  profiles:     { label: t("nav.edit_profile"), icon: "edit",     context: ["owner", "local"] },
+  settings:     { label: t("nav.settings"),     icon: "settings", context: ["owner", "local"] },
+  manage:       { label: t("nav.channels"),     icon: "manage",   context: ["owner", "local"] },
+  logout:       { label: t("nav.logout"),       icon: "logout",   context: ["owner", "local", "remote"] },
+  login:        { label: t("nav.login"),        icon: "login",    context: "anonymous" },
+  remote_login: { label: t("nav.remote_login"), icon: "remote",   context: "anonymous" },
+  register:     { label: t("nav.register"),     icon: "register", context: "anonymous" },
+};
+    return ACTION_ORDER
+      .filter((key) => !!actions[key])
+      .map((key): NavItemDef => {
         const meta = ACTION_META[key];
         const href = actions[key] as string;
         return {
@@ -182,7 +196,7 @@ export function useNavActionItems(): () => NavItemDef[] {
           path:    urlToPath(href),
           context: meta.context,
         };
-      },
-    );
+      })
+      .filter((item) => matchesRole(item.context, role));
   });
 }
