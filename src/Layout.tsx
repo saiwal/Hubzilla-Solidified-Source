@@ -14,12 +14,13 @@ import HelpTrigger from "./shared/views/HelpTrigger";
 const Layout: ParentComponent = (props) => {
   const [rightOpen, setRightOpen] = createSignal(false);
   const [navOpen, setNavOpen] = createSignal(false);
-  const navItems = useNav();
+  // const navItems = useNav();
+  const subjectNick = useSubjectNick();
   const actionItems = useNavActionItems();
   const location = useLocation();
-
+  const navItems = useNav(subjectNick);
+  const showActions = () => !subjectNick();
   const viewerRole = useViewerRole();
-  const subjectNick = useSubjectNick();
   let mainRef!: HTMLElement;
   const [showScrollTop, setShowScrollTop] = createSignal(false);
   const onMainScroll = () => setShowScrollTop(mainRef.scrollTop > 300);
@@ -53,10 +54,13 @@ const Layout: ParentComponent = (props) => {
             <nav class="space-y-2 flex-1 overflow-y-auto">
               <For each={navItems()}>{(item) => <NavItem {...item} />}</For>
             </nav>
-
-            <div class="border-t border-gray-200 dark:border-gray-700 pt-2 space-y-1">
-              <For each={actionItems()}>{(item) => <NavItem {...item} />}</For>
-            </div>
+            <Show when={showActions()}>
+              <div class="border-t border-gray-200 dark:border-gray-700 pt-2 space-y-1">
+                <For each={actionItems()}>
+                  {(item) => <NavItem {...item} />}
+                </For>
+              </div>
+            </Show>
             {/* Only render owner-specific bottom slot for local users */}
             <Show when={isLocalUser()}>
               <Slot name="leftBottom" moduleId={activeModuleId()} />
@@ -150,10 +154,13 @@ const Layout: ParentComponent = (props) => {
                   </span>
                 )}
               </For>
-
-            <div class="border-t border-gray-200 dark:border-gray-700 pt-2 space-y-1">
-              <For each={actionItems()}>{(item) => <NavItem {...item} />}</For>
-							</div>
+              <Show when={showActions()}>
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-2 space-y-1">
+                  <For each={actionItems()}>
+                    {(item) => <NavItem {...item} />}
+                  </For>
+                </div>
+              </Show>
               <LanguageSwitcher />
               <div class="flex items-center justify-evenly mt-2">
                 <ThemeToggle />

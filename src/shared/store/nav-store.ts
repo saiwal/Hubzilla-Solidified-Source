@@ -49,3 +49,4 @@ export function useNavViewer() {
 export function useNavActions() {
   return () => navData()?.actions ?? {};
 }
+

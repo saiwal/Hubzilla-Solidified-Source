@@ -7,7 +7,6 @@ import PostCard from "@/shared/views/PostCard";
 import type { PostActions } from "@/shared/views/PostCard";
 import type { ChannelParams } from "../api/api";
 import ProfileView from "./ProfileView";
-import ChannelTabBar from "@/shared/views/ChannelTabBar";
 
 export function PostPlaceholder() {
   return (
@@ -68,7 +67,6 @@ export default function ChannelView() {
 
   return (
     <>
-			<ChannelTabBar nick={() => params.nick} />
 			<ProfileView />
       <Show when={loading()}>
         <For each={Array(5).fill(0)}>

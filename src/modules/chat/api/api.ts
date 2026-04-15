@@ -25,14 +25,14 @@ export interface ChatPresence {
 }
 
 export async function fetchRooms(nick: string): Promise<ChatRoom[]> {
-  const res = await fetch(`/chatapi/${nick}/rooms?format=json`);
+  const res = await fetch(`/chat_api/${nick}/rooms?format=json`);
   if (!res.ok) return [];
   const data = await res.json();
   return data.rooms ?? [];
 }
 
 export async function fetchRoom(nick: string, roomId: number, since?: string) {
-  const url = `/chatapi/${nick}/${roomId}?format=json${since ? `&since=${encodeURIComponent(since)}` : ""}`;
+  const url = `/chat_api/${nick}/${roomId}?format=json${since ? `&since=${encodeURIComponent(since)}` : ""}`;
   const res = await fetch(url);
   if (!res.ok) return null;
   return res.json() as Promise<{
@@ -43,16 +43,16 @@ export async function fetchRoom(nick: string, roomId: number, since?: string) {
 }
 
 export async function enterRoom(nick: string, roomId: number) {
-  await fetch(`/chatapi/${nick}/${roomId}/enter?format=json`);
+  await fetch(`/chat_api/${nick}/${roomId}/enter?format=json`);
 }
 
 export async function leaveRoom(nick: string, roomId: number) {
-  await fetch(`/chatapi/${nick}/${roomId}/leave?format=json`);
+  await fetch(`/chat_api/${nick}/${roomId}/leave?format=json`);
 }
 
 export async function sendMessage(nick: string, roomId: number, body: string) {
   const fd = new URLSearchParams({ body });
-  const res = await fetch(`/chatapi/${nick}/${roomId}/send?format=json`, {
+  const res = await fetch(`/chat_api/${nick}/${roomId}/send?format=json`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: fd.toString(),
@@ -62,7 +62,7 @@ export async function sendMessage(nick: string, roomId: number, body: string) {
 
 export async function createRoom(nick: string, name: string, expire = 120) {
   const fd = new URLSearchParams({ room_name: name, chat_expire: String(expire) });
-  const res = await fetch(`/chatapi/${nick}/rooms?format=json`, {
+  const res = await fetch(`/chat_api/${nick}/rooms?format=json`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: fd.toString(),
