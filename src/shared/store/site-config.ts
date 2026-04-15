@@ -18,7 +18,7 @@ export function useSubjectNick(): () => string {
     const parts = location.pathname.split("/").filter(Boolean);
     // Any route with shape /:module/:nick — channel, photos, etc.
     // parts[0] = module, parts[1] = nick
-    const modulesWithNick = ["channel", "photos"];
+    const modulesWithNick = ["channel", "photos", "articles", "cart", "chat", "calendar", "cloud", "webpages","wiki" ,"cal"];
     if (parts[1] && modulesWithNick.includes(parts[0])) return parts[1];
     return "";
   });

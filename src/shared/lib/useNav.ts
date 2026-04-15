@@ -122,8 +122,9 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
   const tabs = useChannelTabs(subjectNick);
 
   return createMemo((): NavItemDef[] => {
+    const isOwnChannel = subjectNick() && auth()?.nick === subjectNick();
     // Channel page — tabs take over the sidebar regardless of viewer role
-    if (subjectNick()) {
+    if (subjectNick() && !isOwnChannel) {
       if (tabs.loading) return [];
       return (tabs() ?? []).map(tabToNavItem);
     }
@@ -143,7 +144,15 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
         .replace(/\$baseurl/g, baseurl);
       return appToNavItem({ ...app, url }, t);
     });
-
+    const featured = (data.featured ?? []).map((app) => {
+      const url = app.url
+        .split(",")[0]
+        .trim()
+        .replace(/\$baseurl/g, baseurl);
+      return appToNavItem({ ...app, url }, t);
+    });
+    const pinnedPaths = new Set(items.map((i) => i.path));
+    const featuredNew = featured.filter((i) => !pinnedPaths.has(i.path));
     // Admin item appended if not already in pinned
     if (viewer.is_admin) {
       const hasAdmin = items.some((i) => {
@@ -155,8 +164,7 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
         if (adminMod) items.push({ ...adminMod.navItem });
       }
     }
-
-    return items;
+    return [...items, ...featuredNew];
   });
 }
 // ── useNavActionItems ─────────────────────────────────────────────────────────

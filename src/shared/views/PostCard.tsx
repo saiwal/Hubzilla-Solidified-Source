@@ -158,7 +158,7 @@ export default function PostCard(props: {
 
       {/* Body */}
       <div
-        class="mt-4 prose prose-sm prose-zinc dark:prose-invert max-w-none
+        class="mt-4 prose-code:break-all prose prose-sm prose-zinc dark:prose-invert max-w-none
          prose-a:text-blue-500 prose-a:no-underline hover:prose-a:underline
          prose-blockquote:not-italic prose-blockquote:border-zinc-300
          prose-code:bg-zinc-100 dark:prose-code:bg-zinc-700

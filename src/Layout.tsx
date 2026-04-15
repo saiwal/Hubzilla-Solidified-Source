@@ -10,6 +10,8 @@ import RemoteAuthBanner from "./shared/views/RemoteAuthBanner";
 import { useViewerRole, useSubjectNick } from "./shared/store/site-config";
 import HelpOverlay from "./shared/views/HelpOverlay";
 import HelpTrigger from "./shared/views/HelpTrigger";
+import { MdFillApp_registration } from "solid-icons/md";
+// import { useAuth } from "./shared/store/auth-store";
 
 const Layout: ParentComponent = (props) => {
   const [rightOpen, setRightOpen] = createSignal(false);
@@ -19,7 +21,9 @@ const Layout: ParentComponent = (props) => {
   const actionItems = useNavActionItems();
   const location = useLocation();
   const navItems = useNav(subjectNick);
-  const showActions = () => !subjectNick();
+	// const auth        = useAuth();
+	// const isOwnChannel = () => !!subjectNick() && auth()?.nick === subjectNick();
+  // const showActions = () => !subjectNick() || isOwnChannel();
   const viewerRole = useViewerRole();
   let mainRef!: HTMLElement;
   const [showScrollTop, setShowScrollTop] = createSignal(false);
@@ -54,20 +58,20 @@ const Layout: ParentComponent = (props) => {
             <nav class="space-y-2 flex-1 overflow-y-auto">
               <For each={navItems()}>{(item) => <NavItem {...item} />}</For>
             </nav>
-            <Show when={showActions()}>
+            {/* <Show when={showActions()}> */}
               <div class="border-t border-gray-200 dark:border-gray-700 pt-2 space-y-1">
                 <For each={actionItems()}>
                   {(item) => <NavItem {...item} />}
                 </For>
               </div>
-            </Show>
+            {/* </Show> */}
             {/* Only render owner-specific bottom slot for local users */}
             <Show when={isLocalUser()}>
               <Slot name="leftBottom" moduleId={activeModuleId()} />
             </Show>
-
             <LanguageSwitcher />
             <div class="flex items-center justify-evenly mt-2">
+              <MdFillApp_registration />
               <ThemeToggle />
               <HelpTrigger />
             </div>
@@ -154,15 +158,16 @@ const Layout: ParentComponent = (props) => {
                   </span>
                 )}
               </For>
-              <Show when={showActions()}>
+              {/* <Show when={showActions()}> */}
                 <div class="border-t border-gray-200 dark:border-gray-700 pt-2 space-y-1">
                   <For each={actionItems()}>
                     {(item) => <NavItem {...item} />}
                   </For>
                 </div>
-              </Show>
+              {/* </Show> */}
               <LanguageSwitcher />
               <div class="flex items-center justify-evenly mt-2">
+                <MdFillApp_registration />
                 <ThemeToggle />
                 <HelpTrigger />
               </div>
