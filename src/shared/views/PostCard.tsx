@@ -44,7 +44,7 @@ const networkActions: PostActions = {
 export default function PostCard(props: {
   post: ThreadNode;
   actions?: PostActions;
-  onSeen?: (iid: number) => void;
+  onSeen?: (uuid: string) => void;
 }) {
   const getActions = () => props.actions ?? networkActions;
   const [replyOpen, setReplyOpen] = createSignal(false);
@@ -56,15 +56,15 @@ export default function PostCard(props: {
   let cardRef!: HTMLDivElement;
 
   onMount(() => {
-    const iid = props.post.iid;
-    if (!iid) return;
+    const uuid = props.post.uuid;
+    if (!uuid) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
           observer.disconnect();
-          markItemSeen(iid);
-          props.onSeen?.(iid);
+          markItemSeen(uuid);
+          props.onSeen?.(uuid);
         }
       },
       { threshold: 0.5 },

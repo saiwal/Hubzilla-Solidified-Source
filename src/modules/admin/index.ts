@@ -15,7 +15,6 @@ registerModule({
 		context: "admin",
   },
   slots: {
-    right: () => import("../../shared/views/NotificationsAside"),
   },
   permissions: [],
 });
