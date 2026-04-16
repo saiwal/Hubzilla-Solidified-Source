@@ -174,6 +174,7 @@ const ACTION_ORDER = [
   "profiles",
   "settings",
   "manage",
+	"navhome",
   "logout",
   "login",
   "remote_login",
@@ -196,23 +197,28 @@ export function useNavActionItems(): () => NavItemDef[] {
       profile: {
         label: t("nav.profile"),
         icon: "person",
-        context: ["owner", "local"],
+        context: ["owner"],
       },
       profiles: {
         label: t("nav.edit_profile"),
         icon: "edit",
-        context: ["owner", "local"],
+        context: ["owner"],
       },
       settings: {
         label: t("nav.settings"),
         icon: "settings",
-        context: ["owner", "local"],
+        context: ["owner"],
       },
       manage: {
         label: t("nav.channels"),
         icon: "manage",
-        context: ["owner", "local"],
+        context: ["owner"],
       },
+			navhome: {
+				label:t("nav.navhome"),
+				icon: "home",
+				context: ["remote"],
+			},
       logout: {
         label: t("nav.logout"),
         icon: "logout",

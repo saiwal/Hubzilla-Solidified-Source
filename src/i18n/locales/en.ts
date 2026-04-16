@@ -20,6 +20,7 @@ export type RawDictionary = {
     profile: string;
     edit_profile: string;
     channels: string;
+		navhome: string;
     logout: string;
     login: string;
     remote_login: string;
@@ -58,6 +59,7 @@ export const dict: RawDictionary = {
     profile: "Profile",
     edit_profile: "Edit Profile",
     channels: "Channels",
+		navhome: "Take me Home",
     logout: "Logout",
     login: "Login",
     remote_login: "Remote Login",

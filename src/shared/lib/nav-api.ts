@@ -19,6 +19,7 @@ export interface NavActions {
   profile?: string;
   profiles?: string;
   channel?: string;
+	navhome?: string;
   login?: string;
   remote_login?: string;
   register?: string;

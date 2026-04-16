@@ -21,6 +21,7 @@ export const dict: RawDictionary = {
     profile: "Profil",
     edit_profile: "Profil bearbeiten",
     channels: "Kanäle",
+		navhome: "Take me Home",
     logout: "Abmelden",
     login: "Anmelden",
     remote_login: "Remote-Anmeldung",
