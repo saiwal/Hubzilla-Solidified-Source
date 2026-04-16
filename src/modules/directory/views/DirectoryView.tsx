@@ -1,5 +1,223 @@
-export default function AdminView() {
-	return (
-	<h1>Coming Soon...</h1>
-	)
+// modules/directory/views/DirectoryView.tsx
+
+import {
+  createEffect,
+  createSignal,
+  Show,
+  For,
+  onMount,
+} from "solid-js";
+import {
+  entries,
+  loading,
+  loadingMore,
+  hasMore,
+  total,
+  error,
+  loadDirectory,
+  loadMoreDirectory,
+  resetDirectory,
+} from "../store";
+import DirectoryCard from "./DirectoryCard";
+import type { DirectoryParams } from "../api";
+
+type Order = DirectoryParams["order"];
+
+export default function DirectoryView() {
+  const [search, setSearch]       = createSignal("");
+  const [order, setOrder]         = createSignal<Order>("date");
+  const [globalDir, setGlobalDir] = createSignal<0 | 1>(1);
+  const [suggest, setSuggest]     = createSignal(false);
+
+  let initialized = false;
+
+  // Initial load
+  onMount(() => {
+    if (initialized) return;
+    initialized = true;
+    resetDirectory();
+    loadDirectory({ order: order(), global: globalDir() });
+  });
+
+  // Re-fetch whenever filter signals change (skip first run — onMount handles it)
+  let effectRan = false;
+  createEffect(() => {
+    // track signals
+    const o = order();
+    const g = globalDir();
+    const s = suggest();
+    if (!effectRan) { effectRan = true; return; }
+    resetDirectory();
+    loadDirectory({ order: o, global: g, suggest: s ? 1 : 0 });
+  });
+
+  function handleSearch(e: Event) {
+    e.preventDefault();
+    resetDirectory();
+    loadDirectory({
+      search: search(),
+      order: order(),
+      global: globalDir(),
+      suggest: 0,
+    });
+    setSuggest(false);
+  }
+
+  return (
+    <div class="space-y-4">
+      {/* ── Header ── */}
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          Directory
+        </h1>
+
+        {/* Suggest toggle */}
+        <button
+          onClick={() => setSuggest((s) => !s)}
+          class={`text-sm px-3 py-1.5 rounded-lg border transition-colors
+            ${suggest()
+              ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+              : "border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
+            }`}
+        >
+          {suggest() ? "✓ Suggestions" : "Suggest channels"}
+        </button>
+      </div>
+
+      {/* ── Search bar ── */}
+      <form onSubmit={handleSearch} class="flex gap-2">
+        <input
+          type="text"
+          value={search()}
+          onInput={(e) => setSearch(e.currentTarget.value)}
+          placeholder="Search by name, address, or keyword…"
+          class="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700
+                 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+                 placeholder-gray-400 dark:placeholder-gray-500
+                 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+        />
+        <button
+          type="submit"
+          class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium
+                 hover:bg-blue-700 transition-colors"
+        >
+          Search
+        </button>
+      </form>
+
+      {/* ── Filters row ── */}
+      <div class="flex flex-wrap gap-2 text-sm">
+        {/* Sort order */}
+        <select
+          value={order()}
+          onChange={(e) => setOrder(e.currentTarget.value as Order)}
+          class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700
+                 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300
+                 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="date">Newest first</option>
+          <option value="rdate">Oldest first</option>
+          <option value="alphabetic">A → Z</option>
+          <option value="ralpha">Z → A</option>
+        </select>
+
+        {/* Global vs local */}
+        <button
+          onClick={() => setGlobalDir((g) => (g === 1 ? 0 : 1))}
+          class={`px-3 py-1.5 rounded-lg border transition-colors
+            ${globalDir() === 1
+              ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+              : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+            }`}
+        >
+          {globalDir() === 1 ? "🌐 Global" : "🏠 Local"}
+        </button>
+      </div>
+
+      {/* ── Total count ── */}
+      <Show when={!loading() && total() > 0}>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          {total().toLocaleString()} channels found
+        </p>
+      </Show>
+
+      {/* ── Error ── */}
+      <Show when={error()}>
+        <div class="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 text-sm text-red-700 dark:text-red-300">
+          {error()}
+        </div>
+      </Show>
+
+      {/* ── Loading skeleton ── */}
+      <Show when={loading()}>
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <For each={Array(9).fill(0)}>
+            {() => <DirectoryCardSkeleton />}
+          </For>
+        </div>
+      </Show>
+
+      {/* ── Results grid ── */}
+      <Show when={!loading()}>
+        <Show
+          when={entries().length > 0}
+          fallback={
+            <p class="py-12 text-center text-gray-400 dark:text-gray-500">
+              No channels found.
+            </p>
+          }
+        >
+          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <For each={entries()}>
+              {(entry) => <DirectoryCard entry={entry} />}
+            </For>
+          </div>
+        </Show>
+
+        {/* ── Load more ── */}
+        <Show when={hasMore() && !loadingMore()}>
+          <div class="flex justify-center py-4">
+            <button
+              onClick={loadMoreDirectory}
+              class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700
+                     bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300
+                     hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
+              Load more
+            </button>
+          </div>
+        </Show>
+
+        <Show when={loadingMore()}>
+          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <For each={Array(6).fill(0)}>
+              {() => <DirectoryCardSkeleton />}
+            </For>
+          </div>
+        </Show>
+
+        <Show when={!hasMore() && entries().length > 0}>
+          <p class="py-4 text-center text-sm text-gray-400 dark:text-gray-500">
+            End of results
+          </p>
+        </Show>
+      </Show>
+    </div>
+  );
+}
+
+function DirectoryCardSkeleton() {
+  return (
+    <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 space-y-3 animate-pulse">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
+        <div class="flex-1 space-y-2">
+          <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
+          <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+        </div>
+      </div>
+      <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full" />
+      <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
+    </div>
+  );
 }
