@@ -119,11 +119,17 @@ function MasonryCard(props: { post: ThreadNode }) {
         {/* ── Body with height cap ── */}
         <div class="relative">
           <div
-            ref={bodyRef}
-            class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed
+            class="overflow-hidden transition-[max-height] duration-300 ease-in-out"
+            style={{
+              "max-height": expanded() ? "2000px" : `${COLLAPSED_MAX_PX}px`,
+            }}
+          >
+            <div
+              ref={bodyRef}
+              class="post-body text-sm text-gray-600 dark:text-gray-400 leading-relaxed
                    [&>p]:my-0.5 [&_img]:w-full [&_img]:rounded-lg [&_img]:mt-2 [&_img]:mb-1
                    [&>blockquote]:border-l-2 [&>blockquote]:pl-2 [&>blockquote]:text-gray-400
-                   wrap-anywhere overflow-hidden transition-[max-height] duration-300 ease-in-out
+                   wrap-anywhere
                    [&_.bb-share]:mt-2 [&_.bb-share]:rounded-xl [&_.bb-share]:border
                    [&_.bb-share]:border-gray-200 [&_.bb-share]:dark:border-gray-700
                    [&_.bb-share]:bg-gray-50 [&_.bb-share]:dark:bg-gray-800/60
@@ -144,11 +150,9 @@ function MasonryCard(props: { post: ThreadNode }) {
                    [&_.bb-share-content]:py-2.5 [&_.bb-share-content]:text-sm
                    [&_.bb-share-content]:text-gray-600 [&_.bb-share-content]:dark:text-gray-400
                    [&_.bb-share-content]:border-l-0 [&_.bb-share-content]:pl-0"
-            style={{
-              "max-height": expanded() ? "2000px" : `${COLLAPSED_MAX_PX}px`,
-            }}
-            innerHTML={p.body}
-          />
+              innerHTML={p.body}
+            />
+          </div>
 
           {/* Fade + expand button — only when content actually overflows */}
           <Show when={overflows() && !expanded()}>
@@ -298,7 +302,7 @@ export default function MasonryView(props: { posts: ThreadNode[] }) {
       <div class="flex gap-3 items-start">
         <For each={columns()}>
           {(col) => (
-            <div class="flex-1 flex flex-col">
+            <div class="flex-1 flex flex-col min-w-0">
               <For each={col}>{(post) => <MasonryCard post={post} />}</For>
             </div>
           )}
