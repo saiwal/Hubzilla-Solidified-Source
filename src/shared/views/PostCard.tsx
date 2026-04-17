@@ -10,7 +10,7 @@ import {
 } from "@/modules/network/store/store";
 import { markItemSeen } from "@/shared/lib/markSeen";
 import {
-    MdFillBar_chart,
+  MdFillBar_chart,
   MdFillChat,
   MdFillKeyboard_arrow_down,
   MdFillKeyboard_arrow_up,
@@ -20,6 +20,7 @@ import {
   MdOutlineThumb_up,
 } from "solid-icons/md";
 import { useI18n } from "@/i18n";
+import { BiRegularLinkExternal } from "solid-icons/bi";
 
 export interface PostActions {
   onLike: (mid: string, iid: number) => Promise<void>;
@@ -52,7 +53,7 @@ export default function PostCard(props: {
   const [replyBody, setReplyBody] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
   const [actionError, setActionError] = createSignal<string | null>(null);
-	const { locale } = useI18n();
+  const { locale } = useI18n();
   let cardRef!: HTMLDivElement;
 
   onMount(() => {
@@ -137,16 +138,25 @@ export default function PostCard(props: {
           class="rounded-full object-cover ring-1 ring-zinc-200 dark:ring-zinc-700"
         />
         <div class="flex flex-col">
-         <a 
+          <a
             href={props.post.authorUrl}
             class="font-semibold text-zinc-900 dark:text-zinc-100 hover:underline"
           >
             {props.post.authorName}
           </a>
-          <span class="text-sm text-zinc-500 dark:text-zinc-400" title={new Date(props.post.created + "Z").toLocaleString(locale())}>
+          <span
+            class="text-sm text-zinc-500 dark:text-zinc-400"
+            title={new Date(props.post.created + "Z").toLocaleString(locale())}
+          >
             {formatPostDate(props.post.created, locale())}
           </span>
         </div>
+        <a
+          href={props.post.permalink}
+          class="ml-auto text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100" title="source"
+        >
+          <BiRegularLinkExternal size={17} />
+        </a>
       </div>
 
       {/* Title */}

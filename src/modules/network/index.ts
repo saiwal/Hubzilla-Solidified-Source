@@ -14,6 +14,9 @@ registerModule({
 		context: "owner", 
   },
   slots: {
+    right: [
+      () => import("@/shared/widgets/placeholder/view"),
+		]
   },
   permissions: [],
 });
