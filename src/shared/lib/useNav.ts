@@ -170,8 +170,6 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
 // ── useNavActionItems ─────────────────────────────────────────────────────────
 
 const ACTION_ORDER = [
-  "profile",
-  "profiles",
   "settings",
   "manage",
 	"navhome",
@@ -194,16 +192,6 @@ export function useNavActionItems(): () => NavItemDef[] {
 
     const role = viewerRole();
     const ACTION_META: Record<ActionKey, ActionMeta> = {
-      profile: {
-        label: t("nav.profile"),
-        icon: "person",
-        context: ["owner"],
-      },
-      profiles: {
-        label: t("nav.edit_profile"),
-        icon: "edit",
-        context: ["owner"],
-      },
       settings: {
         label: t("nav.settings"),
         icon: "settings",
