@@ -17,7 +17,7 @@ registerModule({
       notificationSlot,
 			onlinecontactsSlot,
 			weatherSlot,
-      () => import("./widgets/HqMessagesWidget"),
+      // () => import("./widgets/HqMessagesWidget"),
       () => import("./widgets/ComposerWidget"),
     ],
   },
