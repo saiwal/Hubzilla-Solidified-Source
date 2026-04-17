@@ -1,11 +1,26 @@
-import { createSignal } from "solid-js";
+import { createSignal, type Component, lazy } from "solid-js";
 import type { ModuleDef, RouteDef, NavItemDef, SlotsDef } from "@/shared/types/module.types";
 
-const modules = new Map<string, ModuleDef>();
+type SlotLoader = () => Promise<{ default: Component }>;
 
-// reactive nav items so Layout re-renders when modules register
+const modules = new Map<string, ModuleDef>();
 const [navItems, setNavItems] = createSignal<NavItemDef[]>([]);
 const [routes, setRoutes] = createSignal<RouteDef[]>([]);
+
+// Lazy component cache — prevents remounting when memos recompute
+const lazyCache = new WeakMap<SlotLoader, Component>();
+export function getLazy(loader: SlotLoader): Component {
+  if (!lazyCache.has(loader)) lazyCache.set(loader, lazy(loader));
+  return lazyCache.get(loader)!;
+}
+
+// Global loaders collected once at registration time, deduped by reference
+const globalLoaders = new Map<keyof SlotsDef, Set<SlotLoader>>();
+
+export function globalSlot(loader: SlotLoader): SlotLoader {
+  (loader as any).__global = true;
+  return loader;
+}
 
 export function registerModule(def: ModuleDef) {
   if (modules.has(def.id)) {
@@ -13,6 +28,21 @@ export function registerModule(def: ModuleDef) {
     return;
   }
   modules.set(def.id, def);
+
+  // Collect global loaders at registration — Set deduplicates by reference
+  if (def.slots) {
+    for (const [slot, entry] of Object.entries(def.slots)) {
+      const loaders = Array.isArray(entry) ? entry : [entry];
+      for (const l of loaders as SlotLoader[]) {
+        if ((l as any).__global) {
+          const key = slot as keyof SlotsDef;
+          if (!globalLoaders.has(key)) globalLoaders.set(key, new Set());
+          globalLoaders.get(key)!.add(l);
+        }
+      }
+    }
+  }
+
   setNavItems((prev) => [...prev, def.navItem]);
   setRoutes((prev) => [...prev, ...def.routes]);
 }
@@ -24,17 +54,29 @@ export function getNavItems() {
 export function getRoutes() {
   return routes;
 }
+
+export function getModule(id: string) {
+  return modules.get(id) ?? null;
+}
+
+// Global widgets — always mounted, never torn down
+export function resolveGlobalSlots(slot: keyof SlotsDef): SlotLoader[] {
+  return [...(globalLoaders.get(slot) ?? [])];
+}
+
+// Module-local widgets — swapped on navigation, globals excluded
+export function resolveModuleSlot(slot: keyof SlotsDef, moduleId: string): SlotLoader[] {
+  const entry = modules.get(moduleId)?.slots?.[slot];
+  if (!entry) return [];
+  const loaders = Array.isArray(entry) ? entry : [entry];
+  return (loaders as SlotLoader[]).filter((l) => !(l as any).__global);
+}
+
+// Keep for any existing call sites
 export function resolveSlot(slot: keyof SlotsDef, moduleId?: string) {
-  if (moduleId) {
-    // Only return this module's slot — no fallback to other modules
-    return modules.get(moduleId)?.slots?.[slot] ?? null;
-  }
-  // No moduleId = global slot (e.g. leftBottom), collect all
+  if (moduleId) return modules.get(moduleId)?.slots?.[slot] ?? null;
   for (const mod of modules.values()) {
     if (mod.slots?.[slot]) return mod.slots[slot];
   }
   return null;
-}
-export function getModule(id: string) {
-  return modules.get(id) ?? null;
 }

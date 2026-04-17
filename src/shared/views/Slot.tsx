@@ -1,6 +1,10 @@
-import { type Component, lazy, createMemo, For } from "solid-js";
+import { type Component, createMemo, For } from "solid-js";
 import { useLocation } from "@solidjs/router";
-import { resolveSlot } from "@/shared/lib/module-registry";
+import {
+  resolveModuleSlot,
+  resolveGlobalSlots,
+  getLazy,
+} from "@/shared/lib/module-registry";
 import type { SlotsDef } from "../types/module.types";
 
 interface SlotProps {
@@ -8,31 +12,33 @@ interface SlotProps {
   moduleId?: string;
 }
 
-type SlotLoader = () => Promise<{ default: Component }>;
-
 const Slot: Component<SlotProps> = (props) => {
   const location = useLocation();
 
   const activeModuleId = () => {
     if (props.moduleId) return props.moduleId;
-    const segment = location.pathname.split("/").filter(Boolean)[0];
-    return segment ?? "";
+    return location.pathname.split("/").filter(Boolean)[0] ?? "";
   };
 
-  const widgets = createMemo(() => {
-    const loader = resolveSlot(props.name, activeModuleId());
-    if (!loader) return [];
-    const loaders = Array.isArray(loader) ? loader : [loader];
-    return loaders.map((l: SlotLoader) =>
-      lazy(l as () => Promise<{ default: Component }>)
-    );
-  });
+  // Global widgets — stable array, computed once (modules don't unregister)
+  // getLazy caches by loader identity so components are never recreated
+  const globalWidgets = resolveGlobalSlots(props.name).map(getLazy);
+
+  // Module-local widgets — reactive, change when activeModuleId changes
+  const localWidgets = createMemo(() =>
+    resolveModuleSlot(props.name, activeModuleId()).map(getLazy)
+  );
 
   return (
-    <For each={widgets()}>
-      {(Widget) => <Widget />}
-    </For>
+    <>
+      {/* Always mounted — never torn down on module navigation */}
+      <For each={globalWidgets}>{(Widget) => <Widget />}</For>
+
+      {/* Swapped per active module */}
+      <For each={localWidgets()}>{(Widget) => <Widget />}</For>
+    </>
   );
 };
 
 export default Slot;
+

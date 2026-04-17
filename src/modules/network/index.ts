@@ -11,12 +11,12 @@ registerModule({
     icon: "grid",
     path: "/network",
     href: "/network",
-		context: "owner", 
+    context: "owner",
   },
   slots: {
     right: [
       () => import("@/shared/widgets/placeholder/view"),
-		]
+    ],
   },
   permissions: [],
 });
