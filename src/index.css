@@ -3,3 +3,12 @@
 
 /* Enable class-based dark mode */
 @custom-variant dark (&:where(.dark, .dark *));
+@layer base {
+  .post-body {
+    overflow-x: hidden;
+  }
+  .post-body pre {
+    overflow-x: auto;
+    max-width: 100%;
+  }
+}

@@ -146,7 +146,7 @@ const Layout: ParentComponent = (props) => {
             class={`
               fixed left-0 right-0 z-40
               bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4
-              transform transition-transform duration-300 ease-in-out lg:hidden
+              transform transition-transform duration-300 ease-in-out lg:hidden max-h-[70vh] overflow-y-auto
               ${navOpen() ? "translate-y-0 bottom-16" : "translate-y-full bottom-16"}
             `}
           >
