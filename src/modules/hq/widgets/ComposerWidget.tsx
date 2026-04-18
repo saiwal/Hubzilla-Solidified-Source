@@ -26,7 +26,7 @@ const ComposerWidget: Component = () => {
       <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden">
         {/* Header */}
         <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-          <span class="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 select-none">
+      <span class="text-xs font-medium text-gray-400 uppercase tracking-wider">
             Compose
           </span>
           <svg class="w-3.5 h-3.5 text-gray-300 dark:text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
