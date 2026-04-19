@@ -1,5 +1,3 @@
-// modules/manage/api.ts
-
 export interface ManagedChannel {
   channel_id: number;
   channel_name: string;
@@ -10,8 +8,6 @@ export interface ManagedChannel {
   photo: string;
   url: string;
   intros: number;
-  switch_url: string;
-  make_default_url: string;
 }
 
 export interface ManagedDelegate {
@@ -19,7 +15,6 @@ export interface ManagedDelegate {
   address: string;
   photo: string;
   url: string;
-  switch_url: string;
 }
 
 export interface ManageApiResponse {
@@ -32,46 +27,50 @@ export interface ManageApiResponse {
 }
 
 export interface SwitchResult {
-  status: "ok";
   channel_id: number;
   redirect_to: string;
 }
 
 export interface SetDefaultResult {
-  status: "ok";
   default_channel_id: number;
 }
 
 // ── Fetch ─────────────────────────────────────────────────────────────────────
+// modules/manage/api.ts
+import { apiFetch } from '@/shared/lib/fetch';
 
 export async function fetchManageApi(): Promise<ManageApiResponse> {
-  const res = await fetch("/manage_api?format=json", {
-    credentials: "include",
-  });
-  if (!res.ok) throw new Error(`manage_api HTTP ${res.status}`);
-  return res.json();
+  const res = await apiFetch('/api/manage');
+  if (!res.ok) throw await res.json();
+  const { data } = await res.json();
+  return data as ManageApiResponse;
 }
 
 export async function switchChannel(channelId: number): Promise<SwitchResult> {
-  const res = await fetch("/manage_api?format=json", {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
+  const res = await apiFetch('/api/manage', {
+    method: 'POST',
     body: JSON.stringify({ switch_to: channelId }),
   });
-  if (!res.ok) throw new Error(`switch channel HTTP ${res.status}`);
-  return res.json();
+  if (!res.ok) throw await res.json();
+  const { data } = await res.json();
+  return data as SwitchResult;
 }
 
-export async function setDefaultChannel(
-  channelId: number,
-): Promise<SetDefaultResult> {
-  const res = await fetch("/manage_api?format=json", {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
+export async function setDefaultChannel(channelId: number): Promise<SetDefaultResult> {
+  const res = await apiFetch('/api/manage', {
+    method: 'POST',
     body: JSON.stringify({ set_default: channelId }),
   });
-  if (!res.ok) throw new Error(`set default HTTP ${res.status}`);
-  return res.json();
+  if (!res.ok) throw await res.json();
+  const { data } = await res.json();
+  return data as SetDefaultResult;
+}
+
+// ── Client-side helpers ───────────────────────────────────────────────────────
+
+// Reconstructs the Hubzilla magic auth URL for delegate switching.
+// address = delegate's xchan_addr, delegateUrl = delegate's xchan_url
+export function buildDelegateSwitchUrl(delegateUrl: string, address: string): string {
+  const dest = delegateUrl + '?delegate=' + encodeURIComponent(address);
+  return `/magic?f=&bdest=${btoa(dest)}&delegate=${encodeURIComponent(address)}`;
 }

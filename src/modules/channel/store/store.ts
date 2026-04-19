@@ -1,43 +1,65 @@
 import { createSignal } from "solid-js";
-import {
-  fetchChannelPosts,
-  toggleVerb,
-  postComment as apiPostComment,
-  type ChannelParams,
-} from "../api/api";
-import { buildThreadTree, type ThreadNode } from "@/shared/lib/thread";
+import { fetchChannelPosts, toggleVerb, postComment } from "../api/api";
+import type { ChannelParams } from "../api/api";
+import { buildThreadTree } from "@/shared/lib/thread";
+import type { ThreadNode } from "@/shared/lib/thread";
+import type { Post } from "@/shared/types/post.types";
+import { updateInterval } from "@/shared/store/auth-store";
 
-const [posts, setPosts] = createSignal<ThreadNode[]>([]);
-const [loading, setLoading] = createSignal(false);
-const [nickname, setNickname] = createSignal("");
-const [params, setParams] = createSignal<ChannelParams>({});
+// ─── State ────────────────────────────────────────────────────────────────────
+
+const [posts, setPosts]           = createSignal<ThreadNode[]>([]);
+const [loading, setLoading]       = createSignal(false);
+const [loadingMore, setLoadingMore] = createSignal(false);
+const [hasMore, setHasMore]       = createSignal(true);
+const [newPosts, setNewPosts]     = createSignal<ThreadNode[]>([]);
 const [profileUid, setProfileUid] = createSignal<number>(0);
+const [nick, setNick]             = createSignal<string>('');
+const [params, setParams]         = createSignal<ChannelParams>({});
 
+let currentOffset = 0;
+let pollTimer: ReturnType<typeof setTimeout> | null = null;
 const activated = new Set<string>();
 
-export async function loadChannel(nick: string, newParams?: ChannelParams) {
-  setNickname(nick);
-  if (newParams !== undefined) setParams(newParams);
-  setLoading(true);
-  try {
-    const data = await fetchChannelPosts(nick, params());
-    const threads = buildThreadTree(data);
-    setPosts(threads);
-    if (data.length && data[0].profileUid) setProfileUid(data[0].profileUid);
-    activated.clear();
-    data.forEach((p) => {
-      if (p.viewerLiked) activated.add(`${p.mid}:like`);
-      if (p.viewerDisliked) activated.add(`${p.mid}:dislike`);
-      if (p.viewerRepeated) activated.add(`${p.mid}:announce`);
-    });
-  } catch (err) {
-    console.error("loadChannel failed", err);
-  } finally {
-    setLoading(false);
-  }
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function postToThreadNode(p: Post): ThreadNode {
+  return {
+    uuid:            p.uuid,
+    id:              p.id,
+    mid:             p.mid,
+    parent_mid:      p.parent_mid,
+    thr_parent:      p.thr_parent,
+    top_mid:         p.top_mid,
+    parent:          p.parent_mid,
+    body:            p.body,
+    title:           p.title,
+    authorName:      p.authorName,
+    authorAvatar:    p.authorAvatar,
+    authorUrl:       p.authorUrl,
+    created:         p.created,
+    verb:            p.verb,
+    obj_type:        p.obj_type,
+    flags:           p.flags,
+    permalink:       p.permalink,
+    likeCount:       p.likeCount,
+    dislikeCount:    p.dislikeCount,
+    repeatCount:     p.repeatCount,
+    viewerLiked:     p.viewerLiked,
+    viewerDisliked:  p.viewerDisliked,
+    viewerRepeated:  p.viewerRepeated,
+    item_thread_top: p.item_thread_top,
+    children:        [],
+  };
 }
 
-// ─── Node updater (identical helper to network store) ────────────────────────
+function registerActivated(items: Post[]) {
+  items.forEach((p) => {
+    if (p.viewerLiked)    activated.add(`${p.mid}:like`);
+    if (p.viewerDisliked) activated.add(`${p.mid}:dislike`);
+    if (p.viewerRepeated) activated.add(`${p.mid}:announce`);
+  });
+}
 
 function updateNode(
   nodes: ThreadNode[],
@@ -52,7 +74,126 @@ function updateNode(
   });
 }
 
-// ─── Actions (same API calls as network, different posts signal) ─────────────
+// ─── Load ─────────────────────────────────────────────────────────────────────
+
+export async function loadChannel(nickname: string, newParams?: ChannelParams) {
+  setNick(nickname);
+  if (newParams !== undefined) setParams(newParams);
+  setLoading(true);
+  setHasMore(true);
+  currentOffset = 0;
+  stopPolling();
+  try {
+    const { items, rootCount, limit, nouveau } = await fetchChannelPosts(
+      nickname,
+      { ...params(), start: 0 },
+    );
+    const threads = nouveau
+      ? items.map(postToThreadNode)
+      : buildThreadTree(items);
+    setPosts(threads);
+    setNewPosts([]);
+    currentOffset = rootCount;
+    setHasMore(rootCount >= limit);
+    if (items.length && items[0].profileUid) {
+      setProfileUid(items[0].profileUid);
+    }
+    activated.clear();
+    registerActivated(items);
+    startPolling();
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+}
+
+export async function loadMore() {
+  if (loadingMore() || !hasMore()) return;
+  setLoadingMore(true);
+  try {
+    const { items, rootCount, limit, nouveau } = await fetchChannelPosts(
+      nick(),
+      { ...params(), start: currentOffset },
+    );
+    if (!items.length) {
+      setHasMore(false);
+      return;
+    }
+    const threads = nouveau
+      ? items.map(postToThreadNode)
+      : buildThreadTree(items);
+    const existingMids = new Set(posts().map((t) => t.mid));
+    const fresh = threads.filter((t) => !existingMids.has(t.mid));
+    setPosts((prev) => [...prev, ...fresh]);
+    currentOffset += rootCount;
+    setHasMore(rootCount >= limit);
+    registerActivated(items);
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoadingMore(false);
+  }
+}
+
+export function resetPosts() {
+  setPosts([]);
+  setHasMore(true);
+  currentOffset = 0;
+}
+
+export function flushNewPosts() {
+  setPosts((prev) => [...newPosts(), ...prev]);
+  setNewPosts([]);
+}
+
+// ─── Polling ──────────────────────────────────────────────────────────────────
+
+function startPolling() {
+  stopPolling();
+  const schedule = () => {
+    pollTimer = setTimeout(async () => {
+      if (document.visibilityState === "visible") await checkForNew();
+      schedule();
+    }, updateInterval());
+  };
+  schedule();
+}
+
+function stopPolling() {
+  if (pollTimer !== null) {
+    clearTimeout(pollTimer);
+    pollTimer = null;
+  }
+}
+
+async function checkForNew() {
+  const topPost = newPosts()[0] ?? posts()[0];
+  if (!topPost) return;
+  const topDate = new Date(topPost.created.replace(" ", "T") + "Z");
+  topDate.setSeconds(topDate.getSeconds() + 1);
+  const dbegin = topDate.toISOString().slice(0, 19).replace("T", " ");
+  try {
+    const { items, nouveau } = await fetchChannelPosts(
+      nick(),
+      { ...params(), start: 0, dbegin },
+    );
+    if (!items.length) return;
+    const threads = nouveau
+      ? items.map(postToThreadNode)
+      : buildThreadTree(items);
+    const existingMids = new Set([
+      ...posts().map((t) => t.mid),
+      ...newPosts().map((t) => t.mid),
+    ]);
+    const fresh = threads.filter((t) => !existingMids.has(t.mid));
+    if (fresh.length) setNewPosts((prev) => [...fresh, ...prev]);
+  } catch (err) {
+    console.error("Poll failed", err);
+  }
+}
+
+// ─── Actions ──────────────────────────────────────────────────────────────────
 
 export async function handleLike(mid: string, iid: number) {
   const key = `${mid}:like`;
@@ -74,7 +215,7 @@ export async function handleLike(mid: string, iid: number) {
         likeCount: n.likeCount + (isUndo ? 1 : -1),
       })),
     );
-    throw err;
+    console.error("Like failed", err);
   }
 }
 
@@ -98,7 +239,7 @@ export async function handleDislike(mid: string, iid: number) {
         dislikeCount: n.dislikeCount + (isUndo ? 1 : -1),
       })),
     );
-    throw err;
+    console.error("Dislike failed", err);
   }
 }
 
@@ -122,7 +263,7 @@ export async function handleRepeat(mid: string, iid: number) {
         repeatCount: n.repeatCount + (isUndo ? 1 : -1),
       })),
     );
-    throw err;
+    console.error("Repeat failed", err);
   }
 }
 
@@ -134,31 +275,31 @@ export async function handleComment(
   authorAvatar: string,
 ): Promise<void> {
   const tempComment: ThreadNode = {
-    uuid: crypto.randomUUID(),
-    id: crypto.randomUUID(),
-    mid: crypto.randomUUID(),
-    parent_mid: parentMid,
-    thr_parent: parentMid,
-    top_mid: parentMid,
-    parent: parentMid,
+    uuid:            crypto.randomUUID(),
+    id:              crypto.randomUUID(),
+    mid:             crypto.randomUUID(),
+    parent_mid:      parentMid,
+    thr_parent:      parentMid,
+    top_mid:         parentMid,
+    parent:          parentMid,
     body,
-    title: "",
+    title:           "",
     authorName,
     authorAvatar,
-    authorUrl: "",
-    created: new Date().toISOString().replace("T", " ").slice(0, 19),
-    verb: "Create",
-    obj_type: "Note",
-    flags: [],
-    permalink: "",
-    likeCount: 0,
-    dislikeCount: 0,
-    repeatCount: 0,
-    viewerLiked: false,
-    viewerDisliked: false,
-    viewerRepeated: false,
+    authorUrl:       "",
+    created:         new Date().toISOString().replace("T", " ").slice(0, 19),
+    verb:            "Create",
+    obj_type:        "Note",
+    flags:           [],
+    permalink:       "",
+    likeCount:       0,
+    dislikeCount:    0,
+    repeatCount:     0,
+    viewerLiked:     false,
+    viewerDisliked:  false,
+    viewerRepeated:  false,
     item_thread_top: 0,
-    children: [],
+    children:        [],
   };
 
   setPosts((prev) =>
@@ -168,19 +309,19 @@ export async function handleComment(
     })),
   );
 
-  apiPostComment({
-    body,
-    parent_iid: parentIid,
-    profile_uid: profileUid(),
-  }).catch((err) => {
-    console.error("Comment failed", err);
-    setPosts((prev) =>
-      updateNode(prev, parentMid, (n) => ({
-        ...n,
-        children: n.children.filter((c) => c.mid !== tempComment.mid),
-      })),
-    );
-  });
+  postComment({ body, parent_iid: parentIid, profile_uid: profileUid() }).catch(
+    (err) => {
+      console.error("Comment failed", err);
+      setPosts((prev) =>
+        updateNode(prev, parentMid, (n) => ({
+          ...n,
+          children: n.children.filter((c) => c.mid !== tempComment.mid),
+        })),
+      );
+    },
+  );
 }
 
-export { posts, loading, nickname };
+// ─── Exports ──────────────────────────────────────────────────────────────────
+
+export { posts, loading, loadingMore, hasMore, newPosts, profileUid };

@@ -1,6 +1,7 @@
 import { moduleGet } from "@/shared/lib/api";
 import type { Post } from "@/shared/types/post.types.ts";
 import { mapActivityToPost } from "@/shared/lib/activity.mapper.ts";
+import { apiFetch } from "@/shared/lib/fetch";
 
 const HIDDEN_VERBS = new Set(['Like', 'Dislike', 'Announce', 'Accept', 'Reject', 'TentativeAccept']);
 
@@ -69,17 +70,21 @@ export type NetworkStreamResult = {
   limit: number;
   nouveau: boolean;
 };
-
 export async function fetchNetworkStream(params: NetworkParams = {}): Promise<NetworkStreamResult> {
-  const qs = new URLSearchParams({ format: 'json' });
+  const qs = new URLSearchParams();
   Object.entries(params).forEach(([k, v]) => {
     if (v !== undefined && v !== '') qs.set(k, String(v));
   });
-  const raw = await moduleGet<any>(`network?${qs.toString()}`);
-  const activities: any[] = Array.isArray(raw) ? raw : (raw?.items ?? []);
-  const rootCount: number = raw?.meta?.root_count ?? activities.filter((a: any) => a.item_thread_top === 1).length;
-  const limit: number = raw?.meta?.limit ?? 10;
-  const nouveau: boolean = raw?.meta?.nouveau ?? false;
+
+  const res = await apiFetch(`/api/network?${qs.toString()}`);
+  if (!res.ok) throw await res.json();
+  const { data, meta } = await res.json();
+
+  const activities: any[] = Array.isArray(data) ? data : [];
+  const rootCount: number = meta?.root_count ?? activities.filter((a: any) => a.item_thread_top === 1).length;
+  const limit: number     = meta?.limit   ?? 10;
+  const nouveau: boolean  = meta?.nouveau ?? false;
+
   const items = activities.filter(shouldDisplay).map(mapActivityToPost);
   return { items, rootCount, limit, nouveau };
 }

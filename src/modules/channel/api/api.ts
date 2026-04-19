@@ -1,38 +1,58 @@
-import { moduleGet } from "@/shared/lib/api";
+import { apiFetch } from "@/shared/lib/fetch";
 import { mapActivityToPost } from "@/shared/lib/activity.mapper";
 import type { Post } from "@/shared/types/post.types";
 
 export type ChannelParams = {
-  start?:   number;
-  order?:   'created' | 'commented';
-  search?:  string;
-  tag?:     string;
-  cat?:     string;
-  mid?:     string;
-  dend?:    string;
-  dbegin?:  string;
+  start?:  number;
+  order?:  'created' | 'commented';
+  search?: string;
+  tag?:    string;
+  cat?:    string;
+  mid?:    string;
+  dend?:   string;
+  dbegin?: string;
+  nouveau?: 1;
 };
+
+export interface ChannelStreamResult {
+  items:     Post[];
+  rootCount: number;
+  limit:     number;
+  nouveau:   boolean;
+}
 
 export async function fetchChannelPosts(
   nickname: string,
   params: ChannelParams = {},
-): Promise<Post[]> {
-  const qs = new URLSearchParams({ format: 'json' });
+): Promise<ChannelStreamResult> {
+  const qs = new URLSearchParams();
   Object.entries(params).forEach(([k, v]) => {
     if (v !== undefined && v !== '') qs.set(k, String(v));
   });
 
-  // Empty nickname → /channel?format=json → PHP falls back to local_channel()
-  const path = nickname ? `channel/${nickname}` : 'channel';
-  const activities = await moduleGet<any[]>(`${path}?${qs.toString()}`);
-  if (!Array.isArray(activities)) return [];
-  return activities.map(mapActivityToPost);
+  // /api/channel/:nick or /api/channel for own channel
+  const path = nickname ? `/api/channel/${nickname}` : '/api/channel';
+  const res  = await apiFetch(`${path}?${qs.toString()}`);
+  if (!res.ok) throw await res.json();
+
+  const { data, meta } = await res.json();
+  const activities: any[] = Array.isArray(data) ? data : [];
+
+  return {
+    items:     activities.map(mapActivityToPost),
+    rootCount: meta?.root_count ?? activities.filter((a: any) => a.item_thread_top === 1).length,
+    limit:     meta?.limit      ?? 10,
+    nouveau:   meta?.nouveau    ?? false,
+  };
 }
-/** Post a comment on a thread item */
+
+// ── postComment and toggleVerb stay as raw fetch ──────────────────────────────
+// These hit Hubzilla core endpoints that handle their own auth/CSRF
+
 export async function postComment(params: {
   body: string;
-  parent_iid: number;   // integer id of the direct parent item
-  profile_uid: number;  // local channel id of the logged-in user
+  parent_iid: number;
+  profile_uid: number;
 }): Promise<Post | null> {
   const formData = new URLSearchParams();
   formData.set('type', 'net-comment');
@@ -50,17 +70,12 @@ export async function postComment(params: {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: formData.toString(),
   });
-
   if (!res.ok) throw new Error(`Comment failed: ${res.status}`);
   const data = await res.json();
-  // Hubzilla returns {cancel:1, reload:"..."} on success — not the new item
   if (data.cancel) return null;
   return mapActivityToPost(data);
 }
-/** Toggle like / dislike / announce (repeat) on a post.
- *  Hubzilla's handler: GET /like/{iid}?verb=…&conv_mode=&page_mode=client&reload=0
- *  iid is the local integer item id returned by the network JSON hook.
- */
+
 export async function toggleVerb(
   iid: number,
   verb: 'like' | 'dislike' | 'announce',
