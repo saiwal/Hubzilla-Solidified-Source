@@ -3,6 +3,7 @@ import { createResource, Show, For, createSignal } from "solid-js";
 import { useParams } from "@solidjs/router";
 import { useViewerRole } from "@/shared/store/site-config";
 import { MdFillPublic, MdFillLocation_on, MdFillExpand_more, MdFillExpand_less } from "solid-icons/md";
+import { apiFetch } from "@/shared/lib/fetch";
 
 type ChannelProfile = {
   channel_name: string;
@@ -39,13 +40,12 @@ type ChannelProfile = {
 
 async function fetchProfile(nick: string): Promise<ChannelProfile | null> {
   if (!nick) return null;
-  const res = await fetch(`/channel/${nick}?format=json&view=profile`);
+  const res = await apiFetch(`/api/profile/${nick}`);
   if (!res.ok) return null;
-  const d = await res.json();
-  if (d.error) return null;
-  return d as ChannelProfile;
+  const { data } = await res.json();
+  if (!data) return null;
+  return data as ChannelProfile;
 }
-
 export default function ProfileView() {
   const params = useParams<{ nick?: string }>();
   const viewerRole = useViewerRole();
