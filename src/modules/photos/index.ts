@@ -24,6 +24,7 @@ registerModule({
     context: "all",
   },
   slots: {
+    right: () => import('./widgets/PhotosWidget'),
   },
   permissions: [],
 });

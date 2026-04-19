@@ -1,22 +1,23 @@
 import { createSignal } from "solid-js";
-import type { Photo, PhotoDetail, PhotoComment } from "../api/api";
+import type { Photo, PhotoDetail, PhotoComment, Album } from "../api/api";
 import {
-  fetchPhotoSummary,
-  fetchPhotoAlbum,
-  fetchPhotoImage,
-  togglePhotoReaction,
-  postPhotoComment,
+  fetchPhotoSummary, fetchAlbums,
+  fetchPhotoAlbum, fetchPhotoImage,
+  togglePhotoReaction, postPhotoComment,
 } from "../api/api";
 
-// ─── Signals ─────────────────────────────────────────────────────────────────
+// ─── State ────────────────────────────────────────────────────────────────────
 
 const [photos, setPhotos]         = createSignal<Photo[]>([]);
+const [albums, setAlbums]         = createSignal<Album[]>([]);
+const [recentPhotos, setRecent]   = createSignal<Photo[]>([]);
 const [albumName, setAlbumName]   = createSignal('');
 const [detail, setDetail]         = createSignal<PhotoDetail | null>(null);
 const [loading, setLoading]       = createSignal(false);
+const [albumsLoading, setAlbumsLoading] = createSignal(false);
 const [nick, setNick]             = createSignal('');
 
-// ─── Loaders ─────────────────────────────────────────────────────────────────
+// ─── Loaders ──────────────────────────────────────────────────────────────────
 
 export async function loadSummary(nickname: string, start = 0) {
   setNick(nickname);
@@ -24,12 +25,39 @@ export async function loadSummary(nickname: string, start = 0) {
   setDetail(null);
   setAlbumName('');
   try {
-    const res = await fetchPhotoSummary(nickname, start);
-    setPhotos(res.photos);
+    const items = await fetchPhotoSummary(nickname, start);
+    setPhotos(items);
   } catch (err) {
     console.error('loadSummary failed', err);
   } finally {
     setLoading(false);
+  }
+}
+
+export async function loadAlbums(nickname: string) {
+  setAlbumsLoading(true);
+  try {
+    const items = await fetchAlbums(nickname);
+    setAlbums(items);
+    // Use first photo of each album as recent photos for widget
+    const recent = items
+      .filter(a => a.thumb)
+      .slice(0, 6)
+      .map(a => ({ src: a.thumb! } as unknown as Photo));
+    setRecent(recent);
+  } catch (err) {
+    console.error('loadAlbums failed', err);
+  } finally {
+    setAlbumsLoading(false);
+  }
+}
+
+export async function loadRecentPhotos(nickname: string) {
+  try {
+    const items = await fetchPhotoSummary(nickname, 0);
+    setRecent(items.slice(0, 8));
+  } catch (err) {
+    console.error('loadRecentPhotos failed', err);
   }
 }
 
@@ -38,9 +66,9 @@ export async function loadAlbum(nickname: string, albumHash: string, start = 0) 
   setLoading(true);
   setDetail(null);
   try {
-    const res = await fetchPhotoAlbum(nickname, albumHash, start);
-    setPhotos(res.photos);
-    setAlbumName(res.album_name);
+    const { photos: items, album_name } = await fetchPhotoAlbum(nickname, albumHash, start);
+    setPhotos(items);
+    setAlbumName(album_name);
   } catch (err) {
     console.error('loadAlbum failed', err);
   } finally {
@@ -61,7 +89,7 @@ export async function loadImage(nickname: string, resourceId: string) {
   }
 }
 
-// ─── Reaction actions ─────────────────────────────────────────────────────────
+// ─── Actions ──────────────────────────────────────────────────────────────────
 
 export async function handleLike() {
   const d = detail();
@@ -70,9 +98,8 @@ export async function handleLike() {
   setDetail({ ...d, viewer_liked: !isUndo, like_count: d.like_count + (isUndo ? -1 : 1) });
   try {
     await togglePhotoReaction(d.item_id, 'like');
-  } catch (err) {
-    setDetail({ ...d, viewer_liked: isUndo, like_count: d.like_count });
-    console.error('Like failed', err);
+  } catch {
+    setDetail({ ...d });
   }
 }
 
@@ -83,9 +110,8 @@ export async function handleDislike() {
   setDetail({ ...d, viewer_disliked: !isUndo, dislike_count: d.dislike_count + (isUndo ? -1 : 1) });
   try {
     await togglePhotoReaction(d.item_id, 'dislike');
-  } catch (err) {
-    setDetail({ ...d, viewer_disliked: isUndo, dislike_count: d.dislike_count });
-    console.error('Dislike failed', err);
+  } catch {
+    setDetail({ ...d });
   }
 }
 
@@ -94,12 +120,11 @@ export async function handleComment(body: string, profileUid: number) {
   if (!d?.item_id || !d.item_mid) return;
 
   const temp: PhotoComment = {
-    id: 0,
-    mid: crypto.randomUUID(),
-    iid: 0,
+    iid:     0,
+    mid:     crypto.randomUUID(),
     body,
     created: new Date().toISOString().replace('T', ' ').slice(0, 19),
-    author: { name: '', url: '', photo: '' },
+    author:  { name: '', url: '', photo: '' },
   };
 
   setDetail({ ...d, comments: [...d.comments, temp] });
@@ -113,4 +138,4 @@ export async function handleComment(body: string, profileUid: number) {
   });
 }
 
-export { photos, albumName, detail, loading, nick };
+export { photos, albums, recentPhotos, albumName, detail, loading, albumsLoading, nick };
