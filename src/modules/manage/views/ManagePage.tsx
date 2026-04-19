@@ -1,5 +1,3 @@
-// modules/manage/views/ManagePage.tsx
-
 import { type Component, For, Show, createSignal } from "solid-js";
 import {
   useManageData,
@@ -8,8 +6,9 @@ import {
   doSetDefault,
 } from "../store";
 import type { ManagedChannel, ManagedDelegate } from "../api";
+import { buildDelegateSwitchUrl } from "../api";
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// ── ChannelCard ───────────────────────────────────────────────────────────────
 
 const ChannelCard: Component<{
   channel: ManagedChannel;
@@ -95,29 +94,48 @@ const ChannelCard: Component<{
   );
 };
 
-const DelegateCard: Component<{ delegate: ManagedDelegate }> = (props) => (
-  <a
-    href={props.delegate.switch_url}
-    class="flex items-center gap-3 p-3 rounded-lg border border-gray-200
-           dark:border-gray-700 bg-white dark:bg-gray-800
-           hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
-  >
-    <img
-      src={props.delegate.photo}
-      alt={props.delegate.name}
-      class="w-10 h-10 rounded-full object-cover shrink-0"
-    />
-    <div class="flex-1 min-w-0">
-      <p class="font-medium text-sm truncate">{props.delegate.name}</p>
-      <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
-        {props.delegate.address}
-      </p>
+// ── DelegateCard ──────────────────────────────────────────────────────────────
+
+const DelegateCard: Component<{ delegate: ManagedDelegate }> = (props) => {
+  // Computed here rather than stored in API response
+  const switchUrl = () => buildDelegateSwitchUrl(props.delegate.url, props.delegate.address);
+
+  return (
+	<a    
+      href={switchUrl()}
+      class="flex items-center gap-3 p-3 rounded-lg border border-gray-200
+             dark:border-gray-700 bg-white dark:bg-gray-800
+             hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+    >
+      <img
+        src={props.delegate.photo}
+        alt={props.delegate.name}
+        class="w-10 h-10 rounded-full object-cover shrink-0"
+      />
+      <div class="flex-1 min-w-0">
+        <p class="font-medium text-sm truncate">{props.delegate.name}</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+          {props.delegate.address}
+        </p>
+      </div>
+      <span class="text-xs text-gray-400 shrink-0">delegate →</span>
+    </a>
+  );
+};
+
+// ── Skeletons ─────────────────────────────────────────────────────────────────
+
+const ChannelSkeleton: Component = () => (
+  <div class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+    <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse shrink-0" />
+    <div class="flex-1 space-y-2">
+      <div class="h-3 w-32 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+      <div class="h-2.5 w-24 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
     </div>
-    <span class="text-xs text-gray-400 shrink-0">delegate →</span>
-  </a>
+  </div>
 );
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// ── ManagePage ────────────────────────────────────────────────────────────────
 
 const ManagePage: Component = () => {
   const data = useManageData();
@@ -125,32 +143,15 @@ const ManagePage: Component = () => {
   const [confirmSwitch, setConfirmSwitch] = createSignal<number | null>(null);
 
   const isPending = () => actionState().status === "pending";
+
   const errorMsg = () => {
     const s = actionState();
     return s.status === "error" ? s.message : null;
   };
-  const handleSwitch = (channelId: number) => {
-    setConfirmSwitch(channelId);
-  };
-
-  const confirmSwitchAction = async () => {
-    const id = confirmSwitch();
-    if (!id) return;
-    setConfirmSwitch(null);
-    const redirectTo = await doSwitchChannel(id);
-    if (redirectTo) {
-      // Full page reload — session has changed on the server
-      window.location.href = redirectTo;
-    }
-  };
-
-  const handleSetDefault = async (channelId: number) => {
-    await doSetDefault(channelId);
-  };
 
   const channelToConfirm = () => {
     const id = confirmSwitch();
-    if (!id) return null;
+    if (id === null) return null;
     return data()?.channels.find((c) => c.channel_id === id) ?? null;
   };
 
@@ -160,11 +161,28 @@ const ManagePage: Component = () => {
     return `${d.total_channels} of ${d.limit} channels used`;
   };
 
+  const handleSwitch = (channelId: number) => setConfirmSwitch(channelId);
+
+  const handleSetDefault = (channelId: number) => doSetDefault(channelId);
+
+  const confirmSwitchAction = async () => {
+    const id = confirmSwitch();
+    if (id === null) return;
+    setConfirmSwitch(null);
+    const redirectTo = await doSwitchChannel(id);
+    if (redirectTo) {
+      // Full page reload — server session has changed
+      window.location.href = redirectTo;
+    }
+  };
+
   return (
     <div class="max-w-lg mx-auto space-y-6">
+
+      {/* Header */}
       <div class="flex items-center justify-between">
         <h1 class="text-xl font-bold">Channels</h1>
-        <a
+			<a     
           href={data()?.create_url ?? "/new_channel"}
           class="px-3 py-1.5 text-sm rounded-md font-medium
                  bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900
@@ -181,14 +199,10 @@ const ManagePage: Component = () => {
         </div>
       </Show>
 
-      {/* Loading */}
+      {/* Loading skeletons */}
       <Show when={data.loading}>
-        <div class="space-y-3">
-          <For each={[1, 2, 3]}>
-            {() => (
-              <div class="h-16 rounded-lg bg-gray-100 dark:bg-gray-800 animate-pulse" />
-            )}
-          </For>
+        <div class="space-y-2">
+          <For each={[1, 2, 3]}>{() => <ChannelSkeleton />}</For>
         </div>
       </Show>
 
@@ -234,8 +248,7 @@ const ManagePage: Component = () => {
             <h2 class="font-semibold text-lg">Switch channel?</h2>
             <p class="text-sm text-gray-600 dark:text-gray-400">
               You'll be switched to{" "}
-              <strong>{channelToConfirm()?.channel_name}</strong>. The page will
-              reload.
+              <strong>{channelToConfirm()?.channel_name}</strong>. The page will reload.
             </p>
             <div class="flex gap-2 justify-end">
               <button
@@ -259,6 +272,7 @@ const ManagePage: Component = () => {
           </div>
         </div>
       </Show>
+
     </div>
   );
 };
