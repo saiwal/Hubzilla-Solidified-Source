@@ -1,17 +1,13 @@
 /**
  * NotificationsAside.tsx
  *
- * Sub-fetch keys (need /sse_bs/{key} for rows):
- *   network, dm, home, pubs  — static FETCHABLE keys
- *   forum_NNN                — dynamic, discovered from base response
- *                              fetched individually, aggregated for display
+ * Mark-seen: POST /sse_bs with body { sse_rmids: "b64mid,b64mid,...", nquery: "" }
+ * b64mid is the uuid field on each notification.
+ * After marking → refetch counts.
  *
- * Field mapping from real /sse_bs response:
- *   notify_id    — dedup key + sse_rmids value (number). Intros have none.
- *   notify_link  — href
- *   b64mid       — uuid for PostDetailModal
- *   when         — timestamp
- *   hclass       — "notify-unseen" | "notify-seen"
+ * Individual dismiss: × button on each row marks that single item.
+ * Section "clear all": marks all visible items in the section.
+ * Header "mark all read": marks all loaded items across all sections.
  */
 
 import {
@@ -25,6 +21,23 @@ import {
   lazy,
 } from "solid-js";
 import { useAuth, updateInterval } from "@/shared/store/auth-store";
+import {
+  MdFillNotifications,
+  MdFillClose,
+  MdFillRefresh,
+  MdFillDone_all,
+  MdFillForum,
+  MdFillPublic,
+  MdFillMail,
+  MdFillHome,
+  MdFillPeople,
+  MdFillInsert_drive_file,
+  MdFillEvent,
+  MdFillApp_registration,
+  MdFillWifi,
+  MdFillWifi_off,
+  MdFillCircle,
+} from "solid-icons/md";
 
 const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
 
@@ -33,7 +46,7 @@ const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
 interface HzNotification {
   notify_id?: number;
   notify_link?: string;
-  b64mid?: string;
+  b64mid?: string;        // uuid — used as rmid for mark-seen POST
   name?: string;
   url?: string;
   photo?: string;
@@ -56,35 +69,31 @@ type SseResponse = Record<string, StreamBucket | { notifications: HzNotification
 const PROBE_MS = 5_000;
 const RETRY_DELAY_MS = 15_000;
 
-// These keys need /sse_bs/{key} for rows — base call gives counts only.
-// forum_NNN keys are discovered dynamically and added at runtime.
 const STATIC_FETCHABLE = new Set(["network", "dm", "home", "pubs"]);
 
-const KNOWN_META: Record<string, { label: string; icon: string; href?: string }> = {
-  network:    { label: "Network",  icon: "🌐", href: "/network" },
-  dm:         { label: "Messages", icon: "✉️",  href: "/mail" },
-  home:       { label: "Channel",  icon: "🏠", href: "/channel" },
-  notify:     { label: "Alerts",   icon: "🔔" },
-  intros:     { label: "Intros",   icon: "👋", href: "/connections" },
-  forums:     { label: "Forums",   icon: "💬" },
-  pubs:       { label: "Public",   icon: "🌍" },
-  files:      { label: "Files",    icon: "📎" },
-  all_events: { label: "Events",   icon: "📅", href: "/calendar" },
-  register:   { label: "Signups",  icon: "📝" },
-};
-
-// Display order for the aggregated view
 const DISPLAY_ORDER = [
   "network", "dm", "home", "notify", "intros",
   "forums", "pubs", "files", "all_events", "register",
 ];
 
+type BucketMeta = { label: string; Icon: any; href?: string };
+const KNOWN_META: Record<string, BucketMeta> = {
+  network:    { label: "Network",  Icon: MdFillWifi,              href: "/network" },
+  dm:         { label: "Messages", Icon: MdFillMail,              href: "/mail" },
+  home:       { label: "Channel",  Icon: MdFillHome,              href: "/channel" },
+  notify:     { label: "Alerts",   Icon: MdFillNotifications },
+  intros:     { label: "Intros",   Icon: MdFillPeople,            href: "/connections" },
+  forums:     { label: "Forums",   Icon: MdFillForum },
+  pubs:       { label: "Public",   Icon: MdFillPublic },
+  files:      { label: "Files",    Icon: MdFillInsert_drive_file },
+  all_events: { label: "Events",   Icon: MdFillEvent,             href: "/calendar" },
+  register:   { label: "Signups",  Icon: MdFillApp_registration },
+};
+
 // ── API ───────────────────────────────────────────────────────────────────────
 
-async function fetchCounts(rmids?: number[]): Promise<SseResponse> {
-  const url = new URL("/sse_bs", location.origin);
-  if (rmids?.length) url.searchParams.set("sse_rmids", rmids.join(","));
-  const res = await fetch(url.toString(), { credentials: "same-origin" });
+async function fetchCounts(): Promise<SseResponse> {
+  const res = await fetch("/sse_bs", { credentials: "same-origin" });
   if (!res.ok) throw new Error("sse_bs fetch failed");
   return res.json();
 }
@@ -96,46 +105,67 @@ async function fetchBucketRows(key: string): Promise<HzNotification[]> {
   return (data[key] as StreamBucket | undefined)?.notifications ?? [];
 }
 
-/** Fetch all forum_NNN keys in parallel and merge their rows */
 async function fetchForumRows(forumKeys: string[]): Promise<HzNotification[]> {
   if (!forumKeys.length) return [];
   const results = await Promise.all(forumKeys.map(fetchBucketRows));
   return results.flat();
 }
+/** Mark all notices read of a category dm, pubs, forum, etc.*/
+async function markAllSeenAndRefetch(
+	key: string,
+) {
+	const res = await fetch(`/notifications?markRead=${key}`, {credentials: "include",});
+	if (!res.ok) throw new Error('Failed to mark read');
+	return res.json;
+}
+/** Mark b64mids as seen via POST, then refetch counts */
+async function markSeenAndRefetch(
+  b64mids: string[],
+  afterRefetch: (raw: SseResponse) => void,
+) {
+  if (!b64mids.length) return;
+  await fetch("/sse_bs", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      sse_rmids: b64mids.join(","),
+      nquery: "",
+    }),
+  });
+  // Refetch counts after marking
+  try {
+    const fresh = await fetchCounts();
+    afterRefetch(fresh);
+  } catch { /* silent — counts will update on next poll */ }
+}
 
-// ── Normalise raw response ────────────────────────────────────────────────────
+// ── Normalise ─────────────────────────────────────────────────────────────────
 
 interface NormalisedPayload {
   buckets: Record<string, StreamBucket>;
-  forumKeys: string[]; // the actual forum_NNN keys discovered
+  forumKeys: string[];
 }
 
 function normalise(raw: SseResponse): NormalisedPayload {
   const buckets: Record<string, StreamBucket> = Object.fromEntries(
     DISPLAY_ORDER.map((k) => [k, { count: 0, notifications: [] }]),
   );
-
   const forumKeys: string[] = [];
   let forumCount = 0;
 
   for (const [key, val] of Object.entries(raw)) {
     if (key === "notice" || key === "info") continue;
     const bucket = val as StreamBucket;
-
     if (key.startsWith("forum_")) {
       forumKeys.push(key);
       forumCount += bucket.count ?? 0;
       continue;
     }
-
     if (key in buckets) {
-      buckets[key] = {
-        count: bucket.count ?? 0,
-        notifications: bucket.notifications ?? [],
-      };
+      buckets[key] = { count: bucket.count ?? 0, notifications: bucket.notifications ?? [] };
     }
   }
-
   buckets["forums"] = { count: forumCount, notifications: [] };
   return { buckets, forumKeys };
 }
@@ -172,19 +202,9 @@ function relativeTime(when?: string): string {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-function notifKey(n: HzNotification): string | number | null {
-  return n.notify_id ?? n.notify_link ?? null;
-}
-
-function prependDeduped(
-  existing: HzNotification[],
-  incoming: HzNotification[],
-): HzNotification[] {
-  const existingKeys = new Set(existing.map(notifKey).filter((k) => k !== null));
-  const fresh = incoming.filter((n) => {
-    const k = notifKey(n);
-    return k === null || !existingKeys.has(k);
-  });
+function prependDeduped(existing: HzNotification[], incoming: HzNotification[]): HzNotification[] {
+  const existingMids = new Set(existing.map((n) => n.b64mid).filter(Boolean));
+  const fresh = incoming.filter((n) => !n.b64mid || !existingMids.has(n.b64mid));
   return [...fresh, ...existing].slice(0, 50);
 }
 
@@ -192,49 +212,66 @@ function prependDeduped(
 
 function NotifRow(props: {
   n: HzNotification;
-  seen: boolean;
-  onSeen: (key: string | number) => void;
+  onDismiss: (b64mid: string) => void;
   onOpenModal: (uuid: string) => void;
 }) {
   const uuid = () => getDisplayUuid(props.n);
-  const key = () => notifKey(props.n);
 
   const handleClick = (e: MouseEvent) => {
-    const k = key();
-    if (k !== null) props.onSeen(k);
     const u = uuid();
     if (u) { e.preventDefault(); props.onOpenModal(u); }
   };
 
+  const handleDismiss = (e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (props.n.b64mid) props.onDismiss(props.n.b64mid);
+  };
+
   return (
-    <a
-      href={toRelativePath(props.n.notify_link)}
-      onClick={handleClick}
-      class="flex gap-2 items-start px-2 py-1.5 rounded-lg transition-colors
-             hover:bg-gray-100 dark:hover:bg-gray-700"
-      classList={{ "opacity-50": props.seen }}
-    >
-      <Show when={props.n.photo}>
-        <img src={props.n.photo} alt={props.n.name ?? ""}
-          class="w-7 h-7 rounded-full shrink-0 mt-0.5 object-cover" />
-      </Show>
-      <div class="min-w-0 flex-1">
-        <p class="text-xs text-gray-800 dark:text-gray-200 leading-snug line-clamp-2">
-          <Show when={props.n.name}>
-            <span class="font-semibold">{props.n.name} </span>
-          </Show>
-          {props.n.message}
-        </p>
-        <div class="flex items-center gap-1.5 mt-0.5">
-          <Show when={props.n.when}>
-            <p class="text-[10px] text-gray-400">{relativeTime(props.n.when)}</p>
-          </Show>
-          <Show when={uuid()}>
-            <span class="text-[9px] text-violet-400 dark:text-violet-500">· preview</span>
-          </Show>
+    <div class="flex items-start gap-1 group">
+      <a
+        href={toRelativePath(props.n.notify_link)}
+        onClick={handleClick}
+        class="flex gap-2 items-start px-2 py-1.5 rounded-lg transition-colors
+               hover:bg-gray-100 dark:hover:bg-gray-700 flex-1 min-w-0"
+      >
+        <Show when={props.n.photo}>
+          <img src={props.n.photo} alt={props.n.name ?? ""}
+            class="w-7 h-7 rounded-full shrink-0 mt-0.5 object-cover" />
+        </Show>
+        <div class="min-w-0 flex-1">
+          <p class="text-xs text-gray-800 dark:text-gray-200 leading-snug line-clamp-2">
+            <Show when={props.n.name}>
+              <span class="font-semibold">{props.n.name} </span>
+            </Show>
+            {props.n.message}
+          </p>
+          <div class="flex items-center gap-1.5 mt-0.5">
+            <Show when={props.n.when}>
+              <p class="text-[10px] text-gray-400">{relativeTime(props.n.when)}</p>
+            </Show>
+            <Show when={uuid()}>
+              <span class="text-[9px] text-violet-400 dark:text-violet-500">· preview</span>
+            </Show>
+          </div>
         </div>
-      </div>
-    </a>
+      </a>
+
+      {/* Dismiss × button — visible on hover, always visible on touch */}
+      <Show when={props.n.b64mid}>
+        <button
+          onClick={handleDismiss}
+          title="Mark read"
+          class="shrink-0 mt-1.5 p-0.5 rounded text-gray-300 dark:text-gray-600
+                 hover:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100
+                 dark:hover:bg-gray-700 transition-colors
+                 opacity-0 group-hover:opacity-100 focus:opacity-100"
+        >
+          <MdFillClose class="w-3.5 h-3.5" />
+        </button>
+      </Show>
+    </div>
   );
 }
 
@@ -243,15 +280,13 @@ function NotifRow(props: {
 function StreamSection(props: {
   id: string;
   bucket: StreamBucket;
-  /** Raw forum_NNN keys — only set for id="forums" */
   forumKeys?: string[];
-  seenKeys: Set<string | number>;
-  onSeen: (key: string | number) => void;
-  onMarkAllRead: (keys: Array<string | number>) => void;
+  onDismiss: (b64mid: string) => void;
+  onClearAll: (b64mids: string) => void;
   onOpenModal: (uuid: string) => void;
 }) {
   const [open, setOpen] = createSignal(false);
-  const meta = KNOWN_META[props.id] ?? { label: props.id, icon: "📌" };
+  const meta = KNOWN_META[props.id] ?? { label: props.id, Icon: MdFillNotifications };
 
   const isForums = () => props.id === "forums";
   const needsFetch = () => STATIC_FETCHABLE.has(props.id) || isForums();
@@ -259,10 +294,7 @@ function StreamSection(props: {
   const [fetchTick, setFetchTick] = createSignal(0);
   const [fetched] = createResource(
     () => (needsFetch() && open() ? fetchTick() : null),
-    () =>
-      isForums()
-        ? fetchForumRows(props.forumKeys ?? [])
-        : fetchBucketRows(props.id),
+    () => isForums() ? fetchForumRows(props.forumKeys ?? []) : fetchBucketRows(props.id),
   );
 
   const toggle = () => setOpen((o) => !o);
@@ -274,18 +306,24 @@ function StreamSection(props: {
     prevCount = count;
   });
 
+  // When bucket is replaced externally (after dismiss POST), re-fetch rows
+  createEffect(() => {
+    // track notifications array identity
+    void props.bucket.notifications;
+    if (open() && needsFetch()) setFetchTick((t) => t + 1);
+  });
+
   const notifications = (): HzNotification[] =>
     needsFetch() ? (fetched() ?? props.bucket.notifications) : props.bucket.notifications;
 
   const isLoading = () => needsFetch() && open() && fetched.loading;
 
-  const unseenKeys = () =>
-    notifications()
-      .map(notifKey)
-      .filter((k): k is string | number => k !== null && !props.seenKeys.has(k));
+  const dismissibleMids = () =>
+    notifications().map((n) => n.b64mid).filter((m): m is string => !!m);
 
   return (
     <div class="border border-gray-100 dark:border-gray-700 rounded-xl overflow-hidden">
+      {/* Header */}
       <button
         onClick={toggle}
         class="w-full flex items-center justify-between px-3 py-2
@@ -293,7 +331,7 @@ function StreamSection(props: {
                transition-colors text-left"
       >
         <span class="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300">
-          <span>{meta.icon}</span>
+          <meta.Icon class="w-3.5 h-3.5 shrink-0" />
           <Show when={meta.href} fallback={<span>{meta.label}</span>}>
             <a href={meta.href} onClick={(e) => e.stopPropagation()} class="hover:underline">
               {meta.label}
@@ -301,13 +339,15 @@ function StreamSection(props: {
           </Show>
         </span>
         <span class="flex items-center gap-1.5">
-          <Show when={open() && unseenKeys().length > 0}>
+          {/* Clear-all button inside header, only when open */}
+          <Show when={open() && dismissibleMids().length > 0}>
             <button
-              onClick={(e) => { e.stopPropagation(); props.onMarkAllRead(unseenKeys()); }}
-              class="text-[10px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-200
-                     underline underline-offset-2 transition-colors"
+              onClick={(e) => { e.stopPropagation(); props.onClearAll(props.id); }}
+              title="Mark all read"
+              class="p-0.5 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200
+                     hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             >
-              clear
+              <MdFillDone_all class="w-3.5 h-3.5" />
             </button>
           </Show>
           <Show when={props.bucket.count > 0}>
@@ -325,6 +365,7 @@ function StreamSection(props: {
         </span>
       </button>
 
+      {/* Body */}
       <Show when={open()}>
         <div class="px-1 py-1 space-y-0.5 bg-white dark:bg-gray-800/50">
           <Show when={isLoading()}>
@@ -340,17 +381,13 @@ function StreamSection(props: {
               fallback={<p class="text-[11px] text-gray-400 text-center py-3">Nothing new</p>}
             >
               <For each={notifications()}>
-                {(n) => {
-                  const k = notifKey(n);
-                  return (
-                    <NotifRow
-                      n={n}
-                      seen={k !== null && props.seenKeys.has(k)}
-                      onSeen={props.onSeen}
-                      onOpenModal={props.onOpenModal}
-                    />
-                  );
-                }}
+                {(n) => (
+                  <NotifRow
+                    n={n}
+                    onDismiss={props.onDismiss}
+                    onOpenModal={props.onOpenModal}
+                  />
+                )}
               </For>
             </Show>
           </Show>
@@ -363,14 +400,24 @@ function StreamSection(props: {
 // ── Connection dot ────────────────────────────────────────────────────────────
 
 type ConnStatus = "connecting" | "live" | "polling" | "error";
+
 function StatusDot(props: { status: ConnStatus }) {
-  const cfg = () => ({
-    connecting: { dot: "bg-yellow-400 animate-pulse", title: "Connecting…" },
-    live:       { dot: "bg-green-400",                title: "Live" },
-    polling:    { dot: "bg-blue-400 animate-pulse",   title: "Polling" },
-    error:      { dot: "bg-red-400",                  title: "Disconnected" },
+  const cls = () => ({
+    connecting: "text-yellow-400 animate-pulse",
+    live:       "text-green-400",
+    polling:    "text-blue-400 animate-pulse",
+    error:      "text-red-400",
   }[props.status]);
-  return <span title={cfg().title} class={`inline-block w-1.5 h-1.5 rounded-full ${cfg().dot}`} />;
+  const title = () => ({
+    connecting: "Connecting…", 
+    live: "Live", 
+    polling: "Polling", 
+    error: "Disconnected",
+  }[props.status]);
+  
+  const IconComponent = props.status === "error" ? MdFillWifi_off : MdFillCircle;
+  
+  return <IconComponent class={`w-2 h-2 shrink-0 ${cls()}`} title={title()} />;
 }
 
 // ── Main widget ───────────────────────────────────────────────────────────────
@@ -382,7 +429,6 @@ export default function NotificationsAside() {
   const [buckets, setBuckets] = createSignal<Record<string, StreamBucket>>(
     Object.fromEntries(DISPLAY_ORDER.map((k) => [k, emptyBucket()])),
   );
-  // Remembered across polls so StreamSection can sub-fetch the right keys
   const [forumKeys, setForumKeys] = createSignal<string[]>([]);
   const [notices, setNotices] = createSignal<HzNotification[]>([]);
   const [connStatus, setConnStatus] = createSignal<ConnStatus>("connecting");
@@ -390,49 +436,9 @@ export default function NotificationsAside() {
   const [refreshing, setRefreshing] = createSignal(false);
   const [modalUuid, setModalUuid] = createSignal<string | null>(null);
 
-  // ── Seen tracking ─────────────────────────────────────────────────────────
-  const seenStorageKey = "hz:notif:seen";
-  const [seenKeys, setSeenKeys] = createSignal<Set<string | number>>((() => {
-    try {
-      return new Set<string | number>(
-        JSON.parse(sessionStorage.getItem(seenStorageKey) ?? "[]"),
-      );
-    } catch { return new Set(); }
-  })());
-
-  const persistSeen = (s: Set<string | number>) => {
-    sessionStorage.setItem(seenStorageKey, JSON.stringify([...s]));
-    setSeenKeys(new Set(s));
-  };
-
-  const queuedRmids = new Set<number>();
-
-  const onSeen = (key: string | number) => {
-    if (seenKeys().has(key)) return;
-    const next = new Set(seenKeys());
-    next.add(key);
-    persistSeen(next);
-    if (typeof key === "number") queuedRmids.add(key);
-  };
-
-  const onMarkAllRead = (keys: Array<string | number>) => {
-    const next = new Set(seenKeys());
-    keys.forEach((k) => {
-      next.add(k);
-      if (typeof k === "number") queuedRmids.add(k);
-    });
-    persistSeen(next);
-    setBuckets((prev) => {
-      const next2 = { ...prev };
-      for (const key of DISPLAY_ORDER) next2[key] = { ...next2[key], count: 0 };
-      return next2;
-    });
-  };
-
-  // ── Payload application ───────────────────────────────────────────────────
+  // ── Payload application — always replace, never accumulate ───────────────
   const applyRaw = (raw: SseResponse, fromSsePush = false) => {
     const { buckets: incoming, forumKeys: fk } = normalise(raw);
-
     if (fk.length) setForumKeys(fk);
 
     setBuckets((prev) => {
@@ -446,25 +452,41 @@ export default function NotificationsAside() {
             notifications: prependDeduped(prev[key]?.notifications ?? [], inc.notifications),
           };
         } else {
-          // Poll/boot → replace entirely, no accumulation
           next[key] = inc;
         }
       }
       return next;
     });
 
-    const raw_notice = raw["notice"] as { notifications: HzNotification[] } | undefined;
-    const raw_info   = raw["info"]   as { notifications: HzNotification[] } | undefined;
-    setNotices([
-      ...(raw_notice?.notifications ?? []),
-      ...(raw_info?.notifications   ?? []),
-    ]);
+    const nn = raw["notice"] as { notifications: HzNotification[] } | undefined;
+    const ni = raw["info"]   as { notifications: HzNotification[] } | undefined;
+    setNotices([...(nn?.notifications ?? []), ...(ni?.notifications ?? [])]);
   };
 
   const doFetchCounts = async () => {
-    const rmids = queuedRmids.size ? [...queuedRmids] : undefined;
-    queuedRmids.clear();
-    applyRaw(await fetchCounts(rmids), false);
+    applyRaw(await fetchCounts(), false);
+  };
+
+  // ── Mark seen ─────────────────────────────────────────────────────────────
+  const markSeen = async (b64mids: string[]) => {
+    if (!b64mids.length) return;
+    // Optimistically remove from displayed lists
+    setBuckets((prev) => {
+      const midSet = new Set(b64mids);
+      const next = { ...prev };
+      for (const key of DISPLAY_ORDER) {
+        const b = next[key];
+        if (!b) continue;
+        const filtered = b.notifications.filter((n) => !n.b64mid || !midSet.has(n.b64mid));
+        next[key] = {
+          count: Math.max(0, b.count - (b.notifications.length - filtered.length)),
+          notifications: filtered,
+        };
+      }
+      return next;
+    });
+    // POST to server then refetch for accurate counts
+    await markSeenAndRefetch(b64mids, (raw) => applyRaw(raw, false));
   };
 
   // ── SSE probe-then-fallback ───────────────────────────────────────────────
@@ -555,17 +577,22 @@ export default function NotificationsAside() {
 
   onCleanup(() => { es?.close(); clearAllTimers(); });
 
+  // ── Manual refresh ────────────────────────────────────────────────────────
   const manualRefresh = async () => {
     if (refreshing()) return;
     setRefreshing(true);
     try { await doFetchCounts(); } finally { setRefreshing(false); }
   };
 
-  // ── Derived ───────────────────────────────────────────────────────────────
-  const totalCount = createMemo(() =>
-    DISPLAY_ORDER.reduce((sum, k) => sum + (buckets()[k]?.count ?? 0), 0),
-  );
+  // ── Mark all read — collects all b64mids across all loaded sections ───────
+  const markAllRead = () => {
+    const mids: string[] = [];
+    for (const b of Object.values(buckets()))
+      b.notifications.forEach((n) => { if (n.b64mid) mids.push(n.b64mid); });
+    if (mids.length) markSeen(mids);
+  };
 
+  // ── Derived ───────────────────────────────────────────────────────────────
   const activeBuckets = createMemo(() =>
     DISPLAY_ORDER.filter((key) => {
       const b = buckets()[key];
@@ -573,16 +600,9 @@ export default function NotificationsAside() {
     }),
   );
 
-  const hasUnseen = createMemo(() =>
-    activeBuckets().some((key) => buckets()[key].count > 0),
+  const hasAnyCount = createMemo(() =>
+    DISPLAY_ORDER.some((k) => (buckets()[k]?.count ?? 0) > 0),
   );
-
-  const markAllRead = () => {
-    const keys: Array<string | number> = [];
-    for (const b of Object.values(buckets()))
-      b.notifications.forEach((n) => { const k = notifKey(n); if (k !== null) keys.push(k); });
-    onMarkAllRead(keys);
-  };
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -592,38 +612,31 @@ export default function NotificationsAside() {
       </Show>
 
       <div class="space-y-3">
+        {/* Header */}
         <div class="flex items-center justify-between">
-          <h3 class="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+          <h3 class="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
             <StatusDot status={connStatus()} />
             Notifications
-            <Show when={totalCount() > 0}>
-              <span class="text-[10px] font-bold bg-red-500 text-white rounded-full px-1.5 py-0.5">
-                {totalCount() > 99 ? "99+" : totalCount()}
-              </span>
-            </Show>
           </h3>
-          <div class="flex items-center gap-2">
-            <Show when={booted() && hasUnseen()}>
+          <div class="flex items-center gap-1.5">
+            <Show when={booted() && hasAnyCount()}>
               <button
                 onClick={markAllRead}
-                class="text-[10px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-200
-                       underline underline-offset-2 transition-colors"
+                title="Mark all read"
+                class="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200
+                       hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
-                mark all read
+                <MdFillDone_all class="w-4 h-4" />
               </button>
             </Show>
             <button
               onClick={manualRefresh}
               disabled={refreshing()}
               title="Refresh"
-              class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200
-                     transition-colors disabled:opacity-40"
+              class="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200
+                     hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-40"
             >
-              <svg class={`w-3.5 h-3.5 ${refreshing() ? "animate-spin" : ""}`}
-                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
+              <MdFillRefresh class={`w-4 h-4 ${refreshing() ? "animate-spin" : ""}`} />
             </button>
           </div>
         </div>
@@ -661,9 +674,8 @@ export default function NotificationsAside() {
                   id={key}
                   bucket={buckets()[key]}
                   forumKeys={key === "forums" ? forumKeys() : undefined}
-                  seenKeys={seenKeys()}
-                  onSeen={onSeen}
-                  onMarkAllRead={onMarkAllRead}
+                  onDismiss={(mid) => markSeen([mid])}
+                  onClearAll={(key) => markAllSeenAndRefetch(key)}
                   onOpenModal={(uuid) => setModalUuid(uuid)}
                 />
               )}
