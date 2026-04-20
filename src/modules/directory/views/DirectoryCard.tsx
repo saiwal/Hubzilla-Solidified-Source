@@ -1,6 +1,6 @@
 // modules/directory/views/DirectoryCard.tsx
 import { Show, For, type Component } from "solid-js";
-import type { DirectoryEntry } from "../api";
+import { addConnection, type DirectoryEntry } from "../api";
 
 interface Props {
   entry: DirectoryEntry;
@@ -8,9 +8,12 @@ interface Props {
 }
 
 const DirectoryCard: Component<Props> = (props) => {
+
   const e = () => props.entry;
   const blurb = () => e().description || stripTags(e().about);
-
+	async function handleAdd() {
+		await addConnection(props.entry.address);
+	}
   return (
     <div
       class="flex flex-col rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden hover:shadow-md hover:-translate-y-px transition-all duration-200 cursor-pointer group"
@@ -102,14 +105,12 @@ const DirectoryCard: Component<Props> = (props) => {
             </span>
           }
         >
-          <a
-            href={e().connect_url ?? e().profile_url}
-            target={e().connect_url ? undefined : "_blank"}
-            rel="noopener noreferrer"
+          <button
+						onclick={handleAdd}
             class="flex-1 text-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"
           >
             {e().connect_url ? "Connect" : "View Profile"}
-          </a>
+          </button>
         </Show>
         <Show when={e().ignore_url && !e().is_connected}>
          <a 

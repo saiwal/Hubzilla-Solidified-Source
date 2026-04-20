@@ -68,3 +68,10 @@ export async function fetchDirectory(
   if (data.error) throw new Error(data.error);
   return data as DirectoryResponse;
 }
+
+export async function addConnection(addr: string): Promise<void> {
+  await fetch(`/follow/&url=${addr}`, {
+    method: "POST",
+    credentials: "include",
+  });
+}
