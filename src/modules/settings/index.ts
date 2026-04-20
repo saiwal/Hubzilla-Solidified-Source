@@ -19,6 +19,7 @@ registerModule({
     path: "/settings",
     href: "/settings",
     context: "owner",
+		hidden: true,
   },
 
   slots: {

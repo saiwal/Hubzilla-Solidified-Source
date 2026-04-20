@@ -10,6 +10,7 @@ registerModule({
     href: "/manage",
     path: "/manage",
     context: ["owner", "local"],
+		hidden: true,
   },
   routes: [
     {

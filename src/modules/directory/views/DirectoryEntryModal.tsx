@@ -1,0 +1,217 @@
+// modules/directory/views/DirectoryEntryModal.tsx
+import { Show, For, type Component } from "solid-js";
+import { Portal } from "solid-js/web";
+import type { DirectoryEntry } from "../api";
+
+interface Props {
+  entry: DirectoryEntry | null;
+  onClose: () => void;
+}
+
+const DirectoryEntryModal: Component<Props> = (props) => {
+  const e = () => props.entry;
+
+  const handleBackdrop = (ev: MouseEvent) => {
+    if (ev.target === ev.currentTarget) props.onClose();
+  };
+
+  return (
+    <Show when={e()}>
+      <Portal>
+        <div
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={handleBackdrop}
+        >
+          <div class="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-2xl bg-white dark:bg-gray-800 shadow-2xl overflow-hidden">
+
+            {/* ── Header ── */}
+            <div class="flex items-start gap-4 p-5 border-b border-gray-100 dark:border-gray-700">
+              <a href={e()!.profile_url} target="_blank" rel="noopener noreferrer" class="shrink-0">
+                <img
+                  src={e()!.photo}
+                  alt={e()!.name}
+                  class="w-16 h-16 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-600 bg-gray-100 dark:bg-gray-700"
+                />
+              </a>
+              <div class="flex-1 min-w-0 pt-0.5">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="min-w-0">
+                    <a
+                      href={e()!.profile_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="font-bold text-base text-gray-900 dark:text-gray-100 hover:underline leading-tight block"
+                    >
+                      {e()!.name}
+                    </a>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">
+                      {e()!.address}
+                    </p>
+                  </div>
+                  <button
+                    onClick={props.onClose}
+                    class="shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    aria-label="Close"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Badges row */}
+                <div class="flex flex-wrap gap-1.5 mt-2">
+                  <Show when={e()!.public_forum}>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800">
+                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
+                        <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/>
+                      </svg>
+                      Public Forum
+                    </span>
+                  </Show>
+                  <Show when={e()!.is_connected}>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-100 dark:border-green-800">
+                      ✓ Connected
+                    </span>
+                  </Show>
+                  <Show when={e()!.common_count !== null && e()!.common_count! > 0}>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 border border-teal-100 dark:border-teal-800">
+                      {e()!.common_count} mutual
+                    </span>
+                  </Show>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Scrollable body ── */}
+            <div class="flex-1 overflow-y-auto p-5 space-y-4">
+
+              {/* Description / about */}
+              <Show when={e()!.description || e()!.about}>
+                <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                  {e()!.description || stripTags(e()!.about)}
+                </p>
+              </Show>
+
+              {/* Contact details grid */}
+              <div class="space-y-2">
+                <Show when={e()!.location}>
+                  <DetailRow icon="location">
+                    {e()!.location}
+                  </DetailRow>
+                </Show>
+                <Show when={e()!.hometown}>
+                  <DetailRow icon="hometown">
+                    {e()!.hometown}
+                  </DetailRow>
+                </Show>
+                <Show when={e()!.homepage}>
+                  <DetailRow icon="link">
+                   <a 
+                      href={e()!.homepage}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-blue-600 dark:text-blue-400 hover:underline break-all"
+                    >
+                      {e()!.homepage}
+                    </a>
+                  </DetailRow>
+                </Show>
+                <Show when={e()!.gender}>
+                  <DetailRow icon="person">{e()!.gender}</DetailRow>
+                </Show>
+                <Show when={e()!.marital}>
+                  <DetailRow icon="heart">{e()!.marital}</DetailRow>
+                </Show>
+                <Show when={e()!.age !== null && e()!.age !== undefined}>
+                  <DetailRow icon="age">{e()!.age} years old</DetailRow>
+                </Show>
+              </div>
+
+              {/* Keywords */}
+              <Show when={e()!.keywords.length > 0}>
+                <div>
+                  <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Interests</p>
+                  <div class="flex flex-wrap gap-1.5">
+                    <For each={e()!.keywords}>
+                      {(kw) => (
+                        <span class="inline-block px-2 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                          {kw}
+                        </span>
+                      )}
+                    </For>
+                  </div>
+                </div>
+              </Show>
+            </div>
+
+            {/* ── Footer actions ── */}
+            <div class="flex items-center gap-2 px-5 py-4 border-t border-gray-100 dark:border-gray-700">
+              <Show
+                when={!e()!.is_connected}
+                              >
+               <a 
+                  href={e()!.connect_url ?? e()!.profile_url}
+                  target={e()!.connect_url ? undefined : "_blank"}
+                  rel="noopener noreferrer"
+                  class="flex-1 text-center px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                >
+                  {e()!.connect_url ? "Connect" : "View Profile"}
+                </a>
+              </Show>
+             <a 
+                href={e()!.profile_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="px-4 py-2 rounded-lg text-sm font-medium border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                View Profile
+              </a>
+              <Show when={e()!.ignore_url && !e()!.is_connected}>
+               <a 
+                  href={e()!.ignore_url!}
+                  title="Ignore"
+                  class="p-2 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                  </svg>
+                </a>
+              </Show>
+            </div>
+          </div>
+        </div>
+      </Portal>
+    </Show>
+  );
+};
+
+// ── Icon row helper ───────────────────────────────────────────────────────────
+
+type IconKey = "location" | "hometown" | "link" | "person" | "heart" | "age";
+
+const ICONS: Record<IconKey, string> = {
+  location: "M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z",
+  hometown: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
+  link: "M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1",
+  person: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
+  heart: "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z",
+  age: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z",
+};
+
+const DetailRow: Component<{ icon: IconKey; children: any }> = (props) => (
+  <div class="flex items-start gap-2.5 text-sm text-gray-600 dark:text-gray-300">
+    <svg class="w-4 h-4 shrink-0 mt-0.5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={ICONS[props.icon]}/>
+    </svg>
+    <span class="leading-snug">{props.children}</span>
+  </div>
+);
+
+export default DirectoryEntryModal;
+
+function stripTags(html: string): string {
+  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}

@@ -14,6 +14,7 @@ export interface NavItemDef {
   path: string;
   href: string | (() => string);
   context?: NavContext | NavContext[]; // single or array of allowed roles
+  hidden?: boolean;
 }
 
 type SlotLoader = () => Promise<{ default: Component }>;

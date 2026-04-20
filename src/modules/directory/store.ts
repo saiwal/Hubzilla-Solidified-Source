@@ -6,22 +6,21 @@ import type { DirectoryEntry, DirectoryParams } from "./api";
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
-const [entries, setEntries]         = createSignal<DirectoryEntry[]>([]);
-const [loading, setLoading]         = createSignal(false);
+const [entries, setEntries] = createSignal<DirectoryEntry[]>([]);
+const [loading, setLoading] = createSignal(false);
 const [loadingMore, setLoadingMore] = createSignal(false);
-const [hasMore, setHasMore]         = createSignal(false);
-const [total, setTotal]             = createSignal(0);
-const [error, setError]             = createSignal<string | null>(null);
+const [hasMore, setHasMore] = createSignal(false);
+const [total, setTotal] = createSignal(0);
+const [error, setError] = createSignal<string | null>(null);
 
 let currentParams: DirectoryParams = {};
 let currentStart = 0;
-const PAGE_SIZE = 30;
 
 // ── Actions ───────────────────────────────────────────────────────────────────
 
 export async function loadDirectory(params: DirectoryParams = {}) {
   currentParams = params;
-  currentStart  = 0;
+  currentStart = 0;
   setLoading(true);
   setError(null);
   setHasMore(false);
@@ -30,7 +29,7 @@ export async function loadDirectory(params: DirectoryParams = {}) {
     setEntries(data.entries);
     setTotal(data.meta.total);
     currentStart = data.entries.length;
-    setHasMore(data.entries.length >= PAGE_SIZE && currentStart < data.meta.total);
+    setHasMore(currentStart < data.meta.total);
   } catch (err) {
     setError(err instanceof Error ? err.message : "Unknown error");
     setEntries([]);
@@ -43,12 +42,15 @@ export async function loadMoreDirectory() {
   if (loadingMore() || !hasMore()) return;
   setLoadingMore(true);
   try {
-    const data = await fetchDirectory({ ...currentParams, start: currentStart });
+    const data = await fetchDirectory({
+      ...currentParams,
+      start: currentStart,
+    });
     const existingHashes = new Set(entries().map((e) => e.hash));
     const fresh = data.entries.filter((e) => !existingHashes.has(e.hash));
     setEntries((prev) => [...prev, ...fresh]);
-    currentStart += fresh.length;
-    setHasMore(fresh.length >= PAGE_SIZE && currentStart < data.meta.total);
+    currentStart += data.entries.length;
+    setHasMore(currentStart < data.meta.total);
   } catch (err) {
     console.error("Load more failed:", err);
   } finally {
@@ -61,7 +63,7 @@ export function resetDirectory() {
   setTotal(0);
   setHasMore(false);
   setError(null);
-  currentStart  = 0;
+  currentStart = 0;
   currentParams = {};
 }
 

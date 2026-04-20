@@ -1,113 +1,135 @@
 // modules/directory/views/DirectoryCard.tsx
-
-import { Show, For } from "solid-js";
+import { Show, For, type Component } from "solid-js";
 import type { DirectoryEntry } from "../api";
 
 interface Props {
   entry: DirectoryEntry;
+  onSelect: (entry: DirectoryEntry) => void;
 }
 
-export default function DirectoryCard(props: Props) {
+const DirectoryCard: Component<Props> = (props) => {
   const e = () => props.entry;
+  const blurb = () => e().description || stripTags(e().about);
 
   return (
-    <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 space-y-3 hover:shadow-sm transition-shadow">
-      {/* ── Avatar + name ── */}
-      <div class="flex items-start gap-3">
-        <a href={e().profile_url} target="_blank" rel="noopener noreferrer" class="shrink-0">
+    <div
+      class="flex flex-col rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden hover:shadow-md hover:-translate-y-px transition-all duration-200 cursor-pointer group"
+      onClick={() => props.onSelect(e())}
+    >
+      {/* ── Avatar + identity row ── */}
+      <div class="flex items-center gap-3 p-4 pb-3">
+        <div class="shrink-0">
           <img
             src={e().photo}
             alt={e().name}
-            class="w-12 h-12 rounded-full object-cover bg-gray-100 dark:bg-gray-700"
+            class="w-11 h-11 rounded-full object-cover bg-gray-100 dark:bg-gray-700 ring-1 ring-gray-200 dark:ring-gray-600"
             loading="lazy"
           />
-        </a>
+        </div>
         <div class="min-w-0 flex-1">
-          <a
-            href={e().profile_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="block font-semibold text-gray-900 dark:text-gray-100 truncate hover:underline"
-          >
-            {e().name}
-            <Show when={e().public_forum}>
-              <span class="ml-1 text-xs font-normal text-blue-500" title="Public forum">📋</span>
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="font-semibold text-sm text-gray-900 dark:text-gray-100 truncate leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+              {e().name}
+            </span>
+            <Show when={e().common_count !== null && e().common_count! > 0}>
+              <span class="shrink-0 ml-auto text-xs text-teal-600 dark:text-teal-400 font-medium whitespace-nowrap">
+                {e().common_count} mutual
+              </span>
             </Show>
-          </a>
-          <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+          </div>
+          <p class="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">
             {e().address}
           </p>
         </div>
       </div>
 
-      {/* ── Description / about ── */}
-      <Show when={e().description || e().about}>
-        <p class="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
-          {e().description || stripTags(e().about)}
-        </p>
-      </Show>
-
-      {/* ── Location ── */}
-      <Show when={e().location}>
-        <p class="text-xs text-gray-400 dark:text-gray-500">
-          📍 {e().location}
-        </p>
-      </Show>
-
-      {/* ── Keywords ── */}
-      <Show when={e().keywords.length > 0}>
-        <div class="flex flex-wrap gap-1">
-          <For each={e().keywords.slice(0, 5)}>
-            {(kw) => (
-              <span class="inline-block px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-                {kw}
-              </span>
-            )}
-          </For>
+      {/* ── Public forum badge ── */}
+      <Show when={e().public_forum}>
+        <div class="mx-4 mb-2">
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
+              <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/>
+            </svg>
+            Public Forum
+          </span>
         </div>
       </Show>
 
-      {/* ── Common connections (suggest mode) ── */}
-      <Show when={e().common_count !== null && e().common_count! > 0}>
-        <p class="text-xs text-gray-400 dark:text-gray-500">
-          ~{e().common_count} common connections
-        </p>
-      </Show>
+      {/* ── Blurb ── */}
+      <div class="flex-1 px-4">
+        <Show when={blurb()}>
+          <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
+            {blurb()}
+          </p>
+        </Show>
+      </div>
 
-      {/* ── Actions ── */}
-      <div class="flex items-center gap-2 pt-1">
-        <Show when={e().connect_url}>
+      {/* ── Meta: location + keywords ── */}
+      <div class="px-4 pt-2 pb-3 space-y-2">
+        <Show when={e().location}>
+          <p class="text-xs text-gray-400 dark:text-gray-500 truncate flex items-center gap-1">
+            <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            {e().location}
+          </p>
+        </Show>
+        <Show when={e().keywords.length > 0}>
+          <div class="flex flex-wrap gap-1">
+            <For each={e().keywords.slice(0, 4)}>
+              {(kw) => (
+                <span class="inline-block px-1.5 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+                  {kw}
+                </span>
+              )}
+            </For>
+          </div>
+        </Show>
+      </div>
+
+      {/* ── Connect button — stopPropagation so it doesn't open modal ── */}
+      <div
+        class="flex items-center gap-2 px-4 py-3 border-t border-gray-100 dark:border-gray-700 mt-auto"
+        onClick={(ev) => ev.stopPropagation()}
+      >
+        <Show
+          when={!e().is_connected}
+          fallback={
+            <span class="flex-1 text-center px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-200 dark:border-gray-600 text-gray-400 dark:text-gray-500 cursor-default">
+              ✓ Connected
+            </span>
+          }
+        >
           <a
-            href={e().connect_url}
-            class="flex-1 text-center px-3 py-1.5 rounded-lg text-xs font-medium
-                   bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+            href={e().connect_url ?? e().profile_url}
+            target={e().connect_url ? undefined : "_blank"}
+            rel="noopener noreferrer"
+            class="flex-1 text-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"
           >
-            Connect
+            {e().connect_url ? "Connect" : "View Profile"}
           </a>
         </Show>
-        <Show when={e().is_connected}>
-          <span class="flex-1 text-center px-3 py-1.5 rounded-lg text-xs font-medium
-                       border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400">
-            Connected
-          </span>
-        </Show>
-        <Show when={e().ignore_url}>
-          <a
+        <Show when={e().ignore_url && !e().is_connected}>
+         <a 
             href={e().ignore_url!}
-            class="px-3 py-1.5 rounded-lg text-xs font-medium
-                   border border-gray-200 dark:border-gray-700
-                   text-gray-500 dark:text-gray-400
-                   hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            title="Ignore"
+            class="p-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
-            Ignore
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+            </svg>
           </a>
         </Show>
       </div>
     </div>
   );
-}
+};
 
-// Strip HTML tags for plain-text preview of bbcode-rendered about field
+export default DirectoryCard;
+
 function stripTags(html: string): string {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }

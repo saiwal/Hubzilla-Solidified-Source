@@ -16,7 +16,6 @@ type ActionMeta = {
 };
 // ── Bootstrap Icon → internal icon token ─────────────────────────────────────
 
-
 // ── Role matching ─────────────────────────────────────────────────────────────
 
 function matchesRole(
@@ -61,20 +60,28 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
       if (tabs.loading) return [];
       return (tabs() ?? []).map(tabToNavItem);
     }
-if (!auth() || navData.loading) return [];
+    if (!auth() || navData.loading) return [];
     const data = navData();
     const viewer = data?.viewer;
     if (!data || !viewer) return [];
-const seen = new Set<string>();
+    const seen = new Set<string>();
     const items: NavItemDef[] = getRoutes()()
       .map((route) => {
         const seg = route.path.split("/").filter(Boolean)[0] ?? "";
         return getModule(seg);
       })
       .filter((mod) => {
-        if (!mod || seen.has(mod.id)) return false;
+        if (!mod || seen.has(mod.id) || mod.navItem.hidden) return false;
         seen.add(mod.id);
-        return true;
+        const baseurl = viewer.baseurl ?? "";
+        const allApps = [...(data.pinned ?? []), ...(data.featured ?? [])];
+        return allApps.some((app) => {
+          const url = app.url
+            .split(",")[0]
+            .trim()
+            .replace(/\$baseurl/g, baseurl);
+          return moduleSegment(url) === mod.id;
+        });
       })
       .map((mod) => ({ ...mod!.navItem }));
 
@@ -88,16 +95,24 @@ const seen = new Set<string>();
         if (adminMod) items.push({ ...adminMod.navItem });
       }
     }
+    items.sort((a, b) => {
+      const labelA = typeof a.label === "function" ? a.label() : a.label;
+      const labelB = typeof b.label === "function" ? b.label() : b.label;
+      return labelA.localeCompare(labelB);
+    });
 
     return items;
-	});
+  });
+}
+function moduleSegment(url: string): string {
+  return urlToPath(url).split("/").filter(Boolean)[0] ?? "";
 }
 // ── useNavActionItems ─────────────────────────────────────────────────────────
 
 const ACTION_ORDER = [
   "settings",
   "manage",
-	"navhome",
+  "navhome",
   "logout",
   "login",
   "remote_login",
@@ -127,11 +142,11 @@ export function useNavActionItems(): () => NavItemDef[] {
         icon: "manage",
         context: ["owner"],
       },
-			navhome: {
-				label:t("nav.navhome"),
-				icon: "home",
-				context: ["remote"],
-			},
+      navhome: {
+        label: t("nav.navhome"),
+        icon: "home",
+        context: ["remote"],
+      },
       logout: {
         label: t("nav.logout"),
         icon: "logout",

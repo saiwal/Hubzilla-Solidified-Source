@@ -19,7 +19,8 @@ import {
   resetDirectory,
 } from "../store";
 import DirectoryCard from "./DirectoryCard";
-import type { DirectoryParams } from "../api";
+import DirectoryEntryModal from "./DirectoryEntryModal";
+import type { DirectoryParams, DirectoryEntry } from "../api";
 
 type Order = DirectoryParams["order"];
 
@@ -28,10 +29,10 @@ export default function DirectoryView() {
   const [order, setOrder]         = createSignal<Order>("date");
   const [globalDir, setGlobalDir] = createSignal<0 | 1>(1);
   const [suggest, setSuggest]     = createSignal(false);
+  const [selected, setSelected]   = createSignal<DirectoryEntry | null>(null);
 
   let initialized = false;
 
-  // Initial load
   onMount(() => {
     if (initialized) return;
     initialized = true;
@@ -39,10 +40,8 @@ export default function DirectoryView() {
     loadDirectory({ order: order(), global: globalDir() });
   });
 
-  // Re-fetch whenever filter signals change (skip first run — onMount handles it)
   let effectRan = false;
   createEffect(() => {
-    // track signals
     const o = order();
     const g = globalDir();
     const s = suggest();
@@ -70,8 +69,6 @@ export default function DirectoryView() {
         <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
           Directory
         </h1>
-
-        {/* Suggest toggle */}
         <button
           onClick={() => setSuggest((s) => !s)}
           class={`text-sm px-3 py-1.5 rounded-lg border transition-colors
@@ -107,7 +104,6 @@ export default function DirectoryView() {
 
       {/* ── Filters row ── */}
       <div class="flex flex-wrap gap-2 text-sm">
-        {/* Sort order */}
         <select
           value={order()}
           onChange={(e) => setOrder(e.currentTarget.value as Order)}
@@ -121,7 +117,6 @@ export default function DirectoryView() {
           <option value="ralpha">Z → A</option>
         </select>
 
-        {/* Global vs local */}
         <button
           onClick={() => setGlobalDir((g) => (g === 1 ? 0 : 1))}
           class={`px-3 py-1.5 rounded-lg border transition-colors
@@ -169,12 +164,13 @@ export default function DirectoryView() {
         >
           <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <For each={entries()}>
-              {(entry) => <DirectoryCard entry={entry} />}
+              {(entry) => (
+                <DirectoryCard entry={entry} onSelect={setSelected} />
+              )}
             </For>
           </div>
         </Show>
 
-        {/* ── Load more ── */}
         <Show when={hasMore() && !loadingMore()}>
           <div class="flex justify-center py-4">
             <button
@@ -202,6 +198,12 @@ export default function DirectoryView() {
           </p>
         </Show>
       </Show>
+
+      {/* ── Detail modal ── */}
+      <DirectoryEntryModal
+        entry={selected()}
+        onClose={() => setSelected(null)}
+      />
     </div>
   );
 }
