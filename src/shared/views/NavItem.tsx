@@ -29,6 +29,7 @@ import {
   MdFillPerson,
   MdFillEdit,
   MdFillRss_feed,
+  MdFillNote,
   // MdFillApps,
   // MdFillClose,
   // MdFillChevronRight,
@@ -36,41 +37,42 @@ import {
 } from "solid-icons/md";
 
 const ICON_MAP: Record<string, (size: number) => JSX.Element> = {
-  home:        (s) => <MdFillHome size={s} />,
-  grid:        (s) => <MdFillGrid_view size={s} />,
-  dashboard:   (s) => <MdFillSpace_dashboard size={s} />,
-  hq:          (s) => <MdFillSpace_dashboard size={s} />,
-  mail:        (s) => <MdFillMail size={s} />,
-  image:       (s) => <MdFillImage size={s} />,
-  photos:      (s) => <MdFillImage size={s} />,
-  folder:      (s) => <MdFillFolder size={s} />,
-  files:       (s) => <MdFillFolder size={s} />,
-  calendar:    (s) => <MdFillCalendar_month size={s} />,
-  chat:        (s) => <MdFillChat size={s} />,
-  bookmark:    (s) => <MdFillBookmark size={s} />,
-  article:     (s) => <MdFillArticle size={s} />,
-  articles:    (s) => <MdFillArticle size={s} />,
-  cart:        (s) => <MdFillShopping_cart size={s} />,
-  help:        (s) => <MdFillHelp size={s} />,
-  webpages:    (s) => <MdFillWeb_asset size={s} />,
-  wiki:        (s) => <MdFillEdit_note size={s} />,
+  home: (s) => <MdFillHome size={s} />,
+  grid: (s) => <MdFillGrid_view size={s} />,
+  dashboard: (s) => <MdFillSpace_dashboard size={s} />,
+  hq: (s) => <MdFillSpace_dashboard size={s} />,
+  mail: (s) => <MdFillMail size={s} />,
+  image: (s) => <MdFillImage size={s} />,
+  photos: (s) => <MdFillImage size={s} />,
+  folder: (s) => <MdFillFolder size={s} />,
+  files: (s) => <MdFillFolder size={s} />,
+  calendar: (s) => <MdFillCalendar_month size={s} />,
+  chat: (s) => <MdFillChat size={s} />,
+  bookmark: (s) => <MdFillBookmark size={s} />,
+  article: (s) => <MdFillArticle size={s} />,
+  articles: (s) => <MdFillArticle size={s} />,
+  cart: (s) => <MdFillShopping_cart size={s} />,
+  help: (s) => <MdFillHelp size={s} />,
+  webpages: (s) => <MdFillWeb_asset size={s} />,
+  wiki: (s) => <MdFillEdit_note size={s} />,
   connections: (s) => <MdFillPeople size={s} />,
-  directory:   (s) => <MdFillAccount_tree size={s} />,
-  public:      (s) => <MdFillPublic size={s} />,
-  groups:      (s) => <MdFillLock size={s} />,
-  pdl:         (s) => <MdFillView_column size={s} />,
-  network:     (s) => <MdFillRss_feed size={s} />,
-  channel:     (s) => <MdFillPerson size={s} />,
-  settings:    (s) => <MdFillSettings size={s} />,
-  manage:      (s) => <MdFillManage_accounts size={s} />,
-  logout:      (s) => <MdFillLogout size={s} />,
-  login:       (s) => <MdFillLogin size={s} />,
-  remote:      (s) => <MdFillLogin size={s} />,
-  navhome:     (s) => <MdFillHome size={s} />,
-  register:    (s) => <MdFillPerson_add size={s} />,
-  admin:       (s) => <MdFillAdmin_panel_settings size={s} />,
-  person:      (s) => <MdFillPerson size={s} />,
-  edit:        (s) => <MdFillEdit size={s} />,
+  directory: (s) => <MdFillAccount_tree size={s} />,
+  public: (s) => <MdFillPublic size={s} />,
+  groups: (s) => <MdFillLock size={s} />,
+  pdl: (s) => <MdFillView_column size={s} />,
+  network: (s) => <MdFillRss_feed size={s} />,
+  channel: (s) => <MdFillPerson size={s} />,
+  settings: (s) => <MdFillSettings size={s} />,
+  manage: (s) => <MdFillManage_accounts size={s} />,
+  logout: (s) => <MdFillLogout size={s} />,
+  login: (s) => <MdFillLogin size={s} />,
+  remote: (s) => <MdFillLogin size={s} />,
+  navhome: (s) => <MdFillHome size={s} />,
+  register: (s) => <MdFillPerson_add size={s} />,
+  admin: (s) => <MdFillAdmin_panel_settings size={s} />,
+  person: (s) => <MdFillPerson size={s} />,
+  edit: (s) => <MdFillEdit size={s} />,
+  notes: (s) => <MdFillNote size={s} />,
 };
 
 export function getNavIcon(token?: string, size = 20): JSX.Element {
@@ -80,14 +82,16 @@ export function getNavIcon(token?: string, size = 20): JSX.Element {
 }
 
 interface Props {
-  href:  string | (() => string);
+  href: string | (() => string);
   label: string | (() => string);
   icon?: string;
 }
 
 const NavItem: Component<Props> = (props) => {
-  const href  = () => typeof props.href  === "function" ? props.href()  : props.href;
-  const label = () => typeof props.label === "function" ? props.label() : props.label;
+  const href = () =>
+    typeof props.href === "function" ? props.href() : props.href;
+  const label = () =>
+    typeof props.label === "function" ? props.label() : props.label;
 
   return (
     <A

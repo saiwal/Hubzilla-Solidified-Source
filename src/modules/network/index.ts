@@ -8,14 +8,13 @@ registerModule({
   ],
   navItem: {
     label: () => useI18n().t("nav.network"),
-    icon: "grid",
+    icon: "network",
     path: "/network",
     href: "/network",
     context: "owner",
   },
   slots: {
     right: [
-      () => import("@/shared/widgets/placeholder/view"),
     ],
   },
   permissions: [],

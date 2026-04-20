@@ -9,7 +9,7 @@ registerModule({
 
   navItem: {
     label: () => useI18n().t("nav.directory"),
-    icon: "grid",
+    icon: "directory",
     path: "/directory",
     href: "/directory/",
 		context: "all",

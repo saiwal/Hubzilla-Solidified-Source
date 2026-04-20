@@ -9,7 +9,7 @@ registerModule({
 
   navItem: {
     label: () => useI18n().t("nav.admin"),
-    icon: "grid",
+    icon: "admin",
     path: "/admin",
     href: "/admin/",
 		context: "admin",

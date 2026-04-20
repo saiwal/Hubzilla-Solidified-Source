@@ -23,6 +23,8 @@ import {
   lazy,
 } from "solid-js";
 import { useAuth } from "@/shared/store/auth-store";
+import { MdFillApp_registration, MdFillCalendar_month, MdFillHome, MdFillMail, MdFillNotifications, MdFillPublic, MdFillWaving_hand, MdRoundRule_folder } from "solid-icons/md";
+import type { JSX } from "solid-js";
 
 const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
 
@@ -60,15 +62,15 @@ interface SsePayload {
 
 const POLL_MS = 60_000;
 const FETCHABLE = new Set(["network", "dm", "home"]);
-const STREAM_META: Record<string, { label: string; icon: string; href?: string }> = {
-  network:    { label: "Network",  icon: "🌐", href: "/network" },
-  dm:         { label: "Messages", icon: "✉️",  href: "/mail" },
-  home:       { label: "Channel",  icon: "🏠", href: "/channel" },
-  notify:     { label: "System",   icon: "🔔" },
-  intros:     { label: "Intros",   icon: "👋", href: "/connections" },
-  files:      { label: "Files",    icon: "📎" },
-  all_events: { label: "Events",   icon: "📅", href: "/calendar" },
-  register:   { label: "Signups",  icon: "📝" },
+const STREAM_META: Record<string, { label: string; icon: JSX.Element; href?: string }> = {
+  network:    { label: "Network",  icon: <MdFillPublic size={17}/>, href: "/network" },
+  dm:         { label: "Messages", icon: <MdFillMail size={17}/>,  href: "/mail" },
+  home:       { label: "Channel",  icon: <MdFillHome size={17}/>, href: "/channel" },
+  notify:     { label: "Alert",   icon: <MdFillNotifications size={17}/> },
+  intros:     { label: "Intros",   icon: <MdFillWaving_hand size={17}/>, href: "/connections" },
+  files:      { label: "Files",    icon: <MdRoundRule_folder size={17}/>, href: "/cloud" },
+  all_events: { label: "Events",   icon: <MdFillCalendar_month size={17}/>, href: "/calendar" },
+  register:   { label: "Signups",  icon: <MdFillApp_registration size={17}/>, href: "/admin/accounts" },
 };
 const BUCKET_KEYS = Object.keys(STREAM_META);
 

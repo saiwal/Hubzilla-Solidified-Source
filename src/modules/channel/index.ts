@@ -11,7 +11,7 @@ registerModule({
 
   navItem: {
     label: () => useI18n().t("nav.channel"),
-    icon: "grid",
+    icon: "home",
     path: "/channel",
     href: () => `/channel/${usePageNick()()}`,
 		context: "all",

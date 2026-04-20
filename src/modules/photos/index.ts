@@ -18,7 +18,7 @@ registerModule({
   ],
   navItem: {
     label: () => useI18n().t("nav.photos"),
-    icon: "grid",
+    icon: "photos",
     path: "/photos",
     href: () => `/photos/${usePageNick()()}`,
     context: "all",

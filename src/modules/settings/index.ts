@@ -15,7 +15,7 @@ registerModule({
 
   navItem: {
     label: () => useI18n().t("nav.settings"),
-    icon: "grid",
+    icon: "settings",
     path: "/settings",
     href: "/settings",
     context: "owner",

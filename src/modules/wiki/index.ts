@@ -10,7 +10,7 @@ registerModule({
 
   navItem: {
     label: () => useI18n().t("nav.wiki"),
-    icon: "grid",
+    icon: "wiki",
     path: "/wiki",
     href: () => `/wiki/${usePageNick()()}`,
 		context: "all",

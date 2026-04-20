@@ -9,7 +9,7 @@ registerModule({
 
   navItem: {
     label: () => useI18n().t("nav.help"),
-    icon: "grid",
+    icon: "help",
     path: "/help",
     href: "/help/",
 		context: "all",

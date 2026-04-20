@@ -11,7 +11,7 @@ registerModule({
 
   navItem: {
     label: () => useI18n().t("nav.calendar"),
-    icon: "grid",
+    icon: "calendar",
     path: "/cal",
     href: () => {
       const role = useViewerRole()();

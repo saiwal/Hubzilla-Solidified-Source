@@ -3,9 +3,9 @@
 import { createMemo } from "solid-js";
 import { useNavData, useChannelTabs } from "../store/nav-store";
 import { useAuth } from "../store/auth-store";
-import { getModule } from "../lib/module-registry";
+import { getModule, getRoutes } from "../lib/module-registry";
 import type { NavItemDef } from "../types/module.types";
-import type { NavApp, NavActions, NavChannelTab } from "../lib/nav-api";
+import type { NavActions, NavChannelTab } from "../lib/nav-api";
 import { useI18n } from "@/i18n";
 import { useViewerRole } from "../store/site-config";
 import type { ViewerRole } from "../store/site-config";
@@ -16,50 +16,6 @@ type ActionMeta = {
 };
 // ── Bootstrap Icon → internal icon token ─────────────────────────────────────
 
-const BI_TO_ICON: Record<string, string> = {
-  house: "home",
-  "grid-3x3": "grid",
-  "person-circle": "dashboard",
-  envelope: "mail",
-  image: "image",
-  folder: "folder",
-  "calendar-date": "calendar",
-  "chat-text": "chat",
-  bookmark: "bookmark",
-  newspaper: "article",
-  cart: "cart",
-  question: "help",
-  "question-lg": "help",
-  "layout-text-sidebar": "webpages",
-  "pencil-square": "wiki",
-  people: "connections",
-  "diagram-3": "directory",
-  globe: "public",
-  "file-lock": "groups",
-  "columns-gap": "pdl",
-};
-
-function biToIcon(biName: string): string {
-  return BI_TO_ICON[biName] ?? biName;
-}
-
-// ── Hubzilla app name → nav i18n key ─────────────────────────────────────────
-
-const APP_NAME_TO_KEY: Record<string, string> = {
-  Network: "network",
-  Photos: "photos",
-  Calendar: "calendar",
-  Cart: "cart",
-  Chatrooms: "chat",
-  HQ: "hq",
-  Articles: "articles",
-  Webpages: "webpages",
-  Wiki: "wiki",
-  Files: "files",
-  Help: "help",
-  Directory: "directory",
-  Channel: "channel",
-};
 
 // ── Role matching ─────────────────────────────────────────────────────────────
 
@@ -82,30 +38,6 @@ function urlToPath(url: string): string {
   }
 }
 
-function moduleSegment(url: string): string {
-  return urlToPath(url).split("/").filter(Boolean)[0] ?? "";
-}
-
-// ── Pinned app → NavItemDef ───────────────────────────────────────────────────
-
-function appToNavItem(
-  app: NavApp,
-  t: ReturnType<typeof useI18n>["t"],
-): NavItemDef {
-  const path = urlToPath(app.url);
-  const segment = moduleSegment(app.url);
-  const mod = getModule(segment);
-  const icon = biToIcon(app.bi_icon);
-  const i18nKey = APP_NAME_TO_KEY[app.name];
-
-  return {
-    label: i18nKey ? t(`nav.${i18nKey}` as any) : app.label,
-    icon: mod?.navItem.icon ?? icon,
-    href: app.url,
-    path,
-    context: mod?.navItem.context ?? "all",
-  };
-}
 function tabToNavItem(tab: NavChannelTab): NavItemDef {
   return {
     label: tab.label,
@@ -116,10 +48,11 @@ function tabToNavItem(tab: NavChannelTab): NavItemDef {
 }
 // ── useNav ────────────────────────────────────────────────────────────────────
 export function useNav(subjectNick: () => string): () => NavItemDef[] {
-  const navData = useNavData();
+  // const navData = useNavData();
   const auth = useAuth();
-  const { t } = useI18n();
+  // const { t } = useI18n();
   const tabs = useChannelTabs(subjectNick);
+  const navData = useNavData();
 
   return createMemo((): NavItemDef[] => {
     const isOwnChannel = subjectNick() && auth()?.nick === subjectNick();
@@ -128,32 +61,23 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
       if (tabs.loading) return [];
       return (tabs() ?? []).map(tabToNavItem);
     }
-
-    // Non-channel page — show pinned apps
-    if (!auth() || navData.loading) return [];
+if (!auth() || navData.loading) return [];
     const data = navData();
     const viewer = data?.viewer;
     if (!data || !viewer) return [];
+const seen = new Set<string>();
+    const items: NavItemDef[] = getRoutes()()
+      .map((route) => {
+        const seg = route.path.split("/").filter(Boolean)[0] ?? "";
+        return getModule(seg);
+      })
+      .filter((mod) => {
+        if (!mod || seen.has(mod.id)) return false;
+        seen.add(mod.id);
+        return true;
+      })
+      .map((mod) => ({ ...mod!.navItem }));
 
-    const baseurl = viewer.baseurl ?? "";
-
-    const items: NavItemDef[] = data.pinned.map((app) => {
-      const url = app.url
-        .split(",")[0]
-        .trim()
-        .replace(/\$baseurl/g, baseurl);
-      return appToNavItem({ ...app, url }, t);
-    });
-    const featured = (data.featured ?? []).map((app) => {
-      const url = app.url
-        .split(",")[0]
-        .trim()
-        .replace(/\$baseurl/g, baseurl);
-      return appToNavItem({ ...app, url }, t);
-    });
-    const pinnedPaths = new Set(items.map((i) => i.path));
-    const featuredNew = featured.filter((i) => !pinnedPaths.has(i.path));
-    // Admin item appended if not already in pinned
     if (viewer.is_admin) {
       const hasAdmin = items.some((i) => {
         const h = typeof i.href === "string" ? i.href : i.href();
@@ -164,8 +88,9 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
         if (adminMod) items.push({ ...adminMod.navItem });
       }
     }
-    return [...items, ...featuredNew];
-  });
+
+    return items;
+	});
 }
 // ── useNavActionItems ─────────────────────────────────────────────────────────
 
