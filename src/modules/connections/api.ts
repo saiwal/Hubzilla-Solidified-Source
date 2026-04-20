@@ -81,7 +81,7 @@ export async function approveConnection(abookId: number): Promise<void> {
 }
 
 export async function deleteConnection(abookId: number): Promise<void> {
-  await fetch(`/abook/${abookId}`, {
+  await fetch(`/contactedit/${abookId}/drop`, {
     method: "DELETE",
     credentials: "include",
   });
