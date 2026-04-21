@@ -56,7 +56,9 @@ export function useAuth() {
 export function isLocalUser() {
   return authState()?.isLocal ?? false;
 }
-
+export function isAdmin() {
+  return authState()?.isAdmin ?? false;
+}
 export function isLoggedIn() {
   return authState()?.isLoggedIn ?? false;
 }

@@ -1,3 +1,4 @@
+import { isAdmin } from "@/shared/store/auth-store";
 import { createSignal, onCleanup, onMount, For, Show } from "solid-js";
 
 interface PerfStats {
@@ -25,6 +26,7 @@ interface TimePoint {
 }
 
 export default function PerfStatsPanel() {
+	if (!isAdmin()) return;
   const [points, setPoints] = createSignal<TimePoint[]>([]);
   const [latest, setLatest] = createSignal<PerfStats | null>(null);
   const [error, setError] = createSignal<string | null>(null);
