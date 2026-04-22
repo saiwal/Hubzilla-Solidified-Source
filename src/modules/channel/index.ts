@@ -7,6 +7,7 @@ registerModule({
   routes: [
     { path: "/channel", component: () => import("./views/ChannelView") },
     { path: "/channel/:nick", component: () => import("./views/ChannelView") },
+    { path: "/:nick", component: () => import("./views/ChannelView") },
   ],
 
   navItem: {
