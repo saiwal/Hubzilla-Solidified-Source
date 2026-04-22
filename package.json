@@ -3,11 +3,12 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview"
-  },
+"scripts": {
+  "dev":       "vite",
+  "build":     "vite build",
+  "build:sw":  "node build-sw.mjs",
+  "build:all": "vite build && node build-sw.mjs"
+},
   "dependencies": {
     "@bbob/html": "^4.3.1",
     "@bbob/parser": "^4.3.1",
@@ -32,6 +33,7 @@
     "tailwindcss": "^4.2.1",
     "typescript": "~5.9.3",
     "vite": "^7.3.1",
-    "vite-plugin-solid": "^2.11.10"
+    "vite-plugin-solid": "^2.11.10",
+    "workbox-build": "^7.4.0"
   }
 }

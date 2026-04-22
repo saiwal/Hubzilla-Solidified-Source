@@ -3,23 +3,25 @@ import { viteStaticCopy } from "vite-plugin-static-copy";
 import solid from "vite-plugin-solid";
 import path from "path";
 
+const ASSET_WEB_PATH = "/view/theme/utsukta-themes/solidified/assets";
+const OUT_DIR = path.resolve(
+  __dirname,
+  "../hz-ddev/core/extend/theme/utsukta-themes/solidified/assets",
+);
+
 export default defineConfig({
   plugins: [
     solid(),
     viteStaticCopy({
       targets: [{ src: "src/docs", dest: "../" }],
-    }),  ],
+    }),
+  ],
   build: {
-    outDir: path.resolve(
-      __dirname,
-      "../hz-ddev/core/extend/theme/utsukta-themes/solidified/assets",
-    ),
+    outDir: OUT_DIR,
     emptyOutDir: true,
-    watch: {},
-
+    // removed watch: {} — use vite build --watch from CLI
     rollupOptions: {
       output: {
-        // Fixed filenames — no more hashes
         entryFileNames: "app.js",
         chunkFileNames: "app-[name].js",
         assetFileNames: (info) =>
@@ -41,7 +43,7 @@ export default defineConfig({
       },
     },
   },
-  base: "./",
+  base: ASSET_WEB_PATH + "/",
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
