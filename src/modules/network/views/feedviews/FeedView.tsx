@@ -36,7 +36,7 @@ function ActionBar(props: { post: ThreadNode }) {
   return (
     <div class="flex items-center gap-1 mt-3">
       <button
-        onClick={() => handleLike(p.mid, p.iid!)}
+        onClick={() => handleLike(p.mid)}
         class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
                transition-colors hover:bg-rose-50 dark:hover:bg-rose-900/20
                text-gray-500 dark:text-gray-400 hover:text-rose-500"
@@ -63,7 +63,7 @@ function ActionBar(props: { post: ThreadNode }) {
       </button>
 
       <button
-        onClick={() => handleDislike(p.mid, p.iid!)}
+        onClick={() => handleDislike(p.mid)}
         class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
                transition-colors hover:bg-amber-50 dark:hover:bg-amber-900/20
                text-gray-500 dark:text-gray-400 hover:text-amber-500"
@@ -90,7 +90,7 @@ function ActionBar(props: { post: ThreadNode }) {
       </button>
 
       <button
-        onClick={() => handleRepeat(p.mid, p.iid!)}
+        onClick={() => handleRepeat(p.mid)}
         class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
                transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-900/20
                text-gray-500 dark:text-gray-400 hover:text-emerald-500"
@@ -125,7 +125,7 @@ function CommentBox(props: { post: ThreadNode; onClose: () => void }) {
   const submit = () => {
     const text = body().trim();
     if (!text) return;
-    handleComment(props.post.mid, props.post.iid!, text, "Me", "");
+    handleComment(props.post.mid, text, "Me", "");
     setBody("");
     props.onClose();
   };

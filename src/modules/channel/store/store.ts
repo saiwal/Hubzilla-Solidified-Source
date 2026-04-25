@@ -1,21 +1,27 @@
 import { createSignal } from "solid-js";
-import { fetchChannelPosts, toggleVerb, postComment } from "../api/api";
+import { fetchChannelPosts } from "../api/api";
 import type { ChannelParams } from "../api/api";
 import { buildThreadTree } from "@/shared/lib/thread";
 import type { ThreadNode } from "@/shared/lib/thread";
 import type { Post } from "@/shared/types/post.types";
 import { updateInterval } from "@/shared/store/auth-store";
+import {
+  apiToggleLike,
+  apiToggleDislike,
+  apiToggleRepeat,
+  apiCreateComment,
+} from "@/shared/lib/item-api";
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
-const [posts, setPosts]           = createSignal<ThreadNode[]>([]);
-const [loading, setLoading]       = createSignal(false);
+const [posts, setPosts]             = createSignal<ThreadNode[]>([]);
+const [loading, setLoading]         = createSignal(false);
 const [loadingMore, setLoadingMore] = createSignal(false);
-const [hasMore, setHasMore]       = createSignal(true);
-const [newPosts, setNewPosts]     = createSignal<ThreadNode[]>([]);
-const [profileUid, setProfileUid] = createSignal<number>(0);
-const [nick, setNick]             = createSignal<string>('');
-const [params, setParams]         = createSignal<ChannelParams>({});
+const [hasMore, setHasMore]         = createSignal(true);
+const [newPosts, setNewPosts]       = createSignal<ThreadNode[]>([]);
+const [profileUid, setProfileUid]   = createSignal<number>(0);
+const [nick, setNick]               = createSignal<string>('');
+const [params, setParams]           = createSignal<ChannelParams>({});
 
 let currentOffset = 0;
 let pollTimer: ReturnType<typeof setTimeout> | null = null;
@@ -195,89 +201,97 @@ async function checkForNew() {
 
 // ─── Actions ──────────────────────────────────────────────────────────────────
 
-export async function handleLike(mid: string, iid: number) {
+export async function handleLike(mid: string) {
   const key = `${mid}:like`;
   const isUndo = activated.has(key);
   isUndo ? activated.delete(key) : activated.add(key);
-  setPosts((prev) =>
-    updateNode(prev, mid, (n) => ({
-      ...n,
-      likeCount: n.likeCount + (isUndo ? -1 : 1),
-    })),
-  );
+  setPosts(prev => updateNode(prev, mid, n => ({
+    ...n,
+    likeCount: n.likeCount + (isUndo ? -1 : 1),
+    viewerLiked: !isUndo,
+  })));
   try {
-    await toggleVerb(iid, "like");
+    const res = await apiToggleLike(mid);
+    setPosts(prev => updateNode(prev, mid, n => ({
+      ...n,
+      likeCount:    res.like_count,
+      dislikeCount: res.dislike_count,
+    })));
   } catch (err) {
     isUndo ? activated.add(key) : activated.delete(key);
-    setPosts((prev) =>
-      updateNode(prev, mid, (n) => ({
-        ...n,
-        likeCount: n.likeCount + (isUndo ? 1 : -1),
-      })),
-    );
+    setPosts(prev => updateNode(prev, mid, n => ({
+      ...n,
+      likeCount: n.likeCount + (isUndo ? 1 : -1),
+      viewerLiked: isUndo,
+    })));
     console.error("Like failed", err);
   }
 }
 
-export async function handleDislike(mid: string, iid: number) {
+export async function handleDislike(mid: string) {
   const key = `${mid}:dislike`;
   const isUndo = activated.has(key);
   isUndo ? activated.delete(key) : activated.add(key);
-  setPosts((prev) =>
-    updateNode(prev, mid, (n) => ({
-      ...n,
-      dislikeCount: n.dislikeCount + (isUndo ? -1 : 1),
-    })),
-  );
+  setPosts(prev => updateNode(prev, mid, n => ({
+    ...n,
+    dislikeCount: n.dislikeCount + (isUndo ? -1 : 1),
+    viewerDisliked: !isUndo,
+  })));
   try {
-    await toggleVerb(iid, "dislike");
+    const res = await apiToggleDislike(mid);
+    setPosts(prev => updateNode(prev, mid, n => ({
+      ...n,
+      likeCount:    res.like_count,
+      dislikeCount: res.dislike_count,
+    })));
   } catch (err) {
     isUndo ? activated.add(key) : activated.delete(key);
-    setPosts((prev) =>
-      updateNode(prev, mid, (n) => ({
-        ...n,
-        dislikeCount: n.dislikeCount + (isUndo ? 1 : -1),
-      })),
-    );
+    setPosts(prev => updateNode(prev, mid, n => ({
+      ...n,
+      dislikeCount: n.dislikeCount + (isUndo ? 1 : -1),
+      viewerDisliked: isUndo,
+    })));
     console.error("Dislike failed", err);
   }
 }
 
-export async function handleRepeat(mid: string, iid: number) {
+export async function handleRepeat(mid: string) {
   const key = `${mid}:announce`;
   const isUndo = activated.has(key);
   isUndo ? activated.delete(key) : activated.add(key);
-  setPosts((prev) =>
-    updateNode(prev, mid, (n) => ({
-      ...n,
-      repeatCount: n.repeatCount + (isUndo ? -1 : 1),
-    })),
-  );
+  setPosts(prev => updateNode(prev, mid, n => ({
+    ...n,
+    repeatCount: n.repeatCount + (isUndo ? -1 : 1),
+    viewerRepeated: !isUndo,
+  })));
   try {
-    await toggleVerb(iid, "announce");
+    const res = await apiToggleRepeat(mid);
+    setPosts(prev => updateNode(prev, mid, n => ({
+      ...n,
+      repeatCount: res.announce_count,
+    })));
   } catch (err) {
     isUndo ? activated.add(key) : activated.delete(key);
-    setPosts((prev) =>
-      updateNode(prev, mid, (n) => ({
-        ...n,
-        repeatCount: n.repeatCount + (isUndo ? 1 : -1),
-      })),
-    );
+    setPosts(prev => updateNode(prev, mid, n => ({
+      ...n,
+      repeatCount: n.repeatCount + (isUndo ? 1 : -1),
+      viewerRepeated: isUndo,
+    })));
     console.error("Repeat failed", err);
   }
 }
 
 export async function handleComment(
   parentMid: string,
-  parentIid: number,
   body: string,
   authorName: string,
   authorAvatar: string,
 ): Promise<void> {
+  const tempMid = crypto.randomUUID();
   const tempComment: ThreadNode = {
-    uuid:            crypto.randomUUID(),
-    id:              crypto.randomUUID(),
-    mid:             crypto.randomUUID(),
+    uuid:            tempMid,
+    id:              tempMid,
+    mid:             tempMid,
     parent_mid:      parentMid,
     thr_parent:      parentMid,
     top_mid:         parentMid,
@@ -302,24 +316,29 @@ export async function handleComment(
     children:        [],
   };
 
-  setPosts((prev) =>
-    updateNode(prev, parentMid, (n) => ({
-      ...n,
-      children: [...n.children, tempComment],
-    })),
-  );
+  setPosts(prev => updateNode(prev, parentMid, n => ({
+    ...n,
+    children: [...n.children, tempComment],
+  })));
 
-  postComment({ body, parent_iid: parentIid, profile_uid: profileUid() }).catch(
-    (err) => {
-      console.error("Comment failed", err);
-      setPosts((prev) =>
-        updateNode(prev, parentMid, (n) => ({
-          ...n,
-          children: n.children.filter((c) => c.mid !== tempComment.mid),
-        })),
-      );
-    },
-  );
+  try {
+    const res = await apiCreateComment(parentMid, body);
+    // Replace temp uuid with real one from server
+    setPosts(prev => updateNode(prev, parentMid, n => ({
+      ...n,
+      children: n.children.map(c =>
+        c.mid === tempMid
+          ? { ...c, mid: res.mid, uuid: res.uuid }
+          : c
+      ),
+    })));
+  } catch (err) {
+    console.error("Comment failed", err);
+    setPosts(prev => updateNode(prev, parentMid, n => ({
+      ...n,
+      children: n.children.filter(c => c.mid !== tempMid),
+    })));
+  }
 }
 
 // ─── Exports ──────────────────────────────────────────────────────────────────

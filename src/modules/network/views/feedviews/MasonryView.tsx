@@ -224,7 +224,7 @@ function MasonryCard(props: { post: ThreadNode }) {
           onClick={(e) => e.stopPropagation()}
         >
           <button
-            onClick={() => handleLike(p.mid, p.iid!)}
+            onClick={() => handleLike(p.uuid)}
             class="flex items-center gap-1 text-xs transition-colors"
             classList={{
               "text-rose-500": p.viewerLiked,
@@ -248,7 +248,7 @@ function MasonryCard(props: { post: ThreadNode }) {
           </button>
 
           <button
-            onClick={() => handleRepeat(p.mid, p.iid!)}
+            onClick={() => handleRepeat(p.mid)}
             class="flex items-center gap-1 text-xs transition-colors"
             classList={{
               "text-emerald-500": p.viewerRepeated,

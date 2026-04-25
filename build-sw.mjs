@@ -5,10 +5,10 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const ASSET_WEB_PATH = '/view/theme/utsukta-themes/solidified/assets';
+const ASSET_WEB_PATH = '/view/theme/solidified/assets';
 const OUT_DIR = path.resolve(
   __dirname,
-  '../hz-ddev/core/extend/theme/utsukta-themes/solidified/assets'
+  '../hz-ddev/core/extend/view/theme/solidified/assets'
 );
 
 const { count, size } = await generateSW({

@@ -1,11 +1,20 @@
 import { createSignal } from "solid-js";
-import { fetchNetworkStream, toggleVerb, postComment } from "../api/api";
+import { fetchNetworkStream } from "../api/api";
 import type { NetworkParams } from "../api/api";
 import { buildThreadTree } from "@/shared/lib/thread";
 import type { ThreadNode } from "@/shared/lib/thread";
 import type { Post } from "@/shared/types/post.types";
 import { updateInterval } from "@/shared/store/auth-store";
-
+import {
+  apiToggleLike,
+  apiToggleDislike,
+  apiToggleRepeat,
+  apiToggleStar,
+  apiCreateComment,
+  apiDeleteItem,
+  apiEditItem,
+  apiCreatePost,
+} from '../api/api';
 const [posts, setPosts] = createSignal<ThreadNode[]>([]);
 const [loading, setLoading] = createSignal(false);
 const [loadingMore, setLoadingMore] = createSignal(false);
@@ -28,7 +37,236 @@ export { viewMode };
 let currentOffset = 0;
 let pollTimer: ReturnType<typeof setTimeout> | null = null;
 const activated = new Set<string>();
+// ── Reaction toggles (replace your existing handleLike/Dislike/Repeat) ────────
+// Pattern: optimistic update → real API call → rollback on failure
+// The API now returns fresh counts, so we sync those in too.
 
+export async function handleLike(uuid: string) {
+  const isUndo = activated.has(`${uuid}:like`);
+  isUndo ? activated.delete(`${uuid}:like`) : activated.add(`${uuid}:like`);
+
+  setPosts(prev => updateNode(prev, uuid, n => ({
+    ...n,
+    likeCount: n.likeCount + (isUndo ? -1 : 1),
+    viewerLiked: !isUndo,
+  })));
+
+  try {
+    const res = await apiToggleLike(uuid);
+    // Sync server counts (handles race conditions)
+    setPosts(prev => updateNode(prev, uuid, n => ({
+      ...n,
+      likeCount:    res.like_count,
+      dislikeCount: res.dislike_count,
+    })));
+  } catch {
+    // Rollback
+    isUndo ? activated.add(`${uuid}:like`) : activated.delete(`${uuid}:like`);
+    setPosts(prev => updateNode(prev, uuid, n => ({
+      ...n,
+      likeCount: n.likeCount + (isUndo ? 1 : -1),
+      viewerLiked: isUndo,
+    })));
+  }
+}
+
+export async function handleDislike(uuid: string) {  console.log('handleDislike called with:', uuid);
+  const isUndo = activated.has(`${uuid}:dislike`);
+  isUndo ? activated.delete(`${uuid}:dislike`) : activated.add(`${uuid}:dislike`);
+
+  setPosts(prev => updateNode(prev, uuid, n => ({
+    ...n,
+    dislikeCount: n.dislikeCount + (isUndo ? -1 : 1),
+    viewerDisliked: !isUndo,
+  })));
+
+  try {
+    const res = await apiToggleDislike(uuid);
+    setPosts(prev => updateNode(prev, uuid, n => ({
+      ...n,
+      likeCount:    res.like_count,
+      dislikeCount: res.dislike_count,
+    })));
+  } catch {
+    isUndo ? activated.add(`${uuid}:dislike`) : activated.delete(`${uuid}:dislike`);
+    setPosts(prev => updateNode(prev, uuid, n => ({
+      ...n,
+      dislikeCount: n.dislikeCount + (isUndo ? 1 : -1),
+      viewerDisliked: isUndo,
+    })));
+  }
+}
+
+export async function handleRepeat(uuid: string) {
+  const isUndo = activated.has(`${uuid}:announce`);
+  isUndo ? activated.delete(`${uuid}:announce`) : activated.add(`${uuid}:announce`);
+
+  setPosts(prev => updateNode(prev, uuid, n => ({
+    ...n,
+    repeatCount: n.repeatCount + (isUndo ? -1 : 1),
+    viewerRepeated: !isUndo,
+  })));
+
+  try {
+    const res = await apiToggleRepeat(uuid);
+    setPosts(prev => updateNode(prev, uuid, n => ({
+      ...n,
+      repeatCount:    res.announce_count,
+    })));
+  } catch {
+    isUndo ? activated.add(`${uuid}:announce`) : activated.delete(`${uuid}:announce`);
+    setPosts(prev => updateNode(prev, uuid, n => ({
+      ...n,
+      repeatCount: n.repeatCount + (isUndo ? 1 : -1),
+      viewerRepeated: isUndo,
+    })));
+  }
+}
+
+// ── Star toggle ───────────────────────────────────────────────────────────────
+// Optimistic: flip the 'starred' flag in flags[]
+
+export async function handleStar(mid: string) {
+  const currentlyStarred = posts().find(p => p.mid === mid)
+    ?.flags.includes('starred') ?? false;
+
+  setPosts(prev => updateNode(prev, mid, n => ({
+    ...n,
+    flags: currentlyStarred
+      ? n.flags.filter(f => f !== 'starred')
+      : [...n.flags, 'starred'],
+  })));
+
+  try {
+    await apiToggleStar(mid);
+  } catch {
+    // Rollback
+    setPosts(prev => updateNode(prev, mid, n => ({
+      ...n,
+      flags: currentlyStarred
+        ? [...n.flags, 'starred']
+        : n.flags.filter(f => f !== 'starred'),
+    })));
+  }
+}
+
+// ── Delete ────────────────────────────────────────────────────────────────────
+// Optimistic: remove from list immediately
+
+export async function handleDelete(mid: string) {
+  const snapshot = posts();
+  setPosts(prev => prev.filter(p => p.mid !== mid));
+
+  try {
+    await apiDeleteItem(mid);
+  } catch {
+    setPosts(snapshot); // Rollback
+  }
+}
+
+// ── Edit ──────────────────────────────────────────────────────────────────────
+
+export async function handleEdit(mid: string, body: string, title = '') {
+  const prev = posts().find(p => p.mid === mid);
+
+  setPosts(prevPosts => updateNode(prevPosts, mid, n => ({
+    ...n,
+    body,
+    title,
+  })));
+
+  try {
+    await apiEditItem(mid, body, title);
+  } catch {
+    if (prev) {
+      setPosts(prevPosts => updateNode(prevPosts, mid, () => prev));
+    }
+  }
+}
+
+// ── Comment ───────────────────────────────────────────────────────────────────
+// Same optimistic pattern as your existing handleComment,
+// but now delegates to the real API endpoint
+
+export async function handleComment(
+  parentMid: string,
+  body: string,
+  authorName: string,
+  authorAvatar: string,
+): Promise<void> {
+  const tempMid = crypto.randomUUID();
+  const tempComment: ThreadNode = {
+    uuid: tempMid,
+    id: tempMid,
+    mid: tempMid,
+    parent_mid: parentMid,
+    thr_parent: parentMid,
+    top_mid: parentMid,
+    parent: parentMid,
+    body,
+    title: '',
+    authorName,
+    authorAvatar,
+    authorUrl: '',
+    created: new Date().toISOString().replace('T', ' ').slice(0, 19),
+    verb: 'Create',
+    obj_type: 'Note',
+    flags: [],
+    permalink: '',
+    likeCount: 0,
+    dislikeCount: 0,
+    repeatCount: 0,
+    viewerLiked: false,
+    viewerDisliked: false,
+    viewerRepeated: false,
+    item_thread_top: 0,
+    children: [],
+  };
+
+  // Add temp comment immediately
+  setPosts(prev => updateNode(prev, parentMid, n => ({
+    ...n,
+    children: [...n.children, tempComment],
+    comment_count: (n.commentCount ?? 0) + 1,
+  })));
+
+  try {
+    const res = await apiCreateComment(parentMid, body);
+    // Replace temp with real mid
+    setPosts(prev => updateNode(prev, parentMid, n => ({
+      ...n,
+      children: n.children.map(c =>
+        c.mid === tempMid ? { ...c, mid: res.mid, uuid: res.uuid, id: res.iid.toString() } : c
+      ),
+    })));
+  } catch {
+    // Rollback
+    setPosts(prev => updateNode(prev, parentMid, n => ({
+      ...n,
+      children: n.children.filter(c => c.uuid !== tempMid),
+      commentCount: Math.max(0, (n.commentCount ?? 1) - 1),
+    })));
+  }
+}
+
+// ── Create post (for composer) ────────────────────────────────────────────────
+
+export async function handleCreatePost(params: {
+  profile_uid: number;
+  body: string;
+  title?: string;
+  scope?: 'public' | 'contacts' | 'private';
+}): Promise<void> {
+  // No optimistic insert for new posts — just trigger a poll after success
+  // so the real item appears with its server-assigned mid/uuid
+  try {
+    await apiCreatePost(params);
+    await checkForNew(); // your existing polling function
+  } catch (err) {
+    console.error('Create post failed', err);
+    throw err; // let the composer component show an error state
+  }
+}
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function postToThreadNode(p: Post): ThreadNode {
   return {
@@ -49,6 +287,7 @@ function postToThreadNode(p: Post): ThreadNode {
     obj_type: p.obj_type,
     flags: p.flags,
     permalink: p.permalink,
+		commentCount: p.commentCount,
     likeCount: p.likeCount,
     dislikeCount: p.dislikeCount,
     repeatCount: p.repeatCount,
@@ -69,13 +308,13 @@ function registerActivated(data: Post[]) {
 
 function updateNode(
   nodes: ThreadNode[],
-  mid: string,
+  uuid: string,
   updater: (n: ThreadNode) => ThreadNode,
 ): ThreadNode[] {
   return nodes.map((n) => {
-    if (n.mid === mid) return updater(n);
+    if (n.uuid === uuid) return updater(n);
     if (n.children.length)
-      return { ...n, children: updateNode(n.children, mid, updater) };
+      return { ...n, children: updateNode(n.children, uuid, updater) };
     return n;
   });
 }
@@ -164,134 +403,9 @@ export function resetPosts() {
   setHasMore(true);
   // setOffset(0);
 }
-// ─── Actions ─────────────────────────────────────────────────────────────────
 
-export async function handleLike(mid: string, iid: number) {
-  const key = `${mid}:like`;
-  const isUndo = activated.has(key);
-  isUndo ? activated.delete(key) : activated.add(key);
-  setPosts((prev) =>
-    updateNode(prev, mid, (n) => ({
-      ...n,
-      likeCount: n.likeCount + (isUndo ? -1 : 1),
-    })),
-  );
-  try {
-    await toggleVerb(iid, "like");
-  } catch (err) {
-    isUndo ? activated.add(key) : activated.delete(key);
-    setPosts((prev) =>
-      updateNode(prev, mid, (n) => ({
-        ...n,
-        likeCount: n.likeCount + (isUndo ? 1 : -1),
-      })),
-    );
-    console.error("Like failed", err);
-  }
-}
 
-export async function handleDislike(mid: string, iid: number) {
-  const key = `${mid}:dislike`;
-  const isUndo = activated.has(key);
-  isUndo ? activated.delete(key) : activated.add(key);
-  setPosts((prev) =>
-    updateNode(prev, mid, (n) => ({
-      ...n,
-      dislikeCount: n.dislikeCount + (isUndo ? -1 : 1),
-    })),
-  );
-  try {
-    await toggleVerb(iid, "dislike");
-  } catch (err) {
-    isUndo ? activated.add(key) : activated.delete(key);
-    setPosts((prev) =>
-      updateNode(prev, mid, (n) => ({
-        ...n,
-        dislikeCount: n.dislikeCount + (isUndo ? 1 : -1),
-      })),
-    );
-    console.error("Dislike failed", err);
-  }
-}
 
-export async function handleRepeat(mid: string, iid: number) {
-  const key = `${mid}:announce`;
-  const isUndo = activated.has(key);
-  isUndo ? activated.delete(key) : activated.add(key);
-  setPosts((prev) =>
-    updateNode(prev, mid, (n) => ({
-      ...n,
-      repeatCount: n.repeatCount + (isUndo ? -1 : 1),
-    })),
-  );
-  try {
-    await toggleVerb(iid, "announce");
-  } catch (err) {
-    isUndo ? activated.add(key) : activated.delete(key);
-    setPosts((prev) =>
-      updateNode(prev, mid, (n) => ({
-        ...n,
-        repeatCount: n.repeatCount + (isUndo ? 1 : -1),
-      })),
-    );
-    console.error("Repeat failed", err);
-  }
-}
-
-export async function handleComment(
-  parentMid: string,
-  parentIid: number,
-  body: string,
-  authorName: string,
-  authorAvatar: string,
-): Promise<void> {
-  const tempComment: ThreadNode = {
-    uuid: crypto.randomUUID(),
-    id: crypto.randomUUID(),
-    mid: crypto.randomUUID(),
-    parent_mid: parentMid,
-    thr_parent: parentMid,
-    top_mid: parentMid,
-    parent: parentMid,
-    body,
-    title: "",
-    authorName,
-    authorAvatar,
-    authorUrl: "",
-    created: new Date().toISOString().replace("T", " ").slice(0, 19),
-    verb: "Create",
-    obj_type: "Note",
-    flags: [],
-    permalink: "",
-    likeCount: 0,
-    dislikeCount: 0,
-    repeatCount: 0,
-    viewerLiked: false,
-    viewerDisliked: false,
-    viewerRepeated: false,
-    item_thread_top: 0,
-    children: [],
-  };
-
-  setPosts((prev) =>
-    updateNode(prev, parentMid, (n) => ({
-      ...n,
-      children: [...n.children, tempComment],
-    })),
-  );
-
-  postComment({ body, parent_iid: parentIid, profile_uid: profileUid() }).catch(
-    (err) => {
-      console.error("Comment failed", err);
-      setPosts((prev) =>
-        updateNode(prev, parentMid, (n) => ({
-          ...n,
-          children: n.children.filter((c) => c.mid !== tempComment.mid),
-        })),
-      );
-    },
-  );
-}
 async function checkForNew() {
   const topPost = newPosts()[0] ?? posts()[0];
   if (!topPost) return;

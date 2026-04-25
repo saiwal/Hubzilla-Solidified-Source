@@ -19,7 +19,7 @@ function InlineThread(props: { thread: ThreadNode }) {
   const submit = () => {
     const text = replyBody().trim();
     if (!text) return;
-    handleComment(props.thread.mid, props.thread.iid!, text, "Me", "");
+    handleComment(props.thread.mid, text, "Me", "");
     setReplyBody("");
   };
 
@@ -82,7 +82,7 @@ function InlineThread(props: { thread: ThreadNode }) {
                   innerHTML={msg.body}
                 />
                 <button
-                  onClick={() => handleLike(msg.mid, msg.iid!)}
+                  onClick={() => handleLike(msg.uuid)}
                   class="mt-1 flex items-center gap-1 text-[11px] transition-colors"
                   classList={{
                     "text-rose-500": msg.viewerLiked,

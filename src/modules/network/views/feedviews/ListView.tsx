@@ -49,7 +49,7 @@ function ListRow(props: { post: ThreadNode; index: number }) {
       {/* Actions — fade in on hover */}
       <div class="flex items-center gap-2 shrink-0 transition-opacity"
         classList={{ 'opacity-0 group-hover:opacity-100': !p.viewerLiked && !p.viewerRepeated }}>
-        <button onClick={e => { e.stopPropagation(); handleLike(p.mid, p.iid!); }}
+        <button onClick={e => { e.stopPropagation(); handleLike(p.uuid); }}
           class="flex items-center gap-0.5 text-[11px] transition-colors"
           classList={{
             'text-rose-500': p.viewerLiked,
@@ -61,7 +61,7 @@ function ListRow(props: { post: ThreadNode; index: number }) {
           </svg>
           <Show when={p.likeCount > 0}>{p.likeCount}</Show>
         </button>
-        <button onClick={e => { e.stopPropagation(); handleRepeat(p.mid, p.iid!); }}
+        <button onClick={e => { e.stopPropagation(); handleRepeat(p.mid); }}
           class="flex items-center gap-0.5 text-[11px] transition-colors"
           classList={{
             'text-emerald-500': p.viewerRepeated,

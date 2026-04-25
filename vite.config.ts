@@ -3,7 +3,7 @@ import { viteStaticCopy } from "vite-plugin-static-copy";
 import solid from "vite-plugin-solid";
 import path from "path";
 
-const ASSET_WEB_PATH = "/view/theme/utsukta-themes/solidified/assets";
+const ASSET_WEB_PATH = "/view/theme/solidified/assets";
 const OUT_DIR = path.resolve(
   __dirname,
   "../hz-ddev/core/extend/theme/utsukta-themes/solidified/assets",

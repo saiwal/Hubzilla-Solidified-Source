@@ -23,18 +23,16 @@ import { useI18n } from "@/i18n";
 import { BiRegularLinkExternal } from "solid-icons/bi";
 
 export interface PostActions {
-  onLike: (mid: string, iid: number) => Promise<void>;
-  onDislike: (mid: string, iid: number) => Promise<void>;
-  onRepeat: (mid: string, iid: number) => Promise<void>;
+  onLike: (uuid: string) => Promise<void>;
+  onDislike: (uuid: string) => Promise<void>;
+  onRepeat: (uuid: string) => Promise<void>;
   onComment: (
-    parentMid: string,
-    parentIid: number,
+    parentUuid: string,
     body: string,
     authorName: string,
     authorAvatar: string,
   ) => Promise<void>;
 }
-
 const networkActions: PostActions = {
   onLike: networkLike,
   onDislike: networkDislike,
@@ -77,7 +75,7 @@ export default function PostCard(props: {
   async function onLike() {
     setActionError(null);
     try {
-      await getActions().onLike(props.post.mid, props.post.iid!);
+      await getActions().onLike(props.post.uuid);
     } catch {
       setActionError("Like failed");
     }
@@ -86,7 +84,7 @@ export default function PostCard(props: {
   async function onDislike() {
     setActionError(null);
     try {
-      await getActions().onDislike(props.post.mid, props.post.iid!);
+      await getActions().onDislike(props.post.uuid);
     } catch {
       setActionError("Dislike failed");
     }
@@ -95,7 +93,7 @@ export default function PostCard(props: {
   async function onRepeat() {
     setActionError(null);
     try {
-      await getActions().onRepeat(props.post.mid, props.post.iid!);
+      await getActions().onRepeat(props.post.uuid);
     } catch {
       setActionError("Repeat failed");
     }
@@ -108,8 +106,7 @@ export default function PostCard(props: {
     setActionError(null);
     try {
       await getActions().onComment(
-        props.post.mid,
-        props.post.iid!,
+        props.post.uuid,
         body,
         props.post.authorName,
         props.post.authorAvatar,

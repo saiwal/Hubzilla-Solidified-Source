@@ -1,12 +1,6 @@
 // modules/directory/views/DirectoryView.tsx
 
-import {
-  createEffect,
-  createSignal,
-  Show,
-  For,
-  onMount,
-} from "solid-js";
+import { createEffect, createSignal, Show, For, onMount } from "solid-js";
 import {
   entries,
   loading,
@@ -25,11 +19,11 @@ import type { DirectoryParams, DirectoryEntry } from "../api";
 type Order = DirectoryParams["order"];
 
 export default function DirectoryView() {
-  const [search, setSearch]       = createSignal("");
-  const [order, setOrder]         = createSignal<Order>("date");
+  const [search, setSearch] = createSignal("");
+  const [order, setOrder] = createSignal<Order>("date");
   const [globalDir, setGlobalDir] = createSignal<0 | 1>(1);
-  const [suggest, setSuggest]     = createSignal(false);
-  const [selected, setSelected]   = createSignal<DirectoryEntry | null>(null);
+  const [suggest, setSuggest] = createSignal(false);
+  const [selected, setSelected] = createSignal<DirectoryEntry | null>(null);
 
   let initialized = false;
 
@@ -45,7 +39,10 @@ export default function DirectoryView() {
     const o = order();
     const g = globalDir();
     const s = suggest();
-    if (!effectRan) { effectRan = true; return; }
+    if (!effectRan) {
+      effectRan = true;
+      return;
+    }
     resetDirectory();
     loadDirectory({ order: o, global: g, suggest: s ? 1 : 0 });
   });
@@ -69,38 +66,28 @@ export default function DirectoryView() {
         <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
           Directory
         </h1>
-        <button
-          onClick={() => setSuggest((s) => !s)}
-          class={`text-sm px-3 py-1.5 rounded-lg border transition-colors
-            ${suggest()
-              ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-              : "border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
-            }`}
-        >
-          {suggest() ? "✓ Suggestions" : "Suggest channels"}
-        </button>
-      </div>
-
-      {/* ── Search bar ── */}
-      <form onSubmit={handleSearch} class="flex gap-2">
-        <input
-          type="text"
-          value={search()}
-          onInput={(e) => setSearch(e.currentTarget.value)}
-          placeholder="Search by name, address, or keyword…"
-          class="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700
+        <div class="relative">
+          <form onSubmit={handleSearch} class="flex gap-2">
+            <input
+              type="text"
+              value={search()}
+              onInput={(e) => setSearch(e.currentTarget.value)}
+              placeholder="Search by name, address, or keyword…"
+              class="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700
                  bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
                  placeholder-gray-400 dark:placeholder-gray-500
                  focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-        />
-        <button
-          type="submit"
-          class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium
+            />
+            <button
+              type="submit"
+              class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium
                  hover:bg-blue-700 transition-colors"
-        >
-          Search
-        </button>
-      </form>
+            >
+              Search
+            </button>
+          </form>
+        </div>
+      </div>
 
       {/* ── Filters row ── */}
       <div class="flex flex-wrap gap-2 text-sm">
@@ -120,12 +107,24 @@ export default function DirectoryView() {
         <button
           onClick={() => setGlobalDir((g) => (g === 1 ? 0 : 1))}
           class={`px-3 py-1.5 rounded-lg border transition-colors
-            ${globalDir() === 1
-              ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-              : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+            ${
+              globalDir() === 1
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
             }`}
         >
           {globalDir() === 1 ? "🌐 Global" : "🏠 Local"}
+        </button>
+        <button
+          onClick={() => setSuggest((s) => !s)}
+          class={`text-sm px-3 py-1.5 rounded-lg border transition-colors
+            ${
+              suggest()
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                : "border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
+            }`}
+        >
+          {suggest() ? "✓ Suggestions" : "Suggest channels"}
         </button>
       </div>
 
@@ -146,9 +145,7 @@ export default function DirectoryView() {
       {/* ── Loading skeleton ── */}
       <Show when={loading()}>
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <For each={Array(9).fill(0)}>
-            {() => <DirectoryCardSkeleton />}
-          </For>
+          <For each={Array(9).fill(0)}>{() => <DirectoryCardSkeleton />}</For>
         </div>
       </Show>
 
@@ -186,9 +183,7 @@ export default function DirectoryView() {
 
         <Show when={loadingMore()}>
           <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <For each={Array(6).fill(0)}>
-              {() => <DirectoryCardSkeleton />}
-            </For>
+            <For each={Array(6).fill(0)}>{() => <DirectoryCardSkeleton />}</For>
           </div>
         </Show>
 
