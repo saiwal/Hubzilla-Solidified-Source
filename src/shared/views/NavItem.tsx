@@ -30,10 +30,6 @@ import {
   MdFillEdit,
   MdFillRss_feed,
   MdFillNote,
-  // MdFillApps,
-  // MdFillClose,
-  // MdFillChevronRight,
-  // MdFillMoreHoriz,
 } from "solid-icons/md";
 
 const ICON_MAP: Record<string, (size: number) => JSX.Element> = {

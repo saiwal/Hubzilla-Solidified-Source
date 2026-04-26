@@ -3,7 +3,7 @@ import { useI18n } from "@/i18n";
 import { usePageNick } from "@/shared/store/site-config";
 
 registerModule({
-  id: "article",
+  id: "articles",
   routes: [
     { path: "/articles", component: () => import("./views/ArticlesView") },
     { path: "/articles/:nick", component: () => import("./views/ArticlesView") },
