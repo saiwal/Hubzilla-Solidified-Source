@@ -8,7 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ASSET_WEB_PATH = '/view/theme/solidified/assets';
 const OUT_DIR = path.resolve(
   __dirname,
-  '../hz-ddev/core/extend/view/theme/solidified/assets'
+  '../hz-ddev/core/view/theme/solidified/assets'
 );
 
 const { count, size } = await generateSW({
