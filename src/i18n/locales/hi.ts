@@ -23,6 +23,7 @@ export const dict: RawDictionary = {
     channels: "चैनल",
 		navhome: "Take me Home",
     logout: "लॉग आउट",
+		pubsites: "Pubsites",
 		siteinfo: "Siteinfo",
     login: "लॉग इन",
     remote_login: "रिमोट लॉगिन",

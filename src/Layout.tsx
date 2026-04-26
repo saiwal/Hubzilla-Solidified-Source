@@ -3,13 +3,10 @@ import { For } from "solid-js";
 import { A, useLocation } from "@solidjs/router";
 import NavItem, { getNavIcon } from "./shared/views/NavItem";
 import { useNav, useNavActionItems } from "./shared/lib/useNav";
-import ThemeToggle from "./shared/views/ThemeToggle";
-import LanguageSwitcher from "./shared/views/LanguageSwitcher";
 import Slot from "./shared/views/Slot";
 import RemoteAuthBanner from "./shared/views/RemoteAuthBanner";
 import { useViewerRole, useSubjectNick } from "./shared/store/site-config";
 import HelpOverlay from "./shared/views/HelpOverlay";
-import HelpTrigger from "./shared/views/HelpTrigger";
 import {
   MdFillClose,
   MdFillChevron_right,
@@ -17,6 +14,7 @@ import {
   MdFillApps,
 } from "solid-icons/md";
 import { useOnlineStatus } from "./shared/lib/useOnlineStatus";
+import NavUtilities from "./shared/views/NavUtilities";
 
 const NAV_VARS = `
   :root {
@@ -184,13 +182,7 @@ const Layout: ParentComponent = (props) => {
             </Show>
 
             {/* Utilities */}
-            <div class="mt-3 pt-2 border-t border-[var(--nav-border)] flex flex-col gap-1">
-              <LanguageSwitcher />
-              <div class="flex gap-1 px-1">
-                <ThemeToggle />
-                <HelpTrigger />
-              </div>
-            </div>
+						<NavUtilities />
           </aside>
 
           {/* ═══════════════════════════════════════════════════════
@@ -310,12 +302,7 @@ const Layout: ParentComponent = (props) => {
                 )}
               </For>
             </nav>
-
-            <div class="mt-4 pt-3 border-t border-[var(--nav-border)] flex items-center gap-2 flex-wrap">
-              <LanguageSwitcher />
-              <ThemeToggle />
-              <HelpTrigger />
-            </div>
+						<NavUtilities />
           </div>
 
           {/* ═══════════════════════════════════════════════════════
