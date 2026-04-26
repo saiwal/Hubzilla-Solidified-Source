@@ -5,8 +5,9 @@ import { usePageNick } from "@/shared/store/site-config";
 registerModule({
   id: "article",
   routes: [
-    { path: "/articles", component: () => import("./views/ArticleView") },
-    { path: "/articles/:nick", component: () => import("./views/ArticleView") },
+    { path: "/articles", component: () => import("./views/ArticlesView") },
+    { path: "/articles/:nick", component: () => import("./views/ArticlesView") },
+	  { path: "/articles/:nick/:uuid", component: () => import("./views/ArticleView") },
   ],
 
   navItem: {
@@ -15,6 +16,7 @@ registerModule({
     path: "/articles",
     href: () => `/articles/${usePageNick()()}`,
 		context: "all",
+		hidden: false,
   },
   slots: {
   },
