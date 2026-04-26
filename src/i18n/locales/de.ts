@@ -26,6 +26,7 @@ export const dict: RawDictionary = {
     login: "Anmelden",
     remote_login: "Remote-Anmeldung",
     register: "Registrieren",
+		siteinfo: "Siteinfo",
   },
   layout: {
     title: "Hubzilla",

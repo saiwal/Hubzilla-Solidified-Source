@@ -25,6 +25,7 @@ export type RawDictionary = {
     login: string;
     remote_login: string;
     register: string;
+		siteinfo: string;
   };
   layout: {
     title: string;
@@ -64,6 +65,7 @@ export const dict: RawDictionary = {
     login: "Login",
     remote_login: "Remote Login",
     register: "Register",
+		siteinfo: "Siteinfo",
   },
   layout: {
     title: "Hubzilla",
