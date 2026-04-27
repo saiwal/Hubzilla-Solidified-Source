@@ -184,11 +184,11 @@ export default function StreamFilters() {
             <button
               onClick={() => setOrderAndApply(opt.value)}
               class={`px-3 py-1.5 text-sm font-medium transition-colors
-                ${
-                  order() === opt.value
-                    ? "bg-blue-600 text-white"
-                    : "bg-surface text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                }`}
+							${
+								order() === opt.value
+									? "bg-accent text-base"
+									: "bg-surface text-muted hover:bg-elevated hover:text-txt"
+							}`}
             >
               {opt.label}
             </button>
@@ -337,9 +337,7 @@ export default function StreamFilters() {
                     border border-rim"
         >
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-muted font-medium">
-              Tag
-            </span>
+            <span class="text-xs text-muted font-medium">Tag</span>
             <input
               type="text"
               placeholder="e.g. solidjs"
@@ -354,9 +352,7 @@ export default function StreamFilters() {
           </label>
 
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-muted font-medium">
-              From date
-            </span>
+            <span class="text-xs text-muted font-medium">From date</span>
             <input
               type="date"
               value={dbegin()}
@@ -369,9 +365,7 @@ export default function StreamFilters() {
           </label>
 
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-muted font-medium">
-              To date
-            </span>
+            <span class="text-xs text-muted font-medium">To date</span>
             <input
               type="date"
               value={dend()}
@@ -384,9 +378,7 @@ export default function StreamFilters() {
           </label>
 
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-muted font-medium">
-              Min Affinity
-            </span>
+            <span class="text-xs text-muted font-medium">Min Affinity</span>
             <input
               type="number"
               min="0"
@@ -399,9 +391,7 @@ export default function StreamFilters() {
           </label>
 
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-muted font-medium">
-              Max Affinity
-            </span>
+            <span class="text-xs text-muted font-medium">Max Affinity</span>
             <input
               type="number"
               min="0"
@@ -418,9 +408,7 @@ export default function StreamFilters() {
   );
 }
 
-const inputCls = `px-2.5 py-1.5 text-sm rounded-lg border border-rim
-  bg-white dark:bg-gray-900 text-txt
-  placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500`;
+const inputCls = `pl-3 pr-3 py-1.5 text-sm rounded-lg border border-rim bg-surface text-txt placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-40`;
 
 function ToggleChip(props: {
   active: boolean;
@@ -431,11 +419,11 @@ function ToggleChip(props: {
     <button
       onClick={props.onClick}
       class={`px-3 py-1.5 text-sm rounded-lg border transition-colors shrink-0
-        ${
-          props.active
-            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-            : "border-rim bg-surface text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-        }`}
+  ${
+    props.active
+      ? "border-accent bg-accent-muted text-accent-txt"
+      : "border-rim bg-surface text-muted hover:bg-elevated hover:text-txt"
+  }`}
     >
       {props.label}
     </button>

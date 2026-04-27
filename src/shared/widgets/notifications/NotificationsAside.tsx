@@ -1,15 +1,3 @@
-/**
- * NotificationsAside.tsx
- *
- * Mark-seen: POST /sse_bs with body { sse_rmids: "b64mid,b64mid,...", nquery: "" }
- * b64mid is the uuid field on each notification.
- * After marking → refetch counts.
- *
- * Individual dismiss: × button on each row marks that single item.
- * Section "clear all": marks all visible items in the section.
- * Header "mark all read": marks all loaded items across all sections.
- */
-
 import {
   createSignal,
   createResource,
@@ -46,7 +34,7 @@ const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
 interface HzNotification {
   notify_id?: number;
   notify_link?: string;
-  b64mid?: string;        // uuid — used as rmid for mark-seen POST
+  b64mid?: string;
   name?: string;
   url?: string;
   photo?: string;
@@ -68,9 +56,7 @@ type SseResponse = Record<string, StreamBucket | { notifications: HzNotification
 
 const PROBE_MS = 5_000;
 const RETRY_DELAY_MS = 15_000;
-
 const STATIC_FETCHABLE = new Set(["network", "dm", "home", "pubs"]);
-
 const DISPLAY_ORDER = [
   "network", "dm", "home", "notify", "intros",
   "forums", "pubs", "files", "all_events", "register",
@@ -110,15 +96,13 @@ async function fetchForumRows(forumKeys: string[]): Promise<HzNotification[]> {
   const results = await Promise.all(forumKeys.map(fetchBucketRows));
   return results.flat();
 }
-/** Mark all notices read of a category dm, pubs, forum, etc.*/
-async function markAllSeenAndRefetch(
-	key: string,
-) {
-	const res = await fetch(`/notifications?markRead=${key}`, {credentials: "include",});
-	if (!res.ok) throw new Error('Failed to mark read');
-	return res.json;
+
+async function markAllSeenAndRefetch(key: string) {
+  const res = await fetch(`/notifications?markRead=${key}`, { credentials: "include" });
+  if (!res.ok) throw new Error("Failed to mark read");
+  return res.json;
 }
-/** Mark b64mids as seen via POST, then refetch counts */
+
 async function markSeenAndRefetch(
   b64mids: string[],
   afterRefetch: (raw: SseResponse) => void,
@@ -128,16 +112,12 @@ async function markSeenAndRefetch(
     method: "POST",
     credentials: "same-origin",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      sse_rmids: b64mids.join(","),
-      nquery: "",
-    }),
+    body: new URLSearchParams({ sse_rmids: b64mids.join(","), nquery: "" }),
   });
-  // Refetch counts after marking
   try {
     const fresh = await fetchCounts();
     afterRefetch(fresh);
-  } catch { /* silent — counts will update on next poll */ }
+  } catch { /* silent */ }
 }
 
 // ── Normalise ─────────────────────────────────────────────────────────────────
@@ -230,7 +210,7 @@ function NotifRow(props: {
 
   return (
     <div class="flex items-start gap-1 group">
-      <a
+     <a 
         href={toRelativePath(props.n.notify_link)}
         onClick={handleClick}
         class="flex gap-2 items-start px-2 py-1.5 rounded-lg transition-colors
@@ -241,7 +221,7 @@ function NotifRow(props: {
             class="w-7 h-7 rounded-full shrink-0 mt-0.5 object-cover" />
         </Show>
         <div class="min-w-0 flex-1">
-          <p class="text-xs text-gray-800 dark:text-gray-200 leading-snug line-clamp-2">
+          <p class="text-xs text-txt leading-snug">
             <Show when={props.n.name}>
               <span class="font-semibold">{props.n.name} </span>
             </Show>
@@ -249,23 +229,18 @@ function NotifRow(props: {
           </p>
           <div class="flex items-center gap-1.5 mt-0.5">
             <Show when={props.n.when}>
-              <p class="text-[10px] text-gray-400">{relativeTime(props.n.when)}</p>
-            </Show>
-            <Show when={uuid()}>
-              <span class="text-[9px] text-violet-400 dark:text-violet-500">· preview</span>
+              <p class="text-[10px] text-muted">{relativeTime(props.n.when)}</p>
             </Show>
           </div>
         </div>
       </a>
 
-      {/* Dismiss × button — visible on hover, always visible on touch */}
       <Show when={props.n.b64mid}>
         <button
           onClick={handleDismiss}
           title="Mark read"
-          class="shrink-0 mt-1.5 p-0.5 rounded text-gray-300 dark:text-gray-600
-                 hover:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100
-                 dark:hover:bg-gray-700 transition-colors
+          class="shrink-0 mt-1.5 p-0.5 rounded text-subtle
+                 hover:text-muted hover:bg-elevated transition-colors
                  opacity-0 group-hover:opacity-100 focus:opacity-100"
         >
           <MdFillClose class="w-3.5 h-3.5" />
@@ -282,7 +257,7 @@ function StreamSection(props: {
   bucket: StreamBucket;
   forumKeys?: string[];
   onDismiss: (b64mid: string) => void;
-  onClearAll: (b64mids: string) => void;
+  onClearAll: (key: string) => void;
   onOpenModal: (uuid: string) => void;
 }) {
   const [open, setOpen] = createSignal(false);
@@ -306,9 +281,7 @@ function StreamSection(props: {
     prevCount = count;
   });
 
-  // When bucket is replaced externally (after dismiss POST), re-fetch rows
   createEffect(() => {
-    // track notifications array identity
     void props.bucket.notifications;
     if (open() && needsFetch()) setFetchTick((t) => t + 1);
   });
@@ -322,15 +295,14 @@ function StreamSection(props: {
     notifications().map((n) => n.b64mid).filter((m): m is string => !!m);
 
   return (
-    <div class="border border-gray-100 dark:border-gray-700 rounded-xl overflow-hidden">
+    <div class="border border-rim rounded-xl overflow-hidden">
       {/* Header */}
       <button
         onClick={toggle}
         class="w-full flex items-center justify-between px-3 py-2
-               bg-gray-50 dark:bg-gray-800 hover:bg-elevated
-               transition-colors text-left"
+               bg-surface hover:bg-elevated transition-colors text-left"
       >
-        <span class="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300">
+        <span class="flex items-center gap-1.5 text-xs font-semibold text-txt">
           <meta.Icon class="w-3.5 h-3.5 shrink-0" />
           <Show when={meta.href} fallback={<span>{meta.label}</span>}>
             <a href={meta.href} onClick={(e) => e.stopPropagation()} class="hover:underline">
@@ -339,25 +311,23 @@ function StreamSection(props: {
           </Show>
         </span>
         <span class="flex items-center gap-1.5">
-          {/* Clear-all button inside header, only when open */}
           <Show when={open() && dismissibleMids().length > 0}>
             <button
               onClick={(e) => { e.stopPropagation(); props.onClearAll(props.id); }}
               title="Mark all read"
-              class="p-0.5 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200
-                     hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              class="p-0.5 rounded text-subtle hover:text-txt hover:bg-elevated transition-colors"
             >
               <MdFillDone_all class="w-3.5 h-3.5" />
             </button>
           </Show>
           <Show when={props.bucket.count > 0}>
-            <span class="text-[10px] font-bold bg-blue-500 text-white rounded-full
+            <span class="text-[10px] font-bold bg-accent text-base rounded-full
                          px-1.5 py-0.5 min-w-[18px] text-center leading-none">
               {props.bucket.count > 99 ? "99+" : props.bucket.count}
             </span>
           </Show>
           <svg
-            class={`w-3 h-3 text-gray-400 transition-transform ${open() ? "" : "-rotate-90"}`}
+            class={`w-3 h-3 text-subtle transition-transform ${open() ? "" : "-rotate-90"}`}
             fill="none" stroke="currentColor" viewBox="0 0 24 24"
           >
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -367,18 +337,20 @@ function StreamSection(props: {
 
       {/* Body */}
       <Show when={open()}>
-        <div class="px-1 py-1 space-y-0.5 bg-surface/50">
+        <div class="px-1 py-1 space-y-0.5 bg-elevated">
           <Show when={isLoading()}>
             <div class="space-y-1 px-2 py-1">
               <For each={[1, 2, 3]}>
-                {() => <div class="h-8 rounded bg-gray-100 dark:bg-gray-700 animate-pulse" />}
+                {() => <div class="h-8 rounded bg-surface animate-pulse" />}
               </For>
             </div>
           </Show>
           <Show when={!isLoading()}>
             <Show
               when={notifications().length > 0}
-              fallback={<p class="text-[11px] text-gray-400 text-center py-3">Nothing new</p>}
+              fallback={
+                <p class="text-[11px] text-subtle text-center py-3">Nothing new</p>
+              }
             >
               <For each={notifications()}>
                 {(n) => (
@@ -405,18 +377,17 @@ function StatusDot(props: { status: ConnStatus }) {
   const cls = () => ({
     connecting: "text-yellow-400 animate-pulse",
     live:       "text-green-400",
-    polling:    "text-blue-400 animate-pulse",
+    polling:    "text-accent animate-pulse",
     error:      "text-red-400",
   }[props.status]);
   const title = () => ({
-    connecting: "Connecting…", 
-    live: "Live", 
-    polling: "Polling", 
-    error: "Disconnected",
+    connecting: "Connecting…",
+    live:       "Live",
+    polling:    "Polling",
+    error:      "Disconnected",
   }[props.status]);
-  
+
   const IconComponent = props.status === "error" ? MdFillWifi_off : MdFillCircle;
-  
   return <IconComponent class={`w-2 h-2 shrink-0 ${cls()}`} title={title()} />;
 }
 
@@ -436,11 +407,9 @@ export default function NotificationsAside() {
   const [refreshing, setRefreshing] = createSignal(false);
   const [modalUuid, setModalUuid] = createSignal<string | null>(null);
 
-  // ── Payload application — always replace, never accumulate ───────────────
   const applyRaw = (raw: SseResponse, fromSsePush = false) => {
     const { buckets: incoming, forumKeys: fk } = normalise(raw);
     if (fk.length) setForumKeys(fk);
-
     setBuckets((prev) => {
       const next = { ...prev };
       for (const key of DISPLAY_ORDER) {
@@ -457,20 +426,15 @@ export default function NotificationsAside() {
       }
       return next;
     });
-
     const nn = raw["notice"] as { notifications: HzNotification[] } | undefined;
     const ni = raw["info"]   as { notifications: HzNotification[] } | undefined;
     setNotices([...(nn?.notifications ?? []), ...(ni?.notifications ?? [])]);
   };
 
-  const doFetchCounts = async () => {
-    applyRaw(await fetchCounts(), false);
-  };
+  const doFetchCounts = async () => { applyRaw(await fetchCounts(), false); };
 
-  // ── Mark seen ─────────────────────────────────────────────────────────────
   const markSeen = async (b64mids: string[]) => {
     if (!b64mids.length) return;
-    // Optimistically remove from displayed lists
     setBuckets((prev) => {
       const midSet = new Set(b64mids);
       const next = { ...prev };
@@ -485,11 +449,9 @@ export default function NotificationsAside() {
       }
       return next;
     });
-    // POST to server then refetch for accurate counts
     await markSeenAndRefetch(b64mids, (raw) => applyRaw(raw, false));
   };
 
-  // ── SSE probe-then-fallback ───────────────────────────────────────────────
   let es: EventSource | null = null;
   let probeTimer: ReturnType<typeof setTimeout> | null = null;
   let retryTimer: ReturnType<typeof setTimeout> | null = null;
@@ -553,16 +515,13 @@ export default function NotificationsAside() {
     }, PROBE_MS);
   };
 
-  // ── Boot: exactly once ────────────────────────────────────────────────────
   let started = false;
   createEffect(() => {
     const uid = auth()?.uid;
     if (auth.loading) return;
     if (started) return;
     started = true;
-
     if (!uid) { setConnStatus("error"); setBooted(true); return; }
-
     doFetchCounts()
       .then(() => {
         setBooted(true);
@@ -577,14 +536,12 @@ export default function NotificationsAside() {
 
   onCleanup(() => { es?.close(); clearAllTimers(); });
 
-  // ── Manual refresh ────────────────────────────────────────────────────────
   const manualRefresh = async () => {
     if (refreshing()) return;
     setRefreshing(true);
     try { await doFetchCounts(); } finally { setRefreshing(false); }
   };
 
-  // ── Mark all read — collects all b64mids across all loaded sections ───────
   const markAllRead = () => {
     const mids: string[] = [];
     for (const b of Object.values(buckets()))
@@ -592,7 +549,6 @@ export default function NotificationsAside() {
     if (mids.length) markSeen(mids);
   };
 
-  // ── Derived ───────────────────────────────────────────────────────────────
   const activeBuckets = createMemo(() =>
     DISPLAY_ORDER.filter((key) => {
       const b = buckets()[key];
@@ -604,7 +560,6 @@ export default function NotificationsAside() {
     DISPLAY_ORDER.some((k) => (buckets()[k]?.count ?? 0) > 0),
   );
 
-  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <>
       <Show when={modalUuid()}>
@@ -614,7 +569,7 @@ export default function NotificationsAside() {
       <div class="space-y-3">
         {/* Header */}
         <div class="flex items-center justify-between">
-          <h3 class="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+          <h3 class="text-sm font-bold text-txt flex items-center gap-1.5">
             <StatusDot status={connStatus()} />
             Notifications
           </h3>
@@ -623,8 +578,7 @@ export default function NotificationsAside() {
               <button
                 onClick={markAllRead}
                 title="Mark all read"
-                class="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200
-                       hover:bg-elevated transition-colors"
+                class="p-1 rounded text-subtle hover:text-txt hover:bg-elevated transition-colors"
               >
                 <MdFillDone_all class="w-4 h-4" />
               </button>
@@ -633,8 +587,8 @@ export default function NotificationsAside() {
               onClick={manualRefresh}
               disabled={refreshing()}
               title="Refresh"
-              class="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200
-                     hover:bg-elevated transition-colors disabled:opacity-40"
+              class="p-1 rounded text-subtle hover:text-txt hover:bg-elevated
+                     transition-colors disabled:opacity-40"
             >
               <MdFillRefresh class={`w-4 h-4 ${refreshing() ? "animate-spin" : ""}`} />
             </button>
@@ -642,13 +596,13 @@ export default function NotificationsAside() {
         </div>
 
         <Show when={!auth.loading && !auth()?.isLoggedIn}>
-          <p class="text-xs text-gray-400 text-center py-4">Sign in to see notifications</p>
+          <p class="text-xs text-subtle text-center py-4">Sign in to see notifications</p>
         </Show>
 
         <Show when={!booted()}>
           <div class="space-y-2">
             <For each={[1, 2, 3]}>
-              {() => <div class="h-10 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse" />}
+              {() => <div class="h-10 rounded-xl bg-elevated animate-pulse" />}
             </For>
           </div>
         </Show>
@@ -657,8 +611,7 @@ export default function NotificationsAside() {
           <div class="space-y-1">
             <For each={notices()}>
               {(n) => (
-                <div class="text-xs text-blue-700 dark:text-blue-300
-                            bg-blue-50 dark:bg-blue-950/40 rounded-lg px-3 py-2">
+                <div class="text-xs text-accent-txt bg-accent-muted rounded-lg px-3 py-2">
                   {n.message}
                 </div>
               )}
@@ -686,7 +639,7 @@ export default function NotificationsAside() {
         <Show when={booted() && activeBuckets().length === 0 && notices().length === 0}>
           <div class="text-center py-6">
             <p class="text-2xl mb-1">✓</p>
-            <p class="text-xs text-gray-400">All caught up</p>
+            <p class="text-xs text-subtle">All caught up</p>
           </div>
         </Show>
       </div>

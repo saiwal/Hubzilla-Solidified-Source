@@ -160,15 +160,7 @@ function InboxRow(props: { thread: ThreadNode }) {
         class="w-full text-left flex items-center gap-3 px-4 py-3
                hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors"
       >
-        {/* Unread dot */}
-        <div
-          class="w-2 h-2 rounded-full shrink-0"
-          classList={{
-            "bg-blue-500": !p.viewerLiked && replyCount === 0,
-            "bg-transparent": p.viewerLiked || replyCount > 0,
-          }}
-        />
-
+      
         {/* Participants avatars */}
         <div class="flex -space-x-1.5 shrink-0">
           <For each={allParticipants.slice(0, 3)}>
