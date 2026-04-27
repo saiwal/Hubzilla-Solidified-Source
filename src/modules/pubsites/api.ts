@@ -2,6 +2,7 @@ export type PubSite = {
   url: string;
   urltext: string;
   host: string;
+	register_url: string;
   sellpage: string | null;
   access: string;
   register: string;

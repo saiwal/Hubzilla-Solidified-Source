@@ -40,7 +40,7 @@ export default function PubsitesView() {
                   <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                     <td class="px-4 py-3">
                      <a 
-                        href={site.sellpage ?? `${site.url}/register`}
+                        href={site.sellpage ?? `${site.register_url}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         class="font-medium text-blue-600 dark:text-blue-400 hover:underline"
