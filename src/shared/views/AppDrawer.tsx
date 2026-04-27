@@ -54,7 +54,7 @@ function AppTile(props: { app: NavApp; onClick?: () => void }) {
       href={props.app.url}
       onClick={props.onClick}
       class="flex flex-col items-center gap-1.5 p-3 rounded-xl
-             hover:bg-gray-100 dark:hover:bg-gray-700/60
+             hover:bg-elevated/60
              transition-colors text-center group cursor-pointer"
     >
       <AppIcon app={props.app} />
@@ -92,15 +92,15 @@ export default function AppDrawer(props: {
       {/* Panel */}
       <div
         class="fixed inset-y-0 left-64 z-50 w-72
-               bg-white dark:bg-gray-800
-               border-r border-gray-200 dark:border-gray-700
+               bg-surface
+               border-r border-rim
                flex flex-col shadow-xl"
         // on mobile there's no left sidebar — snap to left edge
         style={{ left: "var(--drawer-offset, 0)" }}
       >
         {/* Header */}
         <div class="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
-          <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h3 class="text-sm font-semibold text-txt">
             Apps
           </h3>
           <button
@@ -124,9 +124,9 @@ export default function AppDrawer(props: {
             value={search()}
             onInput={(e) => setSearch(e.currentTarget.value)}
             class="w-full px-3 py-1.5 text-sm rounded-lg
-                   border border-gray-200 dark:border-gray-700
+                   border border-rim
                    bg-gray-50 dark:bg-gray-900
-                   text-gray-900 dark:text-gray-100
+                   text-txt
                    placeholder:text-gray-400
                    focus:outline-none focus:ring-2 focus:ring-blue-500"
           />

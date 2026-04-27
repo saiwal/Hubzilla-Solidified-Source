@@ -40,7 +40,7 @@ export default function ArticleView() {
               <h1 class="text-3xl font-bold leading-tight">
                 {d().article.title || "(Untitled)"}
               </h1>
-              <p class="text-sm text-gray-500 dark:text-gray-400">
+              <p class="text-sm text-muted">
                 {new Date(d().article.created.replace(" ", "T") + "Z").toLocaleDateString(undefined, {
                   year: "numeric", month: "long", day: "numeric",
                 })}
@@ -59,7 +59,7 @@ export default function ArticleView() {
             />
 
             {/* Reactions */}
-            <div class="flex gap-4 text-sm text-gray-500 border-t border-gray-200 dark:border-gray-700 pt-4">
+            <div class="flex gap-4 text-sm text-gray-500 border-t border-rim pt-4">
               <span>♥ {d().article.likeCount} likes</span>
               <span>👎 {d().article.dislikeCount} dislikes</span>
               <span>🔁 {d().article.repeatCount} repeats</span>
@@ -112,9 +112,9 @@ export default function ArticleView() {
 function ArticleViewSkeleton() {
   return (
     <div class="space-y-6 animate-pulse">
-      <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24" />
+      <div class="h-4 bg-elevated rounded w-24" />
       <div class="space-y-3">
-        <div class="h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
+        <div class="h-8 bg-elevated rounded w-3/4" />
         <div class="h-3 bg-gray-100 dark:bg-gray-700/60 rounded w-1/3" />
       </div>
       <div class="space-y-2">

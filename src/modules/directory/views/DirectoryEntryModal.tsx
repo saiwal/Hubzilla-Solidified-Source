@@ -22,7 +22,7 @@ const DirectoryEntryModal: Component<Props> = (props) => {
           class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
           onClick={handleBackdrop}
         >
-          <div class="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-2xl bg-white dark:bg-gray-800 shadow-2xl overflow-hidden">
+          <div class="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-2xl bg-surface shadow-2xl overflow-hidden">
 
             {/* ── Header ── */}
             <div class="flex items-start gap-4 p-5 border-b border-gray-100 dark:border-gray-700">
@@ -40,7 +40,7 @@ const DirectoryEntryModal: Component<Props> = (props) => {
                       href={e()!.profile_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="font-bold text-base text-gray-900 dark:text-gray-100 hover:underline leading-tight block"
+                      class="font-bold text-base text-txt hover:underline leading-tight block"
                     >
                       {e()!.name}
                     </a>
@@ -50,7 +50,7 @@ const DirectoryEntryModal: Component<Props> = (props) => {
                   </div>
                   <button
                     onClick={props.onClose}
-                    class="shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    class="shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-elevated transition-colors"
                     aria-label="Close"
                   >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -164,7 +164,7 @@ const DirectoryEntryModal: Component<Props> = (props) => {
                 href={e()!.profile_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="px-4 py-2 rounded-lg text-sm font-medium border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                class="px-4 py-2 rounded-lg text-sm font-medium border border-rim text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 View Profile
               </a>
@@ -172,7 +172,7 @@ const DirectoryEntryModal: Component<Props> = (props) => {
                <a 
                   href={e()!.ignore_url!}
                   title="Ignore"
-                  class="p-2 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  class="p-2 rounded-lg border border-rim text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-elevated transition-colors"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

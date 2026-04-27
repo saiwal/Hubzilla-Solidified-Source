@@ -637,7 +637,7 @@ const AclPicker: Component<AclPickerProps> = (props) => {
               "flex items-center gap-1 px-2.5 py-1 rounded-md text-xs border transition-all " +
               (props.mode === m
                 ? "border-indigo-400 text-indigo-500 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10"
-                : "border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-600 dark:hover:text-gray-300")
+                : "border-rim text-gray-400 dark:text-gray-500 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-600 dark:hover:text-gray-300")
             }
           >
             {modeLabel[m]}
@@ -647,7 +647,7 @@ const AclPicker: Component<AclPickerProps> = (props) => {
 
       {/* Dropdown */}
       <Show when={open() && props.mode === "custom"}>
-        <div class="absolute bottom-full mb-2 left-0 z-50 w-80 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl overflow-hidden flex flex-col max-h-96">
+        <div class="absolute bottom-full mb-2 left-0 z-50 w-80 rounded-xl border border-rim bg-white dark:bg-gray-900 shadow-xl overflow-hidden flex flex-col max-h-96">
           {/* Search */}
           <div class="px-3 py-2 border-b border-gray-100 dark:border-gray-800 shrink-0">
             <input
@@ -655,7 +655,7 @@ const AclPicker: Component<AclPickerProps> = (props) => {
               placeholder="Search connections & groups…"
               value={query()}
               onInput={(e) => setQuery(e.currentTarget.value)}
-              class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-700
+              class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-rim
                      bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200
                      placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
             />
@@ -713,7 +713,7 @@ const AclPicker: Component<AclPickerProps> = (props) => {
               <button
                 type="button"
                 onClick={props.onClear}
-                class="px-2 py-0.5 rounded-full text-xs text-gray-400 hover:text-red-500 transition-colors border border-gray-200 dark:border-gray-700"
+                class="px-2 py-0.5 rounded-full text-xs text-gray-400 hover:text-red-500 transition-colors border border-rim"
               >
                 Clear all
               </button>
@@ -766,7 +766,7 @@ const AclPicker: Component<AclPickerProps> = (props) => {
                       <Show
                         when={c.photo}
                         fallback={
-                          <span class="w-6 h-6 rounded-full shrink-0 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[10px] text-gray-500">
+                          <span class="w-6 h-6 rounded-full shrink-0 bg-elevated flex items-center justify-center text-[10px] text-gray-500">
                             {c.type === "g" ? "g" : "?"}
                           </span>
                         }
@@ -774,7 +774,7 @@ const AclPicker: Component<AclPickerProps> = (props) => {
                         <img
                           src={c.photo}
                           alt=""
-                          class="w-6 h-6 rounded-full shrink-0 object-cover bg-gray-200 dark:bg-gray-700"
+                          class="w-6 h-6 rounded-full shrink-0 object-cover bg-elevated"
                         />
                       </Show>
 
@@ -1084,8 +1084,8 @@ const PostComposer: Component<ComposerProps> = (props) => {
         >
           <div
             class={
-              "flex flex-col bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 " +
-              "shadow-2xl text-gray-900 dark:text-gray-100 overflow-hidden " +
+              "flex flex-col bg-white dark:bg-gray-900 border border-rim " +
+              "shadow-2xl text-txt overflow-hidden " +
               (fullscreen()
                 ? "fixed inset-0 w-full max-h-full rounded-none"
                 : "w-full max-w-2xl max-h-[90vh] rounded-xl")
@@ -1095,7 +1095,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
             aria-label="Post composer"
           >
             {/* ── Header ── */}
-            <header class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 shrink-0">
+            <header class="flex items-center justify-between px-4 py-3 border-b border-rim shrink-0">
               <span class="text-xs font-semibold tracking-widest uppercase text-gray-400 dark:text-gray-500 select-none">
                 {props.parentId ? "Reply" : "New Post"}
               </span>
@@ -1151,7 +1151,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
             </header>
 
             {/* ── Tab bar ── */}
-            <div class="flex items-center px-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
+            <div class="flex items-center px-4 border-b border-rim shrink-0">
               {(["wysiwyg", "source"] as const).map((t) => (
                 <button
                   type="button"
@@ -1178,7 +1178,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
 
             {/* ── Extra fields ── */}
             <Show when={showExtra()}>
-              <div class="flex flex-col border-b border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-800 shrink-0">
+              <div class="flex flex-col border-b border-rim divide-y divide-gray-100 dark:divide-gray-800 shrink-0">
                 {(
                   [
                     {
@@ -1214,13 +1214,13 @@ const PostComposer: Component<ComposerProps> = (props) => {
               <div
                 role="toolbar"
                 aria-label="Formatting"
-                class="flex flex-wrap gap-0.5 px-2 py-1.5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 shrink-0"
+                class="flex flex-wrap gap-0.5 px-2 py-1.5 border-b border-rim bg-gray-50 dark:bg-gray-800/50 shrink-0"
               >
                 <For each={TOOLBAR}>
                   {(item) => (
                     <>
                       <Show when={item.divider}>
-                        <div class="w-px self-stretch bg-gray-200 dark:bg-gray-700 mx-0.5" />
+                        <div class="w-px self-stretch bg-elevated mx-0.5" />
                       </Show>
                       <button
                         type="button"
@@ -1229,7 +1229,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
                           e.preventDefault();
                           handleToolbar(item);
                         }}
-                        class="min-w-[28px] px-1.5 py-1 rounded text-xs font-mono font-medium text-gray-500 dark:text-gray-400 border border-transparent hover:border-gray-300 dark:hover:border-gray-600 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-100 transition-all text-center whitespace-nowrap"
+                        class="min-w-[28px] px-1.5 py-1 rounded text-xs font-mono font-medium text-muted border border-transparent hover:border-gray-300 dark:hover:border-gray-600 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-100 transition-all text-center whitespace-nowrap"
                       >
                         <span class={item.labelClass ?? ""}>{item.icon}</span>
                       </button>
@@ -1292,7 +1292,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
             </div>
 
             {/* ── Footer ── */}
-            <footer class="flex flex-wrap items-center gap-2 px-3.5 py-2.5 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 shrink-0">
+            <footer class="flex flex-wrap items-center gap-2 px-3.5 py-2.5 border-t border-rim bg-gray-50 dark:bg-gray-800/40 shrink-0">
               {/* ACL Picker */}
               <AclPicker
                 mode={aclMode()}
@@ -1315,7 +1315,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
                   type="datetime-local"
                   value={expiry()}
                   onInput={(e) => setExpiry(e.currentTarget.value)}
-                  class="bg-transparent border border-gray-200 dark:border-gray-700 rounded px-1.5 py-0.5 text-xs text-gray-400 dark:text-gray-500 focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 focus:text-gray-700 dark:focus:text-gray-300 transition-colors"
+                  class="bg-transparent border border-rim rounded px-1.5 py-0.5 text-xs text-gray-400 dark:text-gray-500 focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 focus:text-gray-700 dark:focus:text-gray-300 transition-colors"
                 />
               </div>
 

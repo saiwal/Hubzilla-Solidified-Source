@@ -72,7 +72,7 @@ function MasonryCard(props: { post: ThreadNode }) {
     <>
       <div
         onClick={() => setShowModal(true)}
-        class="mb-3 bg-white dark:bg-gray-800
+        class="mb-3 bg-surface
                border border-gray-100 dark:border-gray-700/50
                rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
       >
@@ -111,7 +111,7 @@ function MasonryCard(props: { post: ThreadNode }) {
 
         {/* ── Title ── */}
         <Show when={p.title}>
-          <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2 leading-snug">
+          <p class="text-sm font-semibold text-txt mb-2 leading-snug">
             {p.title}
           </p>
         </Show>
@@ -347,7 +347,7 @@ export function MasonryPlaceholder(props: { count?: number }) {
             <For each={col}>
               {({ i }) => (
                 <div
-                  class="mb-3 bg-white dark:bg-gray-800
+                  class="mb-3 bg-surface
                             border border-gray-100 dark:border-gray-700/50
                             rounded-xl p-4 shadow-sm animate-pulse"
                 >

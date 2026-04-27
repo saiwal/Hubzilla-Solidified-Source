@@ -20,7 +20,7 @@ export default function SiteinfoView() {
                   {data().site_name.charAt(0).toUpperCase()}
                 </div>
                 <div class="min-w-0">
-                  <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100 truncate">
+                  <h1 class="text-xl font-bold text-txt truncate">
                     {data().site_name}
                   </h1>
                   <Show when={data().version}>
@@ -127,7 +127,7 @@ function Section(props: { title: string; children: any; compact?: boolean }) {
   return (
     <section class={`rounded-xl border border-gray-100 dark:border-gray-800
                      bg-white dark:bg-gray-900 ${props.compact ? 'p-4' : 'p-6'}`}>
-      <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+      <h2 class="text-sm font-semibold text-muted uppercase tracking-wider mb-3">
         {props.title}
       </h2>
       {props.children}

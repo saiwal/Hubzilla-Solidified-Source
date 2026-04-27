@@ -136,20 +136,20 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
       >
         <div
           class="relative w-full max-w-full lg:max-w-[50%] max-h-[90vh] flex flex-col
-            bg-gray-100 dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden"
+            bg-base rounded-2xl shadow-2xl overflow-hidden"
         >
           {/* Header */}
           <div
             class="flex items-center justify-between px-5 py-3 shrink-0
-                      border-b border-gray-200 dark:border-gray-700
-                      bg-white dark:bg-gray-800"
+                      border-b border-rim
+                      bg-surface"
           >
             <h2 class="text-sm font-semibold text-gray-600 dark:text-gray-400">
               Post
             </h2>
             <button
               onClick={props.onClose}
-              class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700
+              class="p-1.5 rounded-lg hover:bg-elevated
                      text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
               aria-label="Close"
             >
@@ -162,25 +162,25 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
           <div class="flex-1 overflow-y-auto p-4">
             <Show when={node.loading}>
               <div class="space-y-4 animate-pulse">
-                <div class="bg-white dark:bg-gray-800 rounded-2xl p-5">
+                <div class="bg-surface rounded-2xl p-5">
                   <div class="flex gap-3 mb-4">
-                    <div class="w-11 h-11 rounded-full bg-gray-200 dark:bg-gray-700" />
+                    <div class="w-11 h-11 rounded-full bg-elevated" />
                     <div class="flex-1 space-y-2 pt-1">
-                      <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
-                      <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/4" />
+                      <div class="h-3 bg-elevated rounded w-1/3" />
+                      <div class="h-3 bg-elevated rounded w-1/4" />
                     </div>
                   </div>
                   <div class="space-y-2">
-                    <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded" />
-                    <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-5/6" />
-                    <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-4/6" />
+                    <div class="h-3 bg-elevated rounded" />
+                    <div class="h-3 bg-elevated rounded w-5/6" />
+                    <div class="h-3 bg-elevated rounded w-4/6" />
                   </div>
                 </div>
               </div>
             </Show>
 
             <Show when={node.error}>
-              <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 text-center">
+              <div class="bg-surface rounded-2xl p-6 text-center">
                 <p class="text-sm text-red-500">
                   Failed to load post: {node.error?.message}
                 </p>

@@ -66,7 +66,7 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
   }
 
   return (
-    <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden">
+    <div class="rounded-lg border border-rim bg-surface overflow-hidden">
       {/* ── Main row ── */}
       <div class="flex items-center gap-3 p-3">
         <a href={props.conn.url} target="_blank" rel="noopener" class="shrink-0">
@@ -83,7 +83,7 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
               href={props.conn.url}
               target="_blank"
               rel="noopener"
-              class="font-medium text-sm text-gray-900 dark:text-gray-100 truncate hover:underline"
+              class="font-medium text-sm text-txt truncate hover:underline"
             >
               {props.conn.name}
             </a>
@@ -130,7 +130,7 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
           </Show>
           <button
             onClick={() => setExpanded(e => !e)}
-            class="p-1.5 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="p-1.5 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-elevated transition-colors"
             title="Details"
           >
             <svg class={`w-3.5 h-3.5 transition-transform ${expanded() ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -139,7 +139,7 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
           </button>
           <A
             href={`/abook/${props.conn.id}`}
-            class="p-1.5 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="p-1.5 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-elevated transition-colors"
             title="Edit"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -208,7 +208,7 @@ export default function ConnectionsView() {
 
   return (
     <div class="max-w-3xl mx-auto space-y-4">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Connections</h1>
+      <h1 class="text-2xl font-bold text-txt">Connections</h1>
 
       {/* ── Filter tabs ── */}
       <div class="flex flex-wrap gap-1.5">
@@ -236,8 +236,8 @@ export default function ConnectionsView() {
           value={searchInput()}
           onInput={(e) => setSearchInput(e.currentTarget.value)}
           onKeyDown={(e) => e.key === 'Enter' && applySearch()}
-          class="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700
-                 bg-white dark:bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="flex-1 px-3 py-2 rounded-lg border border-rim
+                 bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <button
           onClick={applySearch}
@@ -248,8 +248,8 @@ export default function ConnectionsView() {
         <select
           value={order()}
           onChange={(e) => handleOrderChange(e.currentTarget.value as ConnectionOrder)}
-          class="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700
-                 bg-white dark:bg-gray-800 text-sm focus:outline-none"
+          class="px-3 py-2 rounded-lg border border-rim
+                 bg-surface text-sm focus:outline-none"
         >
           <For each={ORDERS}>
             {(o) => <option value={o.id}>{o.label}</option>}
@@ -266,7 +266,7 @@ export default function ConnectionsView() {
           when={connections().length > 0}
           fallback={<p class="py-8 text-center text-sm text-gray-400 dark:text-gray-500">No connections found.</p>}
         >
-          <p class="text-sm text-gray-500 dark:text-gray-400">
+          <p class="text-sm text-muted">
             {meta()?.total} connection{meta()?.total !== 1 ? 's' : ''}
             {search() ? ` matching "${search()}"` : ''}
           </p>
@@ -283,8 +283,8 @@ export default function ConnectionsView() {
               <button
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
                 disabled={page() === 0}
-                class="px-3 py-1.5 rounded border border-gray-200 dark:border-gray-700
-                       disabled:opacity-40 hover:bg-gray-100 dark:hover:bg-gray-700
+                class="px-3 py-1.5 rounded border border-rim
+                       disabled:opacity-40 hover:bg-elevated
                        text-sm transition-colors"
               >
                 ← Prev
@@ -295,8 +295,8 @@ export default function ConnectionsView() {
               <button
                 onClick={() => setPage((p) => Math.min(totalPages() - 1, p + 1))}
                 disabled={page() === totalPages() - 1}
-                class="px-3 py-1.5 rounded border border-gray-200 dark:border-gray-700
-                       disabled:opacity-40 hover:bg-gray-100 dark:hover:bg-gray-700
+                class="px-3 py-1.5 rounded border border-rim
+                       disabled:opacity-40 hover:bg-elevated
                        text-sm transition-colors"
               >
                 Next →
@@ -314,11 +314,11 @@ function ConnectionsSkeleton() {
     <div class="space-y-2">
       <For each={Array(8).fill(0)}>
         {() => (
-          <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 flex items-center gap-3 animate-pulse">
-            <div class="w-11 h-11 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
+          <div class="rounded-lg border border-rim bg-surface p-3 flex items-center gap-3 animate-pulse">
+            <div class="w-11 h-11 rounded-full bg-elevated shrink-0" />
             <div class="flex-1 space-y-2">
-              <div class="h-3.5 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
-              <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+              <div class="h-3.5 bg-elevated rounded w-1/3" />
+              <div class="h-3 bg-elevated rounded w-1/2" />
             </div>
           </div>
         )}

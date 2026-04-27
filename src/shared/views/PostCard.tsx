@@ -124,7 +124,7 @@ export default function PostCard(props: {
   return (
     <div
       ref={cardRef}
-      class="bg-white dark:bg-gray-800 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 mb-4 shadow-sm hover:shadow-md transition-shadow duration-200"
+      class="bg-surface border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 mb-4 shadow-sm hover:shadow-md transition-shadow duration-200"
     >
       {/* Header */}
       <div class="flex items-start gap-3">

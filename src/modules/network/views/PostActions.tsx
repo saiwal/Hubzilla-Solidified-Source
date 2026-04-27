@@ -20,7 +20,7 @@ export default function PostActions(props: Props) {
   const isOwner = () => auth()?.uid === props.post.profileUid;
 
   return (
-    <div class="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+    <div class="flex items-center gap-3 text-sm text-muted">
 
       <button
         onClick={() => handleLike(props.post.mid)}

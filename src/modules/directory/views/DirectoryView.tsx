@@ -63,7 +63,7 @@ export default function DirectoryView() {
     <div class="space-y-4">
       {/* ── Header ── */}
       <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <h1 class="text-2xl font-bold text-txt">
           Directory
         </h1>
         <div class="relative">
@@ -73,8 +73,8 @@ export default function DirectoryView() {
               value={search()}
               onInput={(e) => setSearch(e.currentTarget.value)}
               placeholder="Search by name, address, or keyword…"
-              class="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700
-                 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+              class="flex-1 px-3 py-2 rounded-lg border border-rim
+                 bg-surface text-txt
                  placeholder-gray-400 dark:placeholder-gray-500
                  focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
@@ -94,8 +94,8 @@ export default function DirectoryView() {
         <select
           value={order()}
           onChange={(e) => setOrder(e.currentTarget.value as Order)}
-          class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700
-                 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300
+          class="px-3 py-1.5 rounded-lg border border-rim
+                 bg-surface text-gray-700 dark:text-gray-300
                  focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="date">Newest first</option>
@@ -110,7 +110,7 @@ export default function DirectoryView() {
             ${
               globalDir() === 1
                 ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-                : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                : "border-rim text-gray-600 dark:text-gray-400 hover:bg-elevated"
             }`}
         >
           {globalDir() === 1 ? "🌐 Global" : "🏠 Local"}
@@ -121,7 +121,7 @@ export default function DirectoryView() {
             ${
               suggest()
                 ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-                : "border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
+                : "border-rim hover:bg-elevated text-gray-600 dark:text-gray-400"
             }`}
         >
           {suggest() ? "✓ Suggestions" : "Suggest channels"}
@@ -172,8 +172,8 @@ export default function DirectoryView() {
           <div class="flex justify-center py-4">
             <button
               onClick={loadMoreDirectory}
-              class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700
-                     bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300
+              class="px-4 py-2 text-sm font-medium rounded-lg border border-rim
+                     bg-surface text-gray-600 dark:text-gray-300
                      hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
               Load more
@@ -205,16 +205,16 @@ export default function DirectoryView() {
 
 function DirectoryCardSkeleton() {
   return (
-    <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 space-y-3 animate-pulse">
+    <div class="rounded-xl border border-rim bg-surface p-4 space-y-3 animate-pulse">
       <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
+        <div class="w-12 h-12 rounded-full bg-elevated shrink-0" />
         <div class="flex-1 space-y-2">
-          <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
-          <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+          <div class="h-4 bg-elevated rounded w-3/4" />
+          <div class="h-3 bg-elevated rounded w-1/2" />
         </div>
       </div>
-      <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full" />
-      <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
+      <div class="h-3 bg-elevated rounded w-full" />
+      <div class="h-3 bg-elevated rounded w-2/3" />
     </div>
   );
 }

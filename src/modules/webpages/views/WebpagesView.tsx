@@ -51,10 +51,10 @@ export default function WebpagesView() {
           when={pages().length > 0}
           fallback={<EmptyState nick={nick()} />}
         >
-          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div class="bg-surface rounded-xl border border-rim overflow-hidden">
             <table class="w-full text-sm">
               <thead>
-                <tr class="border-b border-gray-200 dark:border-gray-700 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                <tr class="border-b border-rim text-xs uppercase tracking-wide text-muted">
                   <th class="px-4 py-3 text-left font-medium">Title</th>
                   <th class="px-4 py-3 text-left font-medium hidden md:table-cell">Page Link</th>
                   <th class="px-4 py-3 text-left font-medium hidden lg:table-cell">Last edited</th>
@@ -100,17 +100,17 @@ function PageRow(props: {
           href={props.page.view_url}
           target="_blank"
           rel="noopener noreferrer"
-          class="font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          class="font-medium text-txt hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
         >
           {props.page.title || '(untitled)'}
         </a>
       </td>
       <td class="px-4 py-3 hidden md:table-cell">
-        <span class="font-mono text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+        <span class="font-mono text-xs text-muted bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
           /{props.page.pagelink}
         </span>
       </td>
-      <td class="px-4 py-3 hidden lg:table-cell text-gray-500 dark:text-gray-400">
+      <td class="px-4 py-3 hidden lg:table-cell text-muted">
         {fmtDate(props.page.edited || props.page.created)}
       </td>
       <td class="px-4 py-3">
@@ -129,7 +129,7 @@ function PageRow(props: {
           when={!props.confirmingDelete}
           fallback={
             <span class="inline-flex gap-2 items-center">
-              <span class="text-xs text-gray-500 dark:text-gray-400">Delete?</span>
+              <span class="text-xs text-muted">Delete?</span>
               <button
                 onClick={props.onDelete}
                 class="text-xs px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700 transition-colors"
@@ -150,13 +150,13 @@ function PageRow(props: {
               href={props.page.view_url}
               target="_blank"
               rel="noopener noreferrer"
-              class="text-xs px-2 py-1 rounded border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              class="text-xs px-2 py-1 rounded border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-elevated transition-colors"
             >
               View
             </a>
          <a   
               href={props.page.edit_url}
-              class="text-xs px-2 py-1 rounded border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              class="text-xs px-2 py-1 rounded border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-elevated transition-colors"
             >
               Edit
             </a>
@@ -177,7 +177,7 @@ function EmptyState(props: { nick: string }) {
   return (
     <div class="text-center py-16 space-y-4">
       <div class="text-5xl">📄</div>
-      <p class="text-gray-500 dark:text-gray-400">No webpages yet.</p>
+      <p class="text-muted">No webpages yet.</p>
      <a 
         href={`/webpages/${props.nick}/new`}
         class="inline-block px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
@@ -190,14 +190,14 @@ function EmptyState(props: { nick: string }) {
 
 function WebpagesPlaceholder() {
   return (
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="bg-surface rounded-xl border border-rim overflow-hidden">
       <div class="divide-y divide-gray-100 dark:divide-gray-700">
         <For each={Array(5).fill(0)}>
           {() => (
             <div class="px-4 py-3 flex items-center gap-4 animate-pulse">
-              <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-48" />
-              <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32 hidden md:block" />
-              <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 ml-auto" />
+              <div class="h-4 bg-elevated rounded w-48" />
+              <div class="h-4 bg-elevated rounded w-32 hidden md:block" />
+              <div class="h-4 bg-elevated rounded w-24 ml-auto" />
             </div>
           )}
         </For>

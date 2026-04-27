@@ -44,7 +44,7 @@ const filterParams = () => ({
             loadArticles(nick(), { ...filterParams(), search: e.currentTarget.value || undefined });
           }}
           class="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm
-                 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                 bg-surface focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
@@ -66,7 +66,7 @@ const filterParams = () => ({
             <button
               onClick={() => loadMoreArticles(filterParams())}
               class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700
-                     bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                     bg-surface hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
               Load more
             </button>
@@ -89,13 +89,13 @@ function ArticleCard(props: { article: import("@/shared/types/post.types").Post;
   };
 
   return (
-    <article class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-2 hover:shadow-sm transition-shadow">
+    <article class="bg-surface rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-2 hover:shadow-sm transition-shadow">
       <A href={`/articles/${props.nick}/${props.article.uuid}`} class="block">
         <h2 class="text-lg font-semibold leading-snug hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
           {props.article.title || "(Untitled)"}
         </h2>
       </A>
-      <p class="text-sm text-gray-500 dark:text-gray-400">
+      <p class="text-sm text-muted">
         {new Date(props.article.created.replace(" ", "T") + "Z").toLocaleDateString(undefined, {
           year: "numeric", month: "long", day: "numeric",
         })}
@@ -121,8 +121,8 @@ function ArticlesPlaceholder(props: { count?: number }) {
   return (
     <For each={Array(props.count ?? 5).fill(0)}>
       {() => (
-        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-3 animate-pulse">
-          <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
+        <div class="bg-surface rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-3 animate-pulse">
+          <div class="h-5 bg-elevated rounded w-2/3" />
           <div class="h-3 bg-gray-100 dark:bg-gray-700/60 rounded w-1/4" />
           <div class="h-3 bg-gray-100 dark:bg-gray-700/60 rounded w-full" />
           <div class="h-3 bg-gray-100 dark:bg-gray-700/60 rounded w-5/6" />

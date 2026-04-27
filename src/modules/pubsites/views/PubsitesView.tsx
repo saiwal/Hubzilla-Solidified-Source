@@ -60,7 +60,7 @@ function HubCard(props: { site: PubSite }) {
           {initial()}
         </div>
         <div class="min-w-0">
-          <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate
+          <p class="text-sm font-semibold text-txt truncate
                     group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
             {props.site.urltext}
           </p>
@@ -115,8 +115,8 @@ export default function PubsitesView() {
     <div class="max-w-5xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Public Hubs</h1>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 max-w-2xl">
+        <h1 class="text-2xl font-bold text-txt">Public Hubs</h1>
+        <p class="mt-1 text-sm text-muted max-w-2xl">
           All hubs are interlinked — joining any gives you membership across the whole network.
         </p>
       </div>
@@ -128,15 +128,15 @@ export default function PubsitesView() {
           placeholder="Search hubs or location…"
           value={filter()}
           onInput={(e) => setFilter(e.currentTarget.value)}
-          class="flex-1 px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700
-                 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100
+          class="flex-1 px-3 py-2 text-sm rounded-lg border border-rim
+                 bg-white dark:bg-gray-900 text-txt
                  placeholder:text-gray-400 focus:outline-none focus:ring-2
                  focus:ring-indigo-500/40 focus:border-indigo-400 transition"
         />
         <select
           value={accessFilter()}
           onChange={(e) => setAccessFilter(e.currentTarget.value)}
-          class="px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700
+          class="px-3 py-2 text-sm rounded-lg border border-rim
                  bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300
                  focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition"
         >
@@ -148,7 +148,7 @@ export default function PubsitesView() {
         <select
           value={registerFilter()}
           onChange={(e) => setRegisterFilter(e.currentTarget.value)}
-          class="px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700
+          class="px-3 py-2 text-sm rounded-lg border border-rim
                  bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300
                  focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition"
         >

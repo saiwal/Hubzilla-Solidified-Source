@@ -10,7 +10,7 @@ export default function HelpTrigger() {
       class={`px-3 py-2 rounded-lg  hover:opacity-80 text-sm transition-colors
         ${helpMode()
           ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-          : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+          : "text-muted hover:bg-elevated"
         }`}
       title="Help mode"
     >

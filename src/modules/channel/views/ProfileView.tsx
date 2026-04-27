@@ -97,7 +97,7 @@ function ProfileCard(props: {
     p.likes || p.dislikes || p.contact || p.channels;
 
   return (
-    <div class="rounded-2xl overflow-hidden bg-white dark:bg-gray-800 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+    <div class="rounded-2xl overflow-hidden bg-surface border border-zinc-200 dark:border-zinc-800 shadow-sm">
       {/* Cover */}
       <div class="relative bg-linear-to-br from-blue-500 to-indigo-600" style="aspect-ratio: 3 / 1;">
         <Show when={p.channel_cover}>
@@ -125,7 +125,7 @@ function ProfileCard(props: {
         {/* Name + follow */}
         <div class="flex items-start justify-between gap-3">
           <div>
-            <h1 class="text-lg font-bold leading-tight text-gray-900 dark:text-gray-100">
+            <h1 class="text-lg font-bold leading-tight text-txt">
               {p.channel_name}
             </h1>
             <p class="text-sm text-zinc-500 dark:text-zinc-400">@{p.channel_address}</p>
@@ -291,7 +291,7 @@ function FollowButton(props: { nick: string; connected: boolean; isVisitor: bool
 
 function ProfileSkeleton() {
   return (
-    <div class="rounded-2xl overflow-hidden bg-white dark:bg-gray-800 border border-zinc-200 dark:border-zinc-800 shadow-sm animate-pulse">
+    <div class="rounded-2xl overflow-hidden bg-surface border border-zinc-200 dark:border-zinc-800 shadow-sm animate-pulse">
       <div class="h-36 bg-zinc-200 dark:bg-zinc-700" />
       <div class="pt-12 px-5 pb-5">
         <div class="flex items-start justify-between">

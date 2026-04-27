@@ -122,7 +122,7 @@ function ListRowPlaceholder() {
 }
 export default function ListView(props: { posts: ThreadNode[] }) {
   return (
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700/50
+    <div class="bg-surface rounded-xl border border-gray-100 dark:border-gray-700/50
                 shadow-sm overflow-hidden">
       <div class="flex items-center gap-3 px-4 py-2 border-b border-gray-100 dark:border-gray-700
                   bg-gray-50 dark:bg-gray-800/80 text-[11px] text-gray-400 font-medium uppercase tracking-wide">
@@ -142,7 +142,7 @@ export default function ListView(props: { posts: ThreadNode[] }) {
 // Export so DashboardView can use it
 export function ListPlaceholder(props: { count?: number }) {
   return (
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm overflow-hidden">
+    <div class="bg-surface rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm overflow-hidden">
       <For each={Array(props.count ?? 8).fill(0)}>
         {() => <ListRowPlaceholder />}
       </For>

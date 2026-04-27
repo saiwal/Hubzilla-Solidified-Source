@@ -9,7 +9,7 @@ import {
 } from "@/modules/network/store/store";
 export function FeedPlaceholder() {
   return (
-    <div class="animate-pulse bg-white dark:bg-gray-800 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 mb-4 shadow-sm">
+    <div class="animate-pulse bg-surface border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 mb-4 shadow-sm">
       <div class="flex items-start gap-3">
         <div class="w-11 h-11 rounded-full bg-zinc-200 dark:bg-zinc-700 shrink-0 ring-1 ring-zinc-200 dark:ring-zinc-700" />
         <div class="flex flex-col gap-1.5 pt-1">
@@ -39,7 +39,7 @@ function ActionBar(props: { post: ThreadNode }) {
         onClick={() => handleLike(p.mid)}
         class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
                transition-colors hover:bg-rose-50 dark:hover:bg-rose-900/20
-               text-gray-500 dark:text-gray-400 hover:text-rose-500"
+               text-muted hover:text-rose-500"
         classList={{
           "text-rose-500 bg-rose-50 dark:bg-rose-900/20": p.viewerLiked,
         }}
@@ -66,7 +66,7 @@ function ActionBar(props: { post: ThreadNode }) {
         onClick={() => handleDislike(p.mid)}
         class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
                transition-colors hover:bg-amber-50 dark:hover:bg-amber-900/20
-               text-gray-500 dark:text-gray-400 hover:text-amber-500"
+               text-muted hover:text-amber-500"
         classList={{
           "text-amber-500 bg-amber-50 dark:bg-amber-900/20": p.viewerDisliked,
         }}
@@ -93,7 +93,7 @@ function ActionBar(props: { post: ThreadNode }) {
         onClick={() => handleRepeat(p.mid)}
         class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
                transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-900/20
-               text-gray-500 dark:text-gray-400 hover:text-emerald-500"
+               text-muted hover:text-emerald-500"
         classList={{
           "text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20":
             p.viewerRepeated,
@@ -137,7 +137,7 @@ function CommentBox(props: { post: ThreadNode; onClose: () => void }) {
         rows={2}
         placeholder="Write a reply…"
         class="flex-1 text-sm rounded-lg border border-gray-200 dark:border-gray-600
-               bg-white dark:bg-gray-800 px-3 py-2 resize-none
+               bg-surface px-3 py-2 resize-none
                focus:outline-none focus:ring-2 focus:ring-blue-500/30"
       />
       <div class="flex flex-col gap-1">
@@ -149,7 +149,7 @@ function CommentBox(props: { post: ThreadNode; onClose: () => void }) {
         </button>
         <button
           onClick={props.onClose}
-          class="px-3 py-1 text-xs rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          class="px-3 py-1 text-xs rounded-lg text-gray-500 hover:bg-elevated transition-colors"
         >
           Cancel
         </button>
@@ -188,7 +188,7 @@ function ThreadedPost(props: { post: ThreadNode; depth?: number }) {
             <div class="flex items-baseline gap-2 flex-wrap">
               <a
                 href={props.post.authorUrl}
-                class="text-sm font-semibold text-gray-900 dark:text-gray-100 hover:underline"
+                class="text-sm font-semibold text-txt hover:underline"
               >
                 {props.post.authorName}
               </a>
@@ -252,7 +252,7 @@ export default function FeedView(props: { posts: ThreadNode[] }) {
       >
         {(post) => (
           <div
-            class="bg-white dark:bg-gray-800 rounded-xl mb-3 px-4 shadow-sm
+            class="bg-surface rounded-xl mb-3 px-4 shadow-sm
                       border border-gray-100 dark:border-gray-700/50"
           >
             <ThreadedPost post={post} />

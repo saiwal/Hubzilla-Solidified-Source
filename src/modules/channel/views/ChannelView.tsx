@@ -10,7 +10,7 @@ import ProfileView from "./ProfileView";
 
 export function PostPlaceholder() {
   return (
-    <div class="animate-pulse bg-white dark:bg-gray-800 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 mb-4 shadow-sm">
+    <div class="animate-pulse bg-surface border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 mb-4 shadow-sm">
       <div class="flex items-start gap-3">
         <div class="w-11 h-11 rounded-full bg-zinc-200 dark:bg-zinc-700 shrink-0 ring-1 ring-zinc-200 dark:ring-zinc-700" />
         <div class="flex flex-col gap-1.5 pt-1">

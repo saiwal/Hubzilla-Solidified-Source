@@ -37,7 +37,7 @@ export default function OnlineContactsWidget() {
   const [contacts] = createResource(fetchRecentContacts);
 
   return (
-    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+    <div class="bg-surface border border-rim rounded-xl p-4">
       <p class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">
         Recently active
       </p>

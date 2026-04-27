@@ -18,7 +18,7 @@ export default function PageView() {
 
   return (
     <div class="max-w-4xl mx-auto">
-      <div class="mb-4 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+      <div class="mb-4 flex items-center gap-2 text-sm text-muted">
         <a
           href={`/webpages/${params.nick}`}
           class="hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
@@ -31,14 +31,14 @@ export default function PageView() {
           href={hubzillaUrl()}
           target="_blank"
           rel="noopener noreferrer"
-          class="ml-auto text-xs px-2 py-1 rounded border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          class="ml-auto text-xs px-2 py-1 rounded border border-gray-200 dark:border-gray-600 hover:bg-elevated transition-colors"
         >
           Open original ↗
         </a>
       </div>
       <iframe
         src={hubzillaUrl()}
-        class="w-full min-h-screen rounded-xl border border-gray-200 dark:border-gray-700 bg-white"
+        class="w-full min-h-screen rounded-xl border border-rim bg-white"
         title="Page content"
       />
     </div>

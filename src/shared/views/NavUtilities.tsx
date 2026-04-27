@@ -14,7 +14,7 @@ export default function NavUtilities() {
         <A
           href="/siteinfo"
           title="Site info"
-          class="px-3 py-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:opacity-80 transition-colors"
+          class="px-3 py-2 rounded-lg text-muted hover:bg-elevated hover:opacity-80 transition-colors"
           activeClass="bg-[var(--nav-active)]"
         >
           <BiRegularInfoCircle class="w-5 h-5" />
@@ -22,7 +22,7 @@ export default function NavUtilities() {
         <A
           href="/pubsites"
           title="Public Hubs"
-          class="px-3 py-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:opacity-80 transition-colors"
+          class="px-3 py-2 rounded-lg text-muted hover:bg-elevated hover:opacity-80 transition-colors"
           activeClass="bg-[var(--nav-active)]"
         >
           <BiRegularGlobe class="w-5 h-5" />

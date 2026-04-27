@@ -32,13 +32,13 @@ export default function HelpOverlay() {
             onClick={exit}
           >
             <div
-              class="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl
-                     border border-gray-200 dark:border-gray-700 overflow-hidden"
+              class="w-full max-w-2xl bg-surface rounded-xl
+                     border border-rim overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               <div class="flex items-center justify-between px-5 py-4
-                          border-b border-gray-200 dark:border-gray-700">
-                <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          border-b border-rim">
+                <span class="text-sm font-medium text-txt">
                   {helpTarget()!.split(".").join(" › ")}
                 </span>
                 <button

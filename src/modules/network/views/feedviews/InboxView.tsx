@@ -112,14 +112,14 @@ function InlineThread(props: { thread: ThreadNode }) {
 
       {/* Reply composer */}
       <Show when={props.thread.iid}>
-        <div class="flex gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+        <div class="flex gap-2 mt-3 pt-3 border-t border-rim">
           <textarea
             value={replyBody()}
             onInput={(e) => setReplyBody(e.currentTarget.value)}
             rows={2}
             placeholder="Reply to thread…"
             class="flex-1 text-sm rounded-lg border border-gray-200 dark:border-gray-600
-                   bg-white dark:bg-gray-800 px-3 py-2 resize-none
+                   bg-surface px-3 py-2 resize-none
                    focus:outline-none focus:ring-2 focus:ring-blue-500/30"
           />
           <button
@@ -209,7 +209,7 @@ function InboxRow(props: { thread: ThreadNode }) {
         {/* Subject + preview */}
         <span class="flex-1 text-xs min-w-0 truncate">
           <Show when={p.title}>
-            <span class="font-medium text-gray-900 dark:text-gray-100 mr-1.5">
+            <span class="font-medium text-txt mr-1.5">
               {p.title}
             </span>
           </Show>
@@ -220,7 +220,7 @@ function InboxRow(props: { thread: ThreadNode }) {
         <Show when={replyCount > 0}>
           <span
             class="shrink-0 text-[11px] bg-gray-100 dark:bg-gray-700
-                       text-gray-500 dark:text-gray-400 rounded-full px-2 py-0.5"
+                       text-muted rounded-full px-2 py-0.5"
           >
             {replyCount}
           </span>
@@ -258,7 +258,7 @@ function InboxRow(props: { thread: ThreadNode }) {
 export default function InboxView(props: { posts: ThreadNode[] }) {
   return (
     <div
-      class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100
+      class="bg-surface rounded-xl border border-gray-100
                 dark:border-gray-700/50 shadow-sm overflow-hidden"
     >
       <div

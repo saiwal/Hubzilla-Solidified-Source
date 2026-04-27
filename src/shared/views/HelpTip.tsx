@@ -32,7 +32,7 @@ export default function HelpTip(props: Props) {
                bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600
                cursor-default flex-shrink-0"
       >
-        <span class="text-[10px] font-medium text-gray-500 dark:text-gray-400 select-none leading-none">
+        <span class="text-[10px] font-medium text-muted select-none leading-none">
           ?
         </span>
       </span>
@@ -41,8 +41,8 @@ export default function HelpTip(props: Props) {
         <Portal>
           <div
             class="fixed z-[9999] -translate-x-1/2 -translate-y-full w-48
-                   bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
-                   rounded-lg px-2.5 py-2 text-xs text-gray-500 dark:text-gray-400
+                   bg-surface border border-rim
+                   rounded-lg px-2.5 py-2 text-xs text-muted
                    leading-relaxed pointer-events-none"
             style={{ top: `${pos()!.top}px`, left: `${pos()!.left}px` }}
           >

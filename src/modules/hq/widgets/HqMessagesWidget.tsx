@@ -178,7 +178,7 @@ const MessageItem: Component<{ entry: MessageEntry }> = (props) => {
             </time>
           </div>
 
-          <p class="text-[13px] text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
+          <p class="text-[13px] text-muted line-clamp-2 leading-relaxed">
             {e.summary}
           </p>
 
@@ -218,11 +218,11 @@ const MessageItem: Component<{ entry: MessageEntry }> = (props) => {
 
 const SkeletonRow: Component = () => (
   <div class="px-4 py-3 flex items-start gap-3 animate-pulse">
-    <div class="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
+    <div class="w-9 h-9 rounded-full bg-elevated shrink-0" />
     <div class="flex-1 space-y-2">
-      <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/5" />
-      <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-4/5" />
-      <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/5" />
+      <div class="h-3 bg-elevated rounded w-2/5" />
+      <div class="h-3 bg-elevated rounded w-4/5" />
+      <div class="h-3 bg-elevated rounded w-3/5" />
     </div>
   </div>
 );
@@ -299,14 +299,14 @@ export default function HqMessagesWidget() {
 
   return (
     <div
-      class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700/70
+      class="bg-white dark:bg-gray-900 rounded-2xl border border-rim/70
              flex flex-col overflow-hidden  shadow-sm"
       style={{ height: "480px" }}
     >
       {/* ── Header ── */}
       <div class="px-4 pt-4 pb-0 shrink-0">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
+          <h3 class="text-sm font-semibold text-txt tracking-tight">
             Messages
           </h3>
           {/* Search input */}
@@ -353,7 +353,7 @@ export default function HqMessagesWidget() {
                     ${
                       isActive()
                         ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
-                        : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200"
+                        : "text-muted hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200"
                     }
                   `}
                   onClick={() => setActiveTab(tab.type)}

@@ -234,7 +234,7 @@ function NotifRow(props: {
         href={toRelativePath(props.n.notify_link)}
         onClick={handleClick}
         class="flex gap-2 items-start px-2 py-1.5 rounded-lg transition-colors
-               hover:bg-gray-100 dark:hover:bg-gray-700 flex-1 min-w-0"
+               hover:bg-elevated flex-1 min-w-0"
       >
         <Show when={props.n.photo}>
           <img src={props.n.photo} alt={props.n.name ?? ""}
@@ -327,7 +327,7 @@ function StreamSection(props: {
       <button
         onClick={toggle}
         class="w-full flex items-center justify-between px-3 py-2
-               bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700
+               bg-gray-50 dark:bg-gray-800 hover:bg-elevated
                transition-colors text-left"
       >
         <span class="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300">
@@ -367,7 +367,7 @@ function StreamSection(props: {
 
       {/* Body */}
       <Show when={open()}>
-        <div class="px-1 py-1 space-y-0.5 bg-white dark:bg-gray-800/50">
+        <div class="px-1 py-1 space-y-0.5 bg-surface/50">
           <Show when={isLoading()}>
             <div class="space-y-1 px-2 py-1">
               <For each={[1, 2, 3]}>
@@ -624,7 +624,7 @@ export default function NotificationsAside() {
                 onClick={markAllRead}
                 title="Mark all read"
                 class="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200
-                       hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                       hover:bg-elevated transition-colors"
               >
                 <MdFillDone_all class="w-4 h-4" />
               </button>
@@ -634,7 +634,7 @@ export default function NotificationsAside() {
               disabled={refreshing()}
               title="Refresh"
               class="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200
-                     hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-40"
+                     hover:bg-elevated transition-colors disabled:opacity-40"
             >
               <MdFillRefresh class={`w-4 h-4 ${refreshing() ? "animate-spin" : ""}`} />
             </button>

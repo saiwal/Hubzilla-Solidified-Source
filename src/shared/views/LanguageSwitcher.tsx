@@ -29,7 +29,7 @@ const LanguageSwitcher = () => {
           transition-colors
           ${open()
             ? "bg-gray-100 dark:bg-gray-700"
-            : "bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+            : "bg-surface hover:bg-gray-50 dark:hover:bg-gray-700"
           }`}
       >
         <span class="flex items-center gap-2">
@@ -46,7 +46,7 @@ const LanguageSwitcher = () => {
 
       <Show when={open()}>
         <div class="absolute bottom-full left-0 right-0 mb-1 z-50
-          bg-white dark:bg-gray-800
+          bg-surface
           border border-gray-200 dark:border-gray-600
           rounded-lg overflow-hidden shadow-lg">
           <For each={LOCALES}>
@@ -62,7 +62,7 @@ const LanguageSwitcher = () => {
                 <span class="text-base leading-none">{l.flag}</span>
                 <span>{l.label}</span>
                 <Show when={locale() === l.value}>
-                  <svg class="w-4 h-4 ml-auto text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-4 h-4 ml-auto text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                   </svg>
                 </Show>

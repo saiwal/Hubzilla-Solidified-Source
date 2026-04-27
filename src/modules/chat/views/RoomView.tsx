@@ -92,8 +92,8 @@ export default function RoomView() {
       {/* Message list */}
       <div
         ref={listRef}
-        class="flex-1 overflow-y-auto space-y-3 min-h-0 bg-white dark:bg-gray-800
-               rounded-lg border border-gray-200 dark:border-gray-700 p-4 mb-3"
+        class="flex-1 overflow-y-auto space-y-3 min-h-0 bg-surface
+               rounded-lg border border-rim p-4 mb-3"
       >
         <Show when={messages().length === 0}>
           <p class="text-gray-400 text-sm text-center">No messages yet.</p>
@@ -132,7 +132,7 @@ export default function RoomView() {
           onKeyDown={onKeyDown}
           placeholder="Type a message… (Enter to send)"
           rows={2}
-          class="flex-1 px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700
+          class="flex-1 px-3 py-2 text-sm rounded-lg border border-rim
                  bg-white dark:bg-gray-900 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <button

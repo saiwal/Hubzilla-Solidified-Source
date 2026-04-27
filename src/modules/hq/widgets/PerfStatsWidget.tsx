@@ -129,9 +129,9 @@ export default function PerfStatsPanel() {
   }
 
   return (
-    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
+    <div class="bg-surface rounded-xl p-5 border border-rim">
       <div class="flex items-center justify-between mb-4">
-        <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+        <p class="text-sm font-semibold text-muted uppercase tracking-wider">
           Server Performance
         </p>
         <Show when={latest() && !error()}>

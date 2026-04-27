@@ -38,7 +38,7 @@ export default function RoomListView() {
                 <A
                   href={`/chat/${params.nick}/${room.cr_id}`}
                   class="flex items-center justify-between px-4 py-3 rounded-lg
-                         bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
+                         bg-surface border border-rim
                          hover:border-blue-400 transition-colors"
                 >
                   <span class="font-medium">{room.cr_name}</span>
@@ -58,7 +58,7 @@ export default function RoomListView() {
             ref={nameRef}
             type="text"
             placeholder="New room name…"
-            class="flex-1 px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700
+            class="flex-1 px-3 py-2 text-sm rounded-lg border border-rim
                    bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <button

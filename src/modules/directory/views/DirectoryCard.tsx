@@ -16,7 +16,7 @@ const DirectoryCard: Component<Props> = (props) => {
 	}
   return (
     <div
-      class="flex flex-col rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden hover:shadow-md hover:-translate-y-px transition-all duration-200 cursor-pointer group"
+      class="flex flex-col rounded-xl border border-rim bg-surface overflow-hidden hover:shadow-md hover:-translate-y-px transition-all duration-200 cursor-pointer group"
       onClick={() => props.onSelect(e())}
     >
       {/* ── Avatar + identity row ── */}
@@ -31,7 +31,7 @@ const DirectoryCard: Component<Props> = (props) => {
         </div>
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-1.5 min-w-0">
-            <span class="font-semibold text-sm text-gray-900 dark:text-gray-100 truncate leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+            <span class="font-semibold text-sm text-txt truncate leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
               {e().name}
             </span>
             <Show when={e().common_count !== null && e().common_count! > 0}>
@@ -62,7 +62,7 @@ const DirectoryCard: Component<Props> = (props) => {
       {/* ── Blurb ── */}
       <div class="flex-1 px-4">
         <Show when={blurb()}>
-          <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
+          <p class="text-xs text-muted line-clamp-2 leading-relaxed">
             {blurb()}
           </p>
         </Show>
@@ -83,7 +83,7 @@ const DirectoryCard: Component<Props> = (props) => {
           <div class="flex flex-wrap gap-1">
             <For each={e().keywords.slice(0, 4)}>
               {(kw) => (
-                <span class="inline-block px-1.5 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+                <span class="inline-block px-1.5 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700 text-muted">
                   {kw}
                 </span>
               )}
@@ -116,7 +116,7 @@ const DirectoryCard: Component<Props> = (props) => {
          <a 
             href={e().ignore_url!}
             title="Ignore"
-            class="p-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="p-1.5 rounded-lg border border-rim text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-elevated transition-colors"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

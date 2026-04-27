@@ -66,7 +66,7 @@ export default function ChannelTabBar(props: { nick: () => string | undefined })
   return (
     <Show when={!tabs.loading && (tabs()?.length ?? 0) > 0}>
       <nav
-        class="flex items-end gap-0.5 border-b border-gray-200 dark:border-gray-700
+        class="flex items-end gap-0.5 border-b border-rim
                overflow-x-auto scrollbar-none -mx-4 px-4 lg:-mx-6 lg:px-6 mb-4"
         aria-label="Channel sections"
       >

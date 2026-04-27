@@ -19,7 +19,7 @@ export default function ViewSwitcher() {
           <button
             class={`px-3 py-1.5 text-sm rounded-lg transition-colors
               ${viewMode() === v.id
-                ? 'bg-gray-200 dark:bg-gray-700 font-medium'
+                ? 'bg-elevated font-medium'
                 : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500'}`}
 						title={v.label}
             onClick={() => changeView(v.id)}

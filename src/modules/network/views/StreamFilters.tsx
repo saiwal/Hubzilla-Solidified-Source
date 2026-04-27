@@ -171,7 +171,7 @@ export default function StreamFilters() {
           onClick={() => loadNetwork()}
           disabled={loading()}
           title="Refresh"
-          class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+          class="p-2 rounded-lg hover:bg-elevated transition-colors disabled:opacity-50"
         >
           <span class={loading() ? "animate-spin inline-block" : ""}>
             <MdFillRefresh size={18} />
@@ -179,7 +179,7 @@ export default function StreamFilters() {
         </button>
 
         {/* Order tabs */}
-        <div class="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden shrink-0">
+        <div class="flex rounded-lg border border-rim overflow-hidden shrink-0">
           {ORDER_OPTIONS.map((opt) => (
             <button
               onClick={() => setOrderAndApply(opt.value)}
@@ -187,7 +187,7 @@ export default function StreamFilters() {
                 ${
                   order() === opt.value
                     ? "bg-blue-600 text-white"
-                    : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    : "bg-surface text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                 }`}
             >
               {opt.label}
@@ -234,8 +234,8 @@ export default function StreamFilters() {
               <Show when={connSuggestOpen() && suggestions().length > 0}>
                 <ul
                   class="absolute z-50 top-full mt-1 left-0 w-64 max-h-60 overflow-y-auto
-                           rounded-lg border border-gray-200 dark:border-gray-700
-                           bg-white dark:bg-gray-800 shadow-lg py-1"
+                           rounded-lg border border-rim
+                           bg-surface shadow-lg py-1"
                 >
                   <For each={suggestions()}>
                     {(c) => (
@@ -249,11 +249,11 @@ export default function StreamFilters() {
                             <img
                               src={c.photo}
                               alt=""
-                              class="w-6 h-6 rounded-full shrink-0 object-cover bg-gray-200 dark:bg-gray-700"
+                              class="w-6 h-6 rounded-full shrink-0 object-cover bg-elevated"
                             />
                           </Show>
                           <span class="flex flex-col min-w-0">
-                            <span class="truncate font-medium text-gray-900 dark:text-gray-100">
+                            <span class="truncate font-medium text-txt">
                               {c.name}
                             </span>
                             <span class="truncate text-xs text-gray-400">
@@ -297,8 +297,8 @@ export default function StreamFilters() {
             placeholder="Search…"
             value={search()}
             onInput={(e) => onSearchInput(e.currentTarget.value)}
-            class="pl-8 pr-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700
-                   bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+            class="pl-8 pr-3 py-1.5 text-sm rounded-lg border border-rim
+                   bg-surface text-txt
                    placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-40"
           />
         </div>
@@ -310,7 +310,7 @@ export default function StreamFilters() {
             ${
               expanded() || hasAdvanced()
                 ? "border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
-                : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+                : "border-rim text-gray-600 dark:text-gray-300 bg-surface hover:bg-gray-50 dark:hover:bg-gray-700"
             }`}
         >
           <MdFillFilter_list size={17} />
@@ -322,7 +322,7 @@ export default function StreamFilters() {
         <Show when={hasAnyFilter()}>
           <button
             onClick={clearAll}
-            class="px-3 py-1.5 text-sm rounded-lg text-gray-500 dark:text-gray-400
+            class="px-3 py-1.5 text-sm rounded-lg text-muted
                    hover:text-red-500 dark:hover:text-red-400 transition-colors"
           >
             ✕ Clear
@@ -334,10 +334,10 @@ export default function StreamFilters() {
       <Show when={expanded()}>
         <div
           class="flex flex-wrap gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/60
-                    border border-gray-200 dark:border-gray-700"
+                    border border-rim"
         >
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">
+            <span class="text-xs text-muted font-medium">
               Tag
             </span>
             <input
@@ -354,7 +354,7 @@ export default function StreamFilters() {
           </label>
 
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">
+            <span class="text-xs text-muted font-medium">
               From date
             </span>
             <input
@@ -369,7 +369,7 @@ export default function StreamFilters() {
           </label>
 
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">
+            <span class="text-xs text-muted font-medium">
               To date
             </span>
             <input
@@ -384,7 +384,7 @@ export default function StreamFilters() {
           </label>
 
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">
+            <span class="text-xs text-muted font-medium">
               Min Affinity
             </span>
             <input
@@ -399,7 +399,7 @@ export default function StreamFilters() {
           </label>
 
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">
+            <span class="text-xs text-muted font-medium">
               Max Affinity
             </span>
             <input
@@ -418,8 +418,8 @@ export default function StreamFilters() {
   );
 }
 
-const inputCls = `px-2.5 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700
-  bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100
+const inputCls = `px-2.5 py-1.5 text-sm rounded-lg border border-rim
+  bg-white dark:bg-gray-900 text-txt
   placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500`;
 
 function ToggleChip(props: {
@@ -434,7 +434,7 @@ function ToggleChip(props: {
         ${
           props.active
             ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-            : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+            : "border-rim bg-surface text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
         }`}
     >
       {props.label}
