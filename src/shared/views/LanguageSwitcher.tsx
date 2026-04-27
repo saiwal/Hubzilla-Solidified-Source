@@ -1,18 +1,17 @@
-import { useI18n, LOCALES, type Locale} from "@/i18n/index";
+import { useI18n, LOCALES, type Locale } from "@/i18n/index";
 import { createSignal, For, Show, onCleanup } from "solid-js";
 
 const LanguageSwitcher = () => {
   const { locale, setLocale } = useI18n();
   const [open, setOpen] = createSignal(false);
 
-  const current = () => LOCALES.find(l => l.value === locale());
+  const current = () => LOCALES.find((l) => l.value === locale());
 
   const handleSelect = (value: Locale) => {
     setLocale(value);
     setOpen(false);
   };
 
-  // Close on outside click
   let ref: HTMLDivElement | undefined;
   const onDocClick = (e: MouseEvent) => {
     if (ref && !ref.contains(e.target as Node)) setOpen(false);
@@ -21,54 +20,44 @@ const LanguageSwitcher = () => {
   onCleanup(() => document.removeEventListener("click", onDocClick));
 
   return (
-    <div ref={ref} class="relative mt-2">
+    <div ref={ref} class="relative">
       <button
-        onClick={(e) => { e.stopPropagation(); setOpen(o => !o); }}
-        class={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm
-          border border-gray-200 dark:border-gray-600
-          transition-colors
-          ${open()
-            ? "bg-gray-100 dark:bg-gray-700"
-            : "bg-surface hover:bg-gray-50 dark:hover:bg-gray-700"
-          }`}
+        onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
+        title="Language"
+        class={`p-2 rounded-lg transition-colors text-muted hover:bg-elevated hover:text-txt
+          ${open() ? "bg-elevated text-txt" : ""}`}
       >
-        <span class="flex items-center gap-2">
-          <span class="text-base leading-none">{current()?.flag}</span>
-          <span>{current()?.label}</span>
-        </span>
-        <svg
-          class={`w-4 h-4 text-gray-400 transition-transform duration-200 ${open() ? "rotate-180" : ""}`}
-          fill="none" stroke="currentColor" viewBox="0 0 24 24"
-        >
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-        </svg>
+        <span class="text-base leading-none">{current()?.flag ?? "🌐"}</span>
       </button>
 
       <Show when={open()}>
-        <div class="absolute bottom-full left-0 right-0 mb-1 z-50
-          bg-surface
-          border border-gray-200 dark:border-gray-600
-          rounded-lg overflow-hidden shadow-lg">
-          <For each={LOCALES}>
-            {(l) => (
-              <button
-                onClick={() => handleSelect(l.value)}
-                class={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors
-                  ${locale() === l.value
-                    ? "bg-gray-100 dark:bg-gray-700 font-medium"
-                    : "hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-                  }`}
-              >
-                <span class="text-base leading-none">{l.flag}</span>
-                <span>{l.label}</span>
-                <Show when={locale() === l.value}>
-                  <svg class="w-4 h-4 ml-auto text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </Show>
-              </button>
-            )}
-          </For>
+        <div class="absolute bottom-full left-0 mb-1 z-50 w-44
+                    bg-surface border border-rim rounded-lg shadow-lg overflow-hidden">
+          <div class="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted border-b border-rim">
+            Language
+          </div>
+          <div class="py-1">
+            <For each={LOCALES}>
+              {(l) => (
+                <button
+                  onClick={() => handleSelect(l.value)}
+                  class={`w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left transition-colors
+                    ${locale() === l.value
+                      ? "bg-elevated text-txt font-medium"
+                      : "text-muted hover:bg-elevated hover:text-txt"
+                    }`}
+                >
+                  <span class="text-base leading-none">{l.flag}</span>
+                  <span>{l.label}</span>
+                  <Show when={locale() === l.value}>
+                    <svg class="w-3.5 h-3.5 ml-auto shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </Show>
+                </button>
+              )}
+            </For>
+          </div>
         </div>
       </Show>
     </div>
