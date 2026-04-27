@@ -1,22 +1,32 @@
 import { createSignal, onMount } from "solid-js";
+import type { ThemeId } from "../types/theme.types";
 
-const [theme, setTheme] = createSignal<"light" | "dark">("light");
+const [theme, setTheme] = createSignal<ThemeId>("light");
+
+function applyTheme(id: ThemeId) {
+  document.documentElement.setAttribute("data-theme", id);
+  // keep the `dark` class for any legacy dark: Tailwind variants still in use
+  const darkThemes: ThemeId[] = [
+    "dark", "nord", "dracula", "monokai",
+    "gruvbox-dark", "catppuccin-mocha", "solarized-dark", "tokyo-night",
+  ];
+  document.documentElement.classList.toggle("dark", darkThemes.includes(id));
+}
 
 export function useTheme() {
   onMount(() => {
-    const stored = localStorage.getItem("theme");
+    const stored = localStorage.getItem("theme") as ThemeId | null;
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const isDark = stored ? stored === "dark" : prefersDark;
-    setTheme(isDark ? "dark" : "light");
-    document.documentElement.classList.toggle("dark", isDark);
+    const resolved: ThemeId = stored ?? (prefersDark ? "dark" : "light");
+    setTheme(resolved);
+    applyTheme(resolved);
   });
 
-  const toggle = () => {
-    const next = theme() === "dark" ? "light" : "dark";
-    setTheme(next);
-    document.documentElement.classList.toggle("dark", next === "dark");
-    localStorage.setItem("theme", next);
+  const switchTheme = (id: ThemeId) => {
+    setTheme(id);
+    applyTheme(id);
+    localStorage.setItem("theme", id);
   };
 
-  return { theme, toggle };
+  return { theme, switchTheme };
 }

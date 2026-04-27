@@ -16,25 +16,6 @@ import {
 import { useOnlineStatus } from "./shared/lib/useOnlineStatus";
 import NavUtilities from "./shared/views/NavUtilities";
 
-const NAV_VARS = `
-  :root {
-    --nav-text:        #6b7280;
-    --nav-text-active: #111827;
-    --nav-hover:       rgba(0,0,0,0.05);
-    --nav-active:      #e5e7eb;
-    --nav-bg:          #ffffff;
-    --nav-border:      #e5e7eb;
-  }
-  .dark {
-    --nav-text:        #9ca3af;
-    --nav-text-active: #f9fafb;
-    --nav-hover:       rgba(255,255,255,0.07);
-    --nav-active:      #1e293b;
-    --nav-bg:          #0f172a;
-    --nav-border:      #1e293b;
-  }
-`;
-
 // ── Mobile bottom tab ─────────────────────────────────────────────────────────
 function MobileTab(props: {
   href: string | (() => string);
@@ -51,9 +32,9 @@ function MobileTab(props: {
       href={href()}
       end={href() === "/"}
       class="flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl
-             text-[var(--nav-text)] hover:text-[var(--nav-text-active)]
-             hover:bg-[var(--nav-hover)] transition-colors min-w-0"
-      activeClass="!text-[var(--nav-text-active)]"
+             text-muted hover:text-txt hover:bg-elevated
+             transition-colors min-w-0"
+      activeClass="!text-txt"
     >
       <span class="flex items-center">{getNavIcon(props.icon, 22)}</span>
       <span class="text-[10px] font-medium leading-none truncate max-w-[52px]">
@@ -88,6 +69,7 @@ const Layout: ParentComponent = (props) => {
     setRightOpen(false);
     setMoreOpen(false);
   };
+
   const isOwner = () => viewerRole() === "owner";
   const isLocalUser = () =>
     viewerRole() === "owner" || viewerRole() === "local";
@@ -97,52 +79,49 @@ const Layout: ParentComponent = (props) => {
   const moreItems = () => [...navItems().slice(BOTTOM_LIMIT), ...actionItems()];
 
   return (
-    <div class="fixed inset-0 bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
-      <style>{NAV_VARS}</style>
+    <div class="fixed inset-0 bg-base text-txt">
       <HelpOverlay />
 
       <div class="flex h-full flex-col">
+        {/* ── Offline banner ── */}
         <Show when={!online()}>
           <div
             class="fixed top-0 inset-x-0 z-[100] flex items-center justify-center gap-2
-              bg-amber-500 text-amber-950 text-sm font-medium py-1.5 select-none"
+                   bg-amber-500 text-amber-950 text-sm font-medium py-1.5 select-none"
           >
-            <svg
-              class="w-4 h-4 shrink-0"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
+            <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path
                 fill-rule="evenodd"
                 d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58
-        9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92z
-        M11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                   9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92z
+                   M11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
                 clip-rule="evenodd"
               />
             </svg>
             Offline — showing cached content
           </div>
         </Show>
+
         <RemoteAuthBanner role={viewerRole()} subjectNick={subjectNick()} />
 
         <div class="flex flex-1 min-h-0">
           {/* ═══════════════════════════════════════════════════════
-              DESKTOP LEFT SIDEBAR — fixed width, always visible
+              DESKTOP LEFT SIDEBAR
           ═══════════════════════════════════════════════════════ */}
           <aside
             class="hidden lg:flex flex-col w-56 shrink-0 relative z-20
-                        bg-[var(--nav-bg)] border-r border-[var(--nav-border)] py-3 px-2"
+                   bg-surface border-r border-rim py-3 px-2"
           >
             {/* Brand */}
             <div class="flex items-center gap-3 px-1 mb-5 h-9">
               <span
-                class="shrink-0 w-8 h-8 rounded-xl bg-gray-900 dark:bg-white
-                           flex items-center justify-center
-                           text-white dark:text-gray-900 text-[11px] font-bold select-none"
+                class="shrink-0 w-8 h-8 rounded-xl bg-txt
+                       flex items-center justify-center
+                       text-base text-[11px] font-bold select-none"
               >
                 Hz
               </span>
-              <span class="text-sm font-semibold tracking-tight text-gray-900 dark:text-white">
+              <span class="text-sm font-semibold tracking-tight text-txt">
                 Hubzilla
               </span>
             </div>
@@ -151,26 +130,18 @@ const Layout: ParentComponent = (props) => {
             <nav class="flex-1 flex flex-col gap-0.5 overflow-y-auto">
               <For each={navItems()}>
                 {(item) => (
-                  <NavItem
-                    href={item.href}
-                    label={item.label}
-                    icon={item.icon}
-                  />
+                  <NavItem href={item.href} label={item.label} icon={item.icon} />
                 )}
               </For>
             </nav>
 
-            <div class="my-2 h-px bg-[var(--nav-border)]" />
+            <div class="my-2 h-px bg-rim" />
 
             {/* Action items */}
             <div class="flex flex-col gap-0.5">
               <For each={actionItems()}>
                 {(item) => (
-                  <NavItem
-                    href={item.href}
-                    label={item.label}
-                    icon={item.icon}
-                  />
+                  <NavItem href={item.href} label={item.label} icon={item.icon} />
                 )}
               </For>
             </div>
@@ -181,8 +152,7 @@ const Layout: ParentComponent = (props) => {
               </div>
             </Show>
 
-            {/* Utilities */}
-						<NavUtilities />
+            <NavUtilities />
           </aside>
 
           {/* ═══════════════════════════════════════════════════════
@@ -204,16 +174,11 @@ const Layout: ParentComponent = (props) => {
                 onClick={() => mainRef.scrollTo({ top: 0, behavior: "smooth" })}
                 class="sticky bottom-6 float-right mr-2 z-10
                        w-9 h-9 rounded-full flex items-center justify-center
-                       bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
+                       bg-elevated border border-rim
                        shadow hover:shadow-md transition-all"
                 title="Scroll to top"
               >
-                <svg
-                  class="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -230,20 +195,20 @@ const Layout: ParentComponent = (props) => {
           ═══════════════════════════════════════════════════════ */}
           <aside
             class={`
-            fixed inset-y-0 right-0 z-40 w-72 shrink-0 p-4 overflow-y-auto space-y-4
-            bg-[var(--nav-bg)] border-l border-[var(--nav-border)]
-            transform transition-transform duration-300 ease-in-out
-            xl:relative xl:translate-x-0 xl:block
-            ${rightOpen() ? "translate-x-0" : "translate-x-full"}
-          `}
+              fixed inset-y-0 right-0 z-40 w-72 shrink-0 p-4 overflow-y-auto space-y-4
+              bg-surface border-l border-rim
+              transform transition-transform duration-300 ease-in-out
+              xl:relative xl:translate-x-0 xl:block
+              ${rightOpen() ? "translate-x-0" : "translate-x-full"}
+            `}
           >
             <div class="flex items-center justify-between xl:hidden mb-2">
-              <span class="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+              <span class="text-[10px] font-semibold uppercase tracking-widest text-muted">
                 Panel
               </span>
               <button
                 onClick={() => setRightOpen(false)}
-                class="p-1 rounded-lg hover:bg-[var(--nav-hover)] transition"
+                class="p-1 rounded-lg hover:bg-elevated transition"
               >
                 <MdFillClose size={18} />
               </button>
@@ -267,23 +232,23 @@ const Layout: ParentComponent = (props) => {
           ═══════════════════════════════════════════════════════ */}
           <div
             class={`
-            fixed left-0 right-0 z-40 lg:hidden
-            bg-[var(--nav-bg)] border-t border-[var(--nav-border)]
-            rounded-t-2xl shadow-2xl px-4 pt-3 pb-6
-            transform transition-transform duration-300 ease-in-out
-            max-h-[72vh] overflow-y-auto
-            ${moreOpen() ? "translate-y-0 bottom-16" : "translate-y-full bottom-16"}
-          `}
+              fixed left-0 right-0 z-40 lg:hidden
+              bg-surface border-t border-rim
+              rounded-t-2xl shadow-2xl px-4 pt-3 pb-6
+              transform transition-transform duration-300 ease-in-out
+              max-h-[72vh] overflow-y-auto
+              ${moreOpen() ? "translate-y-0 bottom-16" : "translate-y-full bottom-16"}
+            `}
           >
-            <div class="mx-auto mb-4 w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
+            <div class="mx-auto mb-4 w-10 h-1 rounded-full bg-rim" />
 
             <div class="flex items-center justify-between mb-3">
-              <span class="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+              <span class="text-[10px] font-semibold uppercase tracking-widest text-muted">
                 More
               </span>
               <button
                 onClick={() => setMoreOpen(false)}
-                class="p-1.5 rounded-lg hover:bg-[var(--nav-hover)] transition"
+                class="p-1.5 rounded-lg hover:bg-elevated transition"
               >
                 <MdFillClose size={16} />
               </button>
@@ -293,35 +258,25 @@ const Layout: ParentComponent = (props) => {
               <For each={moreItems()}>
                 {(item) => (
                   <span onClick={closeAll}>
-                    <NavItem
-                      href={item.href}
-                      label={item.label}
-                      icon={item.icon}
-                    />
+                    <NavItem href={item.href} label={item.label} icon={item.icon} />
                   </span>
                 )}
               </For>
             </nav>
-						<NavUtilities />
+            <NavUtilities />
           </div>
 
           {/* ═══════════════════════════════════════════════════════
               MOBILE — Bottom Tab Bar
           ═══════════════════════════════════════════════════════ */}
           <nav
-            class="
-            fixed bottom-0 left-0 right-0 z-50 h-16 lg:hidden
-            bg-[var(--nav-bg)] border-t border-[var(--nav-border)]
-            flex items-center px-2 gap-1
-          "
+            class="fixed bottom-0 left-0 right-0 z-50 h-16 lg:hidden
+                   bg-surface border-t border-rim
+                   flex items-center px-2 gap-1"
           >
             <For each={bottomItems()}>
               {(item) => (
-                <MobileTab
-                  href={item.href}
-                  label={item.label}
-                  icon={item.icon}
-                />
+                <MobileTab href={item.href} label={item.label} icon={item.icon} />
               )}
             </For>
 
@@ -333,10 +288,9 @@ const Layout: ParentComponent = (props) => {
                 }}
                 class={`flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl
                         text-[10px] font-medium transition-colors min-w-0
-                        ${
-                          moreOpen()
-                            ? "text-[var(--nav-text-active)] bg-[var(--nav-active)]"
-                            : "text-[var(--nav-text)] hover:bg-[var(--nav-hover)]"
+                        ${moreOpen()
+                          ? "text-txt bg-elevated"
+                          : "text-muted hover:bg-elevated"
                         }`}
               >
                 <MdFillMore_horiz size={22} />
@@ -351,10 +305,9 @@ const Layout: ParentComponent = (props) => {
               }}
               class={`flex-none px-2 flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl
                       text-[10px] font-medium transition-colors
-                      ${
-                        rightOpen()
-                          ? "text-[var(--nav-text-active)] bg-[var(--nav-active)]"
-                          : "text-[var(--nav-text)] hover:bg-[var(--nav-hover)]"
+                      ${rightOpen()
+                        ? "text-txt bg-elevated"
+                        : "text-muted hover:bg-elevated"
                       }`}
             >
               <span
@@ -370,7 +323,7 @@ const Layout: ParentComponent = (props) => {
           <button
             onClick={() => setRightOpen((o) => !o)}
             class="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full shadow-lg
-                   bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
+                   bg-elevated border border-rim
                    hidden lg:flex xl:hidden items-center justify-center
                    hover:shadow-xl transition-all"
           >

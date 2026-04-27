@@ -1,0 +1,228 @@
+/* ── Default (light) ─────────────────────────────────────────── */
+:root,
+[data-theme="light"] {
+  --color-base:     #eeeee8;
+  --color-surface:  #e4e4de;
+  --color-elevated: #ffffff;
+  --color-overlay:  #f7f7f4;
+
+  --color-txt:      #1c1c1a;
+  --color-muted:    #6b6b66;
+  --color-subtle:   #9b9b95;
+
+  --color-rim:      #ccccc5;
+  --color-rim-strong: #b0b0a8;
+
+  --color-accent:       #4f6ef7;
+  --color-accent-muted: #dde2fd;
+  --color-accent-txt:   #2a3ebf;
+}
+
+/* ── Dark ────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --color-base:     #18181b;
+  --color-surface:  #232329;
+  --color-elevated: #2e2e36;
+  --color-overlay:  #131316;
+
+  --color-txt:      #e8e8e2;
+  --color-muted:    #8888a0;
+  --color-subtle:   #55556a;
+
+  --color-rim:      #3a3a48;
+  --color-rim-strong: #4e4e60;
+
+  --color-accent:       #7c8ff5;
+  --color-accent-muted: #1e2352;
+  --color-accent-txt:   #b0baff;
+}
+
+/* ── Nord ────────────────────────────────────────────────────── */
+[data-theme="nord"] {
+  --color-base:     #2e3440;
+  --color-surface:  #3b4252;
+  --color-elevated: #434c5e;
+  --color-overlay:  #242932;
+
+  --color-txt:      #eceff4;
+  --color-muted:    #9099a8;
+  --color-subtle:   #616b78;
+
+  --color-rim:      #4c566a;
+  --color-rim-strong: #5e6a7e;
+
+  --color-accent:       #88c0d0;
+  --color-accent-muted: #2d3f4f;
+  --color-accent-txt:   #81a1c1;
+}
+
+/* ── Dracula ─────────────────────────────────────────────────── */
+[data-theme="dracula"] {
+  --color-base:     #282a36;
+  --color-surface:  #21222c;
+  --color-elevated: #44475a;
+  --color-overlay:  #1a1b24;
+
+  --color-txt:      #f8f8f2;
+  --color-muted:    #6272a4;
+  --color-subtle:   #44475a;
+
+  --color-rim:      #44475a;
+  --color-rim-strong: #565971;
+
+  --color-accent:       #bd93f9;
+  --color-accent-muted: #2e1f4a;
+  --color-accent-txt:   #caa9fa;
+}
+
+/* ── Monokai ─────────────────────────────────────────────────── */
+[data-theme="monokai"] {
+  --color-base:     #272822;
+  --color-surface:  #1e1f1c;
+  --color-elevated: #3e3d32;
+  --color-overlay:  #1a1b16;
+
+  --color-txt:      #f8f8f2;
+  --color-muted:    #75715e;
+  --color-subtle:   #4e4d43;
+
+  --color-rim:      #3e3d32;
+  --color-rim-strong: #524f42;
+
+  --color-accent:       #a6e22e;
+  --color-accent-muted: #1e2a10;
+  --color-accent-txt:   #b8f04a;
+}
+
+/* ── Gruvbox Dark ────────────────────────────────────────────── */
+[data-theme="gruvbox-dark"] {
+  --color-base:     #282828;
+  --color-surface:  #1d2021;
+  --color-elevated: #3c3836;
+  --color-overlay:  #141413;
+
+  --color-txt:      #ebdbb2;
+  --color-muted:    #a89984;
+  --color-subtle:   #665c54;
+
+  --color-rim:      #504945;
+  --color-rim-strong: #665c54;
+
+  --color-accent:       #d79921;
+  --color-accent-muted: #3a2e0a;
+  --color-accent-txt:   #fabd2f;
+}
+
+/* ── Gruvbox Light ───────────────────────────────────────────── */
+[data-theme="gruvbox-light"] {
+  --color-base:     #f2e5bc;
+  --color-surface:  #ebdbb2;
+  --color-elevated: #fbf1c7;
+  --color-overlay:  #f9f5d7;
+
+  --color-txt:      #3c3836;
+  --color-muted:    #7c6f64;
+  --color-subtle:   #a89984;
+
+  --color-rim:      #d5c4a1;
+  --color-rim-strong: #bdae93;
+
+  --color-accent:       #d79921;
+  --color-accent-muted: #f0e0a0;
+  --color-accent-txt:   #b57614;
+}
+
+/* ── Catppuccin Latte (light) ────────────────────────────────── */
+[data-theme="catppuccin-latte"] {
+  --color-base:     #eff1f5;
+  --color-surface:  #e6e9ef;
+  --color-elevated: #ffffff;
+  --color-overlay:  #dce0e8;
+
+  --color-txt:      #4c4f69;
+  --color-muted:    #7c7f93;
+  --color-subtle:   #acafc4;
+
+  --color-rim:      #ccd0da;
+  --color-rim-strong: #bcc0cc;
+
+  --color-accent:       #1e66f5;
+  --color-accent-muted: #d4e0fb;
+  --color-accent-txt:   #1e66f5;
+}
+
+/* ── Catppuccin Mocha (dark) ─────────────────────────────────── */
+[data-theme="catppuccin-mocha"] {
+  --color-base:     #1e1e2e;
+  --color-surface:  #181825;
+  --color-elevated: #313244;
+  --color-overlay:  #11111b;
+
+  --color-txt:      #cdd6f4;
+  --color-muted:    #6c7086;
+  --color-subtle:   #45475a;
+
+  --color-rim:      #313244;
+  --color-rim-strong: #45475a;
+
+  --color-accent:       #89b4fa;
+  --color-accent-muted: #1a2550;
+  --color-accent-txt:   #b4befe;
+}
+
+/* ── Solarized Light ─────────────────────────────────────────── */
+[data-theme="solarized-light"] {
+  --color-base:     #fdf6e3;
+  --color-surface:  #eee8d5;
+  --color-elevated: #ffffff;
+  --color-overlay:  #f5efdc;
+
+  --color-txt:      #657b83;
+  --color-muted:    #93a1a1;
+  --color-subtle:   #b5bfbf;
+
+  --color-rim:      #d3cbb8;
+  --color-rim-strong: #bfb8a4;
+
+  --color-accent:       #268bd2;
+  --color-accent-muted: #d4eaf8;
+  --color-accent-txt:   #1a6fa8;
+}
+
+/* ── Solarized Dark ──────────────────────────────────────────── */
+[data-theme="solarized-dark"] {
+  --color-base:     #002b36;
+  --color-surface:  #073642;
+  --color-elevated: #0d4050;
+  --color-overlay:  #00212a;
+
+  --color-txt:      #839496;
+  --color-muted:    #586e75;
+  --color-subtle:   #3a5560;
+
+  --color-rim:      #0d4050;
+  --color-rim-strong: #1a5568;
+
+  --color-accent:       #2aa198;
+  --color-accent-muted: #0a2e2c;
+  --color-accent-txt:   #3dd6cb;
+}
+
+/* ── Tokyo Night ─────────────────────────────────────────────── */
+[data-theme="tokyo-night"] {
+  --color-base:     #1a1b26;
+  --color-surface:  #16161e;
+  --color-elevated: #24283b;
+  --color-overlay:  #13131a;
+
+  --color-txt:      #c0caf5;
+  --color-muted:    #565f89;
+  --color-subtle:   #3b4173;
+
+  --color-rim:      #292e42;
+  --color-rim-strong: #3b4173;
+
+  --color-accent:       #7aa2f7;
+  --color-accent-muted: #1a2050;
+  --color-accent-txt:   #a9b8f8;
+}

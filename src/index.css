@@ -1,8 +1,9 @@
 @import "tailwindcss";
+@import "./styles/theme.css";
 @plugin "@tailwindcss/typography";
 
 /* Enable class-based dark mode */
-@custom-variant dark (&:where(.dark, .dark *));
+/* @custom-variant dark (&:where(.dark, .dark *)); */
 @layer base {
   .post-body {
     overflow-x: hidden;
@@ -11,4 +12,26 @@
     overflow-x: auto;
     max-width: 100%;
   }
+}
+
+@theme {
+  /* backgrounds */
+  --color-base:     var(--color-base);
+  --color-surface:  var(--color-surface);
+  --color-elevated: var(--color-elevated);
+  --color-overlay:  var(--color-overlay);
+
+  /* text */
+  --color-txt:    var(--color-txt);
+  --color-muted:  var(--color-muted);
+  --color-subtle: var(--color-subtle);
+
+  /* borders */
+  --color-rim:        var(--color-rim);
+  --color-rim-strong: var(--color-rim-strong);
+
+  /* accent */
+  --color-accent:       var(--color-accent);
+  --color-accent-muted: var(--color-accent-muted);
+  --color-accent-txt:   var(--color-accent-txt);
 }

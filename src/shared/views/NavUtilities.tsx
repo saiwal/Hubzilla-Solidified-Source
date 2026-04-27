@@ -8,8 +8,8 @@ export default function NavUtilities() {
   return (
     <div class="mt-3 pt-2 border-t border-[var(--nav-border)] flex flex-col gap-1">
       <LanguageSwitcher />
+      <ThemeToggle />
       <div class="flex gap-1 px-1">
-        <ThemeToggle />
         <HelpTrigger />
         <A
           href="/siteinfo"
