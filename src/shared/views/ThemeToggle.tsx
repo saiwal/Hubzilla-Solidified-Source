@@ -6,7 +6,7 @@ const ThemeToggle = () => {
   return (
     <button
       onClick={toggle}
-      class="px-3 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:opacity-80 transition  flex items-center justify-center"
+      class="px-3 py-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700  hover:opacity-80 transition-colors"
     >
       {theme() === "dark" ? <MdFillLight_mode /> : <MdFillDark_mode />}
     </button>
