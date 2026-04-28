@@ -15,7 +15,6 @@ registerModule({
   slots: {
     right: [
       notificationSlot,
-      () => import("./widgets/ComposerWidget"),
     ],
   },
   permissions: [],

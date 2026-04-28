@@ -1,3 +1,4 @@
+import HqComposerSlot from '../widgets/HqComposer';
 import HqMessagesWidget from '../widgets/HqMessagesWidget';
 import PerfStatsWidget from '../widgets/PerfStatsWidget';
 
@@ -7,6 +8,7 @@ export default function DashboardView() {
       <h1 class="text-2xl font-bold">Welcome</h1>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 				<PerfStatsWidget />
+				<HqComposerSlot />
 				<HqMessagesWidget />
       </div>
     </div>
