@@ -17,6 +17,7 @@ function applyTheme(id: ThemeId) {
     "tokyo-night",
     "one-dark",
     "cyberpunk",
+		"matrix",
     "rose-pine",
     "pastel-soft",
     "warm-paper",

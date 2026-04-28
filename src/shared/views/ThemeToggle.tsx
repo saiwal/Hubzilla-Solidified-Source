@@ -1,4 +1,4 @@
-import { createSignal, For, Show, onCleanup } from "solid-js";
+import { createSignal, For, Show, onCleanup, createMemo } from "solid-js";
 import { useTheme } from "../lib/useTheme";
 import { THEMES } from "../types/theme.types";
 import { BiRegularPalette } from "solid-icons/bi";
@@ -6,7 +6,11 @@ import { BiRegularPalette } from "solid-icons/bi";
 const ThemeToggle = () => {
   const { theme, switchTheme } = useTheme();
   const [open, setOpen] = createSignal(false);
-
+const sortedThemes = createMemo(() =>
+  [...THEMES].sort((a, b) =>
+    a.label.localeCompare(b.label, undefined, { sensitivity: "base" })
+  )
+);
   let ref: HTMLDivElement | undefined;
 
   const onDocClick = (e: MouseEvent) => {
@@ -47,7 +51,7 @@ const ThemeToggle = () => {
 
           {/* Grid */}
           <div class="p-2 grid grid-cols-2 gap-2 max-h-80 overflow-y-auto">
-            <For each={THEMES}>
+            <For each={sortedThemes()}>
               {(t) => {
                 const active = () => theme() === t.id;
 

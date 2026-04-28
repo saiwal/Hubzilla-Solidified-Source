@@ -1,6 +1,6 @@
 export const THEMES = [
   { id: "light", label: "Light" },
-	{ id: "pastel-soft", label: "Pastel Soft" },
+  { id: "pastel-soft", label: "Pastel Soft" },
   { id: "warm-paper", label: "Warm Paper" },
   { id: "mint", label: "Mint Fresh" },
   { id: "sakura", label: "Sakura" },
@@ -9,7 +9,7 @@ export const THEMES = [
   { id: "nord", label: "Nord" },
   { id: "dracula", label: "Dracula" },
   { id: "monokai", label: "Monokai" },
-	{ id: "one-dark", label: "One Dark" },
+  { id: "one-dark", label: "One Dark" },
   { id: "cyberpunk", label: "CyberPunk" },
   { id: "rose-pine", label: "Rose Pine" },
   { id: "gruvbox-dark", label: "Gruvbox Dark" },
@@ -19,6 +19,7 @@ export const THEMES = [
   { id: "solarized-light", label: "Solarized Light" },
   { id: "solarized-dark", label: "Solarized Dark" },
   { id: "tokyo-night", label: "Tokyo Night" },
+  { id: "matrix", label: "Matrix" },
 ] as const;
 
 export type ThemeId = (typeof THEMES)[number]["id"];

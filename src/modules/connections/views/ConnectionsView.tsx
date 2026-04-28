@@ -33,9 +33,9 @@ const NETWORK_LABELS: Record<string, string> = {
 };
 
 const NETWORK_COLORS: Record<string, string> = {
-  zot6:        'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
-  activitypub: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
-  rss:         'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300',
+  zot6:        'bg-accent-muted text-accent',
+  activitypub: 'bg-accent-muted text-accent',
+  rss:         'bg-accent-muted text-accent',
 };
 
 function formatDate(iso: string): string {
@@ -50,7 +50,7 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
   const [expanded, setExpanded] = createSignal(false);
 
   const networkLabel = () => NETWORK_LABELS[props.conn.network] ?? props.conn.network;
-  const networkColor = () => NETWORK_COLORS[props.conn.network] ?? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300';
+  const networkColor = () => NETWORK_COLORS[props.conn.network] ?? 'bg-accent-muted text-accent';
 
   async function handleApprove() {
     setBusy(true);
@@ -73,7 +73,7 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
           <img
             src={props.conn.photo}
             alt={props.conn.name}
-            class="w-11 h-11 rounded-full object-cover ring-1 ring-gray-200 dark:ring-gray-600 bg-gray-100 dark:bg-gray-700"
+            class="w-11 h-11 rounded-full object-cover ring-1 ring-rim bg-overlay"
           />
         </a>
 
@@ -93,26 +93,26 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
             </span>
             {/* Forum badge */}
             <Show when={props.conn.is_forum}>
-              <span class="shrink-0 text-xs px-1.5 py-0.5 rounded font-medium bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300">
+              <span class="shrink-0 text-xs px-1.5 py-0.5 rounded font-medium bg-accent-muted text-accent">
                 Forum
               </span>
             </Show>
             {/* Pending badge */}
             <Show when={props.conn.pending}>
-              <span class="shrink-0 text-xs px-1.5 py-0.5 rounded font-medium bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300">
+              <span class="shrink-0 text-xs px-1.5 py-0.5 rounded font-medium bg-accent-muted text-accent">
                 Pending
               </span>
             </Show>
             {/* Status badges */}
             <For each={props.conn.status}>
               {(s) => (
-                <span class="shrink-0 text-xs px-1.5 py-0.5 rounded font-medium bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300">
+                <span class="shrink-0 text-xs px-1.5 py-0.5 rounded font-medium bg-accent-muted text-accent">
                   {s}
                 </span>
               )}
             </For>
           </div>
-          <p class="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">
+          <p class="text-xs text-muted truncate mt-0.5">
             {props.conn.address || props.conn.url}
           </p>
         </div>
@@ -123,14 +123,14 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
             <button
               onClick={handleApprove}
               disabled={busy()}
-              class="text-xs px-2 py-1 rounded bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 transition-colors"
+              class="text-xs px-2 py-1 rounded bg-accent hover:opacity-80 text-white disabled:opacity-50 transition-opacity"
             >
               Approve
             </button>
           </Show>
           <button
             onClick={() => setExpanded(e => !e)}
-            class="p-1.5 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-elevated transition-colors"
+            class="p-1.5 rounded text-muted hover:text-txt hover:bg-overlay transition-colors"
             title="Details"
           >
             <svg class={`w-3.5 h-3.5 transition-transform ${expanded() ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -139,21 +139,21 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
           </button>
           <A
             href={`/abook/${props.conn.id}`}
-            class="p-1.5 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-elevated transition-colors"
+            class="p-1.5 rounded text-muted hover:text-txt hover:bg-overlay transition-colors"
             title="Edit"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a2 2 0 00-2.828-2.828l-8.586 8.586V15h2.828z"/>
             </svg>
           </A>
           <button
             onClick={handleDelete}
             disabled={busy()}
-            class="p-1.5 rounded text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 transition-colors"
+            class="p-1.5 rounded text-muted hover:text-accent hover:bg-accent-muted disabled:opacity-50 transition-colors"
             title="Remove"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3H4"/>
             </svg>
           </button>
         </div>
@@ -161,7 +161,7 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
 
       {/* ── Expanded details ── */}
       <Show when={expanded()}>
-        <div class="px-3 pb-3 pt-0 border-t border-gray-100 dark:border-gray-700 grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 text-xs">
+        <div class="px-3 pb-3 pt-0 border-t border-rim grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 text-xs">
           <DetailField label="Connected" value={formatDate(props.conn.connected)} />
           <DetailField label="Closeness" value={String(props.conn.closeness)} />
           <DetailField label="Role" value={props.conn.role} />
@@ -178,8 +178,8 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
 function DetailField(props: { label: string; value: string }) {
   return (
     <div class="pt-2">
-      <p class="text-gray-400 dark:text-gray-500 uppercase tracking-wide text-[10px] font-semibold">{props.label}</p>
-      <p class="text-gray-700 dark:text-gray-300 mt-0.5 break-all">{props.value}</p>
+      <p class="text-muted uppercase tracking-wide text-[10px] font-semibold">{props.label}</p>
+      <p class="text-txt mt-0.5 break-all">{props.value}</p>
     </div>
   );
 }
@@ -218,8 +218,8 @@ export default function ConnectionsView() {
               onClick={() => handleFilterChange(f.id)}
               class={`px-3 py-1 rounded-full text-sm transition-colors
                 ${filter() === f.id
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  ? 'bg-accent text-white'
+                  : 'bg-overlay text-muted hover:bg-surface'
                 }`}
             >
               {f.label}
@@ -237,11 +237,11 @@ export default function ConnectionsView() {
           onInput={(e) => setSearchInput(e.currentTarget.value)}
           onKeyDown={(e) => e.key === 'Enter' && applySearch()}
           class="flex-1 px-3 py-2 rounded-lg border border-rim
-                 bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                 bg-surface text-sm text-txt placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
         />
         <button
           onClick={applySearch}
-          class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 transition-colors"
+          class="px-4 py-2 rounded-lg bg-accent text-white text-sm hover:opacity-80 transition-opacity"
         >
           Search
         </button>
@@ -249,7 +249,7 @@ export default function ConnectionsView() {
           value={order()}
           onChange={(e) => handleOrderChange(e.currentTarget.value as ConnectionOrder)}
           class="px-3 py-2 rounded-lg border border-rim
-                 bg-surface text-sm focus:outline-none"
+                 bg-surface text-txt text-sm focus:outline-none focus:ring-2 focus:ring-accent"
         >
           <For each={ORDERS}>
             {(o) => <option value={o.id}>{o.label}</option>}
@@ -264,7 +264,7 @@ export default function ConnectionsView() {
       >
         <Show
           when={connections().length > 0}
-          fallback={<p class="py-8 text-center text-sm text-gray-400 dark:text-gray-500">No connections found.</p>}
+          fallback={<p class="py-8 text-center text-sm text-muted">No connections found.</p>}
         >
           <p class="text-sm text-muted">
             {meta()?.total} connection{meta()?.total !== 1 ? 's' : ''}
@@ -284,20 +284,20 @@ export default function ConnectionsView() {
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
                 disabled={page() === 0}
                 class="px-3 py-1.5 rounded border border-rim
-                       disabled:opacity-40 hover:bg-elevated
-                       text-sm transition-colors"
+                       disabled:opacity-40 hover:bg-overlay
+                       text-txt text-sm transition-colors"
               >
                 ← Prev
               </button>
-              <span class="text-sm text-gray-600 dark:text-gray-400">
+              <span class="text-sm text-muted">
                 {page() + 1} / {totalPages()}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages() - 1, p + 1))}
                 disabled={page() === totalPages() - 1}
                 class="px-3 py-1.5 rounded border border-rim
-                       disabled:opacity-40 hover:bg-elevated
-                       text-sm transition-colors"
+                       disabled:opacity-40 hover:bg-overlay
+                       text-txt text-sm transition-colors"
               >
                 Next →
               </button>
@@ -315,10 +315,10 @@ function ConnectionsSkeleton() {
       <For each={Array(8).fill(0)}>
         {() => (
           <div class="rounded-lg border border-rim bg-surface p-3 flex items-center gap-3 animate-pulse">
-            <div class="w-11 h-11 rounded-full bg-elevated shrink-0" />
+            <div class="w-11 h-11 rounded-full bg-overlay shrink-0" />
             <div class="flex-1 space-y-2">
-              <div class="h-3.5 bg-elevated rounded w-1/3" />
-              <div class="h-3 bg-elevated rounded w-1/2" />
+              <div class="h-3.5 bg-overlay rounded w-1/3" />
+              <div class="h-3 bg-overlay rounded w-1/2" />
             </div>
           </div>
         )}

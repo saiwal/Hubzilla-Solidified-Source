@@ -373,3 +373,21 @@
   --color-accent-muted: #f2e6d2;
   --color-accent-txt: #a67c3d;
 }
+/* ── Matrix ─────────────────────────────────────────────────── */
+[data-theme="matrix"] {
+  --color-base:     #0a0f0a;
+  --color-surface:  #0f1a0f;
+  --color-elevated: #162416;
+  --color-overlay:  #050805;
+
+  --color-txt:      #d4ffd4;
+  --color-muted:    #5fa85f;
+  --color-subtle:   #2f5f2f;
+
+  --color-rim:      #1f3a1f;
+  --color-rim-strong: #2f5f2f;
+
+  --color-accent:       #00ff66;
+  --color-accent-muted: #003311;
+  --color-accent-txt:   #66ff99;
+}
