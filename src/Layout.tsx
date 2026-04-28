@@ -89,7 +89,11 @@ const Layout: ParentComponent = (props) => {
             class="fixed top-0 inset-x-0 z-[100] flex items-center justify-center gap-2
                    bg-amber-500 text-amber-950 text-sm font-medium py-1.5 select-none"
           >
-            <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <svg
+              class="w-4 h-4 shrink-0"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
               <path
                 fill-rule="evenodd"
                 d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58
@@ -130,7 +134,11 @@ const Layout: ParentComponent = (props) => {
             <nav class="flex-1 flex flex-col gap-0.5 overflow-y-auto">
               <For each={navItems()}>
                 {(item) => (
-                  <NavItem href={item.href} label={item.label} icon={item.icon} />
+                  <NavItem
+                    href={item.href}
+                    label={item.label}
+                    icon={item.icon}
+                  />
                 )}
               </For>
             </nav>
@@ -141,7 +149,11 @@ const Layout: ParentComponent = (props) => {
             <div class="flex flex-col gap-0.5">
               <For each={actionItems()}>
                 {(item) => (
-                  <NavItem href={item.href} label={item.label} icon={item.icon} />
+                  <NavItem
+                    href={item.href}
+                    label={item.label}
+                    icon={item.icon}
+                  />
                 )}
               </For>
             </div>
@@ -178,7 +190,12 @@ const Layout: ParentComponent = (props) => {
                        shadow hover:shadow-md transition-all"
                 title="Scroll to top"
               >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -258,7 +275,11 @@ const Layout: ParentComponent = (props) => {
               <For each={moreItems()}>
                 {(item) => (
                   <span onClick={closeAll}>
-                    <NavItem href={item.href} label={item.label} icon={item.icon} />
+                    <NavItem
+                      href={item.href}
+                      label={item.label}
+                      icon={item.icon}
+                    />
                   </span>
                 )}
               </For>
@@ -276,7 +297,11 @@ const Layout: ParentComponent = (props) => {
           >
             <For each={bottomItems()}>
               {(item) => (
-                <MobileTab href={item.href} label={item.label} icon={item.icon} />
+                <MobileTab
+                  href={item.href}
+                  label={item.label}
+                  icon={item.icon}
+                />
               )}
             </For>
 
@@ -288,9 +313,10 @@ const Layout: ParentComponent = (props) => {
                 }}
                 class={`flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl
                         text-[10px] font-medium transition-colors min-w-0
-                        ${moreOpen()
-                          ? "text-txt bg-elevated"
-                          : "text-muted hover:bg-elevated"
+                        ${
+                          moreOpen()
+                            ? "text-txt bg-elevated"
+                            : "text-muted hover:bg-elevated"
                         }`}
               >
                 <MdFillMore_horiz size={22} />
@@ -305,9 +331,10 @@ const Layout: ParentComponent = (props) => {
               }}
               class={`flex-none px-2 flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl
                       text-[10px] font-medium transition-colors
-                      ${rightOpen()
-                        ? "text-txt bg-elevated"
-                        : "text-muted hover:bg-elevated"
+                      ${
+                        rightOpen()
+                          ? "text-txt bg-elevated"
+                          : "text-muted hover:bg-elevated"
                       }`}
             >
               <span
