@@ -1,0 +1,33 @@
+// src/shared/stream/feedviews/StreamList.tsx
+import { Switch, Match } from "solid-js";
+import type { ThreadNode } from "@/shared/lib/thread";
+import type { StreamHandlers } from "../types";
+import FeedView from "./FeedView";
+import MasonryView from "./MasonryView";
+import ListView from "./ListView";
+import InboxView from "./InboxView";
+
+export type ViewMode = "feed" | "masonry" | "list" | "inbox";
+
+export default function StreamList(props: {
+  posts: ThreadNode[];
+  viewMode: ViewMode;
+  handlers: StreamHandlers;
+}) {
+  return (
+    <Switch>
+      <Match when={props.viewMode === "feed"}>
+        <FeedView posts={props.posts} handlers={props.handlers} />
+      </Match>
+      <Match when={props.viewMode === "masonry"}>
+        <MasonryView posts={props.posts} handlers={props.handlers} />
+      </Match>
+      <Match when={props.viewMode === "list"}>
+        <ListView posts={props.posts} handlers={props.handlers} />
+      </Match>
+      <Match when={props.viewMode === "inbox"}>
+        <InboxView posts={props.posts} handlers={props.handlers} />
+      </Match>
+    </Switch>
+  );
+}

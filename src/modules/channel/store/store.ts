@@ -22,7 +22,15 @@ export const {
   posts, loading, loadingMore, hasMore, newPosts, profileUid,
   loadMore, flushNewPosts, stopPolling,
 } = store;
-
+export type ViewMode = "feed" | "masonry" | "list" | "inbox";
+const [viewMode, setViewMode] = createSignal<ViewMode>(
+  (localStorage.getItem("channel:viewMode") ?? "masonry") as ViewMode
+);
+export function changeView(v: ViewMode) {
+  localStorage.setItem("channel:viewMode", v);
+  setViewMode(v);
+}
+export { viewMode };
 export function resetPosts() { store.reset(); }
 
 export async function loadChannel(nickname: string, params?: ChannelParams) {

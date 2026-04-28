@@ -1,7 +1,8 @@
-// src/shared/ui/PostDetailModal.tsx
+// src/shared/views/PostDetailModal.tsx
 import { type Component, createResource, Show } from "solid-js";
 import { Portal } from "solid-js/web";
-import PostCard, { type PostActions } from "./PostCard";
+import PostCard from "../stream/components/PostCard";
+import type { StreamHandlers } from "../stream/types";
 import { bbcodeToHtml } from "../lib/bbcode";
 import { sanitizeHtml } from "../lib/sanitize";
 import type { ThreadNode } from "../lib/thread";
@@ -87,40 +88,28 @@ async function fetchDisplay(uuid: string): Promise<ThreadNode> {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data: DisplayResponse = await res.json();
   if ((data as any).error) throw new Error((data as any).error);
-
-  // Build a flat list of all posts then let buildThreadTree assemble the tree
   const all: Post[] = [data.post, ...data.comments].map(rawToPost);
   const tree = buildThreadTree(all);
-  // tree[0] is the root with comments nested as children
   return tree[0];
 }
 
 interface PostDetailModalProps {
   uuid: string;
   onClose: () => void;
-  actions?: PostActions;
+  handlers?: StreamHandlers;
 }
 
 const PostDetailModal: Component<PostDetailModalProps> = (props) => {
   const [node, { refetch }] = createResource(() => props.uuid, fetchDisplay);
 
-  // Wrap provided/default actions to refetch after mutations so counts update
-  const wrappedActions: PostActions | undefined = props.actions
+  // Wrap handlers to trigger a refetch after each mutation so counts update
+  const wrappedHandlers: StreamHandlers | undefined = props.handlers
     ? {
-        onLike: async (...a) => {
-          await props.actions!.onLike(...a);
-          refetch();
-        },
-        onDislike: async (...a) => {
-          await props.actions!.onDislike(...a);
-          refetch();
-        },
-        onRepeat: async (...a) => {
-          await props.actions!.onRepeat(...a);
-          refetch();
-        },
-        onComment: async (...a) => {
-          await props.actions!.onComment(...a);
+        onLike: (mid: string) => { props.handlers!.onLike(mid); refetch(); },
+        onDislike: (mid: string) => { props.handlers!.onDislike(mid); refetch(); },
+        onRepeat: (mid: string) => { props.handlers!.onRepeat(mid); refetch(); },
+        onComment: (parentMid: string, body: string, authorName: string, authorAvatar: string) => {
+          props.handlers!.onComment(parentMid, body, authorName, authorAvatar);
           refetch();
         },
       }
@@ -130,30 +119,21 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
     <Portal>
       <div
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) props.onClose();
-        }}
+        onClick={(e) => { if (e.target === e.currentTarget) props.onClose(); }}
       >
         <div
           class="relative w-full max-w-full lg:max-w-[50%] max-h-[90vh] flex flex-col
-            bg-base rounded-2xl shadow-2xl overflow-hidden"
+                 bg-base rounded-2xl shadow-2xl overflow-hidden"
         >
           {/* Header */}
-          <div
-            class="flex items-center justify-between px-5 py-3 shrink-0
-                      border-b border-rim
-                      bg-surface"
-          >
-            <h2 class="text-sm font-semibold text-gray-600 dark:text-gray-400">
-              Post
-            </h2>
+          <div class="flex items-center justify-between px-5 py-3 shrink-0 border-b border-rim bg-surface">
+            <h2 class="text-sm font-semibold text-gray-600 dark:text-gray-400">Post</h2>
             <button
               onClick={props.onClose}
               class="p-1.5 rounded-lg hover:bg-elevated
                      text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
               aria-label="Close"
             >
-              {" "}
               <BiRegularX />
             </button>
           </div>
@@ -181,14 +161,22 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
 
             <Show when={node.error}>
               <div class="bg-surface rounded-2xl p-6 text-center">
-                <p class="text-sm text-red-500">
-                  Failed to load post: {node.error?.message}
-                </p>
+                <p class="text-sm text-red-500">Failed to load post: {node.error?.message}</p>
               </div>
             </Show>
 
             <Show when={node()}>
-              {(n) => <PostCard post={n()} actions={wrappedActions} />}
+              {(n) => (
+                <PostCard
+                  post={n()}
+                  handlers={wrappedHandlers ?? {
+                    onLike: () => {},
+                    onDislike: () => {},
+                    onRepeat: () => {},
+                    onComment: () => {},
+                  }}
+                />
+              )}
             </Show>
           </div>
         </div>
