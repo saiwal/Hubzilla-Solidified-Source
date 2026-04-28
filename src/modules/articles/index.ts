@@ -12,7 +12,7 @@ registerModule({
 
   navItem: {
     label: () => useI18n().t("nav.articles"),
-    icon: "articles",
+    icon: "article",
     path: "/articles",
     href: () => `/articles/${usePageNick()()}`,
 		context: "all",
