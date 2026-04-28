@@ -7,8 +7,22 @@ function applyTheme(id: ThemeId) {
   document.documentElement.setAttribute("data-theme", id);
   // keep the `dark` class for any legacy dark: Tailwind variants still in use
   const darkThemes: ThemeId[] = [
-    "dark", "nord", "dracula", "monokai",
-    "gruvbox-dark", "catppuccin-mocha", "solarized-dark", "tokyo-night",
+    "dark",
+    "nord",
+    "dracula",
+    "monokai",
+    "gruvbox-dark",
+    "catppuccin-mocha",
+    "solarized-dark",
+    "tokyo-night",
+    "one-dark",
+    "cyberpunk",
+    "rose-pine",
+    "pastel-soft",
+    "warm-paper",
+    "mint",
+    "sakura",
+    "latte-cream",
   ];
   document.documentElement.classList.toggle("dark", darkThemes.includes(id));
 }
@@ -16,7 +30,9 @@ function applyTheme(id: ThemeId) {
 export function useTheme() {
   onMount(() => {
     const stored = localStorage.getItem("theme") as ThemeId | null;
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const prefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)",
+    ).matches;
     const resolved: ThemeId = stored ?? (prefersDark ? "dark" : "light");
     setTheme(resolved);
     applyTheme(resolved);
