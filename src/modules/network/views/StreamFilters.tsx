@@ -127,7 +127,7 @@ export default function StreamFilters() {
     setTimeout(() => setConnSuggestOpen(false), 150);
   }
 
-  // ── Clear all ──────────────────────────────────────────────────────────────
+  // ── Clear all ───────────────────────────────────────────────────────────────
 
   function clearAll() {
     setSearchParams(
@@ -171,7 +171,7 @@ export default function StreamFilters() {
           onClick={() => loadNetwork()}
           disabled={loading()}
           title="Refresh"
-          class="p-2 rounded-lg hover:bg-elevated transition-colors disabled:opacity-50"
+          class="p-2 rounded-lg hover:bg-overlay transition-colors disabled:opacity-50 text-txt"
         >
           <span class={loading() ? "animate-spin inline-block" : ""}>
             <MdFillRefresh size={18} />
@@ -184,11 +184,11 @@ export default function StreamFilters() {
             <button
               onClick={() => setOrderAndApply(opt.value)}
               class={`px-3 py-1.5 text-sm font-medium transition-colors
-							${
-								order() === opt.value
-									? "bg-accent text-base"
-									: "bg-surface text-muted hover:bg-elevated hover:text-txt"
-							}`}
+                ${
+                  order() === opt.value
+                    ? "bg-accent text-white"
+                    : "bg-surface text-muted hover:bg-overlay"
+                }`}
             >
               {opt.label}
             </button>
@@ -243,7 +243,7 @@ export default function StreamFilters() {
                         <button
                           onMouseDown={() => selectConnection(c)}
                           class="w-full flex items-center gap-2.5 px-3 py-1.5 text-sm text-left
-                                 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                 hover:bg-overlay transition-colors text-txt"
                         >
                           <Show when={c.photo}>
                             <img
@@ -256,7 +256,7 @@ export default function StreamFilters() {
                             <span class="truncate font-medium text-txt">
                               {c.name}
                             </span>
-                            <span class="truncate text-xs text-gray-400">
+                            <span class="truncate text-xs text-muted">
                               {c.link || c.nick}
                             </span>
                           </span>
@@ -272,14 +272,14 @@ export default function StreamFilters() {
           {/* Active chip */}
           <span
             class="flex items-center gap-1.5 px-2.5 py-1.5 text-sm rounded-lg
-                        border border-blue-500 bg-blue-50 dark:bg-blue-900/20
-                        text-blue-700 dark:text-blue-300 max-w-[180px]"
+                        border border-accent bg-accent-muted
+                        text-accent max-w-[180px]"
           >
             <MdFillPerson size={17} class="shrink-0" />
             <span class="truncate">{xchanLabel() || cid() || gid()}</span>
             <button
               onClick={clearConnection}
-              class="shrink-0 ml-0.5 hover:text-blue-900 dark:hover:text-blue-100 transition-colors"
+              class="shrink-0 ml-0.5 hover:opacity-70 transition-opacity"
               title="Remove filter"
             >
               ✕
@@ -289,7 +289,7 @@ export default function StreamFilters() {
 
         {/* Text search */}
         <div class="relative">
-          <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400">
+          <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted">
             <MdFillSearch size={17} />
           </span>
           <input
@@ -299,7 +299,7 @@ export default function StreamFilters() {
             onInput={(e) => onSearchInput(e.currentTarget.value)}
             class="pl-8 pr-3 py-1.5 text-sm rounded-lg border border-rim
                    bg-surface text-txt
-                   placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-40"
+                   placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent w-40"
           />
         </div>
 
@@ -309,13 +309,13 @@ export default function StreamFilters() {
           class={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border transition-colors
             ${
               expanded() || hasAdvanced()
-                ? "border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
-                : "border-rim text-gray-600 dark:text-gray-300 bg-surface hover:bg-gray-50 dark:hover:bg-gray-700"
+                ? "border-accent text-accent bg-accent-muted"
+                : "border-rim text-muted bg-surface hover:bg-overlay"
             }`}
         >
           <MdFillFilter_list size={17} />
           <Show when={hasAdvanced()}>
-            <span class="w-1.5 h-1.5 rounded-full bg-blue-500" />
+            <span class="w-1.5 h-1.5 rounded-full bg-accent" />
           </Show>
         </button>
 
@@ -323,7 +323,7 @@ export default function StreamFilters() {
           <button
             onClick={clearAll}
             class="px-3 py-1.5 text-sm rounded-lg text-muted
-                   hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                   hover:text-accent transition-colors"
           >
             ✕ Clear
           </button>
@@ -333,11 +333,13 @@ export default function StreamFilters() {
       {/* Advanced panel */}
       <Show when={expanded()}>
         <div
-          class="flex flex-wrap gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/60
+          class="flex flex-wrap gap-3 p-3 rounded-lg bg-overlay
                     border border-rim"
         >
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-muted font-medium">Tag</span>
+            <span class="text-xs text-muted font-medium">
+              Tag
+            </span>
             <input
               type="text"
               placeholder="e.g. solidjs"
@@ -352,7 +354,9 @@ export default function StreamFilters() {
           </label>
 
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-muted font-medium">From date</span>
+            <span class="text-xs text-muted font-medium">
+              From date
+            </span>
             <input
               type="date"
               value={dbegin()}
@@ -365,7 +369,9 @@ export default function StreamFilters() {
           </label>
 
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-muted font-medium">To date</span>
+            <span class="text-xs text-muted font-medium">
+              To date
+            </span>
             <input
               type="date"
               value={dend()}
@@ -378,7 +384,9 @@ export default function StreamFilters() {
           </label>
 
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-muted font-medium">Min Affinity</span>
+            <span class="text-xs text-muted font-medium">
+              Min Affinity
+            </span>
             <input
               type="number"
               min="0"
@@ -391,7 +399,9 @@ export default function StreamFilters() {
           </label>
 
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-muted font-medium">Max Affinity</span>
+            <span class="text-xs text-muted font-medium">
+              Max Affinity
+            </span>
             <input
               type="number"
               min="0"
@@ -408,7 +418,9 @@ export default function StreamFilters() {
   );
 }
 
-const inputCls = `pl-3 pr-3 py-1.5 text-sm rounded-lg border border-rim bg-surface text-txt placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-40`;
+const inputCls = `px-2.5 py-1.5 text-sm rounded-lg border border-rim
+  bg-surface text-txt
+  placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent`;
 
 function ToggleChip(props: {
   active: boolean;
@@ -419,11 +431,11 @@ function ToggleChip(props: {
     <button
       onClick={props.onClick}
       class={`px-3 py-1.5 text-sm rounded-lg border transition-colors shrink-0
-  ${
-    props.active
-      ? "border-accent bg-accent-muted text-accent-txt"
-      : "border-rim bg-surface text-muted hover:bg-elevated hover:text-txt"
-  }`}
+        ${
+          props.active
+            ? "border-accent bg-accent-muted text-accent"
+            : "border-rim bg-surface text-muted hover:bg-overlay"
+        }`}
     >
       {props.label}
     </button>

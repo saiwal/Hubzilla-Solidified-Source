@@ -1,4 +1,4 @@
-// src/modules/network/views/feedviews/FeedView.tsx
+// components/views/FeedView.tsx
 import { For, Show, createSignal } from "solid-js";
 import type { ThreadNode } from "@/shared/lib/thread";
 import {
@@ -7,26 +7,25 @@ import {
   handleRepeat,
   handleComment,
 } from "@/modules/network/store/store";
-
 export function FeedPlaceholder() {
   return (
-    <div class="animate-pulse bg-surface border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 mb-4 shadow-sm">
+    <div class="animate-pulse bg-surface border border-rim rounded-2xl p-5 mb-4 shadow-sm">
       <div class="flex items-start gap-3">
-        <div class="w-11 h-11 rounded-full bg-zinc-200 dark:bg-zinc-700 shrink-0 ring-1 ring-zinc-200 dark:ring-zinc-700" />
+        <div class="w-11 h-11 rounded-full bg-accent-muted shrink-0 ring-1 ring-rim" />
         <div class="flex flex-col gap-1.5 pt-1">
-          <div class="h-3.5 bg-zinc-200 dark:bg-zinc-700 rounded w-32" />
-          <div class="h-3 bg-zinc-200 dark:bg-zinc-700 rounded w-24" />
+          <div class="h-3.5 bg-accent-muted rounded w-32" />
+          <div class="h-3 bg-accent-muted rounded w-24" />
         </div>
       </div>
       <div class="mt-4 space-y-2">
-        <div class="h-3 bg-zinc-200 dark:bg-zinc-700 rounded w-full" />
-        <div class="h-3 bg-zinc-200 dark:bg-zinc-700 rounded w-5/6" />
-        <div class="h-3 bg-zinc-200 dark:bg-zinc-700 rounded w-4/6" />
+        <div class="h-3 bg-accent-muted rounded w-full" />
+        <div class="h-3 bg-accent-muted rounded w-5/6" />
+        <div class="h-3 bg-accent-muted rounded w-4/6" />
       </div>
-      <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center gap-5">
-        <div class="h-3 bg-zinc-200 dark:bg-zinc-700 rounded w-8" />
-        <div class="h-3 bg-zinc-200 dark:bg-zinc-700 rounded w-8" />
-        <div class="h-3 bg-zinc-200 dark:bg-zinc-700 rounded w-8" />
+      <div class="mt-4 pt-3 border-t border-rim flex items-center gap-5">
+        <div class="h-3 bg-accent-muted rounded w-8" />
+        <div class="h-3 bg-accent-muted rounded w-8" />
+        <div class="h-3 bg-accent-muted rounded w-8" />
       </div>
     </div>
   );
@@ -39,9 +38,11 @@ function ActionBar(props: { post: ThreadNode }) {
       <button
         onClick={() => handleLike(p.mid)}
         class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
-               transition-colors hover:bg-rose-50 dark:hover:bg-rose-900/20
-               text-muted hover:text-rose-500"
-        classList={{ "text-rose-500 bg-rose-50 dark:bg-rose-900/20": p.viewerLiked }}
+               transition-colors hover:bg-accent-muted
+               text-muted hover:text-accent"
+        classList={{
+          "text-accent bg-accent-muted": p.viewerLiked,
+        }}
       >
         <svg
           class="w-3.5 h-3.5"
@@ -64,9 +65,11 @@ function ActionBar(props: { post: ThreadNode }) {
       <button
         onClick={() => handleDislike(p.mid)}
         class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
-               transition-colors hover:bg-amber-50 dark:hover:bg-amber-900/20
-               text-muted hover:text-amber-500"
-        classList={{ "text-amber-500 bg-amber-50 dark:bg-amber-900/20": p.viewerDisliked }}
+               transition-colors hover:bg-accent-muted
+               text-muted hover:text-accent"
+        classList={{
+          "text-accent bg-accent-muted": p.viewerDisliked,
+        }}
       >
         <svg
           class="w-3.5 h-3.5"
@@ -78,7 +81,7 @@ function ActionBar(props: { post: ThreadNode }) {
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
-            d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5"
+            d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v12a2 2 0 01-2 2h-2.5a1 1 0 00-1 1v-1.5a1 1 0 00-1-1H9a1 1 0 00-1 1v1.5a1 1 0 001 1H7.5a2 2 0 01-2-2V6a2 2 0 012-2h2.5a1 1 0 001-1V2a1 1 0 011-1h2a1 1 0 011 1v1z"
           />
         </svg>
         <Show when={p.dislikeCount > 0}>
@@ -89,9 +92,11 @@ function ActionBar(props: { post: ThreadNode }) {
       <button
         onClick={() => handleRepeat(p.mid)}
         class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
-               transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-900/20
-               text-muted hover:text-emerald-500"
-        classList={{ "text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20": p.viewerRepeated }}
+               transition-colors hover:bg-accent-muted
+               text-muted hover:text-accent"
+        classList={{
+          "text-accent bg-accent-muted": p.viewerRepeated,
+        }}
       >
         <svg
           class="w-3.5 h-3.5"
@@ -119,7 +124,7 @@ function CommentBox(props: { post: ThreadNode; onClose: () => void }) {
   const submit = () => {
     const text = body().trim();
     if (!text) return;
-    handleComment(props.post.mid, text, props.post.authorName, props.post.authorAvatar);
+    handleComment(props.post.mid, text, "Me", "");
     setBody("");
     props.onClose();
   };
@@ -130,20 +135,20 @@ function CommentBox(props: { post: ThreadNode; onClose: () => void }) {
         onInput={(e) => setBody(e.currentTarget.value)}
         rows={2}
         placeholder="Write a reply…"
-        class="flex-1 text-sm rounded-lg border border-gray-200 dark:border-gray-600
-               bg-surface px-3 py-2 resize-none
-               focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+        class="flex-1 text-sm rounded-lg border border-rim
+               bg-surface px-3 py-2 resize-none text-txt
+               focus:outline-none focus:ring-2 focus:ring-accent/30"
       />
       <div class="flex flex-col gap-1">
         <button
           onClick={submit}
-          class="px-3 py-1 text-xs font-medium rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+          class="px-3 py-1 text-xs font-medium rounded-lg bg-accent text-white hover:opacity-80 transition-opacity"
         >
           Reply
         </button>
         <button
           onClick={props.onClose}
-          class="px-3 py-1 text-xs rounded-lg text-gray-500 hover:bg-elevated transition-colors"
+          class="px-3 py-1 text-xs rounded-lg text-muted hover:bg-overlay transition-colors"
         >
           Cancel
         </button>
@@ -159,7 +164,7 @@ function ThreadedPost(props: { post: ThreadNode; depth?: number }) {
   return (
     <div
       classList={{
-        "ml-8 border-l-2 border-gray-100 dark:border-gray-700 pl-4": depth > 0,
+        "ml-8 border-l-2 border-rim pl-4": depth > 0,
       }}
     >
       <div class="py-3">
@@ -167,7 +172,7 @@ function ThreadedPost(props: { post: ThreadNode; depth?: number }) {
           <Show
             when={props.post.authorAvatar}
             fallback={
-              <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 shrink-0 flex items-center justify-center text-white text-xs font-bold">
+              <div class="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-accent-txt shrink-0 flex items-center justify-center text-white text-xs font-bold">
                 {props.post.authorName?.[0]?.toUpperCase() ?? "?"}
               </div>
             }
@@ -186,37 +191,40 @@ function ThreadedPost(props: { post: ThreadNode; depth?: number }) {
               >
                 {props.post.authorName}
               </a>
-              <span class="text-xs text-gray-400">
+              <span class="text-xs text-muted">
                 {props.post.created?.slice(0, 16)}
               </span>
               <Show when={props.post.verb && props.post.verb !== "Create"}>
-                <span class="text-xs text-gray-400 italic">
+                <span class="text-xs text-muted italic">
                   {props.post.verb?.toLowerCase()}
                 </span>
               </Show>
             </div>
             <Show when={props.post.title}>
-              <p class="text-sm font-medium text-gray-800 dark:text-gray-200 mt-0.5">
+              <p class="text-sm font-medium text-txt mt-0.5">
                 {props.post.title}
               </p>
             </Show>
             <div
-              class="prose prose-sm dark:prose-invert max-w-none mt-1 text-gray-700 dark:text-gray-300
-                     [&>p]:my-1 [&>blockquote]:border-l-2 [&>blockquote]:pl-3 [&>blockquote]:text-gray-500
-                     [&_img]:max-w-full [&_img]:rounded-lg [&_img]:mt-2"
+              class="prose prose-sm dark:prose-invert max-w-none mt-1 text-muted
+                        [&>p]:my-1 [&>blockquote]:border-l-2 [&>blockquote]:border-accent [&>blockquote]:pl-3 [&>blockquote]:text-accent
+                        [&_img]:max-w-full [&_img]:rounded-lg [&_img]:mt-2"
               innerHTML={props.post.body}
             />
             <ActionBar post={props.post} />
             <Show when={props.post.iid}>
               <button
                 onClick={() => setShowReply((v) => !v)}
-                class="mt-1 text-xs text-gray-400 hover:text-blue-500 transition-colors"
+                class="mt-1 text-xs text-muted hover:text-accent transition-colors"
               >
                 Reply
               </button>
             </Show>
             <Show when={showReply()}>
-              <CommentBox post={props.post} onClose={() => setShowReply(false)} />
+              <CommentBox
+                post={props.post}
+                onClose={() => setShowReply(false)}
+              />
             </Show>
           </div>
         </div>
@@ -232,17 +240,19 @@ function ThreadedPost(props: { post: ThreadNode; depth?: number }) {
 
 export default function FeedView(props: { posts: ThreadNode[] }) {
   return (
-    <div class="max-w-2xl mx-auto divide-y divide-gray-100 dark:divide-gray-800">
+    <div class="max-w-2xl mx-auto divide-y divide-rim">
       <For
         each={props.posts}
         fallback={
-          <p class="text-center py-16 text-gray-400 text-sm">Nothing here yet.</p>
+          <p class="text-center py-16 text-muted text-sm">
+            Nothing here yet.
+          </p>
         }
       >
         {(post) => (
           <div
             class="bg-surface rounded-xl mb-3 px-4 shadow-sm
-                   border border-gray-100 dark:border-gray-700/50"
+                      border border-rim"
           >
             <ThreadedPost post={post} />
           </div>

@@ -1,4 +1,4 @@
-// src/modules/network/views/feedviews/InboxView.tsx
+// components/views/InboxView.tsx
 import { For, Show, createSignal } from "solid-js";
 import type { ThreadNode } from "@/shared/lib/thread";
 import { handleLike, handleComment } from "@/modules/network/store/store";
@@ -12,10 +12,6 @@ function stripHtml(html: string): string {
     .trim();
 }
 
-function flattenThread(node: ThreadNode): ThreadNode[] {
-  return [node, ...node.children.flatMap(flattenThread)];
-}
-
 function InlineThread(props: { thread: ThreadNode }) {
   const all = flattenThread(props.thread);
   const [replyBody, setReplyBody] = createSignal("");
@@ -23,12 +19,12 @@ function InlineThread(props: { thread: ThreadNode }) {
   const submit = () => {
     const text = replyBody().trim();
     if (!text) return;
-    handleComment(props.thread.mid, text, props.thread.authorName, props.thread.authorAvatar);
+    handleComment(props.thread.mid, text, "Me", "");
     setReplyBody("");
   };
 
   return (
-    <div class="border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 px-4 py-3">
+    <div class="border-t border-rim bg-overlay px-4 py-3">
       <div class="space-y-4 max-h-96 overflow-y-auto pr-1">
         <For each={all}>
           {(msg) => (
@@ -37,8 +33,9 @@ function InlineThread(props: { thread: ThreadNode }) {
                 when={msg.authorAvatar}
                 fallback={
                   <div
-                    class="w-7 h-7 rounded-full bg-gradient-to-br from-violet-400 to-purple-600
-                            flex items-center justify-center text-white text-[10px] font-bold shrink-0 mt-0.5"
+                    class="w-7 h-7 rounded-full
+                            flex items-center justify-center text-white text-[10px] font-bold shrink-0 mt-0.5
+                            bg-gradient-to-br from-accent to-accent-txt"
                   >
                     {msg.authorName?.[0]?.toUpperCase() ?? "?"}
                   </div>
@@ -52,45 +49,41 @@ function InlineThread(props: { thread: ThreadNode }) {
               </Show>
               <div class="flex-1 min-w-0">
                 <div class="flex items-baseline gap-2">
-                  <span class="text-xs font-semibold text-gray-800 dark:text-gray-200">
+                  <span class="text-xs font-semibold text-txt">
                     {msg.authorName}
                   </span>
-                  <span class="text-[11px] text-gray-400">
+                  <span class="text-[11px] text-muted">
                     {msg.created?.slice(0, 16)}
                   </span>
                 </div>
                 <div
-                  class="text-sm text-gray-700 dark:text-gray-300 mt-0.5 leading-relaxed
-                         [&>p]:my-0.5 [&_img]:max-w-xs [&_img]:rounded-lg
-                         [&_.bb-share]:mt-2 [&_.bb-share]:rounded-xl [&_.bb-share]:border
-                         [&_.bb-share]:border-gray-200 [&_.bb-share]:dark:border-gray-700
-                         [&_.bb-share]:bg-white [&_.bb-share]:dark:bg-gray-800/60
-                         [&_.bb-share]:overflow-hidden
-                         [&_.bb-share_br]:hidden
-                         [&_.bb-share-header]:flex [&_.bb-share-header]:items-center
-                         [&_.bb-share-header]:gap-2 [&_.bb-share-header]:px-3 [&_.bb-share-header]:py-2
-                         [&_.bb-share-header]:text-xs [&_.bb-share-header]:text-gray-500
-                         [&_.bb-share-header]:dark:text-gray-400
-                         [&_.bb-share-header]:border-b [&_.bb-share-header]:border-gray-200
-                         [&_.bb-share-header]:dark:border-gray-700
-                         [&_.share-avatar]:!w-6 [&_.share-avatar]:!h-6
-                         [&_.share-avatar]:rounded-full [&_.share-avatar]:object-cover
-                         [&_.share-avatar]:shrink-0 [&_.share-avatar]:!my-0
-                         [&_.bb-share-header_a]:font-medium [&_.bb-share-header_a]:text-gray-700
-                         [&_.bb-share-header_a]:dark:text-gray-300
-                         [&_.bb-share-header_a:hover]:underline
-                         [&_.bb-share-content]:block [&_.bb-share-content]:px-3
-                         [&_.bb-share-content]:py-2.5 [&_.bb-share-content]:text-sm
-                         [&_.bb-share-content]:text-gray-700 [&_.bb-share-content]:dark:text-gray-300
-                         [&_.bb-share-content]:border-l-0 [&_.bb-share-content]:pl-0"
+                  class="text-sm text-muted mt-0.5 leading-relaxed
+                            [&>p]:my-0.5 [&_img]:max-w-xs [&_img]:rounded-lg
+                            [&_.bb-share]:mt-2 [&_.bb-share]:rounded-xl [&_.bb-share]:border [&_.bb-share]:border-rim
+                            [&_.bb-share]:bg-surface
+                            [&_.bb-share]:overflow-hidden
+                            [&_.bb-share_br]:hidden
+                            [&_.bb-share-header]:flex [&_.bb-share-header]:items-center
+                            [&_.bb-share-header]:gap-2 [&_.bb-share-header]:px-3 [&_.bb-share-header]:py-2
+                            [&_.bb-share-header]:text-xs [&_.bb-share-header]:text-muted
+                            [&_.bb-share-header]:border-b [&_.bb-share-header]:border-rim
+                            [&_.share-avatar]:!w-6 [&_.share-avatar]:!h-6
+                            [&_.share-avatar]:rounded-full [&_.share-avatar]:object-cover
+                            [&_.share-avatar]:shrink-0 [&_.share-avatar]:!my-0
+                            [&_.bb-share-header_a]:font-medium [&_.bb-share-header_a]:text-txt
+                            [&_.bb-share-header_a:hover]:underline
+                            [&_.bb-share-content]:block [&_.bb-share-content]:px-3
+                            [&_.bb-share-content]:py-2.5 [&_.bb-share-content]:text-sm
+                            [&_.bb-share-content]:text-muted
+                            [&_.bb-share-content]:border-l-0 [&_.bb-share-content]:pl-0"
                   innerHTML={msg.body}
                 />
                 <button
-                  onClick={() => handleLike(msg.mid)}
+                  onClick={() => handleLike(msg.uuid)}
                   class="mt-1 flex items-center gap-1 text-[11px] transition-colors"
                   classList={{
-                    "text-rose-500": msg.viewerLiked,
-                    "text-gray-400 hover:text-rose-400": !msg.viewerLiked,
+                    "text-accent": msg.viewerLiked,
+                    "text-muted hover:text-accent": !msg.viewerLiked,
                   }}
                 >
                   <svg
@@ -122,14 +115,14 @@ function InlineThread(props: { thread: ThreadNode }) {
             onInput={(e) => setReplyBody(e.currentTarget.value)}
             rows={2}
             placeholder="Reply to thread…"
-            class="flex-1 text-sm rounded-lg border border-gray-200 dark:border-gray-600
-                   bg-surface px-3 py-2 resize-none
-                   focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+            class="flex-1 text-sm rounded-lg border border-rim
+                   bg-surface px-3 py-2 resize-none text-txt
+                   focus:outline-none focus:ring-2 focus:ring-accent/30"
           />
           <button
             onClick={submit}
             class="self-end px-3 py-1.5 text-xs font-medium rounded-lg
-                   bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                   bg-accent text-white hover:opacity-80 transition-opacity"
           >
             Send
           </button>
@@ -137,6 +130,11 @@ function InlineThread(props: { thread: ThreadNode }) {
       </Show>
     </div>
   );
+}
+
+// Flatten a thread to chronological list (root + all children)
+function flattenThread(node: ThreadNode): ThreadNode[] {
+  return [node, ...node.children.flatMap(flattenThread)];
 }
 
 function InboxRow(props: { thread: ThreadNode }) {
@@ -151,16 +149,24 @@ function InboxRow(props: { thread: ThreadNode }) {
   ];
   const replyCount = flattenThread(p).length - 1;
   const preview = stripHtml(p.body).slice(0, 100);
-  const { locale } = useI18n();
-
+	const { locale } = useI18n();
   return (
-    <div class="border-b border-gray-100 dark:border-gray-800 last:border-0">
+    <div class="border-b border-rim last:border-0">
       <button
         onClick={() => setExpanded((v) => !v)}
         class="w-full text-left flex items-center gap-3 px-4 py-3
-               hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors"
+               hover:bg-overlay transition-colors text-txt"
       >
-        {/* Participant avatars */}
+        {/* Unread dot */}
+        <div
+          class="w-2 h-2 rounded-full shrink-0"
+          classList={{
+            "bg-accent": !p.viewerLiked && replyCount === 0,
+            "bg-transparent": p.viewerLiked || replyCount > 0,
+          }}
+        />
+
+        {/* Participants avatars */}
         <div class="flex -space-x-1.5 shrink-0">
           <For each={allParticipants.slice(0, 3)}>
             {(name) => {
@@ -170,8 +176,8 @@ function InboxRow(props: { thread: ThreadNode }) {
                   when={node?.authorAvatar}
                   fallback={
                     <div
-                      class="w-6 h-6 rounded-full ring-2 ring-white dark:ring-gray-900
-                              bg-gradient-to-br from-blue-400 to-indigo-500
+                      class="w-6 h-6 rounded-full ring-2 ring-surface
+                              bg-gradient-to-br from-accent to-accent-txt
                               flex items-center justify-center text-white text-[9px] font-bold"
                     >
                       {name?.[0]?.toUpperCase()}
@@ -181,7 +187,7 @@ function InboxRow(props: { thread: ThreadNode }) {
                   <img
                     src={node!.authorAvatar}
                     alt={name}
-                    class="w-6 h-6 rounded-full object-cover ring-2 ring-white dark:ring-gray-900"
+                    class="w-6 h-6 rounded-full object-cover ring-2 ring-surface"
                   />
                 </Show>
               );
@@ -190,42 +196,41 @@ function InboxRow(props: { thread: ThreadNode }) {
         </div>
 
         {/* Participant names */}
-        <span class="text-xs font-semibold text-gray-700 dark:text-gray-300 w-36 shrink-0 truncate">
+        <span class="text-xs font-semibold text-txt w-36 shrink-0 truncate">
           {allParticipants.slice(0, 2).join(", ")}
           <Show when={allParticipants.length > 2}>
-            <span class="text-gray-400"> +{allParticipants.length - 2}</span>
+            <span class="text-muted"> +{allParticipants.length - 2}</span>
           </Show>
         </span>
 
         {/* Subject + preview */}
         <span class="flex-1 text-xs min-w-0 truncate">
           <Show when={p.title}>
-            <span class="font-medium text-txt mr-1.5">{p.title}</span>
+            <span class="font-medium text-txt mr-1.5">
+              {p.title}
+            </span>
           </Show>
-          <span class="text-gray-500">{preview}</span>
+          <span class="text-muted">{preview}</span>
         </span>
 
         {/* Reply count badge */}
         <Show when={replyCount > 0}>
           <span
-            class="shrink-0 text-[11px] bg-gray-100 dark:bg-gray-700
-                   text-muted rounded-full px-2 py-0.5"
+            class="shrink-0 text-[11px] bg-accent-muted
+                       text-muted rounded-full px-2 py-0.5"
           >
             {replyCount}
           </span>
         </Show>
 
         {/* Date */}
-        <span
-          class="text-[11px] text-gray-400 w-14 text-right shrink-0"
-          title={new Date(p.created + "Z").toLocaleString(locale())}
-        >
+        <span class="text-[11px] text-muted w-14 text-right shrink-0" title={new Date(p.created + "Z").toLocaleString(locale())}>
           {formatPostDate(p.created, locale())}
         </span>
 
         {/* Chevron */}
         <svg
-          class="w-4 h-4 text-gray-400 shrink-0 transition-transform"
+          class="w-4 h-4 text-muted shrink-0 transition-transform"
           classList={{ "rotate-180": expanded() }}
           fill="none"
           stroke="currentColor"
@@ -250,12 +255,11 @@ function InboxRow(props: { thread: ThreadNode }) {
 export default function InboxView(props: { posts: ThreadNode[] }) {
   return (
     <div
-      class="bg-surface rounded-xl border border-gray-100
-             dark:border-gray-700/50 shadow-sm overflow-hidden"
+      class="bg-surface rounded-xl border border-rim shadow-sm overflow-hidden"
     >
       <div
-        class="flex items-center gap-3 px-4 py-2.5 border-b border-gray-100 dark:border-gray-700
-               bg-gray-50 dark:bg-gray-800/80 text-[11px] text-gray-400 font-medium uppercase tracking-wide"
+        class="flex items-center gap-3 px-4 py-2.5 border-b border-rim
+                  bg-overlay text-[11px] text-muted font-medium uppercase tracking-wide"
       >
         <span class="w-2 shrink-0" />
         <span class="w-6 shrink-0" />
@@ -267,7 +271,9 @@ export default function InboxView(props: { posts: ThreadNode[] }) {
       <For
         each={props.posts}
         fallback={
-          <p class="text-center py-16 text-gray-400 text-sm">Nothing here yet.</p>
+          <p class="text-center py-16 text-muted text-sm">
+            Nothing here yet.
+          </p>
         }
       >
         {(thread) => <InboxRow thread={thread} />}
