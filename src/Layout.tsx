@@ -184,8 +184,8 @@ const Layout: ParentComponent = (props) => {
             <Show when={showScrollTop()}>
               <button
                 onClick={() => mainRef.scrollTo({ top: 0, behavior: "smooth" })}
-                class="sticky bottom-6 float-right mr-2 z-10
-                       w-9 h-9 rounded-full flex items-center justify-center
+                class="sticky bottom-2 lg:bottom-14 xl:bottom-2 float-right z-10
+                       w-10 h-10 rounded-full flex items-center justify-center
                        bg-elevated border border-rim
                        shadow hover:shadow-md transition-all"
                 title="Scroll to top"
