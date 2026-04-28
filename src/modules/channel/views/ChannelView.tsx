@@ -1,8 +1,11 @@
-import { createEffect } from "solid-js";
+// src/modules/channel/views/ChannelView.tsx
+import { createEffect, onCleanup, Show, For } from "solid-js";
 import { useParams, useSearchParams } from "@solidjs/router";
-import { posts, loading, loadChannel } from "../store/store";
-import { handleLike, handleDislike, handleRepeat, handleComment } from "../store/store";
-import { For, Show } from "solid-js";
+import {
+  posts, loading, loadingMore, hasMore, newPosts,
+  loadChannel, loadMore, flushNewPosts, stopPolling,
+  handleLike, handleDislike, handleRepeat, handleComment,
+} from "../store/store";
 import PostCard from "@/shared/views/PostCard";
 import type { PostActions } from "@/shared/views/PostCard";
 import type { ChannelParams } from "../api/api";
@@ -40,11 +43,10 @@ const actions: PostActions = {
 };
 
 export default function ChannelView() {
-	const params = useParams<{ nick: string }>();
+  const params = useParams<{ nick: string }>();
   const [searchParams] = useSearchParams();
 
-  // createEffect re-runs whenever params.nick or any searchParam changes,
-  // so navigating between /channel/alice and /channel/bob reloads correctly
+  // Re-load whenever nick or search params change (cross-channel navigation)
   createEffect(() => {
     const str = (key: string): string | undefined => {
       const v = searchParams[key];
@@ -61,26 +63,67 @@ export default function ChannelView() {
       ...(str("dbegin") && { dbegin: str("dbegin") }),
     };
 
-    // Empty string → PHP falls back to local_channel()
     loadChannel(params.nick ?? "", p);
+  });
+
+  // Stop polling when leaving the route
+  onCleanup(() => stopPolling());
+
+  // Infinite scroll sentinel
+  let sentinel!: HTMLDivElement;
+  createEffect(() => {
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => { if (entries[0].isIntersecting) loadMore(); },
+      { rootMargin: "200px" },
+    );
+    observer.observe(sentinel);
+    onCleanup(() => observer.disconnect());
   });
 
   return (
     <>
-			<ProfileView />
+      <ProfileView />
+
+      {/* New-posts banner */}
+      <Show when={newPosts().length > 0}>
+        <button
+          onClick={flushNewPosts}
+          class="w-full mb-3 py-2 text-sm font-medium rounded-xl
+                 bg-accent text-accent-txt border border-accent
+                 hover:opacity-90 transition-opacity"
+        >
+          ↑ {newPosts().length} new {newPosts().length === 1 ? "post" : "posts"}
+        </button>
+      </Show>
+
+      {/* Loading skeletons */}
       <Show when={loading()}>
         <For each={Array(5).fill(0)}>
           {() => <PostPlaceholder />}
         </For>
       </Show>
+
+      {/* Empty state */}
       <Show when={!loading() && posts().length === 0}>
         <p class="text-sm text-zinc-500 dark:text-zinc-400 py-4 text-center">
           No posts yet.
         </p>
       </Show>
+
+      {/* Posts */}
       <For each={posts()}>
         {(post) => <PostCard post={post} actions={actions} />}
       </For>
+
+      {/* Infinite scroll sentinel + load-more state */}
+      <div ref={sentinel} class="h-1" />
+      <Show when={loadingMore()}>
+        <p class="text-center text-sm text-muted py-4">Loading more…</p>
+      </Show>
+      <Show when={!hasMore() && posts().length > 0}>
+        <p class="text-center text-xs text-muted py-6">You're all caught up.</p>
+      </Show>
     </>
   );
 }

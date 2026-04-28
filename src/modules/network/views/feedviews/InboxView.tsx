@@ -1,4 +1,4 @@
-// components/views/InboxView.tsx
+// src/modules/network/views/feedviews/InboxView.tsx
 import { For, Show, createSignal } from "solid-js";
 import type { ThreadNode } from "@/shared/lib/thread";
 import { handleLike, handleComment } from "@/modules/network/store/store";
@@ -12,6 +12,10 @@ function stripHtml(html: string): string {
     .trim();
 }
 
+function flattenThread(node: ThreadNode): ThreadNode[] {
+  return [node, ...node.children.flatMap(flattenThread)];
+}
+
 function InlineThread(props: { thread: ThreadNode }) {
   const all = flattenThread(props.thread);
   const [replyBody, setReplyBody] = createSignal("");
@@ -19,7 +23,7 @@ function InlineThread(props: { thread: ThreadNode }) {
   const submit = () => {
     const text = replyBody().trim();
     if (!text) return;
-    handleComment(props.thread.mid, text, "Me", "");
+    handleComment(props.thread.mid, text, props.thread.authorName, props.thread.authorAvatar);
     setReplyBody("");
   };
 
@@ -57,32 +61,32 @@ function InlineThread(props: { thread: ThreadNode }) {
                 </div>
                 <div
                   class="text-sm text-gray-700 dark:text-gray-300 mt-0.5 leading-relaxed
-                            [&>p]:my-0.5 [&_img]:max-w-xs [&_img]:rounded-lg
-                            [&_.bb-share]:mt-2 [&_.bb-share]:rounded-xl [&_.bb-share]:border
-                            [&_.bb-share]:border-gray-200 [&_.bb-share]:dark:border-gray-700
-                            [&_.bb-share]:bg-white [&_.bb-share]:dark:bg-gray-800/60
-                            [&_.bb-share]:overflow-hidden
-                            [&_.bb-share_br]:hidden
-                            [&_.bb-share-header]:flex [&_.bb-share-header]:items-center
-                            [&_.bb-share-header]:gap-2 [&_.bb-share-header]:px-3 [&_.bb-share-header]:py-2
-                            [&_.bb-share-header]:text-xs [&_.bb-share-header]:text-gray-500
-                            [&_.bb-share-header]:dark:text-gray-400
-                            [&_.bb-share-header]:border-b [&_.bb-share-header]:border-gray-200
-                            [&_.bb-share-header]:dark:border-gray-700
-                            [&_.share-avatar]:!w-6 [&_.share-avatar]:!h-6
-                            [&_.share-avatar]:rounded-full [&_.share-avatar]:object-cover
-                            [&_.share-avatar]:shrink-0 [&_.share-avatar]:!my-0
-                            [&_.bb-share-header_a]:font-medium [&_.bb-share-header_a]:text-gray-700
-                            [&_.bb-share-header_a]:dark:text-gray-300
-                            [&_.bb-share-header_a:hover]:underline
-                            [&_.bb-share-content]:block [&_.bb-share-content]:px-3
-                            [&_.bb-share-content]:py-2.5 [&_.bb-share-content]:text-sm
-                            [&_.bb-share-content]:text-gray-700 [&_.bb-share-content]:dark:text-gray-300
-                            [&_.bb-share-content]:border-l-0 [&_.bb-share-content]:pl-0"
+                         [&>p]:my-0.5 [&_img]:max-w-xs [&_img]:rounded-lg
+                         [&_.bb-share]:mt-2 [&_.bb-share]:rounded-xl [&_.bb-share]:border
+                         [&_.bb-share]:border-gray-200 [&_.bb-share]:dark:border-gray-700
+                         [&_.bb-share]:bg-white [&_.bb-share]:dark:bg-gray-800/60
+                         [&_.bb-share]:overflow-hidden
+                         [&_.bb-share_br]:hidden
+                         [&_.bb-share-header]:flex [&_.bb-share-header]:items-center
+                         [&_.bb-share-header]:gap-2 [&_.bb-share-header]:px-3 [&_.bb-share-header]:py-2
+                         [&_.bb-share-header]:text-xs [&_.bb-share-header]:text-gray-500
+                         [&_.bb-share-header]:dark:text-gray-400
+                         [&_.bb-share-header]:border-b [&_.bb-share-header]:border-gray-200
+                         [&_.bb-share-header]:dark:border-gray-700
+                         [&_.share-avatar]:!w-6 [&_.share-avatar]:!h-6
+                         [&_.share-avatar]:rounded-full [&_.share-avatar]:object-cover
+                         [&_.share-avatar]:shrink-0 [&_.share-avatar]:!my-0
+                         [&_.bb-share-header_a]:font-medium [&_.bb-share-header_a]:text-gray-700
+                         [&_.bb-share-header_a]:dark:text-gray-300
+                         [&_.bb-share-header_a:hover]:underline
+                         [&_.bb-share-content]:block [&_.bb-share-content]:px-3
+                         [&_.bb-share-content]:py-2.5 [&_.bb-share-content]:text-sm
+                         [&_.bb-share-content]:text-gray-700 [&_.bb-share-content]:dark:text-gray-300
+                         [&_.bb-share-content]:border-l-0 [&_.bb-share-content]:pl-0"
                   innerHTML={msg.body}
                 />
                 <button
-                  onClick={() => handleLike(msg.uuid)}
+                  onClick={() => handleLike(msg.mid)}
                   class="mt-1 flex items-center gap-1 text-[11px] transition-colors"
                   classList={{
                     "text-rose-500": msg.viewerLiked,
@@ -135,11 +139,6 @@ function InlineThread(props: { thread: ThreadNode }) {
   );
 }
 
-// Flatten a thread to chronological list (root + all children)
-function flattenThread(node: ThreadNode): ThreadNode[] {
-  return [node, ...node.children.flatMap(flattenThread)];
-}
-
 function InboxRow(props: { thread: ThreadNode }) {
   const [expanded, setExpanded] = createSignal(false);
   const p = props.thread;
@@ -152,7 +151,8 @@ function InboxRow(props: { thread: ThreadNode }) {
   ];
   const replyCount = flattenThread(p).length - 1;
   const preview = stripHtml(p.body).slice(0, 100);
-	const { locale } = useI18n();
+  const { locale } = useI18n();
+
   return (
     <div class="border-b border-gray-100 dark:border-gray-800 last:border-0">
       <button
@@ -160,8 +160,7 @@ function InboxRow(props: { thread: ThreadNode }) {
         class="w-full text-left flex items-center gap-3 px-4 py-3
                hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors"
       >
-      
-        {/* Participants avatars */}
+        {/* Participant avatars */}
         <div class="flex -space-x-1.5 shrink-0">
           <For each={allParticipants.slice(0, 3)}>
             {(name) => {
@@ -201,9 +200,7 @@ function InboxRow(props: { thread: ThreadNode }) {
         {/* Subject + preview */}
         <span class="flex-1 text-xs min-w-0 truncate">
           <Show when={p.title}>
-            <span class="font-medium text-txt mr-1.5">
-              {p.title}
-            </span>
+            <span class="font-medium text-txt mr-1.5">{p.title}</span>
           </Show>
           <span class="text-gray-500">{preview}</span>
         </span>
@@ -212,14 +209,17 @@ function InboxRow(props: { thread: ThreadNode }) {
         <Show when={replyCount > 0}>
           <span
             class="shrink-0 text-[11px] bg-gray-100 dark:bg-gray-700
-                       text-muted rounded-full px-2 py-0.5"
+                   text-muted rounded-full px-2 py-0.5"
           >
             {replyCount}
           </span>
         </Show>
 
         {/* Date */}
-        <span class="text-[11px] text-gray-400 w-14 text-right shrink-0" title={new Date(p.created + "Z").toLocaleString(locale())}>
+        <span
+          class="text-[11px] text-gray-400 w-14 text-right shrink-0"
+          title={new Date(p.created + "Z").toLocaleString(locale())}
+        >
           {formatPostDate(p.created, locale())}
         </span>
 
@@ -251,11 +251,11 @@ export default function InboxView(props: { posts: ThreadNode[] }) {
   return (
     <div
       class="bg-surface rounded-xl border border-gray-100
-                dark:border-gray-700/50 shadow-sm overflow-hidden"
+             dark:border-gray-700/50 shadow-sm overflow-hidden"
     >
       <div
         class="flex items-center gap-3 px-4 py-2.5 border-b border-gray-100 dark:border-gray-700
-                  bg-gray-50 dark:bg-gray-800/80 text-[11px] text-gray-400 font-medium uppercase tracking-wide"
+               bg-gray-50 dark:bg-gray-800/80 text-[11px] text-gray-400 font-medium uppercase tracking-wide"
       >
         <span class="w-2 shrink-0" />
         <span class="w-6 shrink-0" />
@@ -267,9 +267,7 @@ export default function InboxView(props: { posts: ThreadNode[] }) {
       <For
         each={props.posts}
         fallback={
-          <p class="text-center py-16 text-gray-400 text-sm">
-            Nothing here yet.
-          </p>
+          <p class="text-center py-16 text-gray-400 text-sm">Nothing here yet.</p>
         }
       >
         {(thread) => <InboxRow thread={thread} />}

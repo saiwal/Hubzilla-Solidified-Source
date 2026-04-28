@@ -139,7 +139,7 @@ export async function fetchNetworkStream(params: NetworkParams = {}): Promise<Ne
 }
 export async function toggleVerb(
   iid: number,
-  verb: 'like' | 'dislike' | 'announce',
+  verb: 'like' | 'dislike' | 'announce' | 'star',
 ): Promise<void> {
   const url = `/like/${iid}?verb=${verb}&conv_mode=&page_mode=client&reload=0`;
   const res = await fetch(url, { method: 'GET', credentials: 'include' });

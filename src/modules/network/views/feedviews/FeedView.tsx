@@ -1,4 +1,4 @@
-// components/views/FeedView.tsx
+// src/modules/network/views/feedviews/FeedView.tsx
 import { For, Show, createSignal } from "solid-js";
 import type { ThreadNode } from "@/shared/lib/thread";
 import {
@@ -7,6 +7,7 @@ import {
   handleRepeat,
   handleComment,
 } from "@/modules/network/store/store";
+
 export function FeedPlaceholder() {
   return (
     <div class="animate-pulse bg-surface border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 mb-4 shadow-sm">
@@ -40,9 +41,7 @@ function ActionBar(props: { post: ThreadNode }) {
         class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
                transition-colors hover:bg-rose-50 dark:hover:bg-rose-900/20
                text-muted hover:text-rose-500"
-        classList={{
-          "text-rose-500 bg-rose-50 dark:bg-rose-900/20": p.viewerLiked,
-        }}
+        classList={{ "text-rose-500 bg-rose-50 dark:bg-rose-900/20": p.viewerLiked }}
       >
         <svg
           class="w-3.5 h-3.5"
@@ -67,9 +66,7 @@ function ActionBar(props: { post: ThreadNode }) {
         class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
                transition-colors hover:bg-amber-50 dark:hover:bg-amber-900/20
                text-muted hover:text-amber-500"
-        classList={{
-          "text-amber-500 bg-amber-50 dark:bg-amber-900/20": p.viewerDisliked,
-        }}
+        classList={{ "text-amber-500 bg-amber-50 dark:bg-amber-900/20": p.viewerDisliked }}
       >
         <svg
           class="w-3.5 h-3.5"
@@ -94,10 +91,7 @@ function ActionBar(props: { post: ThreadNode }) {
         class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
                transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-900/20
                text-muted hover:text-emerald-500"
-        classList={{
-          "text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20":
-            p.viewerRepeated,
-        }}
+        classList={{ "text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20": p.viewerRepeated }}
       >
         <svg
           class="w-3.5 h-3.5"
@@ -125,7 +119,7 @@ function CommentBox(props: { post: ThreadNode; onClose: () => void }) {
   const submit = () => {
     const text = body().trim();
     if (!text) return;
-    handleComment(props.post.mid, text, "Me", "");
+    handleComment(props.post.mid, text, props.post.authorName, props.post.authorAvatar);
     setBody("");
     props.onClose();
   };
@@ -208,8 +202,8 @@ function ThreadedPost(props: { post: ThreadNode; depth?: number }) {
             </Show>
             <div
               class="prose prose-sm dark:prose-invert max-w-none mt-1 text-gray-700 dark:text-gray-300
-                        [&>p]:my-1 [&>blockquote]:border-l-2 [&>blockquote]:pl-3 [&>blockquote]:text-gray-500
-                        [&_img]:max-w-full [&_img]:rounded-lg [&_img]:mt-2"
+                     [&>p]:my-1 [&>blockquote]:border-l-2 [&>blockquote]:pl-3 [&>blockquote]:text-gray-500
+                     [&_img]:max-w-full [&_img]:rounded-lg [&_img]:mt-2"
               innerHTML={props.post.body}
             />
             <ActionBar post={props.post} />
@@ -222,10 +216,7 @@ function ThreadedPost(props: { post: ThreadNode; depth?: number }) {
               </button>
             </Show>
             <Show when={showReply()}>
-              <CommentBox
-                post={props.post}
-                onClose={() => setShowReply(false)}
-              />
+              <CommentBox post={props.post} onClose={() => setShowReply(false)} />
             </Show>
           </div>
         </div>
@@ -245,15 +236,13 @@ export default function FeedView(props: { posts: ThreadNode[] }) {
       <For
         each={props.posts}
         fallback={
-          <p class="text-center py-16 text-gray-400 text-sm">
-            Nothing here yet.
-          </p>
+          <p class="text-center py-16 text-gray-400 text-sm">Nothing here yet.</p>
         }
       >
         {(post) => (
           <div
             class="bg-surface rounded-xl mb-3 px-4 shadow-sm
-                      border border-gray-100 dark:border-gray-700/50"
+                   border border-gray-100 dark:border-gray-700/50"
           >
             <ThreadedPost post={post} />
           </div>

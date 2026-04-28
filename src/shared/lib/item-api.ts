@@ -74,5 +74,5 @@ export const apiCreateComment = (parentUuid: string, content: string, title = ''
 export const apiEditItem = (uuid: string, content: string, title = '') =>
   post<{ success: boolean }>(`${BASE}/${encodeId(uuid)}/edit`, { body: content, title });
 
-export const apiDeleteItem = (uuid: string) =>
-  post<{ success: boolean }>(`${BASE}/${encodeId(uuid)}/delete`);
+export const apiDeleteItem = (iid: number) =>
+  post<{ success: boolean }>(`${BASE}/${iid}/delete`);

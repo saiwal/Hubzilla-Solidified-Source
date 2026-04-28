@@ -1,4 +1,4 @@
-// components/views/MasonryView.tsx
+// src/modules/network/views/feedviews/MasonryView.tsx
 import {
   For,
   Show,
@@ -18,8 +18,8 @@ import { useI18n } from "@/i18n";
 function useColumnCount(): () => number {
   const getCount = () => {
     const w = window.innerWidth;
-    if (w >= 1024) return 3; // lg
-    if (w >= 640) return 2; // sm
+    if (w >= 1024) return 3;
+    if (w >= 640) return 2;
     return 1;
   };
   const [count, setCount] = createSignal(getCount());
@@ -33,8 +33,6 @@ function useColumnCount(): () => number {
   return count;
 }
 
-// ── helpers ───────────────────────────────────────────────────────────────────
-
 function splitIntoColumns<T>(items: T[], n: number): T[][] {
   const cols: T[][] = Array.from({ length: n }, () => []);
   items.forEach((item, i) => cols[i % n].push(item));
@@ -43,7 +41,6 @@ function splitIntoColumns<T>(items: T[], n: number): T[][] {
 
 // ── MasonryCard ───────────────────────────────────────────────────────────────
 
-/** Max height (px) before the body is collapsed */
 const COLLAPSED_MAX_PX = 200;
 
 function MasonryCard(props: { post: ThreadNode }) {
@@ -51,15 +48,11 @@ function MasonryCard(props: { post: ThreadNode }) {
   const replyCount = p.children.length;
   const [showModal, setShowModal] = createSignal(false);
   const [expanded, setExpanded] = createSignal(false);
-
-  /** Reference to the body div so we can measure its natural height */
   let bodyRef!: HTMLDivElement;
   const [overflows, setOverflows] = createSignal(false);
   const { locale, t } = useI18n();
 
   onMount(() => {
-    // After the first paint, check whether the content is taller than the cap.
-    // We temporarily remove the max-height constraint to measure true scrollHeight.
     const el = bodyRef;
     const prev = el.style.maxHeight;
     el.style.maxHeight = "none";
@@ -76,7 +69,7 @@ function MasonryCard(props: { post: ThreadNode }) {
                border border-gray-100 dark:border-gray-700/50
                rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
       >
-        {/* ── Author row ── */}
+        {/* Author row */}
         <div class="flex items-center gap-2 mb-3">
           <Show
             when={p.authorAvatar}
@@ -103,20 +96,17 @@ function MasonryCard(props: { post: ThreadNode }) {
               class="text-xs text-gray-400"
               title={new Date(p.created + "Z").toLocaleString(locale())}
             >
-              {" "}
               {formatPostDate(p.created, locale())}
             </p>
           </div>
         </div>
 
-        {/* ── Title ── */}
+        {/* Title */}
         <Show when={p.title}>
-          <p class="text-sm font-semibold text-txt mb-2 leading-snug">
-            {p.title}
-          </p>
+          <p class="text-sm font-semibold text-txt mb-2 leading-snug">{p.title}</p>
         </Show>
 
-        {/* ── Body with height cap ── */}
+        {/* Body with height cap */}
         <div class="relative">
           <div
             class="overflow-hidden transition-[max-height] duration-300 ease-in-out"
@@ -127,34 +117,33 @@ function MasonryCard(props: { post: ThreadNode }) {
             <div
               ref={bodyRef}
               class="post-body text-sm text-gray-600 dark:text-gray-400 leading-relaxed
-                   [&>p]:my-0.5 [&_img]:w-full [&_img]:rounded-lg [&_img]:mt-2 [&_img]:mb-1
-                   [&>blockquote]:border-l-2 [&>blockquote]:pl-2 [&>blockquote]:text-gray-400
-                   wrap-anywhere
-                   [&_.bb-share]:mt-2 [&_.bb-share]:rounded-xl [&_.bb-share]:border
-                   [&_.bb-share]:border-gray-200 [&_.bb-share]:dark:border-gray-700
-                   [&_.bb-share]:bg-gray-50 [&_.bb-share]:dark:bg-gray-800/60
-                   [&_.bb-share]:overflow-hidden
-                   [&_.bb-share_br]:hidden
-                   [&_.bb-share-header]:flex [&_.bb-share-header]:items-center
-                   [&_.bb-share-header]:gap-2 [&_.bb-share-header]:px-3 [&_.bb-share-header]:py-2
-                   [&_.bb-share-header]:text-xs [&_.bb-share-header]:text-gray-500
-                   [&_.bb-share-header]:dark:text-gray-400
-                   [&_.bb-share-header]:border-b [&_.bb-share-header]:border-gray-200
-                   [&_.bb-share-header]:dark:border-gray-700
-                   [&_.share-avatar]:!w-6 [&_.share-avatar]:!h-6
-                   [&_.share-avatar]:rounded-full [&_.share-avatar]:object-cover
-                   [&_.share-avatar]:shrink-0 [&_.share-avatar]:!my-0
-                   [&_.bb-share-header_a]:font-medium [&_.bb-share-header_a]:text-gray-700
-                   [&_.bb-share-header_a]:dark:text-gray-300
-                   [&_.bb-share-content]:block [&_.bb-share-content]:px-3
-                   [&_.bb-share-content]:py-2.5 [&_.bb-share-content]:text-sm
-                   [&_.bb-share-content]:text-gray-600 [&_.bb-share-content]:dark:text-gray-400
-                   [&_.bb-share-content]:border-l-0 [&_.bb-share-content]:pl-0"
+                     [&>p]:my-0.5 [&_img]:w-full [&_img]:rounded-lg [&_img]:mt-2 [&_img]:mb-1
+                     [&>blockquote]:border-l-2 [&>blockquote]:pl-2 [&>blockquote]:text-gray-400
+                     wrap-anywhere
+                     [&_.bb-share]:mt-2 [&_.bb-share]:rounded-xl [&_.bb-share]:border
+                     [&_.bb-share]:border-gray-200 [&_.bb-share]:dark:border-gray-700
+                     [&_.bb-share]:bg-gray-50 [&_.bb-share]:dark:bg-gray-800/60
+                     [&_.bb-share]:overflow-hidden
+                     [&_.bb-share_br]:hidden
+                     [&_.bb-share-header]:flex [&_.bb-share-header]:items-center
+                     [&_.bb-share-header]:gap-2 [&_.bb-share-header]:px-3 [&_.bb-share-header]:py-2
+                     [&_.bb-share-header]:text-xs [&_.bb-share-header]:text-gray-500
+                     [&_.bb-share-header]:dark:text-gray-400
+                     [&_.bb-share-header]:border-b [&_.bb-share-header]:border-gray-200
+                     [&_.bb-share-header]:dark:border-gray-700
+                     [&_.share-avatar]:!w-6 [&_.share-avatar]:!h-6
+                     [&_.share-avatar]:rounded-full [&_.share-avatar]:object-cover
+                     [&_.share-avatar]:shrink-0 [&_.share-avatar]:!my-0
+                     [&_.bb-share-header_a]:font-medium [&_.bb-share-header_a]:text-gray-700
+                     [&_.bb-share-header_a]:dark:text-gray-300
+                     [&_.bb-share-content]:block [&_.bb-share-content]:px-3
+                     [&_.bb-share-content]:py-2.5 [&_.bb-share-content]:text-sm
+                     [&_.bb-share-content]:text-gray-600 [&_.bb-share-content]:dark:text-gray-400
+                     [&_.bb-share-content]:border-l-0 [&_.bb-share-content]:pl-0"
               innerHTML={p.body}
             />
           </div>
 
-          {/* Fade + expand button — only when content actually overflows */}
           <Show when={overflows() && !expanded()}>
             <div
               class="absolute bottom-0 left-0 right-0 h-16
@@ -172,18 +161,8 @@ function MasonryCard(props: { post: ThreadNode }) {
                        border border-violet-200 dark:border-violet-700/50
                        transition-colors"
               >
-                <svg
-                  class="w-3 h-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 9l-7 7-7-7"
-                  />
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
                 {t("ui.show_more")}
               </button>
@@ -191,7 +170,6 @@ function MasonryCard(props: { post: ThreadNode }) {
           </Show>
         </div>
 
-        {/* Collapse button — shown after expanding */}
         <Show when={overflows() && expanded()}>
           <button
             class="flex items-center justify-center gap-1 text-xs text-violet-600 dark:text-violet-400
@@ -201,30 +179,20 @@ function MasonryCard(props: { post: ThreadNode }) {
               setExpanded(false);
             }}
           >
-            <svg
-              class="w-3 h-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M5 15l7-7 7 7"
-              />
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
             </svg>
             {t("ui.show_less")}
           </button>
         </Show>
 
-        {/* ── Actions ── */}
+        {/* Actions */}
         <div
           class="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/50"
           onClick={(e) => e.stopPropagation()}
         >
           <button
-            onClick={() => handleLike(p.uuid)}
+            onClick={() => handleLike(p.mid)}
             class="flex items-center gap-1 text-xs transition-colors"
             classList={{
               "text-rose-500": p.viewerLiked,
@@ -317,27 +285,13 @@ export default function MasonryView(props: { posts: ThreadNode[] }) {
 export function MasonryPlaceholder(props: { count?: number }) {
   const colCount = useColumnCount();
   const heights = [
-    "h-24",
-    "h-36",
-    "h-20",
-    "h-32",
-    "h-28",
-    "h-16",
-    "h-40",
-    "h-24",
-    "h-20",
-    "h-32",
-    "h-28",
-    "h-36",
+    "h-24", "h-36", "h-20", "h-32", "h-28", "h-16",
+    "h-40", "h-24", "h-20", "h-32", "h-28", "h-36",
   ];
   const placeholders = createMemo(() =>
-    Array(props.count ?? 12)
-      .fill(0)
-      .map((_, i) => ({ i })),
+    Array(props.count ?? 12).fill(0).map((_, i) => ({ i })),
   );
-  const columns = createMemo(() =>
-    splitIntoColumns(placeholders(), colCount()),
-  );
+  const columns = createMemo(() => splitIntoColumns(placeholders(), colCount()));
 
   return (
     <div class="flex gap-3 items-start">
@@ -348,8 +302,8 @@ export function MasonryPlaceholder(props: { count?: number }) {
               {({ i }) => (
                 <div
                   class="mb-3 bg-surface
-                            border border-gray-100 dark:border-gray-700/50
-                            rounded-xl p-4 shadow-sm animate-pulse"
+                         border border-gray-100 dark:border-gray-700/50
+                         rounded-xl p-4 shadow-sm animate-pulse"
                 >
                   <div class="flex items-center gap-2 mb-3">
                     <div class="w-7 h-7 rounded-full bg-zinc-200 dark:bg-zinc-700 shrink-0" />
@@ -358,9 +312,7 @@ export function MasonryPlaceholder(props: { count?: number }) {
                       <div class="h-2 bg-zinc-200 dark:bg-zinc-700 rounded w-16" />
                     </div>
                   </div>
-                  <div
-                    class={`${heights[i % heights.length]} bg-zinc-200 dark:bg-zinc-700 rounded-lg`}
-                  />
+                  <div class={`${heights[i % heights.length]} bg-zinc-200 dark:bg-zinc-700 rounded-lg`} />
                   <div class="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/50">
                     <div class="h-2.5 bg-zinc-200 dark:bg-zinc-700 rounded w-6" />
                     <div class="h-2.5 bg-zinc-200 dark:bg-zinc-700 rounded w-6" />

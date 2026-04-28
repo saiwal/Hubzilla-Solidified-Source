@@ -2,12 +2,6 @@ import { createSignal, onMount, onCleanup } from "solid-js";
 import type { ThreadNode } from "../lib/thread";
 import CommentThread from "./CommentThread";
 import formatPostDate from "../lib/date";
-import {
-  handleLike as networkLike,
-  handleDislike as networkDislike,
-  handleRepeat as networkRepeat,
-  handleComment as networkComment,
-} from "@/modules/network/store/store";
 import { markItemSeen } from "@/shared/lib/markSeen";
 import {
   MdFillBar_chart,
@@ -23,29 +17,18 @@ import { useI18n } from "@/i18n";
 import { BiRegularLinkExternal } from "solid-icons/bi";
 
 export interface PostActions {
-  onLike: (uuid: string) => Promise<void>;
-  onDislike: (uuid: string) => Promise<void>;
-  onRepeat: (uuid: string) => Promise<void>;
-  onComment: (
-    parentUuid: string,
-    body: string,
-    authorName: string,
-    authorAvatar: string,
-  ) => Promise<void>;
+  onLike:    (mid: string) => void;
+  onDislike: (mid: string) => void;
+  onRepeat:  (mid: string) => void;
+  onComment: (parentMid: string, body: string, authorName: string, authorAvatar: string) => void;
 }
-const networkActions: PostActions = {
-  onLike: networkLike,
-  onDislike: networkDislike,
-  onRepeat: networkRepeat,
-  onComment: networkComment,
-};
 
 export default function PostCard(props: {
   post: ThreadNode;
   actions?: PostActions;
   onSeen?: (uuid: string) => void;
 }) {
-  const getActions = () => props.actions ?? networkActions;
+  const getActions = () => props.actions;
   const [replyOpen, setReplyOpen] = createSignal(false);
   const [showComments, setShowComments] = createSignal(false);
   const [replyBody, setReplyBody] = createSignal("");
@@ -72,28 +55,28 @@ export default function PostCard(props: {
     onCleanup(() => observer.disconnect());
   });
 
-  async function onLike() {
+  function onLike() {
     setActionError(null);
     try {
-      await getActions().onLike(props.post.uuid);
+      getActions()?.onLike(props.post.mid);
     } catch {
       setActionError("Like failed");
     }
   }
 
-  async function onDislike() {
+  function onDislike() {
     setActionError(null);
     try {
-      await getActions().onDislike(props.post.uuid);
+      getActions()?.onDislike(props.post.mid);
     } catch {
       setActionError("Dislike failed");
     }
   }
 
-  async function onRepeat() {
+  function onRepeat() {
     setActionError(null);
     try {
-      await getActions().onRepeat(props.post.uuid);
+      getActions()?.onRepeat(props.post.mid);
     } catch {
       setActionError("Repeat failed");
     }
@@ -105,8 +88,8 @@ export default function PostCard(props: {
     setSubmitting(true);
     setActionError(null);
     try {
-      await getActions().onComment(
-        props.post.uuid,
+      await getActions()?.onComment(
+        props.post.mid,
         body,
         props.post.authorName,
         props.post.authorAvatar,
@@ -150,7 +133,8 @@ export default function PostCard(props: {
         </div>
         <a
           href={props.post.permalink}
-          class="ml-auto text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100" title="source"
+          class="ml-auto text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
+          title="source"
         >
           <BiRegularLinkExternal size={17} />
         </a>
