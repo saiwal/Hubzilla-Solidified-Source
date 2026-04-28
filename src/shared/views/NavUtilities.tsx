@@ -6,7 +6,7 @@ import { BiRegularGlobe, BiRegularInfoCircle } from "solid-icons/bi";
 
 export default function NavUtilities() {
   return (
-    <div class="mt-3 pt-2 border-t border-rim flex items-center gap-0.5 px-1">
+    <div class="mt-3 pt-2 border-t border-rim flex items-center gap-0.5 px-1 justify-evenly">
       <LanguageSwitcher />
       <ThemeToggle />
       <HelpTrigger />
