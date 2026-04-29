@@ -2,21 +2,21 @@ import { createResource, For, Show, createSignal, createMemo } from 'solid-js';
 import { fetchPubsites, type PubSite } from '../api';
 
 const ACCESS_STYLES: Record<string, string> = {
-  free:   'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  tiered: 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  paid:   'bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400',
+  free:   'bg-accent-muted text-accent',
+  tiered: 'bg-accent-muted text-accent',
+  paid:   'bg-accent-muted text-accent',
 };
 
 const REGISTER_STYLES: Record<string, string> = {
-  open:    'bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
-  approve: 'bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400',
-  closed:  'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-500',
+  open:    'bg-accent-muted text-accent',
+  approve: 'bg-accent-muted text-accent',
+  closed:  'bg-overlay text-muted',
 };
 
 function Badge(props: { label: string; styles: Record<string, string> }) {
   const cls = () =>
     props.styles[props.label.toLowerCase()] ??
-    'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
+    'bg-overlay text-muted';
   return (
     <span class={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium capitalize ${cls()}`}>
       {props.label}
@@ -26,16 +26,16 @@ function Badge(props: { label: string; styles: Record<string, string> }) {
 
 function SkeletonCard() {
   return (
-    <div class="rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-3 animate-pulse">
+    <div class="rounded-xl border border-rim bg-surface p-4 space-y-3 animate-pulse">
       <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800" />
-        <div class="h-4 w-40 rounded bg-gray-100 dark:bg-gray-800" />
+        <div class="w-8 h-8 rounded-lg bg-overlay" />
+        <div class="h-4 w-40 rounded bg-overlay" />
       </div>
       <div class="flex gap-2">
-        <div class="h-5 w-12 rounded-md bg-gray-100 dark:bg-gray-800" />
-        <div class="h-5 w-16 rounded-md bg-gray-100 dark:bg-gray-800" />
+        <div class="h-5 w-12 rounded-md bg-overlay" />
+        <div class="h-5 w-16 rounded-md bg-overlay" />
       </div>
-      <div class="h-3 w-24 rounded bg-gray-100 dark:bg-gray-800" />
+      <div class="h-3 w-24 rounded bg-overlay" />
     </div>
   );
 }
@@ -49,23 +49,22 @@ function HubCard(props: { site: PubSite }) {
       href={props.site.register_url}
       target="_blank"
       rel="noopener noreferrer"
-      class="group block rounded-xl border border-gray-100 dark:border-gray-800
-             bg-white dark:bg-gray-900 p-4 space-y-3
-             hover:border-gray-300 dark:hover:border-gray-600
-             hover:shadow-sm transition-all duration-200"
+      class="group block rounded-xl border border-rim
+             bg-surface p-4 space-y-3
+             hover:border-accent hover:shadow-sm transition-all duration-200"
     >
       <div class="flex items-start gap-3">
-        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600
+        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-accent to-accent-txt
                     flex items-center justify-center text-white text-sm font-semibold shrink-0">
           {initial()}
         </div>
         <div class="min-w-0">
           <p class="text-sm font-semibold text-txt truncate
-                    group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                    group-hover:text-accent transition-colors">
             {props.site.urltext}
           </p>
           <Show when={props.site.location}>
-            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 truncate">
+            <p class="text-xs text-muted mt-0.5 truncate">
               {props.site.location}
             </p>
           </Show>
@@ -78,13 +77,13 @@ function HubCard(props: { site: PubSite }) {
       </div>
 
       <div class="flex items-center justify-between">
-        <span class="text-xs text-gray-400 dark:text-gray-500">
+        <span class="text-xs text-muted">
           {props.site.project}
           <Show when={version()}>
             <span class="ml-1 font-mono">{version()}</span>
           </Show>
         </span>
-        <svg class="w-3.5 h-3.5 text-gray-300 dark:text-gray-700 group-hover:text-indigo-400
+        <svg class="w-3.5 h-3.5 text-muted group-hover:text-accent
                     group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all"
           fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -129,16 +128,16 @@ export default function PubsitesView() {
           value={filter()}
           onInput={(e) => setFilter(e.currentTarget.value)}
           class="flex-1 px-3 py-2 text-sm rounded-lg border border-rim
-                 bg-white dark:bg-gray-900 text-txt
-                 placeholder:text-gray-400 focus:outline-none focus:ring-2
-                 focus:ring-indigo-500/40 focus:border-indigo-400 transition"
+                 bg-surface text-txt
+                 placeholder:text-muted focus:outline-none focus:ring-2
+                 focus:ring-accent/40 focus:border-accent transition"
         />
         <select
           value={accessFilter()}
           onChange={(e) => setAccessFilter(e.currentTarget.value)}
           class="px-3 py-2 text-sm rounded-lg border border-rim
-                 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300
-                 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition"
+                 bg-surface text-txt
+                 focus:outline-none focus:ring-2 focus:ring-accent/40 transition"
         >
           <option value="all">All access</option>
           <option value="free">Free</option>
@@ -149,8 +148,8 @@ export default function PubsitesView() {
           value={registerFilter()}
           onChange={(e) => setRegisterFilter(e.currentTarget.value)}
           class="px-3 py-2 text-sm rounded-lg border border-rim
-                 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300
-                 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition"
+                 bg-surface text-txt
+                 focus:outline-none focus:ring-2 focus:ring-accent/40 transition"
         >
           <option value="all">All registration</option>
           <option value="open">Open</option>
@@ -161,7 +160,7 @@ export default function PubsitesView() {
 
       {/* Stats row */}
       <Show when={!sites.loading && (sites()?.length ?? 0) > 0}>
-        <div class="flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500">
+        <div class="flex items-center gap-4 text-xs text-muted">
           <span>{filtered().length} of {sites()!.length} hubs</span>
           <span>·</span>
           <span>{sites()!.filter(s => s.register === 'open').length} open registration</span>
@@ -179,7 +178,7 @@ export default function PubsitesView() {
 
       {/* Empty */}
       <Show when={!sites.loading && filtered().length === 0}>
-        <div class="text-center py-16 text-gray-400 dark:text-gray-600">
+        <div class="text-center py-16 text-muted">
           <p class="text-4xl mb-3">○</p>
           <p class="text-sm">No hubs match your filters</p>
         </div>

@@ -72,19 +72,10 @@ export default function DirectoryView() {
               type="text"
               value={search()}
               onInput={(e) => setSearch(e.currentTarget.value)}
-              placeholder="Search by name, address, or keyword…"
-              class="flex-1 px-3 py-2 rounded-lg border border-rim
-                 bg-surface text-txt
-                 placeholder-gray-400 dark:placeholder-gray-500
-                 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              placeholder="name, address, or keyword…"
+							title="Find by name, address or keyword"
+              class="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm bg-surface focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <button
-              type="submit"
-              class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium
-                 hover:bg-blue-700 transition-colors"
-            >
-              Search
-            </button>
           </form>
         </div>
       </div>
@@ -95,8 +86,8 @@ export default function DirectoryView() {
           value={order()}
           onChange={(e) => setOrder(e.currentTarget.value as Order)}
           class="px-3 py-1.5 rounded-lg border border-rim
-                 bg-surface text-gray-700 dark:text-gray-300
-                 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                 bg-surface text-txt
+                 focus:outline-none focus:ring-2 focus:ring-accent"
         >
           <option value="date">Newest first</option>
           <option value="rdate">Oldest first</option>
@@ -109,8 +100,8 @@ export default function DirectoryView() {
           class={`px-3 py-1.5 rounded-lg border transition-colors
             ${
               globalDir() === 1
-                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-                : "border-rim text-gray-600 dark:text-gray-400 hover:bg-elevated"
+                ? "border-accent bg-accent-muted text-accent"
+                : "border-rim text-muted hover:bg-overlay"
             }`}
         >
           {globalDir() === 1 ? "🌐 Global" : "🏠 Local"}
@@ -120,8 +111,8 @@ export default function DirectoryView() {
           class={`text-sm px-3 py-1.5 rounded-lg border transition-colors
             ${
               suggest()
-                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-                : "border-rim hover:bg-elevated text-gray-600 dark:text-gray-400"
+                ? "border-accent bg-accent-muted text-accent"
+                : "border-rim text-muted hover:bg-overlay"
             }`}
         >
           {suggest() ? "✓ Suggestions" : "Suggest channels"}
@@ -130,14 +121,14 @@ export default function DirectoryView() {
 
       {/* ── Total count ── */}
       <Show when={!loading() && total() > 0}>
-        <p class="text-sm text-gray-500 dark:text-gray-400">
+        <p class="text-sm text-muted">
           {total().toLocaleString()} channels found
         </p>
       </Show>
 
       {/* ── Error ── */}
       <Show when={error()}>
-        <div class="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 text-sm text-red-700 dark:text-red-300">
+        <div class="rounded-lg bg-accent-muted border border-accent p-4 text-sm text-accent">
           {error()}
         </div>
       </Show>
@@ -154,7 +145,7 @@ export default function DirectoryView() {
         <Show
           when={entries().length > 0}
           fallback={
-            <p class="py-12 text-center text-gray-400 dark:text-gray-500">
+            <p class="py-12 text-center text-muted">
               No channels found.
             </p>
           }
@@ -173,8 +164,8 @@ export default function DirectoryView() {
             <button
               onClick={loadMoreDirectory}
               class="px-4 py-2 text-sm font-medium rounded-lg border border-rim
-                     bg-surface text-gray-600 dark:text-gray-300
-                     hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                     bg-surface text-muted
+                     hover:bg-overlay transition-colors"
             >
               Load more
             </button>
@@ -188,7 +179,7 @@ export default function DirectoryView() {
         </Show>
 
         <Show when={!hasMore() && entries().length > 0}>
-          <p class="py-4 text-center text-sm text-gray-400 dark:text-gray-500">
+          <p class="py-4 text-center text-sm text-muted">
             End of results
           </p>
         </Show>
@@ -207,14 +198,14 @@ function DirectoryCardSkeleton() {
   return (
     <div class="rounded-xl border border-rim bg-surface p-4 space-y-3 animate-pulse">
       <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-full bg-elevated shrink-0" />
+        <div class="w-12 h-12 rounded-full bg-overlay shrink-0" />
         <div class="flex-1 space-y-2">
-          <div class="h-4 bg-elevated rounded w-3/4" />
-          <div class="h-3 bg-elevated rounded w-1/2" />
+          <div class="h-4 bg-overlay rounded w-3/4" />
+          <div class="h-3 bg-overlay rounded w-1/2" />
         </div>
       </div>
-      <div class="h-3 bg-elevated rounded w-full" />
-      <div class="h-3 bg-elevated rounded w-2/3" />
+      <div class="h-3 bg-overlay rounded w-full" />
+      <div class="h-3 bg-overlay rounded w-2/3" />
     </div>
   );
 }

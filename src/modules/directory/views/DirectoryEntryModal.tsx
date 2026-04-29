@@ -25,12 +25,12 @@ const DirectoryEntryModal: Component<Props> = (props) => {
           <div class="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-2xl bg-surface shadow-2xl overflow-hidden">
 
             {/* ── Header ── */}
-            <div class="flex items-start gap-4 p-5 border-b border-gray-100 dark:border-gray-700">
+            <div class="flex items-start gap-4 p-5 border-b border-rim">
               <a href={e()!.profile_url} target="_blank" rel="noopener noreferrer" class="shrink-0">
                 <img
                   src={e()!.photo}
                   alt={e()!.name}
-                  class="w-16 h-16 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-600 bg-gray-100 dark:bg-gray-700"
+                  class="w-16 h-16 rounded-full object-cover ring-2 ring-rim bg-overlay"
                 />
               </a>
               <div class="flex-1 min-w-0 pt-0.5">
@@ -44,13 +44,13 @@ const DirectoryEntryModal: Component<Props> = (props) => {
                     >
                       {e()!.name}
                     </a>
-                    <p class="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">
+                    <p class="text-xs text-muted truncate mt-0.5">
                       {e()!.address}
                     </p>
                   </div>
                   <button
                     onClick={props.onClose}
-                    class="shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-elevated transition-colors"
+                    class="shrink-0 p-1.5 rounded-lg text-muted hover:text-txt hover:bg-overlay transition-colors"
                     aria-label="Close"
                   >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,7 +62,7 @@ const DirectoryEntryModal: Component<Props> = (props) => {
                 {/* Badges row */}
                 <div class="flex flex-wrap gap-1.5 mt-2">
                   <Show when={e()!.public_forum}>
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-accent-muted text-accent border border-accent/30">
                       <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
                         <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/>
@@ -71,12 +71,12 @@ const DirectoryEntryModal: Component<Props> = (props) => {
                     </span>
                   </Show>
                   <Show when={e()!.is_connected}>
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-100 dark:border-green-800">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-accent-muted text-accent border border-accent/30">
                       ✓ Connected
                     </span>
                   </Show>
                   <Show when={e()!.common_count !== null && e()!.common_count! > 0}>
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 border border-teal-100 dark:border-teal-800">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-accent-muted text-accent border border-accent/30">
                       {e()!.common_count} mutual
                     </span>
                   </Show>
@@ -89,7 +89,7 @@ const DirectoryEntryModal: Component<Props> = (props) => {
 
               {/* Description / about */}
               <Show when={e()!.description || e()!.about}>
-                <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                <p class="text-sm text-txt leading-relaxed">
                   {e()!.description || stripTags(e()!.about)}
                 </p>
               </Show>
@@ -112,7 +112,7 @@ const DirectoryEntryModal: Component<Props> = (props) => {
                       href={e()!.homepage}
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="text-blue-600 dark:text-blue-400 hover:underline break-all"
+                      class="text-accent hover:underline break-all"
                     >
                       {e()!.homepage}
                     </a>
@@ -132,11 +132,11 @@ const DirectoryEntryModal: Component<Props> = (props) => {
               {/* Keywords */}
               <Show when={e()!.keywords.length > 0}>
                 <div>
-                  <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Interests</p>
+                  <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Interests</p>
                   <div class="flex flex-wrap gap-1.5">
                     <For each={e()!.keywords}>
                       {(kw) => (
-                        <span class="inline-block px-2 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                        <span class="inline-block px-2 py-0.5 rounded text-xs bg-overlay text-muted">
                           {kw}
                         </span>
                       )}
@@ -147,7 +147,7 @@ const DirectoryEntryModal: Component<Props> = (props) => {
             </div>
 
             {/* ── Footer actions ── */}
-            <div class="flex items-center gap-2 px-5 py-4 border-t border-gray-100 dark:border-gray-700">
+            <div class="flex items-center gap-2 px-5 py-4 border-t border-rim">
               <Show
                 when={!e()!.is_connected}
                               >
@@ -155,7 +155,7 @@ const DirectoryEntryModal: Component<Props> = (props) => {
                   href={e()!.connect_url ?? e()!.profile_url}
                   target={e()!.connect_url ? undefined : "_blank"}
                   rel="noopener noreferrer"
-                  class="flex-1 text-center px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                  class="flex-1 text-center px-4 py-2 rounded-lg text-sm font-semibold bg-accent text-white hover:opacity-80 transition-opacity"
                 >
                   {e()!.connect_url ? "Connect" : "View Profile"}
                 </a>
@@ -164,7 +164,7 @@ const DirectoryEntryModal: Component<Props> = (props) => {
                 href={e()!.profile_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="px-4 py-2 rounded-lg text-sm font-medium border border-rim text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                class="px-4 py-2 rounded-lg text-sm font-medium border border-rim text-muted hover:bg-overlay transition-colors"
               >
                 View Profile
               </a>
@@ -172,7 +172,7 @@ const DirectoryEntryModal: Component<Props> = (props) => {
                <a 
                   href={e()!.ignore_url!}
                   title="Ignore"
-                  class="p-2 rounded-lg border border-rim text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-elevated transition-colors"
+                  class="p-2 rounded-lg border border-rim text-muted hover:text-txt hover:bg-overlay transition-colors"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -188,7 +188,7 @@ const DirectoryEntryModal: Component<Props> = (props) => {
   );
 };
 
-// ── Icon row helper ───────────────────────────────────────────────────────────
+// ── Icon row helper ──────────────────────────────────────────────────────────
 
 type IconKey = "location" | "hometown" | "link" | "person" | "heart" | "age";
 
@@ -202,8 +202,8 @@ const ICONS: Record<IconKey, string> = {
 };
 
 const DetailRow: Component<{ icon: IconKey; children: any }> = (props) => (
-  <div class="flex items-start gap-2.5 text-sm text-gray-600 dark:text-gray-300">
-    <svg class="w-4 h-4 shrink-0 mt-0.5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <div class="flex items-start gap-2.5 text-sm text-txt">
+    <svg class="w-4 h-4 shrink-0 mt-0.5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={ICONS[props.icon]}/>
     </svg>
     <span class="leading-snug">{props.children}</span>

@@ -8,7 +8,7 @@ import {
   type Component,
 } from "solid-js";
 
-// ── Types ────────────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────
 
 interface MessageEntry {
   b64mid: string;
@@ -31,7 +31,7 @@ interface HqResponse {
 
 type MessageType = "" | "direct" | "starred" | "notification";
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────
 
 function timeAgo(dateStr: string): string {
   const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
@@ -97,7 +97,7 @@ const TABS: { type: MessageType; label: string; path: string }[] = [
   {
     type: "starred",
     label: "Starred",
-    path: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z",
+    path: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.175 0l-3.976 2.888c-.783.57-1.838-.197-1.539-1.118l1.519-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.381-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z",
   },
   {
     type: "notification",
@@ -106,7 +106,7 @@ const TABS: { type: MessageType; label: string; path: string }[] = [
   },
 ];
 
-// ── Avatar ────────────────────────────────────────────────────────────────────
+// ── Avatar ─────────────────────────────────────────────────────────────────
 
 const Avatar: Component<{ src?: string; name: string; size?: string }> = (props) => {
   const hue = () => avatarHue(props.name);
@@ -135,7 +135,7 @@ const Avatar: Component<{ src?: string; name: string; size?: string }> = (props)
   );
 };
 
-// ── Message item ─────────────────────────────────────────────────────────────
+// ── Message item ───────────────────────────────────────────────────────────
 
 const MessageItem: Component<{ entry: MessageEntry }> = (props) => {
   const e = props.entry;
@@ -150,14 +150,14 @@ const MessageItem: Component<{ entry: MessageEntry }> = (props) => {
         class={`
           w-full text-left px-4 py-3 flex items-start gap-3
           transition-all duration-150 relative
-          hover:bg-gray-50 dark:hover:bg-white/[0.04]
-          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500
-          ${isUnseen() ? "bg-blue-50/60 dark:bg-blue-950/20" : ""}
+          hover:bg-overlay
+          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent
+          ${isUnseen() ? "bg-accent-muted" : ""}
         `}
       >
         {/* Unseen indicator stripe */}
         <Show when={isUnseen()}>
-          <span class="absolute left-0 top-3 bottom-3 w-0.5 rounded-r-full bg-blue-500" />
+          <span class="absolute left-0 top-3 bottom-3 w-0.5 rounded-r-full bg-accent" />
         </Show>
 
         <Avatar src={e.author_img} name={e.author_name} />
@@ -167,13 +167,13 @@ const MessageItem: Component<{ entry: MessageEntry }> = (props) => {
             <span
               class={`text-sm truncate leading-snug ${
                 isUnseen()
-                  ? "font-semibold text-gray-900 dark:text-gray-50"
-                  : "font-medium text-gray-700 dark:text-gray-300"
+                  ? "font-semibold text-txt"
+                  : "font-medium text-txt"
               }`}
             >
               {e.author_name}
             </span>
-            <time class="text-[11px] text-gray-400 dark:text-gray-500 shrink-0 tabular-nums">
+            <time class="text-[11px] text-muted shrink-0 tabular-nums">
               {timeAgo(e.created)}
             </time>
           </div>
@@ -183,7 +183,7 @@ const MessageItem: Component<{ entry: MessageEntry }> = (props) => {
           </p>
 
           <Show when={e.info}>
-            <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-1 truncate">
+            <p class="text-[11px] text-muted mt-1 truncate">
               {e.info}
             </p>
           </Show>
@@ -195,8 +195,8 @@ const MessageItem: Component<{ entry: MessageEntry }> = (props) => {
               flex items-center justify-center px-1.5 tabular-nums
               ${
                 e.unseen_class === "danger"
-                  ? "bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400"
-                  : "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
+                  ? "bg-accent-muted text-accent"
+                  : "bg-accent-muted text-accent"
               }`}
           >
             {e.unseen_count}
@@ -205,7 +205,7 @@ const MessageItem: Component<{ entry: MessageEntry }> = (props) => {
       </button>
 
       {/* Divider — only between items (rendered outside button for valid HTML) */}
-      <div class="mx-4 h-px bg-gray-100 dark:bg-gray-700/50" />
+      <div class="mx-4 h-px bg-rim" />
 
       <Show when={showModal()}>
         <PostDetailModal uuid={e.b64mid} onClose={() => setShowModal(false)} />
@@ -214,20 +214,20 @@ const MessageItem: Component<{ entry: MessageEntry }> = (props) => {
   );
 };
 
-// ── Skeleton loader ───────────────────────────────────────────────────────────
+// ── Skeleton loader ──────────────────────────────────────────────────────────
 
 const SkeletonRow: Component = () => (
   <div class="px-4 py-3 flex items-start gap-3 animate-pulse">
-    <div class="w-9 h-9 rounded-full bg-elevated shrink-0" />
+    <div class="w-9 h-9 rounded-full bg-overlay shrink-0" />
     <div class="flex-1 space-y-2">
-      <div class="h-3 bg-elevated rounded w-2/5" />
-      <div class="h-3 bg-elevated rounded w-4/5" />
-      <div class="h-3 bg-elevated rounded w-3/5" />
+      <div class="h-3 bg-overlay rounded w-2/5" />
+      <div class="h-3 bg-overlay rounded w-4/5" />
+      <div class="h-3 bg-overlay rounded w-3/5" />
     </div>
   </div>
 );
 
-// ── Main widget ──────────────────────────────────────────────────────────────
+// ── Main widget ───────────────────────────────────────────────────────────────
 
 export default function HqMessagesWidget() {
   const [activeTab, setActiveTab] = createSignal<MessageType>("");
@@ -299,8 +299,8 @@ export default function HqMessagesWidget() {
 
   return (
     <div
-      class="bg-white dark:bg-gray-900 rounded-2xl border border-rim/70
-             flex flex-col overflow-hidden  shadow-sm"
+      class="bg-surface rounded-2xl border border-rim
+             flex flex-col overflow-hidden shadow-sm"
       style={{ height: "480px" }}
     >
       {/* ── Header ── */}
@@ -312,7 +312,7 @@ export default function HqMessagesWidget() {
           {/* Search input */}
           <div class="relative">
             <svg
-              class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none"
+              class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -327,10 +327,10 @@ export default function HqMessagesWidget() {
             <input
               type="text"
               placeholder="Filter…"
-              class="w-36 text-xs bg-gray-100 dark:bg-gray-800 border-0 rounded-lg
-                     pl-7 pr-3 py-1.5 text-gray-700 dark:text-gray-300
-                     placeholder-gray-400 dark:placeholder-gray-500
-                     focus:outline-none focus:ring-2 focus:ring-blue-500/40
+              class="w-36 text-xs bg-overlay border-0 rounded-lg
+                     pl-7 pr-3 py-1.5 text-txt
+                     placeholder-muted
+                     focus:outline-none focus:ring-2 focus:ring-accent/40
                      transition-all duration-200 focus:w-44"
               onInput={(e) => onFilterInput(e.currentTarget.value)}
             />
@@ -352,8 +352,8 @@ export default function HqMessagesWidget() {
                     transition-all duration-150 select-none
                     ${
                       isActive()
-                        ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
-                        : "text-muted hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200"
+                        ? "bg-txt text-surface"
+                        : "text-muted hover:bg-overlay hover:text-txt"
                     }
                   `}
                   onClick={() => setActiveTab(tab.type)}
@@ -369,7 +369,7 @@ export default function HqMessagesWidget() {
         </div>
 
         {/* Tab underline */}
-        <div class="mt-3 h-px bg-gray-100 dark:bg-gray-700/60" />
+        <div class="mt-3 h-px bg-rim" />
       </div>
 
       {/* ── Scrollable list ── */}
@@ -378,10 +378,10 @@ export default function HqMessagesWidget() {
         <Show when={error()}>
           <div class="flex flex-col items-center justify-center py-10 gap-2 text-sm">
             <span class="text-2xl">⚠</span>
-            <span class="text-red-400">{error()}</span>
+            <span class="text-accent">{error()}</span>
             <button
               onClick={() => loadPage(true)}
-              class="text-xs text-blue-500 hover:underline mt-1"
+              class="text-xs text-accent hover:underline mt-1"
             >
               Retry
             </button>
@@ -389,7 +389,7 @@ export default function HqMessagesWidget() {
         </Show>
 
         <Show when={empty() && !loading()}>
-          <div class="flex flex-col items-center justify-center h-full gap-2 text-sm text-gray-400 dark:text-gray-500 py-16">
+          <div class="flex flex-col items-center justify-center h-full gap-2 text-sm text-muted py-16">
             <svg class="w-8 h-8 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                 d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
@@ -409,7 +409,7 @@ export default function HqMessagesWidget() {
 
         {/* Tail spinner (load-more) */}
         <Show when={loading() && entries().length > 0}>
-          <div class="flex items-center justify-center gap-2 py-4 text-xs text-gray-400 dark:text-gray-500">
+          <div class="flex items-center justify-center gap-2 py-4 text-xs text-muted">
             <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />

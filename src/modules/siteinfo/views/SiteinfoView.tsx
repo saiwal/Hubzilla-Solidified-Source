@@ -8,14 +8,14 @@ export default function SiteinfoView() {
 
   return (
     <Show when={!info.loading} fallback={<SiteinfoPending />}>
-      <Show when={info()} fallback={<p class="text-sm text-red-500">Failed to load site info.</p>}>
+      <Show when={info()} fallback={<p class="text-sm text-accent">Failed to load site info.</p>}>
         {(data) => (
           <div class="max-w-2xl mx-auto space-y-8">
 
             {/* Header card */}
-            <div class="rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6">
+            <div class="rounded-xl border border-rim bg-surface p-6">
               <div class="flex items-start gap-4">
-                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-accent to-accent-txt
                             flex items-center justify-center text-white text-lg font-bold shrink-0">
                   {data().site_name.charAt(0).toUpperCase()}
                 </div>
@@ -24,7 +24,7 @@ export default function SiteinfoView() {
                     {data().site_name}
                   </h1>
                   <Show when={data().version}>
-                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 font-mono">
+                    <p class="text-xs text-muted mt-0.5 font-mono">
                       v{data().version}
                     </p>
                   </Show>
@@ -39,7 +39,8 @@ export default function SiteinfoView() {
             <Show when={data().site_about}>
               <Section title="About this site">
                 <div
-                  class="prose dark:prose-invert max-w-none text-sm"
+                  class="prose prose-sm dark:prose-invert max-w-none text-txt
+                           prose-a:text-accent prose-a:no-underline hover:prose-a:underline"
                   innerHTML={DOMPurify.sanitize(bbcode(data().site_about))}
                 />
               </Section>
@@ -49,7 +50,8 @@ export default function SiteinfoView() {
             <Show when={data().admin_about}>
               <Section title="Administrator">
                 <div
-                  class="prose dark:prose-invert max-w-none text-sm"
+                  class="prose prose-sm dark:prose-invert max-w-none text-txt
+                           prose-a:text-accent prose-a:no-underline hover:prose-a:underline"
                   innerHTML={DOMPurify.sanitize(bbcode(data().admin_about))}
                 />
               </Section>
@@ -58,13 +60,13 @@ export default function SiteinfoView() {
             {/* Federation */}
             <Section title="Federation">
               <div class="space-y-2">
-                <p class="text-sm text-gray-600 dark:text-gray-400">
+                <p class="text-sm text-txt">
                   Powered by{" "}
                   <a
                     href={data().project_link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="text-indigo-600 dark:text-indigo-400 hover:underline"
+                    class="text-accent hover:underline"
                   >
                     Hubzilla
                   </a>
@@ -74,7 +76,7 @@ export default function SiteinfoView() {
                       href={data().project_src}
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="text-indigo-600 dark:text-indigo-400 hover:underline"
+                      class="text-accent hover:underline"
                     >
                       Source code
                     </a>
@@ -121,12 +123,12 @@ export default function SiteinfoView() {
   );
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// ── Sub-components ──────────────────────────────────────────────────────────
 
 function Section(props: { title: string; children: any; compact?: boolean }) {
   return (
-    <section class={`rounded-xl border border-gray-100 dark:border-gray-800
-                     bg-white dark:bg-gray-900 ${props.compact ? 'p-4' : 'p-6'}`}>
+    <section class={`rounded-xl border border-rim
+                     bg-surface ${props.compact ? 'p-4' : 'p-6'}`}>
       <h2 class="text-sm font-semibold text-muted uppercase tracking-wider mb-3">
         {props.title}
       </h2>
@@ -137,8 +139,8 @@ function Section(props: { title: string; children: any; compact?: boolean }) {
 
 function Chip(props: { label: string; variant?: 'info' | 'default' }) {
   const cls = () => props.variant === 'info'
-    ? 'bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400'
-    : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
+    ? 'bg-accent-muted text-accent'
+    : 'bg-overlay text-muted';
   return (
     <span class={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${cls()}`}>
       {props.label}
@@ -154,10 +156,10 @@ function RegistrationBadge(props: { policy: 0 | 1 | 2 }) {
 
   const cls = () =>
     props.policy === 1
-      ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+      ? "bg-accent-muted text-accent"
       : props.policy === 2
-      ? "bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-      : "bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400";
+      ? "bg-accent-muted text-accent"
+      : "bg-accent-muted text-accent";
 
   return (
     <span class={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${cls()}`}>
@@ -169,22 +171,22 @@ function RegistrationBadge(props: { policy: 0 | 1 | 2 }) {
 function SiteinfoPending() {
   return (
     <div class="max-w-2xl mx-auto space-y-4 animate-pulse">
-      <div class="rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6">
+      <div class="rounded-xl border border-rim bg-surface p-6">
         <div class="flex items-start gap-4">
-          <div class="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-800 shrink-0" />
+          <div class="w-12 h-12 rounded-xl bg-overlay shrink-0" />
           <div class="space-y-2 flex-1">
-            <div class="h-5 w-48 rounded bg-gray-100 dark:bg-gray-800" />
-            <div class="h-3 w-16 rounded bg-gray-100 dark:bg-gray-800" />
-            <div class="h-5 w-24 rounded-md bg-gray-100 dark:bg-gray-800" />
+            <div class="h-5 w-48 rounded bg-overlay" />
+            <div class="h-3 w-16 rounded bg-overlay" />
+            <div class="h-5 w-24 rounded-md bg-overlay" />
           </div>
         </div>
       </div>
       <For each={Array(3).fill(0)}>
         {() => (
-          <div class="rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 space-y-3">
-            <div class="h-3 w-20 rounded bg-gray-100 dark:bg-gray-800" />
-            <div class="h-4 w-full rounded bg-gray-100 dark:bg-gray-800" />
-            <div class="h-4 w-4/5 rounded bg-gray-100 dark:bg-gray-800" />
+          <div class="rounded-xl border border-rim bg-surface p-6 space-y-3">
+            <div class="h-3 w-20 rounded bg-overlay" />
+            <div class="h-4 w-full rounded bg-overlay" />
+            <div class="h-4 w-4/5 rounded bg-overlay" />
           </div>
         )}
       </For>
