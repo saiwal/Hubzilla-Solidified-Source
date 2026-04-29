@@ -17,7 +17,7 @@ export default function CommentThread(props: {
       }}
     >
       <div style={{ overflow: "hidden" }}>
-        <div class="mt-2 ml-2 pl-3 border-l border-rim space-y-1.5">
+        <div class="mt-2 ml-2 space-y-1.5">
           <For each={props.comments}>
             {(comment) => (
               <PostCard post={comment} handlers={props.handlers} compact />

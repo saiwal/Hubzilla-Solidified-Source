@@ -82,7 +82,7 @@ export default function PostCard(props: {
   // ── Compact (comment) layout ──────────────────────────────────────────────
   if (props.compact) {
     return (
-      <div ref={cardRef} class="bg-elevated rounded-xl px-3 py-2.5 mb-1">
+      <div ref={cardRef} class="rounded-tl-lg rounded-bl-lg pl-3 py-2.5 mb-1 border border-rim">
         {/* Single-line author header */}
         <div class="flex items-center gap-2 min-w-0">
           <Show
@@ -120,7 +120,7 @@ export default function PostCard(props: {
           </span>
          <a 
             href={props.post.permalink}
-            class="ml-auto text-subtle hover:text-txt transition-colors shrink-0"
+            class="ml-auto pr-2 text-subtle hover:text-txt transition-colors shrink-0"
             title="source"
           >
             <BiRegularLinkExternal size={13} />
