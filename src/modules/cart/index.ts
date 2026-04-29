@@ -11,7 +11,7 @@ registerModule({
 
   navItem: {
     label: () => useI18n().t("nav.cart"),
-    icon: "grid",
+    icon: "cart",
     path: "/cart",
     href: () => `/cart/${usePageNick()()}`,
 		context: "all",
