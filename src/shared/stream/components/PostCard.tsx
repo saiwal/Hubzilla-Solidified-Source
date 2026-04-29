@@ -18,13 +18,13 @@ import {
 import { useI18n } from "@/i18n";
 import { BiRegularLinkExternal } from "solid-icons/bi";
 
-// Re-export so existing callers using the old PostActions name still compile
 export type { StreamHandlers as PostActions };
 
 export default function PostCard(props: {
   post: ThreadNode;
   handlers: StreamHandlers;
   onSeen?: (uuid: string) => void;
+  compact?: boolean;
 }) {
   const [replyOpen, setReplyOpen] = createSignal(false);
   const [showComments, setShowComments] = createSignal(false);
@@ -51,15 +51,9 @@ export default function PostCard(props: {
     onCleanup(() => observer.disconnect());
   });
 
-  function onLike() {
-    props.handlers.onLike(props.post.mid);
-  }
-  function onDislike() {
-    props.handlers.onDislike(props.post.mid);
-  }
-  function onRepeat() {
-    props.handlers.onRepeat(props.post.mid);
-  }
+  function onLike() { props.handlers.onLike(props.post.mid); }
+  function onDislike() { props.handlers.onDislike(props.post.mid); }
+  function onRepeat() { props.handlers.onRepeat(props.post.mid); }
 
   async function submitComment() {
     const body = replyBody().trim();
@@ -85,6 +79,147 @@ export default function PostCard(props: {
     }
   }
 
+  // ── Compact (comment) layout ──────────────────────────────────────────────
+  if (props.compact) {
+    return (
+      <div
+        ref={cardRef}
+        class="bg-elevated rounded-xl px-3 py-2.5 mb-1"
+      >
+        {/* Single-line author header */}
+        <div class="flex items-center gap-2 min-w-0">
+          <img
+            src={props.post.authorAvatar}
+            width="24"
+            height="24"
+            class="rounded-full object-cover shrink-0"
+          />
+         <a 
+            href={props.post.authorUrl}
+            class="font-medium text-sm text-txt hover:underline truncate"
+          >
+            {props.post.authorName}
+          </a>
+          <span
+            class="text-xs text-subtle shrink-0 ml-1"
+            title={new Date(props.post.created + "Z").toLocaleString(locale())}
+          >
+            {formatPostDate(props.post.created, locale())}
+          </span>
+         <a 
+            href={props.post.permalink}
+            class="ml-auto text-subtle hover:text-txt transition-colors shrink-0"
+            title="source"
+          >
+            <BiRegularLinkExternal size={13} />
+          </a>
+        </div>
+
+        {/* Body — no title rendered for comments */}
+        <div
+          class="mt-1.5 prose prose-sm dark:prose-invert max-w-none text-muted
+                 prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+                 prose-blockquote:not-italic prose-blockquote:border-accent
+                 prose-code:bg-overlay prose-code:px-1 prose-code:rounded prose-code:text-xs prose-code:text-txt
+                 prose-img:rounded-lg prose-img:my-1 break-words
+                 prose-p:my-1 prose-p:leading-snug"
+          innerHTML={props.post.body}
+        />
+
+        {actionError() && (
+          <p class="mt-1 text-xs text-accent">{actionError()}</p>
+        )}
+
+        {/* Compact action bar */}
+        <div class="mt-2 flex items-center gap-0.5 flex-wrap">
+          <CompactActionBtn
+            icon={<MdOutlineThumb_up size={14} />}
+            count={props.post.likeCount}
+            label="Like"
+            onClick={onLike}
+            active={props.post.viewerLiked}
+          />
+          <CompactActionBtn
+            icon={<MdOutlineThumb_down size={14} />}
+            count={props.post.dislikeCount}
+            label="Dislike"
+            onClick={onDislike}
+            active={props.post.viewerDisliked}
+          />
+          <CompactActionBtn
+            icon={<MdFillShare size={14} />}
+            count={props.post.repeatCount}
+            label="Repeat"
+            onClick={onRepeat}
+            active={props.post.viewerRepeated}
+          />
+
+          {props.post.children.length > 0 && (
+            <button
+              onClick={() => setShowComments((v) => !v)}
+              class="flex items-center gap-1 px-2 py-1 rounded-md text-xs
+                     text-subtle hover:bg-overlay hover:text-txt transition-colors"
+            >
+              {showComments()
+                ? <MdFillKeyboard_arrow_up size={14} />
+                : <MdFillKeyboard_arrow_down size={14} />}
+              <span>{props.post.children.length}</span>
+            </button>
+          )}
+
+          <button
+            onClick={() => { setReplyOpen((v) => !v); setShowComments(true); }}
+            class="ml-auto flex items-center gap-1 px-2 py-1 rounded-md text-xs
+                   text-subtle hover:bg-overlay hover:text-txt transition-colors"
+          >
+            <MdFillChat size={14} />
+            <span>Reply</span>
+          </button>
+        </div>
+
+        {replyOpen() && (
+          <div class="mt-2 flex flex-col gap-1.5">
+            <textarea
+              value={replyBody()}
+              onInput={(e) => setReplyBody(e.currentTarget.value)}
+              placeholder="Write a reply…"
+              rows={2}
+              class="w-full rounded-lg border border-rim bg-overlay text-txt
+                     text-sm px-2.5 py-1.5 resize-none
+                     focus:outline-none focus:ring-1 focus:ring-accent
+                     placeholder:text-subtle"
+            />
+            <div class="flex justify-end gap-1.5">
+              <button
+                onClick={() => { setReplyOpen(false); setReplyBody(""); }}
+                class="px-2.5 py-1 text-xs rounded-lg text-subtle hover:bg-overlay transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitComment}
+                disabled={submitting() || !replyBody().trim()}
+                class="flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-lg
+                       bg-accent hover:opacity-80 active:opacity-70
+                       disabled:opacity-50 disabled:cursor-not-allowed text-white transition-opacity"
+              >
+                <MdFillSend size={12} />
+                {submitting() ? "Sending…" : "Send"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        <CommentThread
+          comments={props.post.children}
+          show={showComments()}
+          handlers={props.handlers}
+        />
+      </div>
+    );
+  }
+
+  // ── Full (main post) layout ───────────────────────────────────────────────
   return (
     <div
       ref={cardRef}
@@ -99,7 +234,7 @@ export default function PostCard(props: {
           class="rounded-full object-cover ring-1 ring-rim"
         />
         <div class="flex flex-col">
-          <a
+        <a  
             href={props.post.authorUrl}
             class="font-semibold text-txt hover:underline"
           >
@@ -112,7 +247,7 @@ export default function PostCard(props: {
             {formatPostDate(props.post.created, locale())}
           </span>
         </div>
-        <a
+       <a 
           href={props.post.permalink}
           class="ml-auto text-sm text-muted hover:text-txt transition-colors"
           title="source"
@@ -212,10 +347,7 @@ export default function PostCard(props: {
         )}
 
         <button
-          onClick={() => {
-            setReplyOpen((v) => !v);
-            setShowComments(true);
-          }}
+          onClick={() => { setReplyOpen((v) => !v); setShowComments(true); }}
           class="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
                  text-muted hover:bg-overlay hover:text-txt transition-colors"
           title="Reply"
@@ -239,10 +371,7 @@ export default function PostCard(props: {
           />
           <div class="flex justify-end gap-2">
             <button
-              onClick={() => {
-                setReplyOpen(false);
-                setReplyBody("");
-              }}
+              onClick={() => { setReplyOpen(false); setReplyBody(""); }}
               class="px-3 py-1.5 text-sm rounded-lg text-muted hover:bg-overlay transition-colors"
             >
               Cancel
@@ -285,6 +414,27 @@ function ActionBtn(props: {
       class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
               transition-colors select-none hover:bg-overlay
               ${props.active ? props.activeClass : "text-muted"}`}
+    >
+      {props.icon}
+      <span>{props.count}</span>
+    </button>
+  );
+}
+
+function CompactActionBtn(props: {
+  icon: any;
+  count: number;
+  label: string;
+  onClick: () => void;
+  active?: boolean;
+}) {
+  return (
+    <button
+      onClick={props.onClick}
+      title={props.label}
+      class={`flex items-center gap-1 px-2 py-1 rounded-md text-xs
+              transition-colors select-none hover:bg-overlay
+              ${props.active ? "text-accent" : "text-subtle"}`}
     >
       {props.icon}
       <span>{props.count}</span>
