@@ -1,5 +1,5 @@
 // src/shared/stream/components/PostCard.tsx
-import { createSignal, onMount, onCleanup } from "solid-js";
+import { createSignal, onMount, onCleanup, Show } from "solid-js";
 import type { ThreadNode } from "@/shared/lib/thread";
 import type { StreamHandlers } from "../types";
 import CommentThread from "@/shared/views/CommentThread";
@@ -82,24 +82,36 @@ export default function PostCard(props: {
   // ── Compact (comment) layout ──────────────────────────────────────────────
   if (props.compact) {
     return (
-      <div
-        ref={cardRef}
-        class="bg-elevated rounded-xl px-3 py-2.5 mb-1"
-      >
+      <div ref={cardRef} class="bg-elevated rounded-xl px-3 py-2.5 mb-1">
         {/* Single-line author header */}
         <div class="flex items-center gap-2 min-w-0">
-          <img
-            src={props.post.authorAvatar}
-            width="24"
-            height="24"
-            class="rounded-full object-cover shrink-0"
-          />
+          <Show
+            when={props.post.authorAvatar}
+            fallback={
+              <div class="w-6 h-6 rounded-full bg-gradient-to-br from-accent to-accent-txt
+                          shrink-0 flex items-center justify-center text-white text-[10px] font-bold">
+                {props.post.authorName?.[0]?.toUpperCase() ?? "?"}
+              </div>
+            }
+          >
+            <img
+              src={props.post.authorAvatar}
+              width="24"
+              height="24"
+              class="rounded-full object-cover shrink-0"
+            />
+          </Show>
          <a 
             href={props.post.authorUrl}
             class="font-medium text-sm text-txt hover:underline truncate"
           >
             {props.post.authorName}
           </a>
+          <Show when={props.post.verb && props.post.verb !== "Create"}>
+            <span class="text-xs text-subtle italic shrink-0">
+              {props.post.verb?.toLowerCase()}
+            </span>
+          </Show>
           <span
             class="text-xs text-subtle shrink-0 ml-1"
             title={new Date(props.post.created + "Z").toLocaleString(locale())}
@@ -154,18 +166,21 @@ export default function PostCard(props: {
             active={props.post.viewerRepeated}
           />
 
-          {props.post.children.length > 0 && (
+          <Show when={props.post.children.length > 0}>
             <button
               onClick={() => setShowComments((v) => !v)}
               class="flex items-center gap-1 px-2 py-1 rounded-md text-xs
                      text-subtle hover:bg-overlay hover:text-txt transition-colors"
             >
-              {showComments()
-                ? <MdFillKeyboard_arrow_up size={14} />
-                : <MdFillKeyboard_arrow_down size={14} />}
+              <Show
+                when={showComments()}
+                fallback={<MdFillKeyboard_arrow_down size={14} />}
+              >
+                <MdFillKeyboard_arrow_up size={14} />
+              </Show>
               <span>{props.post.children.length}</span>
             </button>
-          )}
+          </Show>
 
           <button
             onClick={() => { setReplyOpen((v) => !v); setShowComments(true); }}
@@ -177,7 +192,7 @@ export default function PostCard(props: {
           </button>
         </div>
 
-        {replyOpen() && (
+        <Show when={replyOpen()}>
           <div class="mt-2 flex flex-col gap-1.5">
             <textarea
               value={replyBody()}
@@ -208,7 +223,7 @@ export default function PostCard(props: {
               </button>
             </div>
           </div>
-        )}
+        </Show>
 
         <CommentThread
           comments={props.post.children}
@@ -227,27 +242,46 @@ export default function PostCard(props: {
     >
       {/* Header */}
       <div class="flex items-start gap-3">
-        <img
-          src={props.post.authorAvatar}
-          width="44"
-          height="44"
-          class="rounded-full object-cover ring-1 ring-rim"
-        />
+        <Show
+          when={props.post.authorAvatar}
+          fallback={
+            <div class="w-11 h-11 rounded-full bg-gradient-to-br from-accent to-accent-txt
+                        shrink-0 flex items-center justify-center text-white text-sm font-bold ring-1 ring-rim">
+              {props.post.authorName?.[0]?.toUpperCase() ?? "?"}
+            </div>
+          }
+        >
+          <img
+            src={props.post.authorAvatar}
+            width="44"
+            height="44"
+            class="rounded-full object-cover ring-1 ring-rim"
+          />
+        </Show>
         <div class="flex flex-col">
-        <a  
+          
+         <a 
             href={props.post.authorUrl}
             class="font-semibold text-txt hover:underline"
           >
             {props.post.authorName}
           </a>
-          <span
-            class="text-sm text-muted"
-            title={new Date(props.post.created + "Z").toLocaleString(locale())}
-          >
-            {formatPostDate(props.post.created, locale())}
-          </span>
+          <div class="flex items-baseline gap-1.5">
+            <span
+              class="text-sm text-muted"
+              title={new Date(props.post.created + "Z").toLocaleString(locale())}
+            >
+              {formatPostDate(props.post.created, locale())}
+            </span>
+            <Show when={props.post.verb && props.post.verb !== "Create"}>
+              <span class="text-xs text-subtle italic">
+                {props.post.verb?.toLowerCase()}
+              </span>
+            </Show>
+          </div>
         </div>
-       <a 
+        
+         <a 
           href={props.post.permalink}
           class="ml-auto text-sm text-muted hover:text-txt transition-colors"
           title="source"
@@ -257,11 +291,13 @@ export default function PostCard(props: {
       </div>
 
       {/* Title */}
-      <div
-        class="mt-6 prose prose-sm dark:prose-invert max-w-none
-               [&>*]:font-bold [&>*]:tracking-tight [&>*]:text-lg [&>*]:text-txt"
-        innerHTML={props.post.title}
-      />
+      <Show when={props.post.title}>
+        <div
+          class="mt-6 prose prose-sm dark:prose-invert max-w-none
+                 [&>*]:font-bold [&>*]:tracking-tight [&>*]:text-lg [&>*]:text-txt"
+          innerHTML={props.post.title}
+        />
+      </Show>
 
       {/* Body */}
       <div
@@ -315,36 +351,41 @@ export default function PostCard(props: {
           activeClass="text-accent"
         />
 
-        {(props.post.likeCount > 0 ||
-          props.post.dislikeCount > 0 ||
-          props.post.repeatCount > 0) && (
+        <Show
+          when={
+            props.post.likeCount > 0 ||
+            props.post.dislikeCount > 0 ||
+            props.post.repeatCount > 0
+          }
+        >
           <button
             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
-                         text-muted hover:bg-overlay hover:text-txt transition-colors"
+                   text-muted hover:bg-overlay hover:text-txt transition-colors"
             title="Post Statistics"
           >
             <MdFillBar_chart size={17} />
           </button>
-        )}
+        </Show>
 
-        {props.post.children.length > 0 && (
+        <Show when={props.post.children.length > 0}>
           <button
             onClick={() => setShowComments((v) => !v)}
             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
                    text-muted hover:bg-overlay hover:text-txt transition-colors"
             title="Toggle comments"
           >
-            {showComments() ? (
+            <Show
+              when={showComments()}
+              fallback={<MdFillKeyboard_arrow_down size={17} />}
+            >
               <MdFillKeyboard_arrow_up size={17} />
-            ) : (
-              <MdFillKeyboard_arrow_down size={17} />
-            )}
+            </Show>
             <span>
               {props.post.children.length} comment
               {props.post.children.length !== 1 ? "s" : ""}
             </span>
           </button>
-        )}
+        </Show>
 
         <button
           onClick={() => { setReplyOpen((v) => !v); setShowComments(true); }}
@@ -357,7 +398,7 @@ export default function PostCard(props: {
         </button>
       </div>
 
-      {replyOpen() && (
+      <Show when={replyOpen()}>
         <div class="mt-3 flex flex-col gap-2">
           <textarea
             value={replyBody()}
@@ -388,7 +429,7 @@ export default function PostCard(props: {
             </button>
           </div>
         </div>
-      )}
+      </Show>
 
       <CommentThread
         comments={props.post.children}
