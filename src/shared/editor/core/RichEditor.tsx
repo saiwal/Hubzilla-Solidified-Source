@@ -1,5 +1,6 @@
-import { Show, onMount } from "solid-js";
+import { createEffect, onMount, Show } from "solid-js";
 import type { EditorCapabilities, EditorTab } from "../types/editor.types";
+import EditorToolbar from "./EditorToolbar";
 
 interface Props {
   body: string;
@@ -9,20 +10,40 @@ interface Props {
   onTabChange: (t: EditorTab) => void;
   onCtrlEnter?: () => void;
   placeholder?: string;
+  minHeight?: string; // e.g. "120px" — defaults vary by toolbar level
 }
 
 export default function RichEditor(props: Props) {
-  let editorRef!: HTMLDivElement;
-  let textareaRef!: HTMLTextAreaElement;
+  let editorRef: HTMLDivElement | undefined;
+  let textareaRef: HTMLTextAreaElement | undefined;
 
-  // Sync contenteditable from external body signal when tab switches
-  // (e.g. source → wysiwyg: push textarea value into div)
+  const minH = () =>
+    props.minHeight ??
+    (props.capabilities.toolbar === "comment" ? "60px" : "140px");
+
+  // Seed contenteditable on mount
   onMount(() => {
-    editorRef.innerHTML = props.body;
+    if (editorRef) editorRef.innerHTML = props.body;
+  });
+
+  // When body resets to "" externally (post-submit), clear the div too.
+  // We only trigger on empty to avoid fighting contenteditable mid-type.
+  createEffect(() => {
+    if (props.body === "" && editorRef && editorRef.innerHTML !== "") {
+      editorRef.innerHTML = "";
+    }
+  });
+
+  // When switching source→wysiwyg, push textarea content back into div
+  createEffect(() => {
+    if (props.tab === "wysiwyg" && editorRef) {
+      // props.body is already updated by textarea's onInput, just mirror it
+      editorRef.innerHTML = props.body;
+    }
   });
 
   const onEditorInput = () => {
-    props.onInput(editorRef.innerHTML);
+    if (editorRef) props.onInput(editorRef.innerHTML);
   };
 
   const onTextareaInput = (e: InputEvent) => {
@@ -30,61 +51,53 @@ export default function RichEditor(props: Props) {
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (props.capabilities.submitOnCtrlEnter && e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+    if (
+      props.capabilities.submitOnCtrlEnter &&
+      e.key === "Enter" &&
+      (e.ctrlKey || e.metaKey)
+    ) {
       e.preventDefault();
       props.onCtrlEnter?.();
     }
   };
 
   const switchTab = (t: EditorTab) => {
-    if (t === "source" && props.tab === "wysiwyg") {
-      // wysiwyg → source: copy innerHTML as body (caller already has it via onInput)
-    }
-    if (t === "wysiwyg" && props.tab === "source") {
-      // source → wysiwyg: push raw text back into div
-      editorRef.innerHTML = props.body;
-    }
+    // wysiwyg→source: body already synced via onInput, nothing extra needed
+    // source→wysiwyg: handled by the createEffect above
     props.onTabChange(t);
   };
 
-  const isComment = () => props.capabilities.toolbar === "comment";
+  const showTabs = () => props.capabilities.toolbar !== "comment";
 
   return (
-    <div class="rich-editor border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-      {/* Tab bar — hidden for comment composer */}
-      <Show when={!isComment()}>
-        <div class="flex border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-          <button
-            type="button"
+    <div class="rich-editor rounded-lg border border-rim overflow-hidden bg-surface">
+      {/* ── Tab bar ──────────────────────────────────────── */}
+      <Show when={showTabs()}>
+        <div class="flex bg-elevated border-b border-rim">
+          <TabBtn
+            active={props.tab === "wysiwyg"}
             onClick={() => switchTab("wysiwyg")}
-            class={`px-3 py-1.5 text-xs font-medium transition-colors ${
-              props.tab === "wysiwyg"
-                ? "bg-white dark:bg-gray-800 border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-            }`}
           >
             Write
-          </button>
-          <button
-            type="button"
+          </TabBtn>
+          <TabBtn
+            active={props.tab === "source"}
             onClick={() => switchTab("source")}
-            class={`px-3 py-1.5 text-xs font-medium transition-colors ${
-              props.tab === "source"
-                ? "bg-white dark:bg-gray-800 border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-            }`}
           >
             BBCode
-          </button>
+          </TabBtn>
         </div>
       </Show>
 
-      {/* Toolbar */}
+      {/* ── Toolbar (wysiwyg only) ────────────────────────── */}
       <Show when={props.tab === "wysiwyg"}>
-        <EditorToolbar capabilities={props.capabilities} editorRef={() => editorRef} />
+        <EditorToolbar
+          level={props.capabilities.toolbar}
+          editorRef={() => editorRef}
+        />
       </Show>
 
-      {/* WYSIWYG surface */}
+      {/* ── WYSIWYG surface ───────────────────────────────── */}
       <Show when={props.tab === "wysiwyg"}>
         <div
           ref={editorRef}
@@ -92,68 +105,43 @@ export default function RichEditor(props: Props) {
           onInput={onEditorInput}
           onKeyDown={handleKeyDown}
           data-placeholder={props.placeholder ?? "What's on your mind?"}
-          class="min-h-[80px] p-3 outline-none text-sm
+          style={{ "min-height": minH() }}
+          class="p-3 outline-none text-sm text-txt
                  empty:before:content-[attr(data-placeholder)]
-                 empty:before:text-gray-400 dark:empty:before:text-gray-500"
+                 empty:before:text-muted empty:before:pointer-events-none"
         />
       </Show>
 
-      {/* Source tab */}
+      {/* ── BBCode source textarea ────────────────────────── */}
       <Show when={props.tab === "source"}>
         <textarea
           ref={textareaRef}
           value={props.body}
           onInput={onTextareaInput}
           onKeyDown={handleKeyDown}
-          rows={4}
-          class="w-full p-3 text-sm font-mono bg-white dark:bg-gray-900 outline-none resize-y"
-          placeholder="BBCode source..."
+          style={{ "min-height": minH() }}
+          class="w-full p-3 text-sm font-mono bg-surface text-txt outline-none resize-y"
+          placeholder="BBCode source…"
         />
       </Show>
     </div>
   );
 }
 
-// ── Inline toolbar ─────────────────────────────────────────────────────────────
-
-function EditorToolbar(props: {
-  capabilities: EditorCapabilities;
-  editorRef: () => HTMLDivElement;
+function TabBtn(props: {
+  active: boolean;
+  onClick: () => void;
+  children: any;
 }) {
-  const exec = (cmd: string, value?: string) => {
-    props.editorRef().focus();
-    document.execCommand(cmd, false, value);
-  };
-
-  const minimal = () => props.capabilities.toolbar === "comment";
-
-  return (
-    <div class="flex flex-wrap gap-0.5 p-1 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
-      <ToolBtn title="Bold" onClick={() => exec("bold")}><b>B</b></ToolBtn>
-      <ToolBtn title="Italic" onClick={() => exec("italic")}><i>I</i></ToolBtn>
-      <ToolBtn title="Underline" onClick={() => exec("underline")}><u>U</u></ToolBtn>
-      <Show when={!minimal()}>
-        <span class="w-px bg-gray-200 dark:bg-gray-700 mx-0.5" />
-        <ToolBtn title="Link" onClick={() => {
-          const url = prompt("URL:");
-          if (url) exec("createLink", url);
-        }}>🔗</ToolBtn>
-        <ToolBtn title="Blockquote" onClick={() => exec("formatBlock", "blockquote")}>❝</ToolBtn>
-        <ToolBtn title="Code" onClick={() => exec("formatBlock", "pre")}>{"</>"}</ToolBtn>
-        <ToolBtn title="Bullet list" onClick={() => exec("insertUnorderedList")}>•</ToolBtn>
-        <ToolBtn title="Numbered list" onClick={() => exec("insertOrderedList")}>1.</ToolBtn>
-      </Show>
-    </div>
-  );
-}
-
-function ToolBtn(props: { title: string; onClick: () => void; children: any }) {
   return (
     <button
       type="button"
-      title={props.title}
       onClick={props.onClick}
-      class="px-2 py-0.5 rounded text-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+      class={`px-3 py-1.5 text-xs font-medium transition-colors border-b-2 ${
+        props.active
+          ? "border-accent text-accent bg-surface"
+          : "border-transparent text-muted hover:text-txt"
+      }`}
     >
       {props.children}
     </button>
