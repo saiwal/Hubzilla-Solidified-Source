@@ -71,10 +71,10 @@ function ProfileField(props: { label: string; value: string }) {
   return (
     <Show when={props.value}>
       <div class="flex gap-2">
-        <span class="text-xs font-medium text-zinc-400 dark:text-zinc-500 w-28 shrink-0 pt-0.5">
+        <span class="text-xs font-medium text-muted w-28 shrink-0 pt-0.5">
           {props.label}
         </span>
-        <span class="text-zinc-700 dark:text-zinc-300 text-xs leading-relaxed">
+        <span class="text-txt text-xs leading-relaxed">
           {props.value}
         </span>
       </div>
@@ -97,9 +97,9 @@ function ProfileCard(props: {
     p.likes || p.dislikes || p.contact || p.channels;
 
   return (
-    <div class="rounded-2xl overflow-hidden bg-surface border border-zinc-200 dark:border-zinc-800 shadow-sm">
+    <div class="rounded-2xl overflow-hidden bg-surface border border-rim shadow-sm">
       {/* Cover */}
-      <div class="relative bg-linear-to-br from-blue-500 to-indigo-600" style="aspect-ratio: 3 / 1;">
+      <div class="relative bg-gradient-to-br from-accent to-accent-txt" style="aspect-ratio: 3 / 1;">
         <Show when={p.channel_cover}>
           <img src={p.channel_cover} alt="" class="absolute inset-0 w-full h-full object-cover" />
         </Show>
@@ -107,7 +107,7 @@ function ProfileCard(props: {
           <img
             src={p.channel_photo_l}
             alt={p.channel_name}
-            class="w-20 h-20 rounded-full ring-4 ring-white dark:ring-gray-800 object-cover bg-zinc-200 dark:bg-gray-800"
+            class="w-20 h-20 rounded-full ring-4 ring-surface object-cover bg-overlay"
           />
         </div>
         <Show when={props.isOwner}>
@@ -128,9 +128,9 @@ function ProfileCard(props: {
             <h1 class="text-lg font-bold leading-tight text-txt">
               {p.channel_name}
             </h1>
-            <p class="text-sm text-zinc-500 dark:text-zinc-400">@{p.channel_address}</p>
+            <p class="text-sm text-muted">@{p.channel_address}</p>
             <Show when={p.pdesc}>
-              <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 italic">{p.pdesc}</p>
+              <p class="text-xs text-muted mt-0.5 italic">{p.pdesc}</p>
             </Show>
           </div>
           <Show when={!props.isOwner}>
@@ -141,13 +141,14 @@ function ProfileCard(props: {
         {/* About */}
         <Show when={p.about}>
           <div
-            class="mt-3 text-sm text-gray-700 dark:text-gray-300 leading-relaxed prose dark:prose-invert prose-sm max-w-none"
+            class="mt-3 text-sm text-txt leading-relaxed prose prose-sm dark:prose-invert max-w-none
+                     prose-a:text-accent prose-a:no-underline hover:prose-a:underline"
             innerHTML={p.about}
           />
         </Show>
 
         {/* Basic meta */}
-        <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
+        <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
           <Show when={p.location}>
             <span class="flex items-center gap-1">
               <MdFillLocation_on size={14} /> {p.location}
@@ -158,14 +159,14 @@ function ProfileCard(props: {
               href={p.homepage}
               target="_blank"
               rel="noopener noreferrer"
-              class="flex items-center gap-1 hover:text-blue-500 transition-colors"
+              class="flex items-center gap-1 hover:text-accent transition-colors"
             >
               <MdFillPublic size={13} /> {p.homepage.replace(/^https?:\/\//, "")}
             </a>
           </Show>
           <Show when={p.connections > 0}>
             <span>
-              <strong class="text-gray-700 dark:text-gray-200">{p.connections}</strong> connections
+              <strong class="text-txt">{p.connections}</strong> connections
             </span>
           </Show>
         </div>
@@ -175,7 +176,7 @@ function ProfileCard(props: {
           <div class="mt-3 flex flex-wrap gap-1.5">
             <For each={p.keywords}>
               {(tag) => (
-                <span class="px-2 py-0.5 text-xs rounded-full bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300">
+                <span class="px-2 py-0.5 text-xs rounded-full bg-overlay text-muted">
                   #{tag}
                 </span>
               )}
@@ -185,7 +186,7 @@ function ProfileCard(props: {
 
         {/* Expanded details */}
         <Show when={expanded()}>
-          <div class="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-700 space-y-4">
+          <div class="mt-4 pt-4 border-t border-rim space-y-4">
             {/* Personal */}
             <Show when={p.gender || p.marital || p.sexual || (p.dob && p.dob !== "0000-00-00") || p.hometown}>
               <FieldGroup label="Personal">
@@ -247,7 +248,7 @@ function ProfileCard(props: {
         <Show when={hasDetails()}>
           <button
             onClick={() => setExpanded((e) => !e)}
-            class="mt-4 w-full flex items-center justify-center gap-1 text-xs text-zinc-400 dark:text-zinc-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors py-1"
+            class="mt-4 w-full flex items-center justify-center gap-1 text-xs text-muted hover:text-accent transition-colors py-1"
           >
             <Show when={!expanded()} fallback={<><MdFillExpand_less size={16} /> Show less</>}>
               <MdFillExpand_more size={16} /> More details
@@ -262,7 +263,7 @@ function ProfileCard(props: {
 function FieldGroup(props: { label: string; children: any }) {
   return (
     <div>
-      <p class="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wide mb-2">
+      <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
         {props.label}
       </p>
       <div class="grid grid-cols-1 gap-1.5">
@@ -279,8 +280,8 @@ function FollowButton(props: { nick: string; connected: boolean; isVisitor: bool
       : `/connedit?add=${encodeURIComponent(props.nick)}`;
 
   const cls = props.connected
-    ? "border-zinc-300 dark:border-zinc-600 text-zinc-600 dark:text-zinc-300 hover:border-red-400 hover:text-red-500 dark:hover:text-red-400"
-    : "border-blue-500 bg-blue-500 text-white hover:bg-blue-600";
+    ? "border-rim text-muted hover:border-accent hover:text-accent"
+    : "border-accent bg-accent text-white hover:opacity-80";
 
   return (
     <a href={href()} class={`shrink-0 px-4 py-1.5 text-sm font-medium rounded-full border transition-colors ${cls}`}>
@@ -291,19 +292,19 @@ function FollowButton(props: { nick: string; connected: boolean; isVisitor: bool
 
 function ProfileSkeleton() {
   return (
-    <div class="rounded-2xl overflow-hidden bg-surface border border-zinc-200 dark:border-zinc-800 shadow-sm animate-pulse">
-      <div class="h-36 bg-zinc-200 dark:bg-zinc-700" />
+    <div class="rounded-2xl overflow-hidden bg-surface border border-rim shadow-sm animate-pulse">
+      <div class="h-36 bg-overlay" />
       <div class="pt-12 px-5 pb-5">
         <div class="flex items-start justify-between">
           <div class="space-y-2">
-            <div class="h-5 w-36 bg-zinc-200 dark:bg-zinc-700 rounded" />
-            <div class="h-3.5 w-24 bg-zinc-200 dark:bg-zinc-700 rounded" />
+            <div class="h-5 w-36 bg-overlay rounded" />
+            <div class="h-3.5 w-24 bg-overlay rounded" />
           </div>
-          <div class="h-8 w-24 bg-zinc-200 dark:bg-zinc-700 rounded-full" />
+          <div class="h-8 w-24 bg-overlay rounded-full" />
         </div>
         <div class="mt-3 space-y-2">
-          <div class="h-3 bg-zinc-200 dark:bg-zinc-700 rounded w-full" />
-          <div class="h-3 bg-zinc-200 dark:bg-zinc-700 rounded w-4/5" />
+          <div class="h-3 bg-overlay rounded w-full" />
+          <div class="h-3 bg-overlay rounded w-4/5" />
         </div>
       </div>
     </div>
