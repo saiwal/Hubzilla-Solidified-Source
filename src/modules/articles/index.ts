@@ -6,8 +6,14 @@ registerModule({
   id: "articles",
   routes: [
     { path: "/articles", component: () => import("./views/ArticlesView") },
-    { path: "/articles/:nick", component: () => import("./views/ArticlesView") },
-	  { path: "/articles/:nick/:uuid", component: () => import("./views/ArticleView") },
+    {
+      path: "/articles/:nick",
+      component: () => import("./views/ArticlesView"),
+    },
+    {
+      path: "/articles/:nick/:uuid",
+      component: () => import("./views/ArticleView"),
+    },
   ],
 
   navItem: {
@@ -15,10 +21,9 @@ registerModule({
     icon: "article",
     path: "/articles",
     href: () => `/articles/${usePageNick()()}`,
-		context: "all",
-		hidden: false,
+    context: "all",
+    hidden: false,
   },
-  slots: {
-  },
+  slots: { right: () => import("./slots/ArticlesSidebarSlot") },
   permissions: [],
 });
