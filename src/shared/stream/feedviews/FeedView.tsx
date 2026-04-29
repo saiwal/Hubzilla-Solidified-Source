@@ -6,6 +6,7 @@ import PostCard from "../components/PostCard";
 
 export function FeedPlaceholder() {
   return (
+    <div class="max-w-2xl mx-auto">
     <div class="animate-pulse bg-surface border border-rim rounded-2xl p-5 mb-4 shadow-sm">
       <div class="flex items-start gap-3">
         <div class="w-11 h-11 rounded-full bg-accent-muted shrink-0 ring-1 ring-rim" />
@@ -24,6 +25,7 @@ export function FeedPlaceholder() {
         <div class="h-3 bg-accent-muted rounded w-8" />
         <div class="h-3 bg-accent-muted rounded w-8" />
       </div>
+    </div>
     </div>
   );
 }
