@@ -26,7 +26,7 @@ export function mapActivityToPost(activity: any): Post {
   }
   // const body = sanitizeHtml(bbcodeToHtml(activity.body ?? ""));
   return {
-    id: activity.uuid,
+    id: activity.iid,
     iid: activity.iid ? Number(activity.iid) : undefined,
     uuid: activity.uuid,
     profileUid: activity.profile_uid ? Number(activity.profile_uid) : undefined,

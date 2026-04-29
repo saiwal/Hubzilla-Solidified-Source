@@ -1,10 +1,11 @@
 // src/modules/channel/store/store.ts
 import { createSignal } from "solid-js";
 import { createStreamStore, updateNode } from "@/shared/stream/store/createStreamStore";
-import { fetchChannelPosts, toggleVerb, postComment } from "../api/api";
+import { fetchChannelPosts, postComment } from "../api/api";
 import type { ChannelParams, ChannelStreamResult } from "../api/api";
 import type { ThreadNode } from "@/shared/lib/thread";
-
+import { createActionHandlers } from "@/shared/stream/store/actions-store";
+import type { ViewMode } from "@/shared/stream/types";
 // ── nick signal (channel-specific, not part of generic store) ─────────────────
 const [nick, setNick] = createSignal<string>("");
 export { nick };
@@ -18,11 +19,12 @@ async function channelFetcher(params: ChannelParams): Promise<ChannelStreamResul
 // ── store instance ────────────────────────────────────────────────────────────
 const store = createStreamStore<ChannelParams>(channelFetcher);
 
+const { handleLike, handleDislike, handleRepeat } = createActionHandlers(store);
+export { handleLike, handleDislike, handleRepeat };
 export const {
   posts, loading, loadingMore, hasMore, newPosts, profileUid,
   loadMore, flushNewPosts, stopPolling,
 } = store;
-export type ViewMode = "feed" | "masonry" | "list" | "inbox";
 const [viewMode, setViewMode] = createSignal<ViewMode>(
   (localStorage.getItem("channel:viewMode") ?? "masonry") as ViewMode
 );
@@ -53,22 +55,6 @@ function findNode(nodes: ThreadNode[], mid: string): ThreadNode | undefined {
 function iidFor(mid: string): number {
   const node = findNode(store.posts(), mid);
   return node ? Number(node.id) : 0;
-}
-
-// ── reactions ─────────────────────────────────────────────────────────────────
-export function handleLike(mid: string) {
-  const iid = iidFor(mid);
-  store.optimisticToggle(mid, "like", "likeCount", () => toggleVerb(iid, "like"));
-}
-
-export function handleDislike(mid: string) {
-  const iid = iidFor(mid);
-  store.optimisticToggle(mid, "dislike", "dislikeCount", () => toggleVerb(iid, "dislike"));
-}
-
-export function handleRepeat(mid: string) {
-  const iid = iidFor(mid);
-  store.optimisticToggle(mid, "announce", "repeatCount", () => toggleVerb(iid, "announce"));
 }
 
 // ── comment ───────────────────────────────────────────────────────────────────

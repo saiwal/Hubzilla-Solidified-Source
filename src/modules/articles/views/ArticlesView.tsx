@@ -1,133 +1,107 @@
-import { createEffect, Show, For, onCleanup } from "solid-js";
-import { useParams, useSearchParams, A } from "@solidjs/router";
-import { usePageNick } from "@/shared/store/site-config";
+// src/modules/articles/views/ArticlesView.tsx
+import { createEffect, Show, For, Switch, Match } from "solid-js";
+import { useParams } from "@solidjs/router";
+import { useAuth } from "@/shared/store/auth-store";
 import {
-  articles, loading, loadingMore, hasMore,
-  loadArticles, loadMoreArticles,
+  posts, loading, loadingMore, hasMore, newPosts,
+  loadArticles, resetPosts, loadMore, flushNewPosts,
+  handleLike, handleDislike, handleRepeat, handleComment,
 } from "../store";
-import { bbcodeToHtml } from "@/shared/lib/bbcode";
-import DOMPurify from "dompurify";
+import StreamList from "@/shared/stream/feedviews/StreamList";
+import type { StreamHandlers } from "@/shared/stream/types";
+import { FeedPlaceholder } from "@/shared/stream/feedviews/FeedView";
+import { ListPlaceholder } from "@/shared/stream/feedviews/ListView";
+import { MasonryPlaceholder } from "@/shared/stream/feedviews/MasonryView";
+import { ViewSwitcher } from "@/shared/stream/filters";
+import { viewMode, changeView } from "../store";
+
+const handlers: StreamHandlers = {
+  onLike: handleLike,
+  onDislike: handleDislike,
+  onRepeat: handleRepeat,
+  onComment: handleComment,
+};
 
 export default function ArticlesView() {
-  const params = useParams();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const pageNick = usePageNick();
-
-  const nick = () => params.nick || pageNick();
-const filterParams = () => ({
-  search: [searchParams.search].flat()[0] || undefined,
-  tag:    [searchParams.tag].flat()[0]    || undefined,
-  cat:    [searchParams.cat].flat()[0]    || undefined,
-});
+  const auth = useAuth();
+  const params = useParams<{ nick: string }>();
+  let initialized = false;
 
   createEffect(() => {
-    const n = nick();
-    if (!n) return;
-    loadArticles(n, filterParams());
-  });
-
-  onCleanup(() => {
-    // reset on leave so back-nav gets fresh data for a different channel
+    if (auth.loading) return;
+    if (initialized) return;
+    initialized = true;
+    resetPosts();
+    loadArticles(params.nick);
   });
 
   return (
-    <div class="max-w-3xl mx-auto space-y-6">
-      <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-bold">Articles</h1>
-        {/* Search */}
-        <input
-          type="search"
-          placeholder="Search articles…"
-          value={searchParams.search ?? ""}
-          onInput={(e) => {
-            setSearchParams({ search: e.currentTarget.value || undefined }, { replace: true });
-            loadArticles(nick(), { ...filterParams(), search: e.currentTarget.value || undefined });
-          }}
-          class="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm
-                 bg-surface focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
+    <div class="relative">
+      {/* Add an ArticlesFilters / ViewSwitcher here when ready */}
+<ViewSwitcher
+  viewMode={viewMode()}
+  onChange={changeView}
+  available={["feed", "masonry", "list"]}
+/>
+      <Show when={newPosts().length > 0}>
+        <div class="sticky top-2 z-10 flex justify-center">
+          <button
+            onClick={flushNewPosts}
+            class="px-4 py-2 rounded-full bg-accent text-white text-sm font-medium shadow-lg hover:opacity-90 transition-opacity"
+          >
+            ↑ {newPosts().length} new {newPosts().length === 1 ? "post" : "posts"}
+          </button>
+        </div>
+      </Show>
 
-      <Show when={!loading()} fallback={<ArticlesPlaceholder />}>
-        <Show when={articles().length > 0} fallback={
-          <p class="text-center py-12 text-gray-400">No articles yet.</p>
-        }>
-          <For each={articles()}>
-            {(article) => <ArticleCard article={article} nick={nick()} />}
-          </For>
-        </Show>
+      <Show
+        when={!loading()}
+        fallback={
+          <Switch>
+            <Match when={viewMode() === "list"}>
+              <ListPlaceholder count={8} />
+            </Match>
+            <Match when={viewMode() === "masonry"}>
+              <MasonryPlaceholder count={12} />
+            </Match>
+            <Match when={true}>
+              <For each={Array(5).fill(0)}>{() => <FeedPlaceholder />}</For>
+            </Match>
+          </Switch>
+        }
+      >
+        <StreamList posts={posts()} viewMode={viewMode()} handlers={handlers} />
 
         <Show when={loadingMore()}>
-          <ArticlesPlaceholder count={3} />
+          <Switch>
+            <Match when={viewMode() === "list"}>
+              <ListPlaceholder count={4} />
+            </Match>
+            <Match when={viewMode() === "masonry"}>
+              <MasonryPlaceholder count={6} />
+            </Match>
+            <Match when={true}>
+              <For each={Array(3).fill(0)}>{() => <FeedPlaceholder />}</For>
+            </Match>
+          </Switch>
         </Show>
 
         <Show when={hasMore() && !loadingMore()}>
           <div class="flex justify-center py-4">
             <button
-              onClick={() => loadMoreArticles(filterParams())}
-              class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700
-                     bg-surface hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              onClick={loadMore}
+              class="px-4 py-2 text-sm font-medium rounded-lg border border-rim
+                     bg-surface text-muted hover:bg-overlay transition-colors"
             >
               Load more
             </button>
           </div>
         </Show>
 
-        <Show when={!hasMore() && articles().length > 0}>
-          <p class="text-center py-4 text-sm text-gray-400">All caught up</p>
+        <Show when={!hasMore() && posts().length > 0}>
+          <p class="text-center py-4 text-sm text-muted">All articles loaded</p>
         </Show>
       </Show>
     </div>
-  );
-}
-
-function ArticleCard(props: { article: import("@/shared/types/post.types").Post; nick: string }) {
-  // Render a short excerpt — first ~300 chars of rendered body, stripped of HTML
-  const excerpt = () => {
-    const raw = DOMPurify.sanitize(bbcodeToHtml(props.article.body ?? ""), { ALLOWED_TAGS: [] });
-    return raw.length > 280 ? raw.slice(0, 280) + "…" : raw;
-  };
-
-  return (
-    <article class="bg-surface rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-2 hover:shadow-sm transition-shadow">
-      <A href={`/articles/${props.nick}/${props.article.uuid}`} class="block">
-        <h2 class="text-lg font-semibold leading-snug hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-          {props.article.title || "(Untitled)"}
-        </h2>
-      </A>
-      <p class="text-sm text-muted">
-        {new Date(props.article.created.replace(" ", "T") + "Z").toLocaleDateString(undefined, {
-          year: "numeric", month: "long", day: "numeric",
-        })}
-        {" · "}
-        {props.article.authorName}
-      </p>
-      <p class="text-sm text-gray-700 dark:text-gray-300 line-clamp-3">{excerpt()}</p>
-      <div class="flex items-center gap-4 pt-1 text-xs text-gray-400">
-        <span>♥ {props.article.likeCount}</span>
-        <span>💬 {props.article.commentCount ?? 0}</span>
-        <A
-          href={`/articles/${props.nick}/${props.article.uuid}`}
-          class="ml-auto text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium"
-        >
-          Read →
-        </A>
-      </div>
-    </article>
-  );
-}
-
-function ArticlesPlaceholder(props: { count?: number }) {
-  return (
-    <For each={Array(props.count ?? 5).fill(0)}>
-      {() => (
-        <div class="bg-surface rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-3 animate-pulse">
-          <div class="h-5 bg-elevated rounded w-2/3" />
-          <div class="h-3 bg-gray-100 dark:bg-gray-700/60 rounded w-1/4" />
-          <div class="h-3 bg-gray-100 dark:bg-gray-700/60 rounded w-full" />
-          <div class="h-3 bg-gray-100 dark:bg-gray-700/60 rounded w-5/6" />
-        </div>
-      )}
-    </For>
   );
 }

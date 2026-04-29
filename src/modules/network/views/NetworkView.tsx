@@ -1,19 +1,18 @@
 // src/modules/network/views/NetworkView.tsx
 import { createEffect, Show, For, Switch, Match } from "solid-js";
 import { useAuth } from "@/shared/store/auth-store";
-import {
-  viewMode, posts, loadNetwork, resetPosts,
-  loading, loadMore, loadingMore, hasMore, newPosts, flushNewPosts,
-  handleLike, handleDislike, handleRepeat, handleComment,
-} from "../store/store";
 import StreamList from "@/shared/stream/feedviews/StreamList";
 import type { StreamHandlers } from "@/shared/stream/types";
 import { ListPlaceholder } from "@/shared/stream/feedviews/ListView";
 import { MasonryPlaceholder } from "@/shared/stream/feedviews/MasonryView";
 import { FeedPlaceholder } from "@/shared/stream/feedviews/FeedView";
 import StreamFilters from "./StreamFilters";
-import ViewSwitcher from "./ViewSwitcher";
-
+import { ViewSwitcher } from "@/shared/stream/filters";
+import {
+  viewMode, changeView, posts, loadNetwork, resetPosts,
+  loading, loadMore, loadingMore, hasMore, newPosts, flushNewPosts,
+  handleLike, handleDislike, handleRepeat, handleComment,
+} from "../store/store";
 const handlers: StreamHandlers = {
   onLike:    handleLike,
   onDislike: handleDislike,
@@ -36,7 +35,7 @@ export default function NetworkView() {
   return (
     <div class="relative">
       <StreamFilters />
-      <ViewSwitcher />
+<ViewSwitcher viewMode={viewMode()} onChange={changeView} />
 
       <Show when={newPosts().length > 0}>
         <div class="sticky top-2 z-10 flex justify-center">

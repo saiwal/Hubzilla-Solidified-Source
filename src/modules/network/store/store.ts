@@ -1,9 +1,10 @@
 // src/modules/network/store/store.ts
 import { createSignal } from "solid-js";
 import { createStreamStore, updateNode } from "@/shared/stream/store/createStreamStore";
-import { fetchNetworkStream, toggleVerb, postComment, apiDeleteItem as deleteItem} from "../api/api";
+import { fetchNetworkStream, postComment, apiDeleteItem as deleteItem} from "../api/api";
 import type { NetworkParams } from "../api/api";
 import type { ThreadNode } from "@/shared/lib/thread";
+import { createActionHandlers, toggleVerb } from "@/shared/stream/store/actions-store";
 
 // ── viewMode (stays network-local) ───────────────────────────────────────────
 export type ViewMode = "feed" | "masonry" | "list" | "inbox";
@@ -17,6 +18,8 @@ export { viewMode };
 
 // ── store instance ────────────────────────────────────────────────────────────
 const store = createStreamStore<NetworkParams>(fetchNetworkStream);
+const { handleLike, handleDislike, handleRepeat } = createActionHandlers(store);
+export { handleLike, handleDislike, handleRepeat };
 
 export const {
   posts, loading, loadingMore, hasMore, newPosts, profileUid,
@@ -45,23 +48,6 @@ function iidFor(mid: string): number {
   const node = findNode(store.posts(), mid);
   return node ? Number(node.id) : 0;
 }
-
-// ── reactions — single-arg, iid resolved internally ──────────────────────────
-export function handleLike(mid: string) {
-  const iid = iidFor(mid);
-  store.optimisticToggle(mid, "like", "likeCount", () => toggleVerb(iid, "like"));
-}
-
-export function handleDislike(mid: string) {
-  const iid = iidFor(mid);
-  store.optimisticToggle(mid, "dislike", "dislikeCount", () => toggleVerb(iid, "dislike"));
-}
-
-export function handleRepeat(mid: string) {
-  const iid = iidFor(mid);
-  store.optimisticToggle(mid, "announce", "repeatCount", () => toggleVerb(iid, "announce"));
-}
-
 export function handleStar(mid: string) {
   const iid = iidFor(mid);
   store.optimisticToggle(mid, "like", "likeCount", () => toggleVerb(iid, "star"));

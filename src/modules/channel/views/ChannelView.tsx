@@ -2,9 +2,19 @@
 import { createEffect, onCleanup, Show, For, Switch, Match } from "solid-js";
 import { useParams, useSearchParams } from "@solidjs/router";
 import {
-  posts, loading, loadingMore, hasMore, newPosts,
-  loadChannel, loadMore, flushNewPosts, stopPolling, viewMode,
-  handleLike, handleDislike, handleRepeat, handleComment,
+  posts,
+  loading,
+  loadingMore,
+  hasMore,
+  newPosts,
+  loadChannel,
+  loadMore,
+  flushNewPosts,
+  stopPolling,
+  handleLike,
+  handleDislike,
+  handleRepeat,
+  handleComment,
 } from "../store/store";
 import StreamList from "@/shared/stream/feedviews/StreamList";
 import type { StreamHandlers } from "@/shared/stream/types";
@@ -13,11 +23,14 @@ import { MasonryPlaceholder } from "@/shared/stream/feedviews/MasonryView";
 import { FeedPlaceholder } from "@/shared/stream/feedviews/FeedView";
 import type { ChannelParams } from "../api/api";
 import ProfileView from "./ProfileView";
+import { ViewSwitcher } from "@/shared/stream/filters";
+import { viewMode, changeView } from "../store/store";
+import { useViewerRole } from "@/shared/store/site-config";
 
 const handlers: StreamHandlers = {
-  onLike:    handleLike,
+  onLike: handleLike,
   onDislike: handleDislike,
-  onRepeat:  handleRepeat,
+  onRepeat: handleRepeat,
   onComment: handleComment,
 };
 
@@ -25,18 +38,19 @@ export default function ChannelView() {
   const params = useParams<{ nick: string }>();
   const [searchParams] = useSearchParams();
 
+const role = useViewerRole();
   createEffect(() => {
     const str = (key: string): string | undefined => {
       const v = searchParams[key];
       return v ? String(Array.isArray(v) ? v[0] : v) : undefined;
     };
     const p: ChannelParams = {
-      ...(str("order")  && { order:  str("order") as ChannelParams["order"] }),
+      ...(str("order") && { order: str("order") as ChannelParams["order"] }),
       ...(str("search") && { search: str("search") }),
-      ...(str("tag")    && { tag:    str("tag") }),
-      ...(str("cat")    && { cat:    str("cat") }),
-      ...(str("mid")    && { mid:    str("mid") }),
-      ...(str("dend")   && { dend:   str("dend") }),
+      ...(str("tag") && { tag: str("tag") }),
+      ...(str("cat") && { cat: str("cat") }),
+      ...(str("mid") && { mid: str("mid") }),
+      ...(str("dend") && { dend: str("dend") }),
       ...(str("dbegin") && { dbegin: str("dbegin") }),
     };
     loadChannel(params.nick ?? "", p);
@@ -48,7 +62,9 @@ export default function ChannelView() {
   createEffect(() => {
     if (!sentinel) return;
     const observer = new IntersectionObserver(
-      (entries) => { if (entries[0].isIntersecting) loadMore(); },
+      (entries) => {
+        if (entries[0].isIntersecting) loadMore();
+      },
       { rootMargin: "200px" },
     );
     observer.observe(sentinel);
@@ -58,7 +74,15 @@ export default function ChannelView() {
   return (
     <>
       <ProfileView />
-
+      <ViewSwitcher
+        viewMode={viewMode()}
+        onChange={changeView}
+        available={
+          role() === "owner"
+            ? ["feed", "masonry", "list", "inbox"]
+            : ["feed", "masonry"]
+        }
+      />
       <Show when={newPosts().length > 0}>
         <button
           onClick={flushNewPosts}

@@ -1,4 +1,4 @@
-import { createSignal, Show, For, createResource, type JSX } from "solid-js";
+import { createSignal, Show, For, createResource } from "solid-js";
 import { useSearchParams } from "@solidjs/router";
 import { loadNetwork, loading } from "../store/store";
 import {
@@ -15,6 +15,7 @@ import {
   MdFillStar,
 } from "solid-icons/md";
 import { helpable } from "@/shared/lib/helpable";
+import { FilterChip as ToggleChip } from "@/shared/stream/filters";
 void helpable;
 
 type Order = NonNullable<NetworkParams["order"]>;
@@ -422,22 +423,3 @@ const inputCls = `px-2.5 py-1.5 text-sm rounded-lg border border-rim
   bg-surface text-txt
   placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent`;
 
-function ToggleChip(props: {
-  active: boolean;
-  onClick: () => void;
-  label: string | JSX.Element;
-}) {
-  return (
-    <button
-      onClick={props.onClick}
-      class={`px-3 py-1.5 text-sm rounded-lg border transition-colors shrink-0
-        ${
-          props.active
-            ? "border-accent bg-accent-muted text-accent"
-            : "border-rim bg-surface text-muted hover:bg-overlay"
-        }`}
-    >
-      {props.label}
-    </button>
-  );
-}

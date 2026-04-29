@@ -1,0 +1,526 @@
+src/
+├── App.tsx
+├── docs
+│   ├── en
+│   │   ├── hq
+│   │   │   └── index.txt
+│   │   ├── network
+│   │   │   └── index.txt
+│   │   └── shared
+│   │       ├── nav.txt
+│   │       ├── notifications.txt
+│   │       └── post-composer.txt
+│   └── hi
+│       └── network
+│           └── index.txt
+├── i18n
+│   ├── index.tsx
+│   └── locales
+│       ├── de.ts
+│       ├── en.ts
+│       ├── hi.ts
+│       └── index.ts
+├── index.css
+├── index.tsx
+├── Layout.tsx
+├── modules
+│   ├── admin
+│   │   ├── api
+│   │   ├── index.ts
+│   │   ├── store
+│   │   └── views
+│   │       └── AdminView.tsx
+│   ├── articles
+│   │   ├── api.ts
+│   │   ├── index.ts
+│   │   ├── store
+│   │   ├── store.ts
+│   │   └── views
+│   │       ├── ArticlesView.tsx
+│   │       └── ArticleView.tsx
+│   ├── calendar
+│   │   ├── api
+│   │   ├── index.ts
+│   │   ├── store
+│   │   └── views
+│   │       └── CalendarView.tsx
+│   ├── cart
+│   │   ├── api
+│   │   ├── index.ts
+│   │   ├── store
+│   │   └── views
+│   │       └── CartView.tsx
+│   ├── channel
+│   │   ├── api
+│   │   │   └── api.ts
+│   │   ├── index.ts
+│   │   ├── store
+│   │   │   └── store.ts
+│   │   └── views
+│   │       ├── ChannelView.tsx
+│   │       └── ProfileView.tsx
+│   ├── chat
+│   │   ├── api
+│   │   │   └── api.ts
+│   │   ├── index.ts
+│   │   └── views
+│   │       ├── RoomListView.tsx
+│   │       └── RoomView.tsx
+│   ├── connections
+│   │   ├── api.ts
+│   │   ├── index.ts
+│   │   ├── store.ts
+│   │   └── views
+│   │       └── ConnectionsView.tsx
+│   ├── directory
+│   │   ├── api.ts
+│   │   ├── index.ts
+│   │   ├── store.ts
+│   │   └── views
+│   │       ├── DirectoryCard.tsx
+│   │       ├── DirectoryEntryModal.tsx
+│   │       └── DirectoryView.tsx
+│   ├── files
+│   │   ├── api
+│   │   ├── index.ts
+│   │   ├── store
+│   │   └── views
+│   │       └── FilesView.tsx
+│   ├── help
+│   │   ├── api
+│   │   ├── index.ts
+│   │   ├── store
+│   │   └── views
+│   │       └── HelpView.tsx
+│   ├── hq
+│   │   ├── api
+│   │   ├── index.ts
+│   │   ├── store
+│   │   ├── views
+│   │   │   └── HqView.tsx
+│   │   └── widgets
+│   │       ├── ActivityWidget.tsx
+│   │       ├── HqComposer.tsx
+│   │       ├── HqMessagesWidget.tsx
+│   │       ├── PerfStatsWidget.tsx
+│   │       └── StatsWidget.tsx
+│   ├── manage
+│   │   ├── api.ts
+│   │   ├── index.ts
+│   │   ├── store.ts
+│   │   └── views
+│   │       └── ManagePage.tsx
+│   ├── network
+│   │   ├── api
+│   │   │   └── api.ts
+│   │   ├── index.ts
+│   │   ├── store
+│   │   │   └── store.ts
+│   │   ├── views
+│   │   │   ├── NetworkView.tsx
+│   │   │   ├── PostActions.tsx
+│   │   │   ├── ReactorList.tsx
+│   │   │   ├── StreamFilters.tsx
+│   │   │   └── ViewSwitcher.tsx
+│   │   └── widgets
+│   ├── photos
+│   │   ├── api
+│   │   │   └── api.ts
+│   │   ├── index.ts
+│   │   ├── store
+│   │   │   └── store.ts
+│   │   ├── views
+│   │   │   └── PhotoView.tsx
+│   │   └── widgets
+│   │       └── PhotosWidget.tsx
+│   ├── pubsites
+│   │   ├── api.ts
+│   │   ├── index.ts
+│   │   └── views
+│   │       └── PubsitesView.tsx
+│   ├── settings
+│   │   ├── api
+│   │   │   └── api.ts
+│   │   ├── index.ts
+│   │   ├── store
+│   │   │   ├── types.ts
+│   │   │   └── useSectionForm.ts
+│   │   └── views
+│   │       ├── DisplaySection.tsx
+│   │       ├── NotificationsSection.tsx
+│   │       ├── Primitives.tsx
+│   │       ├── PrivacySection.tsx
+│   │       └── SettingsView.tsx
+│   ├── siteinfo
+│   │   ├── api.ts
+│   │   ├── index.ts
+│   │   └── views
+│   │       └── SiteinfoView.tsx
+│   ├── webpages
+│   │   ├── api
+│   │   │   └── api.ts
+│   │   ├── index.ts
+│   │   ├── store
+│   │   │   └── store.ts
+│   │   └── views
+│   │       ├── PageView.tsx
+│   │       └── WebpagesView.tsx
+│   └── wiki
+│       ├── api
+│       ├── index.ts
+│       ├── store
+│       └── views
+│           └── WikiView.tsx
+├── pwa.ts
+├── router.tsx
+├── shared
+│   ├── editor
+│   │   ├── composers
+│   │   │   ├── ArticleComposer.tsx
+│   │   │   ├── CommentComposer.tsx
+│   │   │   └── PostComposer.tsx
+│   │   ├── core
+│   │   │   ├── EditorPreview.tsx
+│   │   │   ├── EditorToolbar.tsx
+│   │   │   └── RichEditor.tsx
+│   │   ├── store
+│   │   │   └── createComposerStore.ts
+│   │   └── types
+│   │       └── editor.types.ts
+│   ├── lib
+│   │   ├── activity.mapper.ts
+│   │   ├── api.ts
+│   │   ├── bbcode.ts
+│   │   ├── conversation.ts
+│   │   ├── csrf.ts
+│   │   ├── date.ts
+│   │   ├── fetch.ts
+│   │   ├── helpable.ts
+│   │   ├── item-api.ts
+│   │   ├── markSeen.ts
+│   │   ├── module-registry.ts
+│   │   ├── nav-api.ts
+│   │   ├── parseEventBBCode.ts
+│   │   ├── post-api.ts
+│   │   ├── sanitize.ts
+│   │   ├── thread.ts
+│   │   ├── useDocs.ts
+│   │   ├── useNav.ts
+│   │   ├── useOnlineStatus.ts
+│   │   └── useTheme.ts
+│   ├── slots.ts
+│   ├── store
+│   │   ├── auth-store.ts
+│   │   ├── help-mode.ts
+│   │   ├── nav-store.ts
+│   │   └── site-config.ts
+│   ├── stream
+│   │   ├── components
+│   │   │   ├── ActionBar.tsx
+│   │   │   ├── CommentBox.tsx
+│   │   │   └── PostCard.tsx
+│   │   ├── feedviews
+│   │   │   ├── FeedView.tsx
+│   │   │   ├── InboxView.tsx
+│   │   │   ├── ListView.tsx
+│   │   │   ├── MasonryView.tsx
+│   │   │   └── StreamList.tsx
+│   │   ├── filters
+│   │   ├── store
+│   │   │   ├── actions-store.ts
+│   │   │   ├── createStreamStore.ts
+│   │   │   └── post-modal-store.ts
+│   │   └── types.ts
+│   ├── types
+│   │   ├── layout.types.ts
+│   │   ├── module.types.ts
+│   │   ├── post.types.ts
+│   │   ├── solid.d.ts
+│   │   ├── stream.type.ts
+│   │   └── theme.types.ts
+│   ├── views
+│   │   ├── CommentThread.tsx
+│   │   ├── EventCard.tsx
+│   │   ├── HelpOverlay.tsx
+│   │   ├── HelpTip.tsx
+│   │   ├── HelpTrigger.tsx
+│   │   ├── LanguageSwitcher.tsx
+│   │   ├── NavItem.tsx
+│   │   ├── NavUtilities.tsx
+│   │   ├── PostComposer.tsx
+│   │   ├── PostDetailModal.tsx
+│   │   ├── RemoteAuthBanner.tsx
+│   │   ├── Slot.tsx
+│   │   └── ThemeToggle.tsx
+│   └── widgets
+│       ├── notifications
+│       │   └── NotificationsAside.tsx
+│       └── onlinecontacts
+│           └── view.tsx
+└── styles
+    └── theme.css
+
+97 directories, 164 files
+src/
+├── App.tsx
+├── docs
+│   ├── en
+│   │   ├── hq
+│   │   │   └── index.txt
+│   │   ├── network
+│   │   │   └── index.txt
+│   │   └── shared
+│   │       ├── nav.txt
+│   │       ├── notifications.txt
+│   │       └── post-composer.txt
+│   └── hi
+│       └── network
+│           └── index.txt
+├── i18n
+│   ├── index.tsx
+│   └── locales
+│       ├── de.ts
+│       ├── en.ts
+│       ├── hi.ts
+│       └── index.ts
+├── index.css
+├── index.tsx
+├── Layout.tsx
+├── modules
+│   ├── admin
+│   │   ├── api
+│   │   ├── index.ts
+│   │   ├── store
+│   │   └── views
+│   │       └── AdminView.tsx
+│   ├── articles
+│   │   ├── api.ts
+│   │   ├── index.ts
+│   │   ├── store
+│   │   ├── store.ts
+│   │   └── views
+│   │       ├── ArticlesView.tsx
+│   │       └── ArticleView.tsx
+│   ├── calendar
+│   │   ├── api
+│   │   ├── index.ts
+│   │   ├── store
+│   │   └── views
+│   │       └── CalendarView.tsx
+│   ├── cart
+│   │   ├── api
+│   │   ├── index.ts
+│   │   ├── store
+│   │   └── views
+│   │       └── CartView.tsx
+│   ├── channel
+│   │   ├── api
+│   │   │   └── api.ts
+│   │   ├── index.ts
+│   │   ├── store
+│   │   │   └── store.ts
+│   │   └── views
+│   │       ├── ChannelView.tsx
+│   │       └── ProfileView.tsx
+│   ├── chat
+│   │   ├── api
+│   │   │   └── api.ts
+│   │   ├── index.ts
+│   │   └── views
+│   │       ├── RoomListView.tsx
+│   │       └── RoomView.tsx
+│   ├── connections
+│   │   ├── api.ts
+│   │   ├── index.ts
+│   │   ├── store.ts
+│   │   └── views
+│   │       └── ConnectionsView.tsx
+│   ├── directory
+│   │   ├── api.ts
+│   │   ├── index.ts
+│   │   ├── store.ts
+│   │   └── views
+│   │       ├── DirectoryCard.tsx
+│   │       ├── DirectoryEntryModal.tsx
+│   │       └── DirectoryView.tsx
+│   ├── files
+│   │   ├── api
+│   │   ├── index.ts
+│   │   ├── store
+│   │   └── views
+│   │       └── FilesView.tsx
+│   ├── help
+│   │   ├── api
+│   │   ├── index.ts
+│   │   ├── store
+│   │   └── views
+│   │       └── HelpView.tsx
+│   ├── hq
+│   │   ├── api
+│   │   ├── index.ts
+│   │   ├── store
+│   │   ├── views
+│   │   │   └── HqView.tsx
+│   │   └── widgets
+│   │       ├── ActivityWidget.tsx
+│   │       ├── HqComposer.tsx
+│   │       ├── HqMessagesWidget.tsx
+│   │       ├── PerfStatsWidget.tsx
+│   │       └── StatsWidget.tsx
+│   ├── manage
+│   │   ├── api.ts
+│   │   ├── index.ts
+│   │   ├── store.ts
+│   │   └── views
+│   │       └── ManagePage.tsx
+│   ├── network
+│   │   ├── api
+│   │   │   └── api.ts
+│   │   ├── index.ts
+│   │   ├── store
+│   │   │   └── store.ts
+│   │   ├── views
+│   │   │   ├── NetworkView.tsx
+│   │   │   ├── PostActions.tsx
+│   │   │   ├── ReactorList.tsx
+│   │   │   ├── StreamFilters.tsx
+│   │   │   └── ViewSwitcher.tsx
+│   │   └── widgets
+│   ├── photos
+│   │   ├── api
+│   │   │   └── api.ts
+│   │   ├── index.ts
+│   │   ├── store
+│   │   │   └── store.ts
+│   │   ├── views
+│   │   │   └── PhotoView.tsx
+│   │   └── widgets
+│   │       └── PhotosWidget.tsx
+│   ├── pubsites
+│   │   ├── api.ts
+│   │   ├── index.ts
+│   │   └── views
+│   │       └── PubsitesView.tsx
+│   ├── settings
+│   │   ├── api
+│   │   │   └── api.ts
+│   │   ├── index.ts
+│   │   ├── store
+│   │   │   ├── types.ts
+│   │   │   └── useSectionForm.ts
+│   │   └── views
+│   │       ├── DisplaySection.tsx
+│   │       ├── NotificationsSection.tsx
+│   │       ├── Primitives.tsx
+│   │       ├── PrivacySection.tsx
+│   │       └── SettingsView.tsx
+│   ├── siteinfo
+│   │   ├── api.ts
+│   │   ├── index.ts
+│   │   └── views
+│   │       └── SiteinfoView.tsx
+│   ├── webpages
+│   │   ├── api
+│   │   │   └── api.ts
+│   │   ├── index.ts
+│   │   ├── store
+│   │   │   └── store.ts
+│   │   └── views
+│   │       ├── PageView.tsx
+│   │       └── WebpagesView.tsx
+│   └── wiki
+│       ├── api
+│       ├── index.ts
+│       ├── store
+│       └── views
+│           └── WikiView.tsx
+├── pwa.ts
+├── router.tsx
+├── shared
+│   ├── editor
+│   │   ├── composers
+│   │   │   ├── ArticleComposer.tsx
+│   │   │   ├── CommentComposer.tsx
+│   │   │   └── PostComposer.tsx
+│   │   ├── core
+│   │   │   ├── EditorPreview.tsx
+│   │   │   ├── EditorToolbar.tsx
+│   │   │   └── RichEditor.tsx
+│   │   ├── store
+│   │   │   └── createComposerStore.ts
+│   │   └── types
+│   │       └── editor.types.ts
+│   ├── lib
+│   │   ├── activity.mapper.ts
+│   │   ├── api.ts
+│   │   ├── bbcode.ts
+│   │   ├── conversation.ts
+│   │   ├── csrf.ts
+│   │   ├── date.ts
+│   │   ├── fetch.ts
+│   │   ├── helpable.ts
+│   │   ├── item-api.ts
+│   │   ├── markSeen.ts
+│   │   ├── module-registry.ts
+│   │   ├── nav-api.ts
+│   │   ├── parseEventBBCode.ts
+│   │   ├── post-api.ts
+│   │   ├── sanitize.ts
+│   │   ├── thread.ts
+│   │   ├── useDocs.ts
+│   │   ├── useNav.ts
+│   │   ├── useOnlineStatus.ts
+│   │   └── useTheme.ts
+│   ├── slots.ts
+│   ├── store
+│   │   ├── auth-store.ts
+│   │   ├── help-mode.ts
+│   │   ├── nav-store.ts
+│   │   └── site-config.ts
+│   ├── stream
+│   │   ├── components
+│   │   │   ├── ActionBar.tsx
+│   │   │   ├── CommentBox.tsx
+│   │   │   └── PostCard.tsx
+│   │   ├── feedviews
+│   │   │   ├── FeedView.tsx
+│   │   │   ├── InboxView.tsx
+│   │   │   ├── ListView.tsx
+│   │   │   ├── MasonryView.tsx
+│   │   │   └── StreamList.tsx
+│   │   ├── filters
+│   │   ├── store
+│   │   │   ├── actions-store.ts
+│   │   │   ├── createStreamStore.ts
+│   │   │   └── post-modal-store.ts
+│   │   └── types.ts
+│   ├── types
+│   │   ├── layout.types.ts
+│   │   ├── module.types.ts
+│   │   ├── post.types.ts
+│   │   ├── solid.d.ts
+│   │   ├── stream.type.ts
+│   │   └── theme.types.ts
+│   ├── views
+│   │   ├── CommentThread.tsx
+│   │   ├── EventCard.tsx
+│   │   ├── HelpOverlay.tsx
+│   │   ├── HelpTip.tsx
+│   │   ├── HelpTrigger.tsx
+│   │   ├── LanguageSwitcher.tsx
+│   │   ├── NavItem.tsx
+│   │   ├── NavUtilities.tsx
+│   │   ├── PostComposer.tsx
+│   │   ├── PostDetailModal.tsx
+│   │   ├── RemoteAuthBanner.tsx
+│   │   ├── Slot.tsx
+│   │   └── ThemeToggle.tsx
+│   └── widgets
+│       ├── notifications
+│       │   └── NotificationsAside.tsx
+│       └── onlinecontacts
+│           └── view.tsx
+└── styles
+    └── theme.css
+
+97 directories, 164 files

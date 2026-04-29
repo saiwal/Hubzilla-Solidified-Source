@@ -30,6 +30,42 @@ export async function fetchArticles(
   };
 }
 
+export async function toggleVerb(
+  iid: number,
+  verb: 'like' | 'dislike' | 'announce' | 'star',
+): Promise<void> {
+  const url = `/like/${iid}?verb=${verb}&conv_mode=&page_mode=client&reload=0`;
+  const res = await fetch(url, { method: 'GET', credentials: 'include' });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`${verb} failed: ${res.status} ${text}`);
+  }
+}
+export async function postComment(params: {
+  body: string;
+  parent_iid: number;
+  profile_uid: number;
+}): Promise<Post | null> {
+  const formData = new URLSearchParams();
+  formData.set('type', 'net-comment');
+  formData.set('profile_uid', String(params.profile_uid));
+  formData.set('parent', String(params.parent_iid));
+  formData.set('body', params.body);
+  formData.set('return', '');
+  formData.set('jsreload', '');
+  formData.set('preview', '0');
+  formData.set('conv_mode', '');
+  const res = await fetch('/item', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: formData.toString(),
+  });
+  if (!res.ok) throw new Error(`Comment failed: ${res.status}`);
+  const data = await res.json();
+  if (data.cancel) return null;
+  return mapActivityToPost(data);
+}
 export async function fetchArticle(
   nick: string,
   uuid: string,
