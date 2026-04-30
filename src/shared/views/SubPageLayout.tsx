@@ -8,7 +8,7 @@ export interface SubPageItem {
   path: string;
   label: string;
   icon?: JSX.Element;
-  dividerBefore?: boolean;
+  dividerAfter?: boolean;
   /** Who can see this nav item. Omit or use "all" for everyone. */
   context?: SubPageContext | SubPageContext[];
 }
@@ -115,7 +115,6 @@ function SubPageNav(props: {
         const active = () => item.path === props.activeKey;
         return (
           <>
-            {item.dividerBefore && <hr class="my-2 mx-3 border-rim" />}
             <A
               href={`${props.base}/${item.path}`}
               class={[
@@ -139,6 +138,7 @@ function SubPageNav(props: {
                 <polyline points="9 18 15 12 9 6" />
               </svg>
             </A>
+            {item.dividerAfter && <hr class="my-2 mx-3 border-rim" />}
           </>
         );
       })}

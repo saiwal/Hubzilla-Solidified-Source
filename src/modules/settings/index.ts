@@ -7,9 +7,9 @@ export const SETTINGS_ITEMS: SubPageItem[] = [
   { path: "account",       label: "Account" },
   { path: "privacy",       label: "Privacy" },
   { path: "notifications", label: "Notifications" },
-  { path: "display",       label: "Display",      dividerBefore: true },
+  { path: "display",       label: "Display"},
   { path: "integrations",  label: "Integrations" },
-  { path: "danger",        label: "Danger zone",  dividerBefore: true },
+  { path: "danger",        label: "Danger zone"  },
 ];
 
 // Derive all sub-routes from SETTINGS_ITEMS so the list is always in sync.
