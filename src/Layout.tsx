@@ -15,6 +15,7 @@ import {
 } from "solid-icons/md";
 import { useOnlineStatus } from "./shared/lib/useOnlineStatus";
 import NavUtilities from "./shared/views/NavUtilities";
+import { notifCount } from "@/shared/lib/notificationCount";
 
 // ── Mobile bottom tab ─────────────────────────────────────────────────────────
 function MobileTab(props: {
@@ -337,10 +338,22 @@ const Layout: ParentComponent = (props) => {
                           : "text-muted hover:bg-elevated"
                       }`}
             >
-              <span
-                style={`display:flex; transform: rotate(${rightOpen() ? "180deg" : "0deg"}); transition: transform 200ms`}
-              >
-                <MdFillChevron_right size={22} />
+              <span class="relative flex items-center justify-center">
+                <span
+                  style={`display:flex; transform: rotate(${rightOpen() ? "180deg" : "0deg"}); transition: transform 200ms`}
+                >
+                  <MdFillChevron_right size={22} />
+                </span>
+                <Show when={!rightOpen() && notifCount() > 0}>
+                  <span
+                    class="absolute -top-2 -right-1.5 min-w-[14px] h-[14px] px-[3px]
+                    rounded-full bg-accent text-accent-txt
+                    text-[9px] font-bold leading-[14px] text-center
+                    pointer-events-none select-none"
+                  >
+                    {notifCount() > 99 ? "99+" : notifCount()}
+                  </span>
+                </Show>
               </span>
               <span>Panel</span>
             </button>
@@ -354,6 +367,18 @@ const Layout: ParentComponent = (props) => {
                    hidden lg:flex xl:hidden items-center justify-center
                    hover:shadow-xl transition-all"
           >
+            <span class="relative inline-flex">
+              <Show when={!rightOpen() && notifCount() > 0}>
+                <span
+                  class="absolute top-0 right-0 translate-x-3/2 -translate-y-3/2 min-w-[14px] h-[14px] px-[3px]
+                    rounded-full bg-accent text-accent-txt
+                    text-[9px] font-bold leading-[14px] text-center
+                    pointer-events-none select-none"
+                >
+                  {notifCount() > 99 ? "99+" : notifCount()}
+                </span>
+              </Show>
+            </span>
             <MdFillApps size={18} />
           </button>
         </div>

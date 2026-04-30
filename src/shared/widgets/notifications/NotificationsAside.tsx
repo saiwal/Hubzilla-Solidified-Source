@@ -26,7 +26,7 @@ import {
   MdFillWifi_off,
   MdFillCircle,
 } from "solid-icons/md";
-
+import { setNotifCount } from "@/shared/lib/notificationCount";
 const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -50,7 +50,10 @@ interface StreamBucket {
   offset?: number;
 }
 
-type SseResponse = Record<string, StreamBucket | { notifications: HzNotification[] }>;
+type SseResponse = Record<
+  string,
+  StreamBucket | { notifications: HzNotification[] }
+>;
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -58,22 +61,30 @@ const PROBE_MS = 5_000;
 const RETRY_DELAY_MS = 15_000;
 const STATIC_FETCHABLE = new Set(["network", "dm", "home", "pubs"]);
 const DISPLAY_ORDER = [
-  "network", "dm", "home", "notify", "intros",
-  "forums", "pubs", "files", "all_events", "register",
+  "network",
+  "dm",
+  "home",
+  "notify",
+  "intros",
+  "forums",
+  "pubs",
+  "files",
+  "all_events",
+  "register",
 ];
 
 type BucketMeta = { label: string; Icon: any; href?: string };
 const KNOWN_META: Record<string, BucketMeta> = {
-  network:    { label: "Network",  Icon: MdFillWifi,              href: "/network" },
-  dm:         { label: "Messages", Icon: MdFillMail,              href: "/mail" },
-  home:       { label: "Channel",  Icon: MdFillHome,              href: "/channel" },
-  notify:     { label: "Alerts",   Icon: MdFillNotifications },
-  intros:     { label: "Intros",   Icon: MdFillPeople,            href: "/connections" },
-  forums:     { label: "Forums",   Icon: MdFillForum },
-  pubs:       { label: "Public",   Icon: MdFillPublic },
-  files:      { label: "Files",    Icon: MdFillInsert_drive_file },
-  all_events: { label: "Events",   Icon: MdFillEvent,             href: "/calendar" },
-  register:   { label: "Signups",  Icon: MdFillApp_registration },
+  network: { label: "Network", Icon: MdFillWifi, href: "/network" },
+  dm: { label: "Messages", Icon: MdFillMail, href: "/mail" },
+  home: { label: "Channel", Icon: MdFillHome, href: "/channel" },
+  notify: { label: "Alerts", Icon: MdFillNotifications },
+  intros: { label: "Intros", Icon: MdFillPeople, href: "/connections" },
+  forums: { label: "Forums", Icon: MdFillForum },
+  pubs: { label: "Public", Icon: MdFillPublic },
+  files: { label: "Files", Icon: MdFillInsert_drive_file },
+  all_events: { label: "Events", Icon: MdFillEvent, href: "/calendar" },
+  register: { label: "Signups", Icon: MdFillApp_registration },
 };
 
 // ── API ───────────────────────────────────────────────────────────────────────
@@ -98,7 +109,9 @@ async function fetchForumRows(forumKeys: string[]): Promise<HzNotification[]> {
 }
 
 async function markAllSeenAndRefetch(key: string) {
-  const res = await fetch(`/notifications?markRead=${key}`, { credentials: "include" });
+  const res = await fetch(`/notifications?markRead=${key}`, {
+    credentials: "include",
+  });
   if (!res.ok) throw new Error("Failed to mark read");
   return res.json;
 }
@@ -117,7 +130,9 @@ async function markSeenAndRefetch(
   try {
     const fresh = await fetchCounts();
     afterRefetch(fresh);
-  } catch { /* silent */ }
+  } catch {
+    /* silent */
+  }
 }
 
 // ── Normalise ─────────────────────────────────────────────────────────────────
@@ -143,7 +158,10 @@ function normalise(raw: SseResponse): NormalisedPayload {
       continue;
     }
     if (key in buckets) {
-      buckets[key] = { count: bucket.count ?? 0, notifications: bucket.notifications ?? [] };
+      buckets[key] = {
+        count: bucket.count ?? 0,
+        notifications: bucket.notifications ?? [],
+      };
     }
   }
   buckets["forums"] = { count: forumCount, notifications: [] };
@@ -160,7 +178,9 @@ function getDisplayUuid(n: HzNotification): string | null {
     const path = href.startsWith("http") ? new URL(href).pathname : href;
     const m = path.match(/\/display\/([^/?#]+)/);
     return m ? m[1] : null;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 function toRelativePath(href?: string): string {
@@ -169,7 +189,9 @@ function toRelativePath(href?: string): string {
     if (!href.startsWith("http")) return href;
     const u = new URL(href);
     return u.pathname + u.search + u.hash;
-  } catch { return href; }
+  } catch {
+    return href;
+  }
 }
 
 function relativeTime(when?: string): string {
@@ -182,9 +204,14 @@ function relativeTime(when?: string): string {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-function prependDeduped(existing: HzNotification[], incoming: HzNotification[]): HzNotification[] {
+function prependDeduped(
+  existing: HzNotification[],
+  incoming: HzNotification[],
+): HzNotification[] {
   const existingMids = new Set(existing.map((n) => n.b64mid).filter(Boolean));
-  const fresh = incoming.filter((n) => !n.b64mid || !existingMids.has(n.b64mid));
+  const fresh = incoming.filter(
+    (n) => !n.b64mid || !existingMids.has(n.b64mid),
+  );
   return [...fresh, ...existing].slice(0, 50);
 }
 
@@ -199,7 +226,10 @@ function NotifRow(props: {
 
   const handleClick = (e: MouseEvent) => {
     const u = uuid();
-    if (u) { e.preventDefault(); props.onOpenModal(u); }
+    if (u) {
+      e.preventDefault();
+      props.onOpenModal(u);
+    }
   };
 
   const handleDismiss = (e: MouseEvent) => {
@@ -210,15 +240,18 @@ function NotifRow(props: {
 
   return (
     <div class="flex items-start gap-1 group">
-     <a 
+      <a
         href={toRelativePath(props.n.notify_link)}
         onClick={handleClick}
         class="flex gap-2 items-start px-2 py-1.5 rounded-lg transition-colors
                hover:bg-elevated flex-1 min-w-0"
       >
         <Show when={props.n.photo}>
-          <img src={props.n.photo} alt={props.n.name ?? ""}
-            class="w-7 h-7 rounded-full shrink-0 mt-0.5 object-cover" />
+          <img
+            src={props.n.photo}
+            alt={props.n.name ?? ""}
+            class="w-7 h-7 rounded-full shrink-0 mt-0.5 object-cover"
+          />
         </Show>
         <div class="min-w-0 flex-1">
           <p class="text-xs text-txt leading-snug">
@@ -261,7 +294,10 @@ function StreamSection(props: {
   onOpenModal: (uuid: string) => void;
 }) {
   const [open, setOpen] = createSignal(false);
-  const meta = KNOWN_META[props.id] ?? { label: props.id, Icon: MdFillNotifications };
+  const meta = KNOWN_META[props.id] ?? {
+    label: props.id,
+    Icon: MdFillNotifications,
+  };
 
   const isForums = () => props.id === "forums";
   const needsFetch = () => STATIC_FETCHABLE.has(props.id) || isForums();
@@ -269,7 +305,10 @@ function StreamSection(props: {
   const [fetchTick, setFetchTick] = createSignal(0);
   const [fetched] = createResource(
     () => (needsFetch() && open() ? fetchTick() : null),
-    () => isForums() ? fetchForumRows(props.forumKeys ?? []) : fetchBucketRows(props.id),
+    () =>
+      isForums()
+        ? fetchForumRows(props.forumKeys ?? [])
+        : fetchBucketRows(props.id),
   );
 
   const toggle = () => setOpen((o) => !o);
@@ -287,12 +326,16 @@ function StreamSection(props: {
   });
 
   const notifications = (): HzNotification[] =>
-    needsFetch() ? (fetched() ?? props.bucket.notifications) : props.bucket.notifications;
+    needsFetch()
+      ? (fetched() ?? props.bucket.notifications)
+      : props.bucket.notifications;
 
   const isLoading = () => needsFetch() && open() && fetched.loading;
 
   const dismissibleMids = () =>
-    notifications().map((n) => n.b64mid).filter((m): m is string => !!m);
+    notifications()
+      .map((n) => n.b64mid)
+      .filter((m): m is string => !!m);
 
   return (
     <div class="border border-rim rounded-xl overflow-hidden">
@@ -305,7 +348,11 @@ function StreamSection(props: {
         <span class="flex items-center gap-1.5 text-xs font-semibold text-txt">
           <meta.Icon class="w-3.5 h-3.5 shrink-0" />
           <Show when={meta.href} fallback={<span>{meta.label}</span>}>
-            <a href={meta.href} onClick={(e) => e.stopPropagation()} class="hover:underline">
+            <a
+              href={meta.href}
+              onClick={(e) => e.stopPropagation()}
+              class="hover:underline"
+            >
               {meta.label}
             </a>
           </Show>
@@ -313,7 +360,10 @@ function StreamSection(props: {
         <span class="flex items-center gap-1.5">
           <Show when={open() && dismissibleMids().length > 0}>
             <button
-              onClick={(e) => { e.stopPropagation(); props.onClearAll(props.id); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                props.onClearAll(props.id);
+              }}
               title="Mark all read"
               class="p-0.5 rounded text-subtle hover:text-txt hover:bg-elevated transition-colors"
             >
@@ -321,16 +371,25 @@ function StreamSection(props: {
             </button>
           </Show>
           <Show when={props.bucket.count > 0}>
-            <span class="text-[10px] font-bold bg-accent text-base rounded-full
-                         px-1.5 py-0.5 min-w-[18px] text-center leading-none">
+            <span
+              class="text-[10px] font-bold bg-accent text-base rounded-full
+                         px-1.5 py-0.5 min-w-[18px] text-center leading-none"
+            >
               {props.bucket.count > 99 ? "99+" : props.bucket.count}
             </span>
           </Show>
           <svg
             class={`w-3 h-3 text-subtle transition-transform ${open() ? "" : "-rotate-90"}`}
-            fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 9l-7 7-7-7"
+            />
           </svg>
         </span>
       </button>
@@ -349,7 +408,9 @@ function StreamSection(props: {
             <Show
               when={notifications().length > 0}
               fallback={
-                <p class="text-[11px] text-subtle text-center py-3">Nothing new</p>
+                <p class="text-[11px] text-subtle text-center py-3">
+                  Nothing new
+                </p>
               }
             >
               <For each={notifications()}>
@@ -374,20 +435,23 @@ function StreamSection(props: {
 type ConnStatus = "connecting" | "live" | "polling" | "error";
 
 function StatusDot(props: { status: ConnStatus }) {
-  const cls = () => ({
-    connecting: "text-yellow-400 animate-pulse",
-    live:       "text-green-400",
-    polling:    "text-accent animate-pulse",
-    error:      "text-red-400",
-  }[props.status]);
-  const title = () => ({
-    connecting: "Connecting…",
-    live:       "Live",
-    polling:    "Polling",
-    error:      "Disconnected",
-  }[props.status]);
+  const cls = () =>
+    ({
+      connecting: "text-yellow-400 animate-pulse",
+      live: "text-green-400",
+      polling: "text-accent animate-pulse",
+      error: "text-red-400",
+    })[props.status];
+  const title = () =>
+    ({
+      connecting: "Connecting…",
+      live: "Live",
+      polling: "Polling",
+      error: "Disconnected",
+    })[props.status];
 
-  const IconComponent = props.status === "error" ? MdFillWifi_off : MdFillCircle;
+  const IconComponent =
+    props.status === "error" ? MdFillWifi_off : MdFillCircle;
   return <IconComponent class={`w-2 h-2 shrink-0 ${cls()}`} title={title()} />;
 }
 
@@ -418,7 +482,10 @@ export default function NotificationsAside() {
         if (fromSsePush && inc.notifications.length) {
           next[key] = {
             count: inc.count,
-            notifications: prependDeduped(prev[key]?.notifications ?? [], inc.notifications),
+            notifications: prependDeduped(
+              prev[key]?.notifications ?? [],
+              inc.notifications,
+            ),
           };
         } else {
           next[key] = inc;
@@ -427,11 +494,13 @@ export default function NotificationsAside() {
       return next;
     });
     const nn = raw["notice"] as { notifications: HzNotification[] } | undefined;
-    const ni = raw["info"]   as { notifications: HzNotification[] } | undefined;
+    const ni = raw["info"] as { notifications: HzNotification[] } | undefined;
     setNotices([...(nn?.notifications ?? []), ...(ni?.notifications ?? [])]);
   };
 
-  const doFetchCounts = async () => { applyRaw(await fetchCounts(), false); };
+  const doFetchCounts = async () => {
+    applyRaw(await fetchCounts(), false);
+  };
 
   const markSeen = async (b64mids: string[]) => {
     if (!b64mids.length) return;
@@ -441,9 +510,14 @@ export default function NotificationsAside() {
       for (const key of DISPLAY_ORDER) {
         const b = next[key];
         if (!b) continue;
-        const filtered = b.notifications.filter((n) => !n.b64mid || !midSet.has(n.b64mid));
+        const filtered = b.notifications.filter(
+          (n) => !n.b64mid || !midSet.has(n.b64mid),
+        );
         next[key] = {
-          count: Math.max(0, b.count - (b.notifications.length - filtered.length)),
+          count: Math.max(
+            0,
+            b.count - (b.notifications.length - filtered.length),
+          ),
           notifications: filtered,
         };
       }
@@ -460,9 +534,18 @@ export default function NotificationsAside() {
   let usePolling = false;
 
   const clearAllTimers = () => {
-    if (probeTimer) { clearTimeout(probeTimer);  probeTimer = null; }
-    if (retryTimer) { clearTimeout(retryTimer);  retryTimer = null; }
-    if (pollTimer)  { clearInterval(pollTimer);  pollTimer  = null; }
+    if (probeTimer) {
+      clearTimeout(probeTimer);
+      probeTimer = null;
+    }
+    if (retryTimer) {
+      clearTimeout(retryTimer);
+      retryTimer = null;
+    }
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
   };
 
   const startPollMode = () => {
@@ -472,33 +555,51 @@ export default function NotificationsAside() {
     if (pollTimer) return;
     pollTimer = setInterval(async () => {
       if (document.visibilityState !== "visible") return;
-      try { await doFetchCounts(); } catch { setConnStatus("error"); }
+      try {
+        await doFetchCounts();
+      } catch {
+        setConnStatus("error");
+      }
     }, updateInterval());
   };
 
   const connectSSE = () => {
     if (usePolling) return;
-    if (es) { es.close(); es = null; }
+    if (es) {
+      es.close();
+      es = null;
+    }
     es = new EventSource("/sse", { withCredentials: true });
 
     const onEvent = (data: SseResponse) => {
       if (!sseConfirmed) {
         sseConfirmed = true;
-        if (probeTimer) { clearTimeout(probeTimer); probeTimer = null; }
+        if (probeTimer) {
+          clearTimeout(probeTimer);
+          probeTimer = null;
+        }
       }
       setConnStatus("live");
       if (data && Object.keys(data).length) applyRaw(data, true);
     };
 
     es.addEventListener("notifications", (e: MessageEvent) => {
-      try { onEvent(JSON.parse(e.data)); } catch { /* ignore */ }
+      try {
+        onEvent(JSON.parse(e.data));
+      } catch {
+        /* ignore */
+      }
     });
     es.addEventListener("heartbeat", () => onEvent({}));
     es.onopen = () => setConnStatus("connecting");
     es.onerror = () => {
-      es?.close(); es = null;
+      es?.close();
+      es = null;
       if (!sseConfirmed) {
-        if (probeTimer) { clearTimeout(probeTimer); probeTimer = null; }
+        if (probeTimer) {
+          clearTimeout(probeTimer);
+          probeTimer = null;
+        }
         startPollMode();
       } else {
         setConnStatus("error");
@@ -511,7 +612,11 @@ export default function NotificationsAside() {
 
     probeTimer = setTimeout(() => {
       probeTimer = null;
-      if (!sseConfirmed) { es?.close(); es = null; startPollMode(); }
+      if (!sseConfirmed) {
+        es?.close();
+        es = null;
+        startPollMode();
+      }
     }, PROBE_MS);
   };
 
@@ -521,31 +626,51 @@ export default function NotificationsAside() {
     if (auth.loading) return;
     if (started) return;
     started = true;
-    if (!uid) { setConnStatus("error"); setBooted(true); return; }
+    if (!uid) {
+      setConnStatus("error");
+      setBooted(true);
+      return;
+    }
     doFetchCounts()
       .then(() => {
         setBooted(true);
         connectSSE();
         pollTimer = setInterval(async () => {
           if (document.visibilityState !== "visible") return;
-          try { await doFetchCounts(); } catch { /* silent */ }
+          try {
+            await doFetchCounts();
+          } catch {
+            /* silent */
+          }
         }, updateInterval());
       })
-      .catch(() => { setBooted(true); setConnStatus("error"); });
+      .catch(() => {
+        setBooted(true);
+        setConnStatus("error");
+      });
   });
 
-  onCleanup(() => { es?.close(); clearAllTimers(); });
+  onCleanup(() => {
+    es?.close();
+    clearAllTimers();
+  });
 
   const manualRefresh = async () => {
     if (refreshing()) return;
     setRefreshing(true);
-    try { await doFetchCounts(); } finally { setRefreshing(false); }
+    try {
+      await doFetchCounts();
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const markAllRead = () => {
     const mids: string[] = [];
     for (const b of Object.values(buckets()))
-      b.notifications.forEach((n) => { if (n.b64mid) mids.push(n.b64mid); });
+      b.notifications.forEach((n) => {
+        if (n.b64mid) mids.push(n.b64mid);
+      });
     if (mids.length) markSeen(mids);
   };
 
@@ -559,11 +684,21 @@ export default function NotificationsAside() {
   const hasAnyCount = createMemo(() =>
     DISPLAY_ORDER.some((k) => (buckets()[k]?.count ?? 0) > 0),
   );
+  createEffect(() => {
+    const total = DISPLAY_ORDER.reduce(
+      (sum, k) => sum + (buckets()[k]?.count ?? 0),
+      0,
+    );
+    setNotifCount(total);
+  });
 
   return (
     <>
       <Show when={modalUuid()}>
-        <PostDetailModal uuid={modalUuid()!} onClose={() => setModalUuid(null)} />
+        <PostDetailModal
+          uuid={modalUuid()!}
+          onClose={() => setModalUuid(null)}
+        />
       </Show>
 
       <div class="space-y-3">
@@ -590,13 +725,17 @@ export default function NotificationsAside() {
               class="p-1 rounded text-subtle hover:text-txt hover:bg-elevated
                      transition-colors disabled:opacity-40"
             >
-              <MdFillRefresh class={`w-4 h-4 ${refreshing() ? "animate-spin" : ""}`} />
+              <MdFillRefresh
+                class={`w-4 h-4 ${refreshing() ? "animate-spin" : ""}`}
+              />
             </button>
           </div>
         </div>
 
         <Show when={!auth.loading && !auth()?.isLoggedIn}>
-          <p class="text-xs text-subtle text-center py-4">Sign in to see notifications</p>
+          <p class="text-xs text-subtle text-center py-4">
+            Sign in to see notifications
+          </p>
         </Show>
 
         <Show when={!booted()}>
@@ -636,7 +775,11 @@ export default function NotificationsAside() {
           </div>
         </Show>
 
-        <Show when={booted() && activeBuckets().length === 0 && notices().length === 0}>
+        <Show
+          when={
+            booted() && activeBuckets().length === 0 && notices().length === 0
+          }
+        >
           <div class="text-center py-6">
             <p class="text-2xl mb-1">✓</p>
             <p class="text-xs text-subtle">All caught up</p>
