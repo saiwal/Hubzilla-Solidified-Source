@@ -10,12 +10,13 @@ interface Props {
   onTabChange: (t: EditorTab) => void;
   onCtrlEnter?: () => void;
   placeholder?: string;
-  minHeight?: string; // e.g. "120px" — defaults vary by toolbar level
+  minHeight?: string;
 }
 
 export default function RichEditor(props: Props) {
   let editorRef: HTMLDivElement | undefined;
   let textareaRef: HTMLTextAreaElement | undefined;
+  let isUserTyping = false;
 
   const minH = () =>
     props.minHeight ??
@@ -27,7 +28,6 @@ export default function RichEditor(props: Props) {
   });
 
   // When body resets to "" externally (post-submit), clear the div too.
-  // We only trigger on empty to avoid fighting contenteditable mid-type.
   createEffect(() => {
     if (props.body === "" && editorRef && editorRef.innerHTML !== "") {
       editorRef.innerHTML = "";
@@ -36,14 +36,25 @@ export default function RichEditor(props: Props) {
 
   // When switching source→wysiwyg, push textarea content back into div
   createEffect(() => {
-    if (props.tab === "wysiwyg" && editorRef) {
-      // props.body is already updated by textarea's onInput, just mirror it
-      editorRef.innerHTML = props.body;
+    if (props.tab === "wysiwyg" && editorRef && !isUserTyping) {
+      const currentContent = editorRef.innerHTML;
+      if (currentContent !== props.body) {
+        editorRef.innerHTML = props.body;
+        // Move cursor to end after update
+        const range = document.createRange();
+        const selection = window.getSelection();
+        range.selectNodeContents(editorRef);
+        range.collapse(false); // false = move to end
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+      }
     }
   });
 
   const onEditorInput = () => {
+    isUserTyping = true;
     if (editorRef) props.onInput(editorRef.innerHTML);
+    isUserTyping = false;
   };
 
   const onTextareaInput = (e: InputEvent) => {
@@ -62,8 +73,6 @@ export default function RichEditor(props: Props) {
   };
 
   const switchTab = (t: EditorTab) => {
-    // wysiwyg→source: body already synced via onInput, nothing extra needed
-    // source→wysiwyg: handled by the createEffect above
     props.onTabChange(t);
   };
 
@@ -102,6 +111,7 @@ export default function RichEditor(props: Props) {
         <div
           ref={editorRef}
           contenteditable
+          dir="ltr"
           onInput={onEditorInput}
           onKeyDown={handleKeyDown}
           data-placeholder={props.placeholder ?? "What's on your mind?"}
