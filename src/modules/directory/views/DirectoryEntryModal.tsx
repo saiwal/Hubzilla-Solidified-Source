@@ -1,7 +1,7 @@
 // modules/directory/views/DirectoryEntryModal.tsx
 import { Show, For, type Component } from "solid-js";
 import { Portal } from "solid-js/web";
-import type { DirectoryEntry } from "../api";
+import type { DirectoryEntry } from "../people/api";
 
 interface Props {
   entry: DirectoryEntry | null;

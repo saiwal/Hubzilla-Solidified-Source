@@ -2,10 +2,10 @@ import { createEffect, createSignal, Show, For, onMount } from "solid-js";
 import {
   entries, loading, loadingMore, hasMore, total, error,
   loadDirectory, loadMoreDirectory, resetDirectory,
-} from "../../../directory/store";
-import DirectoryCard from "../../../directory/views/DirectoryCard";
-import DirectoryEntryModal from "../../../directory/views/DirectoryEntryModal";
-import type { DirectoryParams, DirectoryEntry } from "../../../directory/api";
+} from "../../people/store";
+import DirectoryCard from "../DirectoryCard";
+import DirectoryEntryModal from "../DirectoryEntryModal";
+import type { DirectoryParams, DirectoryEntry } from "../../people/api";
 
 type Order = DirectoryParams["order"];
 
@@ -116,7 +116,7 @@ export default function DirectorySection() {
       {/* ── Skeleton ── */}
       <Show when={loading()}>
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <For each={Array(9).fill(0)}>{() => <CardSkeleton />}</For>
+          <For each={Array(12).fill(0)}>{() => <CardSkeleton />}</For>
         </div>
       </Show>
 

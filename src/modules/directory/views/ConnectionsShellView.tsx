@@ -6,18 +6,18 @@ import { useViewerRole } from "@/shared/store/site-config";
 import { CONNECTIONS_ITEMS } from "../index";
 
 const SECTIONS: Record<string, ReturnType<typeof lazy>> = {
-  "list":           lazy(() => import("./sections/ConnectionsSection")),
+  "connections":           lazy(() => import("./sections/ConnectionsSection")),
   "hubs":           lazy(() => import("./sections/HubsSection")),
-  "directory":      lazy(() => import("./sections/DirectorySection")),
+  "people":      lazy(() => import("./sections/DirectorySection")),
   "privacy-groups": lazy(() => import("./sections/PrivacyGroupsSection")),
 };
 
 // Per-role default: what section to land on when hitting /directory bare
 const DEFAULT_BY_ROLE: Partial<Record<string, string>> = {
-  owner:     "list",
-  local:     "list",
-  remote:    "directory",
-  anonymous: "directory",
+  owner:     "connections",
+  local:     "people",
+  remote:    "people",
+  anonymous: "people",
 };
 
 export default function ConnectionsShellView() {
@@ -28,7 +28,7 @@ export default function ConnectionsShellView() {
     const seg = location.pathname.replace(/^\/directory\/?/, "").split("/")[0];
     if (seg && seg in SECTIONS) return seg;
     // No segment — pick the role-appropriate default
-    return DEFAULT_BY_ROLE[role()] ?? "directory";
+    return DEFAULT_BY_ROLE[role()] ?? "people";
   });
 
   return (

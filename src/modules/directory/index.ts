@@ -3,7 +3,7 @@ import { registerModule } from "@/shared/lib/module-registry";
 import type { SubPageItem } from "@/shared/views/SubPageLayout";
 
 export const CONNECTIONS_ITEMS: SubPageItem[] = [
-  { path: "list", label: "Connections", context: "owner" },
+  { path: "connections", label: "Connections", context: "owner" },
   {
     path: "privacy-groups",
     label: "Privacy groups",
@@ -11,8 +11,8 @@ export const CONNECTIONS_ITEMS: SubPageItem[] = [
     dividerAfter: true,
   },
   {
-    path: "directory",
-    label: "Directory",
+    path: "people",
+    label: "People & Groups",
     context: "all",
   },
   { path: "hubs", label: "Hubs", context: "all" },

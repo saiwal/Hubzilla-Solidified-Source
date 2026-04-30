@@ -1,6 +1,6 @@
 // modules/directory/views/DirectoryCard.tsx
 import { Show, For, type Component } from "solid-js";
-import { addConnection, type DirectoryEntry } from "../api";
+import { addConnection, type DirectoryEntry } from "../people/api";
 
 interface Props {
   entry: DirectoryEntry;

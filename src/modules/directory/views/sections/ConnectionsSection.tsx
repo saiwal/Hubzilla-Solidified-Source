@@ -3,9 +3,9 @@ import { A } from "@solidjs/router";
 import {
   connectionsData, refetch, setFilter, setOrder, setSearch, setPage,
   filter, order, search, page, LIMIT,
-} from "../../../connections/store";
-import type { ConnectionFilter, ConnectionOrder, Connection } from "../../../connections/api";
-import { deleteConnection, approveConnection } from "../../../connections/api";
+} from "../../connections/store";
+import type { ConnectionFilter, ConnectionOrder, Connection } from "../../connections/api";
+import { deleteConnection, approveConnection } from "../../connections/api";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
