@@ -10,13 +10,13 @@ import {
   MdFillChat,
   MdFillKeyboard_arrow_down,
   MdFillKeyboard_arrow_up,
-  MdFillSend,
   MdFillShare,
   MdOutlineThumb_down,
   MdOutlineThumb_up,
 } from "solid-icons/md";
 import { useI18n } from "@/i18n";
 import { BiRegularLinkExternal } from "solid-icons/bi";
+import CommentComposer from "@/shared/editor/composers/CommentComposer";
 
 export type { StreamHandlers as PostActions };
 
@@ -28,9 +28,6 @@ export default function PostCard(props: {
 }) {
   const [replyOpen, setReplyOpen] = createSignal(false);
   const [showComments, setShowComments] = createSignal(false);
-  const [replyBody, setReplyBody] = createSignal("");
-  const [submitting, setSubmitting] = createSignal(false);
-  const [actionError, setActionError] = createSignal<string | null>(null);
   const { locale } = useI18n();
   let cardRef!: HTMLDivElement;
 
@@ -54,30 +51,6 @@ export default function PostCard(props: {
   function onLike() { props.handlers.onLike(props.post.mid); }
   function onDislike() { props.handlers.onDislike(props.post.mid); }
   function onRepeat() { props.handlers.onRepeat(props.post.mid); }
-
-  async function submitComment() {
-    const body = replyBody().trim();
-    if (!body) return;
-    setSubmitting(true);
-    setActionError(null);
-    try {
-      await Promise.resolve(
-        props.handlers.onComment(
-          props.post.mid,
-          body,
-          props.post.authorName,
-          props.post.authorAvatar,
-        ),
-      );
-      setReplyBody("");
-      setReplyOpen(false);
-      setShowComments(true);
-    } catch {
-      setActionError("Comment failed, please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
 
   // ── Compact (comment) layout ──────────────────────────────────────────────
   if (props.compact) {
@@ -138,10 +111,6 @@ export default function PostCard(props: {
           innerHTML={props.post.body}
         />
 
-        {actionError() && (
-          <p class="mt-1 text-xs text-accent">{actionError()}</p>
-        )}
-
         {/* Compact action bar */}
         <div class="mt-2 flex items-center gap-0.5 flex-wrap">
           <CompactActionBtn
@@ -191,40 +160,21 @@ export default function PostCard(props: {
             <span>Reply</span>
           </button>
         </div>
-
-        <Show when={replyOpen()}>
-          <div class="mt-2 flex flex-col gap-1.5">
-            <textarea
-              value={replyBody()}
-              onInput={(e) => setReplyBody(e.currentTarget.value)}
-              placeholder="Write a reply…"
-              rows={2}
-              class="w-full rounded-lg border border-rim bg-overlay text-txt
-                     text-sm px-2.5 py-1.5 resize-none
-                     focus:outline-none focus:ring-1 focus:ring-accent
-                     placeholder:text-subtle"
-            />
-            <div class="flex justify-end gap-1.5">
-              <button
-                onClick={() => { setReplyOpen(false); setReplyBody(""); }}
-                class="px-2.5 py-1 text-xs rounded-lg text-subtle hover:bg-overlay transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={submitComment}
-                disabled={submitting() || !replyBody().trim()}
-                class="flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-lg
-                       bg-accent hover:opacity-80 active:opacity-70
-                       disabled:opacity-50 disabled:cursor-not-allowed text-white transition-opacity"
-              >
-                <MdFillSend size={12} />
-                {submitting() ? "Sending…" : "Send"}
-              </button>
-            </div>
-          </div>
-        </Show>
-
+<Show when={replyOpen() && props.post.iid && props.post.profileUid}>
+  <CommentComposer
+    parentMid={props.post.mid}
+    parentIid={props.post.iid!}
+    profileUid={props.post.profileUid!}
+    onSubmitted={(body) => {
+      props.handlers.onComment(
+        props.post.mid, body,
+        props.post.authorName, props.post.authorAvatar,
+      );
+      setReplyOpen(false);
+      setShowComments(true);
+    }}
+  />
+</Show>
         <CommentThread
           comments={props.post.children}
           show={showComments()}
@@ -322,7 +272,6 @@ export default function PostCard(props: {
         innerHTML={props.post.body}
       />
 
-      {actionError() && <p class="mt-2 text-xs text-accent">{actionError()}</p>}
 
       {/* Action bar */}
       <div class="mt-4 pt-3 border-t border-rim flex items-center gap-1 flex-wrap">
@@ -397,41 +346,22 @@ export default function PostCard(props: {
           <span>Reply</span>
         </button>
       </div>
-
-      <Show when={replyOpen()}>
-        <div class="mt-3 flex flex-col gap-2">
-          <textarea
-            value={replyBody()}
-            onInput={(e) => setReplyBody(e.currentTarget.value)}
-            placeholder="Write a reply…"
-            rows={3}
-            class="w-full rounded-xl border border-rim bg-overlay text-txt
-                   text-sm px-3 py-2 resize-none
-                   focus:outline-none focus:ring-2 focus:ring-accent
-                   placeholder:text-muted"
-          />
-          <div class="flex justify-end gap-2">
-            <button
-              onClick={() => { setReplyOpen(false); setReplyBody(""); }}
-              class="px-3 py-1.5 text-sm rounded-lg text-muted hover:bg-overlay transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={submitComment}
-              disabled={submitting() || !replyBody().trim()}
-              class="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium rounded-lg
-                     bg-accent hover:opacity-80 active:opacity-70
-                     disabled:opacity-50 disabled:cursor-not-allowed text-white transition-opacity"
-            >
-              <MdFillSend size={15} />
-              {submitting() ? "Sending…" : "Send"}
-            </button>
-          </div>
-        </div>
-      </Show>
-
-      <CommentThread
+			<Show when={replyOpen() && props.post.iid && props.post.profileUid}>
+  <CommentComposer
+    parentMid={props.post.mid}
+    parentIid={props.post.iid!}
+    profileUid={props.post.profileUid!}
+    onSubmitted={(body) => {
+      props.handlers.onComment(
+        props.post.mid, body,
+        props.post.authorName, props.post.authorAvatar,
+      );
+      setReplyOpen(false);
+      setShowComments(true);
+    }}
+  />
+</Show>
+			<CommentThread
         comments={props.post.children}
         show={showComments()}
         handlers={props.handlers}
