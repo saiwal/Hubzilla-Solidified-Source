@@ -1,5 +1,5 @@
 import { createResource, For, Show, createSignal, createMemo } from 'solid-js';
-import { fetchPubsites, type PubSite } from '../../../pubsites/api';
+import { fetchPubsites, type PubSite } from '../../hubs/api';
 
 const ACCESS_STYLES: Record<string, string> = {
   free:   'bg-accent-muted text-accent',
