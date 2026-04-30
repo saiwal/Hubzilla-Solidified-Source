@@ -107,15 +107,13 @@ async function fetchForumRows(forumKeys: string[]): Promise<HzNotification[]> {
   const results = await Promise.all(forumKeys.map(fetchBucketRows));
   return results.flat();
 }
-
-async function markAllSeenAndRefetch(key: string) {
+async function markAllSeenAndRefetch(key: string): Promise<SseResponse> {
   const res = await fetch(`/notifications?markRead=${key}`, {
     credentials: "include",
   });
   if (!res.ok) throw new Error("Failed to mark read");
-  return res.json;
+  return res.json(); // fix: was missing ()
 }
-
 async function markSeenAndRefetch(
   b64mids: string[],
   afterRefetch: (raw: SseResponse) => void,
@@ -767,7 +765,32 @@ export default function NotificationsAside() {
                   bucket={buckets()[key]}
                   forumKeys={key === "forums" ? forumKeys() : undefined}
                   onDismiss={(mid) => markSeen([mid])}
-                  onClearAll={(key) => markAllSeenAndRefetch(key)}
+                  onClearAll={async (key) => {
+                    // Optimistically clear local state
+                    const mids =
+                      buckets()
+                        [key]?.notifications.map((n) => n.b64mid)
+                        .filter((m): m is string => !!m) ?? [];
+                    if (mids.length) {
+                      // const midSet = new Set(mids);
+                      setBuckets((prev) => {
+                        const next = { ...prev };
+                        next[key] = { count: 0, notifications: [] };
+                        return next;
+                      });
+                    }
+                    // Hit the by-key endpoint, then refresh
+                    try {
+                      await markAllSeenAndRefetch(key);
+                      await doFetchCounts();
+                    } catch {
+                      /* silent */
+                    }
+                    setBuckets((prev) => ({
+                      ...prev,
+                      [key]: { count: 0, notifications: [] },
+                    }));
+                  }}
                   onOpenModal={(uuid) => setModalUuid(uuid)}
                 />
               )}

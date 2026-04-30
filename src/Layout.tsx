@@ -16,7 +16,7 @@ import {
 import { useOnlineStatus } from "./shared/lib/useOnlineStatus";
 import NavUtilities from "./shared/views/NavUtilities";
 import { notifCount } from "@/shared/lib/notificationCount";
-
+import { createMediaQuery } from "@solid-primitives/media";
 // ── Mobile bottom tab ─────────────────────────────────────────────────────────
 function MobileTab(props: {
   href: string | (() => string);
@@ -75,10 +75,13 @@ const Layout: ParentComponent = (props) => {
   const isLocalUser = () =>
     viewerRole() === "owner" || viewerRole() === "local";
 
-  const BOTTOM_LIMIT = 4;
-  const bottomItems = () => navItems().slice(0, BOTTOM_LIMIT);
-  const moreItems = () => [...navItems().slice(BOTTOM_LIMIT), ...actionItems()];
-
+  const isMedium = createMediaQuery("(min-width: 768px)");
+  const bottomLimit = () => (isMedium() ? 8 : 4);
+  const bottomItems = () => navItems().slice(0, bottomLimit());
+  const moreItems = () => [
+    ...navItems().slice(bottomLimit()),
+    ...actionItems(),
+  ];
   return (
     <div class="fixed inset-0 bg-base text-txt">
       <HelpOverlay />
