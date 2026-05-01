@@ -24,6 +24,6 @@ registerModule({
     context: "all",
     hidden: false,
   },
-  slots: { right: () => import("./slots/ArticlesSidebarSlot") },
+  slots: { },
   permissions: [],
 });

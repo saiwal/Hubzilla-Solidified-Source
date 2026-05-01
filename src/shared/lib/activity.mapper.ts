@@ -37,6 +37,7 @@ export function mapActivityToPost(activity: any): Post {
     parent: activity.uuid,
     body,
     title: activity.title ?? "",
+		summary: activity.summary ?? "",
     authorName: activity.author?.name ?? "",
     authorAvatar: activity.author?.photo?.src ?? "",
     authorUrl: activity.author?.url ?? "",

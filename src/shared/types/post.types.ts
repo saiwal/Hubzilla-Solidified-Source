@@ -10,6 +10,7 @@ export interface Post {
   parent: string;
   body: string;
   title: string;
+  summary?: string;
   authorName: string;
   authorAvatar: string;
   authorUrl: string;
@@ -22,7 +23,7 @@ export interface Post {
   flags: string[];
   permalink: string;
   children: Post[];
-	commentCount?: number;
+  commentCount?: number;
   likeCount: number;
   viewerLiked: boolean;
   viewerDisliked: boolean;
