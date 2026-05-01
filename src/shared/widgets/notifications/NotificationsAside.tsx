@@ -803,7 +803,7 @@ export default function NotificationsAside() {
             booted() && activeBuckets().length === 0 && notices().length === 0
           }
         >
-          <div class="text-center py-6">
+          <div class="text-center py-2">
             <p class="text-2xl mb-1">✓</p>
             <p class="text-xs text-subtle">All caught up</p>
           </div>
