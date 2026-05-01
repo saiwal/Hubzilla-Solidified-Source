@@ -247,50 +247,99 @@ const Layout: ParentComponent = (props) => {
               onClick={closeAll}
             />
           </Show>
-
           {/* ═══════════════════════════════════════════════════════
-              MOBILE — "More" bottom sheet drawer
-          ═══════════════════════════════════════════════════════ */}
+									MOBILE — "More" bottom sheet drawer
+							═══════════════════════════════════════════════════════ */}
           <div
             class={`
-              fixed left-0 right-0 z-40 lg:hidden
-              bg-surface border-t border-rim
-              rounded-t-2xl shadow-2xl px-4 pt-3 pb-6
-              transform transition-transform duration-300 ease-in-out
-              max-h-[72vh] overflow-y-auto
-              ${moreOpen() ? "translate-y-0 bottom-16" : "translate-y-full bottom-16"}
-            `}
+    fixed left-0 right-0 z-40 lg:hidden
+    bg-surface border-t border-rim
+    rounded-t-2xl shadow-2xl px-0 pt-0 pb-3
+    transform transition-transform duration-300 ease-in-out
+    max-h-[72vh] overflow-y-auto
+    ${moreOpen() ? "translate-y-0 bottom-16" : "translate-y-full bottom-16"}
+  `}
           >
-            <div class="mx-auto mb-4 w-10 h-1 rounded-full bg-rim" />
+            <div class="mx-auto mt-3 mb-4 w-9 h-1 rounded-full bg-rim" />
 
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-[10px] font-semibold uppercase tracking-widest text-muted">
-                More
-              </span>
-              <button
-                onClick={() => setMoreOpen(false)}
-                class="p-1.5 rounded-lg hover:bg-elevated transition"
-              >
-                <MdFillClose size={16} />
-              </button>
-            </div>
+            {/* ── Nav tiles ── */}
+            <Show when={navItems().slice(bottomLimit()).length > 0}>
+              <p class="px-4 pb-2 text-[10px] font-semibold uppercase tracking-widest text-muted">
+                Navigation
+              </p>
+              <div class="grid grid-cols-4 gap-1.5 px-2.5 pb-4">
+                <For each={navItems().slice(bottomLimit())}>
+                  {(item) => (
+                    <A
+                      href={
+                        typeof item.href === "function"
+                          ? item.href()
+                          : item.href
+                      }
+                      onClick={closeAll}
+                      class="flex flex-col items-center gap-1.5 py-2.5 px-1
+                   rounded-xl bg-elevated border border-rim
+                   text-txt text-[10px] font-medium leading-tight text-center
+                   hover:brightness-95 transition-all"
+                    >
+                      <span class="text-muted">
+                        {getNavIcon(item.icon, 20)}
+                      </span>
+                      <span class="truncate w-full text-center">
+                        {typeof item.label === "function"
+                          ? item.label()
+                          : item.label}
+                      </span>
+                    </A>
+                  )}
+                </For>
+              </div>
+            </Show>
 
-            <nav class="flex flex-col gap-0.5">
-              <For each={moreItems()}>
-                {(item) => (
-                  <span onClick={closeAll}>
-                    <NavItem
-                      href={item.href}
-                      label={item.label}
-                      icon={item.icon}
-                    />
-                  </span>
-                )}
-              </For>
-            </nav>
+            {/* ── Divider ── */}
+            <Show
+              when={
+                navItems().slice(bottomLimit()).length > 0 &&
+                actionItems().length > 0
+              }
+            >
+              <div class="mx-3.5 mb-3.5 h-px bg-rim" />
+            </Show>
+
+            {/* ── Action tiles ── */}
+            <Show when={actionItems().length > 0}>
+              <p class="px-4 pb-2 text-[10px] font-semibold uppercase tracking-widest text-muted">
+                Actions
+              </p>
+              <div class="grid grid-cols-4 gap-1.5 px-2.5 pb-2">
+                <For each={actionItems()}>
+                  {(item) => (
+                    <A
+                      href={
+                        typeof item.href === "function"
+                          ? item.href()
+                          : item.href
+                      }
+                      onClick={closeAll}
+                      class="flex flex-col items-center gap-1.5 py-2.5 px-1
+                   rounded-xl bg-accent-muted border border-accent/20
+                   text-accent text-[10px] font-medium leading-tight text-center
+                   hover:brightness-95 transition-all"
+                    >
+                      <span>{getNavIcon(item.icon, 20)}</span>
+                      <span class="truncate w-full text-center">
+                        {typeof item.label === "function"
+                          ? item.label()
+                          : item.label}
+                      </span>
+                    </A>
+                  )}
+                </For>
+              </div>
+            </Show>
+
             <NavUtilities />
           </div>
-
           {/* ═══════════════════════════════════════════════════════
               MOBILE — Bottom Tab Bar
           ═══════════════════════════════════════════════════════ */}
