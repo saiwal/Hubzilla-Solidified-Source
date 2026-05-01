@@ -13,6 +13,7 @@ export interface NavViewer {
 }
 
 export interface NavActions {
+	admin?: string;
   logout?: string;
   settings?: string;
   manage?: string;

@@ -2,7 +2,7 @@
 
 import { createMemo } from "solid-js";
 import { useNavData, useChannelTabs } from "../store/nav-store";
-import { useAuth } from "../store/auth-store";
+import { isAdmin, useAuth } from "../store/auth-store";
 import { getModule, getRoutes } from "../lib/module-registry";
 import type { NavItemDef } from "../types/module.types";
 import type { NavActions, NavChannelTab } from "../lib/nav-api";
@@ -86,16 +86,6 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
       })
       .map((mod) => ({ ...mod!.navItem }));
 
-    if (viewer.is_admin) {
-      const hasAdmin = items.some((i) => {
-        const h = typeof i.href === "string" ? i.href : i.href();
-        return h.includes("/admin");
-      });
-      if (!hasAdmin) {
-        const adminMod = getModule("admin");
-        if (adminMod) items.push({ ...adminMod.navItem });
-      }
-    }
     items.sort((a, b) => {
       const labelA = typeof a.label === "function" ? a.label() : a.label;
       const labelB = typeof b.label === "function" ? b.label() : b.label;
@@ -111,6 +101,7 @@ function moduleSegment(url: string): string {
 // ── useNavActionItems ─────────────────────────────────────────────────────────
 
 const ACTION_ORDER = [
+  "admin",
   "settings",
   "manage",
   "navhome",
@@ -126,13 +117,18 @@ export function useNavActionItems(): () => NavItemDef[] {
   const navData = useNavData();
   const { t } = useI18n();
   const viewerRole = useViewerRole();
-
+  // const auth = useAuth();
   return createMemo((): NavItemDef[] => {
     const actions = navData()?.actions as NavActions | undefined;
     if (!actions) return [];
 
     const role = viewerRole();
     const ACTION_META: Record<ActionKey, ActionMeta> = {
+      admin: {
+        label: t("nav.admin"),
+        icon: "admin",
+        context: "admin",
+      },
       settings: {
         label: t("nav.settings"),
         icon: "settings",
@@ -165,18 +161,20 @@ export function useNavActionItems(): () => NavItemDef[] {
         context: "anonymous",
       },
     };
-    return ACTION_ORDER.filter((key) => !!actions[key])
-      .map((key): NavItemDef => {
-        const meta = ACTION_META[key];
-        const href = actions[key] as string;
-        return {
-          label: meta.label,
-          icon: meta.icon,
-          href,
-          path: urlToPath(href),
-          context: meta.context,
-        };
-      })
-      .filter((item) => matchesRole(item.context, role));
+    return ACTION_ORDER.filter((key) => {
+      if (key === "admin") return isAdmin(); 
+      if (!actions[key]) return false;
+      return matchesRole(ACTION_META[key].context, role);
+    }).map((key): NavItemDef => {
+      const meta = ACTION_META[key];
+      const href = key === "admin" ? "/admin/" : (actions[key] as string);
+      return {
+        label: meta.label,
+        icon: meta.icon,
+        href,
+        path: urlToPath(href),
+        context: meta.context,
+      };
+    });
   });
 }
