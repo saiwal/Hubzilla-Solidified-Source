@@ -3,7 +3,7 @@
 @plugin "@tailwindcss/typography";
 
 /* Enable class-based dark mode */
-/* @custom-variant dark (&:where(.dark, .dark *)); */
+@custom-variant dark (&:where(.dark, .dark *));
 @layer base {
   .post-body {
     overflow-x: hidden;
