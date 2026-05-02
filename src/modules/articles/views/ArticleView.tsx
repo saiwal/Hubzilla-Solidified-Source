@@ -57,7 +57,7 @@ export default function ArticleView() {
 
             {/* Body */}
             <div
-              class="prose max-w-none"
+              class="prose dark:prose-invert max-w-none"
               // eslint-disable-next-line solid/no-innerhtml
               innerHTML={rendered()}
             />
@@ -103,7 +103,7 @@ export default function ArticleView() {
                           </span>
                         </div>
                         <div
-                          class="text-sm prose max-w-none"
+                          class="text-sm prose dark:prose-invert max-w-none"
                           innerHTML={DOMPurify.sanitize(
                             bbcodeToHtml(c.body ?? ""),
                           )}

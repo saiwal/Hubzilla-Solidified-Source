@@ -3,16 +3,19 @@ import { createComposerStore } from "../store/createComposerStore";
 import RichEditor from "../core/RichEditor";
 import EditorPreview from "../core/EditorPreview";
 import { CAPABILITIES } from "../types/editor.types";
+import { apiFetch } from "@/shared/lib/fetch";
 
 interface Props {
   profileUid: number;
+  /** The channel nick — required to POST to /api/articles/:nick */
+  nick: string;
   /** Pass an existing article's data to edit rather than create */
   initial?: {
     title: string;
     slug: string;
     category: string;
     body: string;
-    itemId?: number; // if editing, pass the item id for PATCH/PUT
+    itemId?: number;
   };
   onSaved?: () => void;
 }
@@ -27,31 +30,21 @@ export default function ArticleComposer(props: Props) {
     : "article:new";
 
   const store = createComposerStore(async (body, meta) => {
-    const csrf =
-      document.querySelector<HTMLMetaElement>('meta[name="api-token"]')
-        ?.content ?? "";
-
-    const params = new URLSearchParams({
-      body,
-      mimetype: meta.mimetype ?? "text/bbcode",
-      type: "wall",
-      profile_uid: String(props.profileUid),
-      obj_type: "Article",
-    });
-    if (meta.title) params.set("title", meta.title);
-    if (meta.slug) params.set("webpage", meta.slug);  // Hubzilla uses 'webpage' for slug
-    if (meta.category) params.set("category", meta.category);
-
-    const res = await fetch("/item", {
+    const res = await apiFetch(`/api/articles/${props.nick}`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "X-CSRF-Token": csrf,
-      },
-      body: params.toString(),
+      body: JSON.stringify({
+        body,
+        mimetype: meta.mimetype ?? "text/bbcode",
+        title:    meta.title    ?? "",
+        slug:     meta.slug     ?? "",
+        category: meta.category ?? "",
+      }),
     });
 
-    if (!res.ok) throw new Error("Save failed");
+    if (!res.ok) {
+      const msg = await res.json().catch(() => ({ error: { message: "Save failed" } }));
+      throw new Error(msg?.error?.message ?? "Save failed");
+    }
     props.onSaved?.();
   }, scope);
 
@@ -65,12 +58,10 @@ export default function ArticleComposer(props: Props) {
 
   const onBodyChange = (v: string) => {
     store.setBody(v);
-    // Strip HTML tags for word count
     const text = v.replace(/<[^>]*>/g, " ");
     setWordCount(text.trim().split(/\s+/).filter(Boolean).length);
   };
 
-  // Auto-generate slug from title (only when slug is still empty)
   const onTitleChange = (v: string) => {
     store.setTitle(v);
     if (!store.slug()) {
@@ -161,7 +152,7 @@ export default function ArticleComposer(props: Props) {
 
       {/* Error */}
       <Show when={store.error()}>
-        <p class="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-lg">
+        <p class="text-sm text-red-500 bg-red-50/10 px-3 py-2 rounded-lg">
           {store.error()}
         </p>
       </Show>

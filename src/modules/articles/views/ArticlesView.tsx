@@ -137,6 +137,7 @@ function ArticleModal(props: {
         </div>
         <ArticleComposer
           profileUid={props.uid}
+          nick={props.nick}
           onSaved={() => {
             close();
             resetPosts();
@@ -169,7 +170,7 @@ export default function ArticlesView() {
   };
 
   return (
-    <div class="space-y-6">
+    <div class="space-y-6 max-w-2xl mx-auto ">
       {/* ── Header row ── */}
       <div class="flex items-center justify-between">
         <h1 class="text-xl font-bold text-txt">Articles</h1>
