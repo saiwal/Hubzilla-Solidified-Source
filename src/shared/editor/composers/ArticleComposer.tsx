@@ -3,15 +3,14 @@ import { createComposerStore } from "../store/createComposerStore";
 import RichEditor from "../core/RichEditor";
 import EditorPreview from "../core/EditorPreview";
 import { CAPABILITIES } from "../types/editor.types";
-import { apiFetch } from "@/shared/lib/fetch";
 
 interface Props {
   profileUid: number;
-  /** The channel nick — required to POST to /api/articles/:nick */
   nick: string;
   /** Pass an existing article's data to edit rather than create */
   initial?: {
     title: string;
+    summary: string;
     slug: string;
     category: string;
     body: string;
@@ -30,27 +29,44 @@ export default function ArticleComposer(props: Props) {
     : "article:new";
 
   const store = createComposerStore(async (body, meta) => {
-    const res = await apiFetch(`/api/articles/${props.nick}`, {
-      method: "POST",
-      body: JSON.stringify({
-        body,
-        mimetype: meta.mimetype ?? "text/bbcode",
-        title:    meta.title    ?? "",
-        slug:     meta.slug     ?? "",
-        category: meta.category ?? "",
-      }),
+    // /item uses Hubzilla's own form security token injected into the page
+    const csrf =
+      document.querySelector<HTMLMetaElement>('meta[name="form_security_token"]')
+        ?.content ?? "";
+
+    const params = new URLSearchParams({
+      mimetype:    meta.mimetype ?? "text/bbcode",
+      obj_type:    "",
+      profile_uid: String(props.profileUid),
+      return:      `articles/${props.nick}`,
+      webpage:     "7",   // ITEM_TYPE_ARTICLE
+      preview:     "0",
+      consensus:   "0",
+      nocomment:   "0",
+      title:       meta.title    ?? "",
+      summary:     meta.summary  ?? "",
+      category:    meta.category ?? "",
+      pagetitle:   meta.slug     ?? "",
+      body,
     });
 
-    if (!res.ok) {
-      const msg = await res.json().catch(() => ({ error: { message: "Save failed" } }));
-      throw new Error(msg?.error?.message ?? "Save failed");
-    }
+    if (csrf) params.set("form_security_token", csrf);
+
+    const res = await fetch("/item", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString(),
+    });
+
+    if (!res.ok) throw new Error("Save failed");
     props.onSaved?.();
   }, scope);
 
   // Seed from initial if editing
   if (props.initial) {
     store.setTitle(props.initial.title);
+    store.setSummary(props.initial.summary);
     store.setSlug(props.initial.slug);
     store.setCategory(props.initial.category);
     store.setBody(props.initial.body);
@@ -85,6 +101,19 @@ export default function ArticleComposer(props: Props) {
                placeholder:text-muted border-0 border-b border-rim outline-none
                focus:border-accent transition-colors"
       />
+
+      {/* Summary */}
+      <Show when={caps.summary}>
+        <textarea
+          placeholder="Short summary (shown in article listings)…"
+          value={store.summary()}
+          onInput={(e) => store.setSummary(e.currentTarget.value)}
+          rows={2}
+          class="w-full px-0 py-1.5 text-sm bg-transparent text-txt
+                 placeholder:text-muted border-0 border-b border-rim outline-none
+                 focus:border-accent transition-colors resize-none"
+        />
+      </Show>
 
       {/* Slug + Category row */}
       <div class="flex gap-3">

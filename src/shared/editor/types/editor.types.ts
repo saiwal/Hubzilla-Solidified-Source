@@ -7,6 +7,7 @@ export type EditorCapabilities = {
   toolbar: ToolbarLevel;
   preview: boolean;
   title: boolean;
+  summary: boolean;
   slug: boolean;
   category: boolean;
   attachments: boolean;
@@ -16,6 +17,7 @@ export type EditorCapabilities = {
 
 export type ComposerMeta = {
   title?: string;
+  summary?: string;
   slug?: string;
   category?: string;
   mimetype?: MimeType;
@@ -27,6 +29,7 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
     toolbar: "full",
     preview: true,
     title: true,
+    summary: false,
     slug: false,
     category: false,
     attachments: false,
@@ -38,6 +41,7 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
     toolbar: "comment",
     preview: false,
     title: false,
+    summary: false,
     slug: false,
     category: false,
     attachments: false,
@@ -49,6 +53,7 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
     toolbar: "full",
     preview: true,
     title: true,
+    summary: true,
     slug: true,
     category: true,
     attachments: false,
@@ -60,6 +65,7 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
     toolbar: "full",
     preview: true,
     title: true,
+    summary: false,
     slug: true,
     category: false,
     attachments: false,

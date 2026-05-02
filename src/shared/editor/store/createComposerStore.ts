@@ -7,7 +7,7 @@ export type ComposerStore = ReturnType<typeof createComposerStore>;
 
 /**
  * Factory — call once per composer *instance* (inside the component body),
- * never at module level unless the composer is a true singleton (e.g. PostComposer in a slot).
+ * never at module level unless the composer is a true singleton.
  *
  * `scope` is used as the localStorage draft key, so make it unique:
  *   "hq:post", "article:new", "comment:<parentMid>"
@@ -15,14 +15,15 @@ export type ComposerStore = ReturnType<typeof createComposerStore>;
 export function createComposerStore(submitFn: SubmitFn, scope: string) {
   const DRAFT_KEY = `draft:${scope}`;
 
-  const [body, setBody] = createSignal(localStorage.getItem(DRAFT_KEY) ?? "");
-  const [title, setTitle] = createSignal("");
-  const [slug, setSlug] = createSignal("");
+  const [body, setBody]         = createSignal(localStorage.getItem(DRAFT_KEY) ?? "");
+  const [title, setTitle]       = createSignal("");
+  const [summary, setSummary]   = createSignal("");
+  const [slug, setSlug]         = createSignal("");
   const [category, setCategory] = createSignal("");
   const [mimetype, setMimetype] = createSignal<MimeType>("text/bbcode");
   const [submitting, setSubmitting] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
-  const [tab, setTab] = createSignal<"wysiwyg" | "source">("wysiwyg");
+  const [error, setError]       = createSignal<string | null>(null);
+  const [tab, setTab]           = createSignal<"wysiwyg" | "source">("wysiwyg");
 
   // Persist body as draft while typing; remove when submitted or cleared
   createEffect(() => {
@@ -37,8 +38,9 @@ export function createComposerStore(submitFn: SubmitFn, scope: string) {
     setSubmitting(true);
     try {
       await submitFn(body(), {
-        title: title(),
-        slug: slug(),
+        title:    title(),
+        summary:  summary(),
+        slug:     slug(),
         category: category(),
         mimetype: mimetype(),
         ...extra,
@@ -46,6 +48,7 @@ export function createComposerStore(submitFn: SubmitFn, scope: string) {
       // Reset on success
       setBody("");
       setTitle("");
+      setSummary("");
       setSlug("");
       setCategory("");
       localStorage.removeItem(DRAFT_KEY);
@@ -59,6 +62,7 @@ export function createComposerStore(submitFn: SubmitFn, scope: string) {
   function reset() {
     setBody("");
     setTitle("");
+    setSummary("");
     setSlug("");
     setCategory("");
     setError(null);
@@ -69,6 +73,7 @@ export function createComposerStore(submitFn: SubmitFn, scope: string) {
     // State
     body, setBody,
     title, setTitle,
+    summary, setSummary,
     slug, setSlug,
     category, setCategory,
     mimetype, setMimetype,

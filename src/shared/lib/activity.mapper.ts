@@ -24,20 +24,25 @@ export function mapActivityToPost(activity: any): Post {
     console.error("Body parse failed", activity.body, err);
     body = "";
   }
-  // const body = sanitizeHtml(bbcodeToHtml(activity.body ?? ""));
+
+  // summary: returned by Articles handler as 'summary', fallback to activity stream fields
+  const rawSummary: string =
+    activity.summary ?? activity.item_summary ?? activity.obj_summary ?? "";
+  const summary = rawSummary.trim() || undefined;
+
   return {
     id: activity.iid,
     iid: activity.iid ? Number(activity.iid) : undefined,
     uuid: activity.uuid,
     profileUid: activity.profile_uid ? Number(activity.profile_uid) : undefined,
-    mid: activity.mid, // was: activity.message_id
-    parent_mid: activity.parent_mid, // was: activity.message_parent
-    thr_parent: activity.thr_parent, // was: activity.message_parent
-    top_mid: activity.message_top, // same
+    mid: activity.mid,
+    parent_mid: activity.parent_mid,
+    thr_parent: activity.thr_parent,
+    top_mid: activity.message_top,
     parent: activity.uuid,
     body,
+    summary,
     title: activity.title ?? "",
-		summary: activity.summary ?? "",
     authorName: activity.author?.name ?? "",
     authorAvatar: activity.author?.photo?.src ?? "",
     authorUrl: activity.author?.url ?? "",
@@ -45,7 +50,7 @@ export function mapActivityToPost(activity: any): Post {
     commented: activity.commented,
     edited: activity.edited,
     verb: activity.verb,
-    obj_type: activity.obj_type, // was: activity.object_type
+    obj_type: activity.obj_type,
     item_thread_top: activity.item_thread_top ?? 0,
     flags: activity.flags ?? [],
     permalink: activity.permalink ?? "",
