@@ -154,9 +154,29 @@ function bbExtractImages(body: string): ExtractImagesResult {
   let result = body;
   let idx = 0;
 
+  // Extract data: URIs — must happen before HTML escaping
   result = result.replace(/\[img[^\]]*\]data:([\s\S]*?)\[\/img\]/gi, (_m, data) => {
     const placeholder = `[$#saved_image${idx}#$]`;
     images[idx] = "data:" + data;
+    idx++;
+    return placeholder;
+  });
+
+  // Extract [img=url]alt[/img] and [zmg=url]alt[/zmg] blocks.
+  //
+  // These must be pulled out BEFORE HTML escaping and URL auto-linking so that:
+  //   1. The alt text (which may contain bare https:// URLs) is not converted
+  //      into <a> tags mid-tag by the auto-linker.
+  //   2. The alt text may span multiple lines and contain any characters.
+  //
+  // We convert them to their final <img> HTML immediately and store that HTML
+  // as the placeholder payload so bbReplaceImages can drop it in verbatim.
+  const imgEqPattern = /\[([zi])mg=(https?:\/\/[^\]]*?)\]([\s\S]*?)\[\/[zi]mg\]/gi;
+  result = result.replace(imgEqPattern, (_m, tag, src, alt) => {
+    const placeholder = `[$#saved_image${idx}#$]`;
+    const zCls = tag === "z" ? ' class="zrl"' : "";
+    const cleanAlt = escapeHtml(alt.trim());
+    images[idx] = `<img${zCls} style="max-width: 100%;" src="${src.trim()}" alt="${cleanAlt}" title="${cleanAlt}" loading="eager" />`;
     idx++;
     return placeholder;
   });
@@ -167,10 +187,16 @@ function bbExtractImages(body: string): ExtractImagesResult {
 function bbReplaceImages(body: string, images: string[]): string {
   let result = body;
   images.forEach((img, i) => {
-    result = result.replace(
-      `[$#saved_image${i}#$]`,
-      `<img src="${img}" alt="Image/photo" loading="eager" />`
-    );
+    // If the stored value is already an <img> tag (extracted above), use it
+    // directly; otherwise it's a data: URI needing the default wrapper.
+    if (img.startsWith("<img")) {
+      result = result.replace(`[$#saved_image${i}#$]`, img);
+    } else {
+      result = result.replace(
+        `[$#saved_image${i}#$]`,
+        `<img src="${img}" alt="Image/photo" loading="eager" />`
+      );
+    }
   });
   return result;
 }
