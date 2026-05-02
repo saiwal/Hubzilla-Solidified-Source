@@ -19,9 +19,16 @@ export function useSectionForm<T extends object>(options: {
   fetcher: () => Promise<T>;
   saver: (data: Partial<T>) => Promise<void>;
   numericFields?: string[];
+  checkboxFields?: string[];
   reloadOn?: (prev: T | undefined, next: Partial<T>) => boolean;
 }) {
-  const { fetcher, saver, numericFields = [], reloadOn } = options;
+  const {
+    fetcher,
+    saver,
+    numericFields = [],
+    checkboxFields = [],
+    reloadOn,
+  } = options;
 
   const [data, { refetch }] = createResource<T>(fetcher);
   const [saving, setSaving] = createSignal(false);
@@ -31,8 +38,14 @@ export function useSectionForm<T extends object>(options: {
   async function handleSubmit(e: Event) {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
-    const raw = Object.fromEntries(new FormData(form)) as Record<string, string>;
+    const raw = Object.fromEntries(new FormData(form)) as Record<
+      string,
+      string
+    >;
 
+    for (const f of checkboxFields) {
+      if (!(f in raw)) raw[f] = "0";
+    }
     // Coerce declared numeric fields; leave the rest as strings
     const payload = Object.fromEntries(
       Object.entries(raw).map(([k, v]) =>
