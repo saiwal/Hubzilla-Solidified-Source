@@ -2,7 +2,6 @@
 import { createResource, Show, For } from "solid-js";
 import { useParams, A } from "@solidjs/router";
 import { fetchArticle } from "../api";
-import { bbcodeToHtml } from "@/shared/lib/bbcode";
 import DOMPurify from "dompurify";
 import { usePageNick } from "@/shared/store/site-config";
 
@@ -19,7 +18,7 @@ export default function ArticleView() {
 
   const rendered = () =>
     data()?.article
-      ? DOMPurify.sanitize(bbcodeToHtml(data()!.article.body ?? ""))
+      ? DOMPurify.sanitize((data()!.article.body ?? ""))
       : "";
 
   return (
@@ -40,6 +39,11 @@ export default function ArticleView() {
               <h1 class="text-3xl font-bold leading-tight text-txt">
                 {d().article.title || "(Untitled)"}
               </h1>
+              <Show when={d().article.summary}>
+                <p class="text-lg text-muted italic leading-snug">
+                  {d().article.summary}
+                </p>
+              </Show>
               <p class="text-sm text-muted">
                 {new Date(
                   d().article.created.replace(" ", "T") + "Z",
@@ -105,7 +109,7 @@ export default function ArticleView() {
                         <div
                           class="text-sm prose dark:prose-invert max-w-none"
                           innerHTML={DOMPurify.sanitize(
-                            bbcodeToHtml(c.body ?? ""),
+                            (c.body ?? ""),
                           )}
                         />
                       </div>
