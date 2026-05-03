@@ -11,6 +11,8 @@ import {
   MdFillKeyboard_arrow_down,
   MdFillKeyboard_arrow_up,
   MdFillShare,
+  MdFillFormat_list_bulleted,
+  MdFillAccount_tree,
   MdOutlineThumb_down,
   MdOutlineThumb_up,
 } from "solid-icons/md";
@@ -20,6 +22,17 @@ import CommentComposer from "@/shared/editor/composers/CommentComposer";
 
 export type { StreamHandlers as PostActions };
 
+/** Recursively flatten a thread tree into a chronological list.
+ *  Each node's children are zeroed out so CommentThread won't re-nest them. */
+function flattenThread(nodes: ThreadNode[]): ThreadNode[] {
+  const result: ThreadNode[] = [];
+  for (const node of nodes) {
+    result.push({ ...node, children: [] });
+    result.push(...flattenThread(node.children));
+  }
+  return result;
+}
+
 export default function PostCard(props: {
   post: ThreadNode;
   handlers: StreamHandlers;
@@ -28,6 +41,7 @@ export default function PostCard(props: {
 }) {
   const [replyOpen, setReplyOpen] = createSignal(false);
   const [showComments, setShowComments] = createSignal(false);
+  const [threaded, setThreaded] = createSignal(true);
   const { locale } = useI18n();
   let cardRef!: HTMLDivElement;
 
@@ -52,6 +66,9 @@ export default function PostCard(props: {
   function onDislike() { props.handlers.onDislike(props.post.mid); }
   function onRepeat() { props.handlers.onRepeat(props.post.mid); }
 
+  const visibleComments = () =>
+    threaded() ? props.post.children : flattenThread(props.post.children);
+
   // ── Compact (comment) layout ──────────────────────────────────────────────
   if (props.compact) {
     return (
@@ -74,7 +91,7 @@ export default function PostCard(props: {
               class="rounded-full object-cover shrink-0"
             />
           </Show>
-         <a 
+          <a
             href={props.post.authorUrl}
             class="font-medium text-sm text-txt hover:underline truncate"
           >
@@ -91,7 +108,7 @@ export default function PostCard(props: {
           >
             {formatPostDate(props.post.created, locale())}
           </span>
-         <a 
+          <a
             href={props.post.permalink}
             class="ml-auto pr-2 text-subtle hover:text-txt transition-colors shrink-0"
             title="source"
@@ -151,6 +168,20 @@ export default function PostCard(props: {
             </button>
           </Show>
 
+          {/* Thread/flat toggle — compact */}
+          <Show when={props.post.children.length > 1}>
+            <button
+              onClick={() => setThreaded((v) => !v)}
+              class="flex items-center gap-1 px-2 py-1 rounded-md text-xs
+                     text-subtle hover:bg-overlay hover:text-txt transition-colors"
+              title={threaded() ? "Switch to flat view" : "Switch to threaded view"}
+            >
+              <Show when={threaded()} fallback={<MdFillAccount_tree size={14} />}>
+                <MdFillFormat_list_bulleted size={14} />
+              </Show>
+            </button>
+          </Show>
+
           <button
             onClick={() => { setReplyOpen((v) => !v); setShowComments(true); }}
             class="ml-auto flex items-center gap-1 px-2 py-1 rounded-md text-xs
@@ -160,23 +191,24 @@ export default function PostCard(props: {
             <span>Reply</span>
           </button>
         </div>
-<Show when={replyOpen() && props.post.iid && props.post.profileUid}>
-  <CommentComposer
-    parentMid={props.post.mid}
-    parentIid={props.post.iid!}
-    profileUid={props.post.profileUid!}
-    onSubmitted={(body) => {
-      props.handlers.onComment(
-        props.post.mid, body,
-        props.post.authorName, props.post.authorAvatar,
-      );
-      setReplyOpen(false);
-      setShowComments(true);
-    }}
-  />
-</Show>
+
+        <Show when={replyOpen() && props.post.iid && props.post.profileUid}>
+          <CommentComposer
+            parentMid={props.post.mid}
+            parentIid={props.post.iid!}
+            profileUid={props.post.profileUid!}
+            onSubmitted={(body) => {
+              props.handlers.onComment(
+                props.post.mid, body,
+                props.post.authorName, props.post.authorAvatar,
+              );
+              setReplyOpen(false);
+              setShowComments(true);
+            }}
+          />
+        </Show>
         <CommentThread
-          comments={props.post.children}
+          comments={visibleComments()}
           show={showComments()}
           handlers={props.handlers}
         />
@@ -209,8 +241,7 @@ export default function PostCard(props: {
           />
         </Show>
         <div class="flex flex-col">
-          
-         <a 
+          <a
             href={props.post.authorUrl}
             class="font-semibold text-txt hover:underline"
           >
@@ -230,8 +261,8 @@ export default function PostCard(props: {
             </Show>
           </div>
         </div>
-        
-         <a 
+
+        <a
           href={props.post.permalink}
           class="ml-auto text-sm text-muted hover:text-txt transition-colors"
           title="source"
@@ -271,7 +302,6 @@ export default function PostCard(props: {
                [&_.bb-share-content]:!not-italic [&_.bb-share-content]:!text-inherit"
         innerHTML={props.post.body}
       />
-
 
       {/* Action bar */}
       <div class="mt-4 pt-3 border-t border-rim flex items-center gap-1 flex-wrap">
@@ -336,6 +366,21 @@ export default function PostCard(props: {
           </button>
         </Show>
 
+        {/* Thread/flat toggle — full */}
+        <Show when={props.post.children.length > 1}>
+          <button
+            onClick={() => setThreaded((v) => !v)}
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                   text-muted hover:bg-overlay hover:text-txt transition-colors"
+            title={threaded() ? "Switch to flat view" : "Switch to threaded view"}
+          >
+            <Show when={threaded()} fallback={<MdFillAccount_tree size={17} />}>
+              <MdFillFormat_list_bulleted size={17} />
+            </Show>
+            <span>{threaded() ? "Flat" : "Threaded"}</span>
+          </button>
+        </Show>
+
         <button
           onClick={() => { setReplyOpen((v) => !v); setShowComments(true); }}
           class="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
@@ -346,23 +391,24 @@ export default function PostCard(props: {
           <span>Reply</span>
         </button>
       </div>
-			<Show when={replyOpen() && props.post.iid && props.post.profileUid}>
-  <CommentComposer
-    parentMid={props.post.mid}
-    parentIid={props.post.iid!}
-    profileUid={props.post.profileUid!}
-    onSubmitted={(body) => {
-      props.handlers.onComment(
-        props.post.mid, body,
-        props.post.authorName, props.post.authorAvatar,
-      );
-      setReplyOpen(false);
-      setShowComments(true);
-    }}
-  />
-</Show>
-			<CommentThread
-        comments={props.post.children}
+
+      <Show when={replyOpen() && props.post.iid && props.post.profileUid}>
+        <CommentComposer
+          parentMid={props.post.mid}
+          parentIid={props.post.iid!}
+          profileUid={props.post.profileUid!}
+          onSubmitted={(body) => {
+            props.handlers.onComment(
+              props.post.mid, body,
+              props.post.authorName, props.post.authorAvatar,
+            );
+            setReplyOpen(false);
+            setShowComments(true);
+          }}
+        />
+      </Show>
+      <CommentThread
+        comments={visibleComments()}
         show={showComments()}
         handlers={props.handlers}
       />

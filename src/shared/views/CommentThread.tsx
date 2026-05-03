@@ -7,6 +7,7 @@ export default function CommentThread(props: {
   comments: ThreadNode[];
   show: boolean;
   handlers: StreamHandlers;
+  threaded?: boolean;
 }) {
   return (
     <div
@@ -20,7 +21,12 @@ export default function CommentThread(props: {
         <div class="mt-2 ml-2 space-y-1.5">
           <For each={props.comments}>
             {(comment) => (
-              <PostCard post={comment} handlers={props.handlers} compact />
+              <PostCard
+                post={comment}
+                handlers={props.handlers}
+                compact
+                // ❌ removed threaded
+              />
             )}
           </For>
         </div>
