@@ -1,16 +1,23 @@
 // src/modules/articles/views/ArticleView.tsx
-import { createResource, createSignal, createEffect, onCleanup, Show, For } from "solid-js";
-import { useParams, A } from "@solidjs/router";
-import { fetchArticle } from "../api";
+import {
+  createResource, createSignal, createEffect, onCleanup, onMount,
+  Show, For
+} from "solid-js";
+import { useParams, A, useNavigate } from "@solidjs/router";
+import { Portal } from "solid-js/web";
+import { fetchArticle, deleteArticle } from "../api";
+import ArticleComposer from "@/shared/editor/composers/ArticleComposer";
 import DOMPurify from "dompurify";
-import { usePageNick } from "@/shared/store/site-config";
+import { usePageNick, useViewerRole } from "@/shared/store/site-config";
+import { useAuth } from "@/shared/store/auth-store";
+import { BiRegularEdit, BiRegularTrash } from "solid-icons/bi";
 
 // ── types ─────────────────────────────────────────────────────────────────────
 
 interface TocEntry {
   id: string;
   text: string;
-  level: number; // 1–4
+  level: number;
 }
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -18,29 +25,23 @@ interface TocEntry {
 function extractHeadings(container: HTMLElement): TocEntry[] {
   const nodes = container.querySelectorAll("h1, h2, h3, h4");
   const entries: TocEntry[] = [];
-
   nodes.forEach((node, i) => {
     const text = (node as HTMLElement).innerText?.trim();
     if (!text) return;
     if (!node.id) node.id = `heading-${i}`;
-    const level = parseInt(node.tagName[1], 10);
-    entries.push({ id: node.id, text, level });
+    entries.push({ id: node.id, text, level: parseInt(node.tagName[1], 10) });
   });
-
   return entries;
 }
 
-// ── TOC component ─────────────────────────────────────────────────────────────
+// ── TOC ───────────────────────────────────────────────────────────────────────
 
 function TableOfContents(props: { entries: TocEntry[]; activeId: string }) {
   const [expanded, setExpanded] = createSignal(true);
   const minLevel = () => Math.min(...props.entries.map((e) => e.level));
-
   const indent = (level: number) => {
-    const diff = level - minLevel();
-    if (diff === 0) return "";
-    if (diff === 1) return "pl-3";
-    return "pl-6";
+    const d = level - minLevel();
+    return d === 0 ? "" : d === 1 ? "pl-3" : "pl-6";
   };
 
   return (
@@ -49,7 +50,6 @@ function TableOfContents(props: { entries: TocEntry[]; activeId: string }) {
              border border-rim xl:border-0 rounded-xl xl:rounded-none p-3 xl:p-0"
       aria-label="Table of contents"
     >
-      {/* Header row — always visible, toggles list on small screens */}
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
@@ -58,12 +58,8 @@ function TableOfContents(props: { entries: TocEntry[]; activeId: string }) {
         <span class="text-xs font-semibold uppercase tracking-wide text-muted">
           On this page
         </span>
-        <span class="xl:hidden text-muted text-xs">
-          {expanded() ? "▲" : "▼"}
-        </span>
+        <span class="xl:hidden text-muted text-xs">{expanded() ? "▲" : "▼"}</span>
       </button>
-
-      {/* Entry list */}
       <Show when={expanded()}>
         <div class="mt-2 space-y-0.5 max-h-[50vh] xl:max-h-[70vh] overflow-y-auto">
           <For each={props.entries}>
@@ -73,7 +69,6 @@ function TableOfContents(props: { entries: TocEntry[]; activeId: string }) {
                 onClick={(e) => {
                   e.preventDefault();
                   document.getElementById(entry.id)?.scrollIntoView({ behavior: "smooth" });
-                  // Collapse after tap on mobile
                   if (window.innerWidth < 1280) setExpanded(false);
                 }}
                 class={`block text-xs py-0.5 px-1 rounded transition-colors truncate
@@ -93,14 +88,118 @@ function TableOfContents(props: { entries: TocEntry[]; activeId: string }) {
   );
 }
 
+// ── edit modal ────────────────────────────────────────────────────────────────
+
+function EditModal(props: {
+  article: { mid: string; title: string; summary?: string; slug?: string; category?: string; body: string };
+  nick: string;
+  profileUid: number;
+  onSaved: () => void;
+  onClose: () => void;
+}) {
+  let dialogRef: HTMLDialogElement | undefined;
+  onMount(() => dialogRef?.showModal());
+
+  const close = () => {
+    dialogRef?.close();
+    props.onClose();
+  };
+
+  return (
+    <Portal mount={document.body}>
+      <dialog
+        ref={dialogRef}
+        onClick={(e) => { if (e.target === dialogRef) close(); }}
+        class="m-auto w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-xl
+               bg-base border border-rim shadow-xl p-0 backdrop:bg-black/50"
+      >
+        <div class="flex items-center justify-between px-4 py-3 border-b border-rim sticky top-0 bg-base z-10">
+          <h2 class="text-sm font-semibold text-txt">Edit article</h2>
+          <button
+            type="button"
+            onClick={close}
+            class="p-1 rounded text-muted hover:bg-elevated transition-colors text-lg leading-none"
+          >
+            ✕
+          </button>
+        </div>
+        <ArticleComposer
+          profileUid={props.profileUid}
+          nick={props.nick}
+          initial={{
+            mid:      props.article.mid,
+            title:    props.article.title,
+            summary:  props.article.summary ?? "",
+            slug:     props.article.slug    ?? "",
+            category: props.article.category ?? "",
+            body:     props.article.body,
+          }}
+          onSaved={() => {
+            close();
+            props.onSaved();
+          }}
+        />
+      </dialog>
+    </Portal>
+  );
+}
+
+// ── delete confirm ────────────────────────────────────────────────────────────
+
+function DeleteConfirm(props: { mid: string; onDeleted: () => void; onCancel: () => void }) {
+  const [deleting, setDeleting] = createSignal(false);
+  const [error, setError] = createSignal("");
+
+  const confirm = async () => {
+    setDeleting(true);
+    try {
+      await deleteArticle(props.mid);
+      props.onDeleted();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Delete failed");
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <div class="flex items-center gap-3 px-4 py-3 bg-surface border border-rim rounded-xl">
+      <p class="text-sm text-txt flex-1">
+        Delete this article? This cannot be undone.
+      </p>
+      <Show when={error()}>
+        <p class="text-xs text-red-500">{error()}</p>
+      </Show>
+      <button
+        type="button"
+        onClick={props.onCancel}
+        class="px-3 py-1.5 text-sm rounded-lg border border-rim text-muted hover:bg-elevated transition-colors"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        onClick={confirm}
+        disabled={deleting()}
+        class="px-3 py-1.5 text-sm font-medium rounded-lg bg-red-500 text-white
+               hover:opacity-90 disabled:opacity-40 transition-opacity"
+      >
+        {deleting() ? "Deleting…" : "Delete"}
+      </button>
+    </div>
+  );
+}
+
 // ── main view ─────────────────────────────────────────────────────────────────
 
 export default function ArticleView() {
   const params = useParams<{ nick: string; uuid: string }>();
   const pageNick = usePageNick();
   const nick = () => params.nick || pageNick();
+  const role = useViewerRole();
+  const auth = useAuth();
+  const navigate = useNavigate();
 
-  const [data] = createResource(
+  const [data, { refetch }] = createResource(
     () => ({ nick: nick(), uuid: params.uuid }),
     ({ nick, uuid }) => fetchArticle(nick, uuid),
   );
@@ -108,16 +207,19 @@ export default function ArticleView() {
   const rendered = () =>
     data()?.article ? DOMPurify.sanitize(data()!.article.body ?? "") : "";
 
+  // editing / deleting state
+  const [editing, setEditing] = createSignal(false);
+  const [confirmDelete, setConfirmDelete] = createSignal(false);
+
+  // TOC
   const [toc, setToc] = createSignal<TocEntry[]>([]);
   const [activeId, setActiveId] = createSignal("");
   let bodyRef: HTMLDivElement | undefined;
 
   createEffect(() => {
     if (!rendered() || !bodyRef) return;
-
     requestAnimationFrame(() => {
       if (!bodyRef) return;
-
       const entries = extractHeadings(bodyRef);
       setToc(entries);
       if (entries.length) setActiveId(entries[0].id);
@@ -131,15 +233,15 @@ export default function ArticleView() {
         },
         { rootMargin: "0px 0px -60% 0px", threshold: 0 },
       );
-
       entries.forEach(({ id }) => {
         const el = document.getElementById(id);
         if (el) observer.observe(el);
       });
-
       onCleanup(() => observer.disconnect());
     });
   });
+
+  const isOwner = () => role() === "owner";
 
   return (
     <div class="relative max-w-5xl mx-auto py-4">
@@ -148,6 +250,7 @@ export default function ArticleView() {
           <div class="xl:flex xl:gap-8">
             {/* ── Article ── */}
             <article class="min-w-0 flex-1 max-w-3xl space-y-6">
+              {/* Back link */}
               <A
                 href={`/articles/${nick()}`}
                 class="inline-flex items-center gap-1 text-sm text-muted hover:text-txt transition-colors"
@@ -155,87 +258,141 @@ export default function ArticleView() {
                 ← All articles
               </A>
 
-              <header class="space-y-2 border-b border-rim pb-4">
-                <h1 class="text-3xl font-bold leading-tight text-txt">
-                  {d().article.title || "(Untitled)"}
-                </h1>
-                <Show when={d().article.summary}>
-                  <p class="text-lg text-muted italic leading-snug">
-                    {d().article.summary}
-                  </p>
-                </Show>
-                <p class="text-sm text-muted">
-                  {new Date(
-                    d().article.created.replace(" ", "T") + "Z",
-                  ).toLocaleDateString(undefined, {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                  {" by "}
-                  <a href={d().article.authorUrl} class="hover:underline text-txt">
-                    {d().article.authorName}
-                  </a>
-                </p>
-              </header>
-
-              {/* TOC inline on small screens */}
-              <Show when={toc().length > 1}>
-                <div class="xl:hidden">
-                  <TableOfContents entries={toc()} activeId={activeId()} />
-                </div>
+              {/* Delete confirm banner */}
+              <Show when={confirmDelete()}>
+                <DeleteConfirm
+                  mid={d().article.mid}
+                  onDeleted={() => navigate(`/articles/${nick()}`)}
+                  onCancel={() => setConfirmDelete(false)}
+                />
               </Show>
 
-              <div
-                ref={bodyRef}
-                class="prose dark:prose-invert max-w-none"
-                // eslint-disable-next-line solid/no-innerhtml
-                innerHTML={rendered()}
-              />
+              {/* Edit modal */}
+              <Show when={editing()}>
+                <EditModal
+                  article={{
+                    mid:      d().article.mid,
+                    title:    d().article.title,
+                    summary:  d().article.summary,
+                    body:     d().article.body ?? "",
+                  }}
+                  nick={nick()}
+                  profileUid={auth()!.uid}
+                  onSaved={() => { setEditing(false); refetch(); }}
+                  onClose={() => setEditing(false)}
+                />
+              </Show>
 
-              <div class="flex gap-4 text-sm text-muted border-t border-rim pt-4">
-                <span>♥ {d().article.likeCount}</span>
-                <span>👎 {d().article.dislikeCount}</span>
-                <span>🔁 {d().article.repeatCount}</span>
-              </div>
-
-              <section class="space-y-4">
-                <h2 class="text-base font-semibold text-txt">
-                  Comments ({d().comments.length})
-                </h2>
-                <Show
-                  when={d().comments.length > 0}
-                  fallback={<p class="text-sm text-muted">No comments yet.</p>}
-                >
-                  <For each={d().comments}>
-                    {(c) => (
-                      <div class="flex gap-3">
-                        <Show when={c.authorAvatar}>
-                          <img
-                            src={c.authorAvatar}
-                            alt={c.authorName}
-                            class="w-8 h-8 rounded-full shrink-0 object-cover"
-                          />
-                        </Show>
-                        <div class="flex-1 bg-surface border border-rim rounded-lg p-3 space-y-1">
-                          <div class="flex items-center gap-2 text-xs text-muted">
-                            <span class="font-medium text-txt">{c.authorName}</span>
-                            <span>
-                              {new Date(
-                                c.created.replace(" ", "T") + "Z",
-                              ).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <div
-                            class="text-sm prose dark:prose-invert max-w-none"
-                            innerHTML={DOMPurify.sanitize(c.body ?? "")}
-                          />
-                        </div>
+              {/* Normal view */}
+              <Show when={!editing()}>
+                {/* Header */}
+                <header class="space-y-2 border-b border-rim pb-4">
+                  <div class="flex items-start justify-between gap-4">
+                    <h1 class="text-3xl font-bold leading-tight text-txt">
+                      {d().article.title || "(Untitled)"}
+                    </h1>
+                    {/* Owner actions */}
+                    <Show when={isOwner()}>
+                      <div class="flex items-center gap-1 shrink-0 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => { setConfirmDelete(false); setEditing(true); }}
+                          title="Edit article"
+                          class="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-txt transition-colors"
+                        >
+                          <BiRegularEdit class="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setEditing(false); setConfirmDelete(true); }}
+                          title="Delete article"
+                          class="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-red-500 transition-colors"
+                        >
+                          <BiRegularTrash class="w-4 h-4" />
+                        </button>
                       </div>
-                    )}
-                  </For>
+                    </Show>
+                  </div>
+
+                  <Show when={d().article.summary}>
+                    <p class="text-lg text-muted italic leading-snug">
+                      {d().article.summary}
+                    </p>
+                  </Show>
+                  <p class="text-sm text-muted">
+                    {new Date(
+                      d().article.created.replace(" ", "T") + "Z",
+                    ).toLocaleDateString(undefined, {
+                      year: "numeric", month: "long", day: "numeric",
+                    })}
+                    {" by "}
+                    <a href={d().article.authorUrl} class="hover:underline text-txt">
+                      {d().article.authorName}
+                    </a>
+                  </p>
+                </header>
+
+                {/* TOC inline on small screens */}
+                <Show when={toc().length > 1}>
+                  <div class="xl:hidden">
+                    <TableOfContents entries={toc()} activeId={activeId()} />
+                  </div>
                 </Show>
-              </section>
+
+                {/* Body */}
+                <div
+                  ref={bodyRef}
+                  class="prose dark:prose-invert max-w-none"
+                  // eslint-disable-next-line solid/no-innerhtml
+                  innerHTML={rendered()}
+                />
+
+                {/* Reactions */}
+                <div class="flex gap-4 text-sm text-muted border-t border-rim pt-4">
+                  <span>♥ {d().article.likeCount}</span>
+                  <span>👎 {d().article.dislikeCount}</span>
+                  <span>🔁 {d().article.repeatCount}</span>
+                </div>
+
+                {/* Comments */}
+                <section class="space-y-4">
+                  <h2 class="text-base font-semibold text-txt">
+                    Comments ({d().comments.length})
+                  </h2>
+                  <Show
+                    when={d().comments.length > 0}
+                    fallback={<p class="text-sm text-muted">No comments yet.</p>}
+                  >
+                    <For each={d().comments}>
+                      {(c) => (
+                        <div class="flex gap-3">
+                          <Show when={c.authorAvatar}>
+                            <img
+                              src={c.authorAvatar}
+                              alt={c.authorName}
+                              class="w-8 h-8 rounded-full shrink-0 object-cover"
+                            />
+                          </Show>
+                          <div class="flex-1 bg-surface border border-rim rounded-lg p-3 space-y-1">
+                            <div class="flex items-center gap-2 text-xs text-muted">
+                              <span class="font-medium text-txt">{c.authorName}</span>
+                              <span>
+                                {new Date(
+                                  c.created.replace(" ", "T") + "Z",
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <div
+                              class="text-sm prose dark:prose-invert max-w-none"
+                              innerHTML={DOMPurify.sanitize(c.body ?? "")}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </For>
+                  </Show>
+                </section>
+              </Show>
             </article>
 
             {/* ── Floating TOC — fixed sidebar on xl+ ── */}

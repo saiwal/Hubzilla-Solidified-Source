@@ -3,18 +3,19 @@ import { createComposerStore } from "../store/createComposerStore";
 import RichEditor from "../core/RichEditor";
 import EditorPreview from "../core/EditorPreview";
 import { CAPABILITIES } from "../types/editor.types";
+import { apiFetch } from "@/shared/lib/fetch";
 
 interface Props {
   profileUid: number;
   nick: string;
-  /** Pass an existing article's data to edit rather than create */
+  /** Pass existing article data to edit rather than create */
   initial?: {
+    mid: string;      // required for edit — passed to /api/item/:mid/edit
     title: string;
     summary: string;
     slug: string;
     category: string;
     body: string;
-    itemId?: number;
   };
   onSaved?: () => void;
 }
@@ -23,43 +24,67 @@ export default function ArticleComposer(props: Props) {
   const caps = CAPABILITIES.article;
   const [showPreview, setShowPreview] = createSignal(false);
   const [wordCount, setWordCount] = createSignal(0);
+  const isEditing = () => !!props.initial?.mid;
 
-  const scope = props.initial?.itemId
-    ? `article:${props.initial.itemId}`
+  const scope = props.initial?.mid
+    ? `article:edit:${props.initial.mid}`
     : "article:new";
 
   const store = createComposerStore(async (body, meta) => {
-    // /item uses Hubzilla's own form security token injected into the page
-    const csrf =
-      document.querySelector<HTMLMetaElement>('meta[name="form_security_token"]')
-        ?.content ?? "";
+    if (isEditing()) {
+      // ── Edit existing article via /api/item/:mid/edit ──────────────────────
+      const res = await apiFetch(
+        `/api/item/${encodeURIComponent(props.initial!.mid)}/edit`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            body,
+            title:    meta.title    ?? "",
+            summary:  meta.summary  ?? "",
+            // slug and category are stored as item fields Hubzilla manages
+            // separately; pass them so the handler can update if supported
+            slug:     meta.slug     ?? "",
+            category: meta.category ?? "",
+            mimetype: meta.mimetype ?? "text/bbcode",
+          }),
+        },
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.error ?? "Save failed");
+      }
+    } else {
+      // ── Create new article via /item (Hubzilla native) ─────────────────────
+      const csrf =
+        document.querySelector<HTMLMetaElement>('meta[name="form_security_token"]')
+          ?.content ?? "";
 
-    const params = new URLSearchParams({
-      mimetype:    meta.mimetype ?? "text/bbcode",
-      obj_type:    "",
-      profile_uid: String(props.profileUid),
-      return:      `articles/${props.nick}`,
-      webpage:     "7",   // ITEM_TYPE_ARTICLE
-      preview:     "0",
-      consensus:   "0",
-      nocomment:   "0",
-      title:       meta.title    ?? "",
-      summary:     meta.summary  ?? "",
-      category:    meta.category ?? "",
-      pagetitle:   meta.slug     ?? "",
-      body,
-    });
+      const params = new URLSearchParams({
+        mimetype:    meta.mimetype ?? "text/bbcode",
+        obj_type:    "",
+        profile_uid: String(props.profileUid),
+        return:      `articles/${props.nick}`,
+        webpage:     "7",   // ITEM_TYPE_ARTICLE
+        preview:     "0",
+        consensus:   "0",
+        nocomment:   "0",
+        title:       meta.title    ?? "",
+        summary:     meta.summary  ?? "",
+        category:    meta.category ?? "",
+        pagetitle:   meta.slug     ?? "",
+        body,
+      });
+      if (csrf) params.set("form_security_token", csrf);
 
-    if (csrf) params.set("form_security_token", csrf);
+      const res = await fetch("/item", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: params.toString(),
+      });
+      if (!res.ok) throw new Error("Save failed");
+    }
 
-    const res = await fetch("/item", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: params.toString(),
-    });
-
-    if (!res.ok) throw new Error("Save failed");
     props.onSaved?.();
   }, scope);
 
@@ -203,7 +228,7 @@ export default function ArticleComposer(props: Props) {
             class="px-3 py-1.5 text-sm rounded-lg border border-rim text-muted
                    hover:bg-elevated transition-colors"
           >
-            Discard
+            {isEditing() ? "Cancel" : "Discard"}
           </button>
         </div>
         <button
@@ -219,7 +244,7 @@ export default function ArticleComposer(props: Props) {
         >
           {store.submitting()
             ? "Saving…"
-            : props.initial
+            : isEditing()
               ? "Save changes"
               : "Publish"}
         </button>
