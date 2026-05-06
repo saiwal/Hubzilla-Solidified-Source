@@ -18,16 +18,16 @@ const Usermenu = (props: NavUtilitiesProps) => {
           onClick={props.onUserMenuToggle}
           title={props.viewer!.name}
           class={`relative p-0.5 rounded-lg transition-colors hover:bg-elevated
-                  focus-visible:outline-none flex items-center justify-start
+                  focus-visible:outline-none flex items-center justify-start min-w-0
                   ${props.actionsOpen ? "bg-elevated ring-2 ring-accent/40" : ""}`}
         >
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 min-w-0">
             {/* Avatar */}
             <div class="relative flex-shrink-0 pe-2">
               <img
                 src={props.viewer!.avatar}
                 alt={props.viewer!.name}
-                class="w-7 h-7 rounded-lg object-cover select-none"
+                class="w-10 h-10 rounded-lg object-cover select-none"
                 loading="lazy"
               />
               <span
@@ -38,14 +38,9 @@ const Usermenu = (props: NavUtilitiesProps) => {
             </div>
 
             {/* Text (stacked) */}
-            <div class="flex flex-col leading-tight text-left min-w-0">
-              <span class="text-sm font-medium text-txt">
+              <span class="text-md font-medium text-txt truncate">
                 {props.viewer!.name}
               </span>
-              <span class="text-xs text-muted truncate">
-                {props.viewer!.nick ?? "No address"}
-              </span>
-            </div>
           </div>
         </button>
       </div>
