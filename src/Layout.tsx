@@ -226,15 +226,14 @@ const Layout: ParentComponent = (props) => {
           ═══════════════════════════════════════════════════════ */}
           <aside
             class={`
-              fixed top-0 right-0 h-full z-40 w-72
+              fixed inset-y-0 right-0 z-40 w-72 shrink-0 p-4 overflow-y-auto space-y-4
               bg-surface border-l border-rim
-              flex flex-col
               transform transition-transform duration-300 ease-in-out
-              xl:relative xl:translate-x-0 xl:flex
-              ${rightOpen() ? "translate-x-0" : "translate-x-full xl:translate-x-0"}
+              xl:relative xl:translate-x-0 xl:block
+              ${rightOpen() ? "translate-x-0" : "translate-x-full"}
             `}
           >
-            <div class="flex items-center justify-between px-3 py-3 border-b border-rim shrink-0">
+            <div class="flex items-center justify-between xl:hidden mb-2">
               <span class="text-[10px] font-semibold uppercase tracking-widest text-muted">
                 Panel
               </span>
@@ -250,7 +249,6 @@ const Layout: ParentComponent = (props) => {
               <Slot name="rightVisitor" moduleId={activeModuleId()} />
             </Show>
           </aside>
-
           {/* Backdrop */}
           <Show when={rightOpen() || moreOpen()}>
             <div
@@ -365,7 +363,7 @@ const Layout: ParentComponent = (props) => {
               )}
             </For>
 
-            <Show when={moreItems().length > 0}>
+            {/* <Show when={moreItems().length > 0}> */}
               <button
                 onClick={() => {
                   setMoreOpen((o) => !o);
@@ -382,7 +380,7 @@ const Layout: ParentComponent = (props) => {
                 <MdFillMore_horiz size={22} />
                 <span>More</span>
               </button>
-            </Show>
+            {/* </Show> */}
 
             <button
               onClick={() => {
