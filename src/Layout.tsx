@@ -17,6 +17,8 @@ import { useOnlineStatus } from "./shared/lib/useOnlineStatus";
 import NavUtilities from "./shared/views/NavUtilities";
 import { notifCount } from "@/shared/lib/notificationCount";
 import { createMediaQuery } from "@solid-primitives/media";
+import { useNavActions, useNavViewer } from "./shared/store/nav-store";
+
 // ── Mobile bottom tab ─────────────────────────────────────────────────────────
 function MobileTab(props: {
   href: string | (() => string);
@@ -49,6 +51,7 @@ function MobileTab(props: {
 const Layout: ParentComponent = (props) => {
   const [rightOpen, setRightOpen] = createSignal(false);
   const [moreOpen, setMoreOpen] = createSignal(false);
+  const [actionsOpen, setActionsOpen] = createSignal(false);
 
   const subjectNick = useSubjectNick();
   const actionItems = useNavActionItems();
@@ -56,6 +59,8 @@ const Layout: ParentComponent = (props) => {
   const navItems = useNav(subjectNick);
   const viewerRole = useViewerRole();
   const online = useOnlineStatus();
+  const navViewer = useNavViewer();
+  const navActions = useNavActions();
 
   let mainRef!: HTMLElement;
   const [showScrollTop, setShowScrollTop] = createSignal(false);
@@ -69,6 +74,7 @@ const Layout: ParentComponent = (props) => {
   const closeAll = () => {
     setRightOpen(false);
     setMoreOpen(false);
+    setActionsOpen(false);
   };
 
   const isOwner = () => viewerRole() === "owner";
@@ -78,10 +84,8 @@ const Layout: ParentComponent = (props) => {
   const isMedium = createMediaQuery("(min-width: 768px)");
   const bottomLimit = () => (isMedium() ? 8 : 4);
   const bottomItems = () => navItems().slice(0, bottomLimit());
-  const moreItems = () => [
-    ...navItems().slice(bottomLimit()),
-    ...actionItems(),
-  ];
+  const moreItems = () => navItems().slice(bottomLimit());
+
   return (
     <div class="fixed inset-0 bg-base text-txt">
       <HelpOverlay />
@@ -147,20 +151,21 @@ const Layout: ParentComponent = (props) => {
               </For>
             </nav>
 
-            <div class="my-2 h-px bg-rim" />
-
-            {/* Action items */}
-            <div class="flex flex-col gap-0.5">
-              <For each={actionItems()}>
-                {(item) => (
-                  <NavItem
-                    href={item.href}
-                    label={item.label}
-                    icon={item.icon}
-                  />
-                )}
-              </For>
-            </div>
+            {/* Action items — toggled by avatar click */}
+            <Show when={actionsOpen() && actionItems().length > 0}>
+              <div class="my-2 h-px bg-rim" />
+              <div class="flex flex-col gap-0.5">
+                <For each={actionItems()}>
+                  {(item) => (
+                    <NavItem
+                      href={item.href}
+                      label={item.label}
+                      icon={item.icon}
+                    />
+                  )}
+                </For>
+              </div>
+            </Show>
 
             <Show when={isLocalUser()}>
               <div class="mt-1">
@@ -168,7 +173,12 @@ const Layout: ParentComponent = (props) => {
               </div>
             </Show>
 
-            <NavUtilities />
+            <NavUtilities
+              viewer={navViewer()}
+              actions={navActions()}
+              actionsOpen={actionsOpen()}
+              onUserMenuToggle={() => setActionsOpen((o) => !o)}
+            />
           </aside>
 
           {/* ═══════════════════════════════════════════════════════
@@ -216,14 +226,15 @@ const Layout: ParentComponent = (props) => {
           ═══════════════════════════════════════════════════════ */}
           <aside
             class={`
-              fixed inset-y-0 right-0 z-40 w-72 shrink-0 p-4 overflow-y-auto space-y-4
+              fixed top-0 right-0 h-full z-40 w-72
               bg-surface border-l border-rim
+              flex flex-col
               transform transition-transform duration-300 ease-in-out
-              xl:relative xl:translate-x-0 xl:block
-              ${rightOpen() ? "translate-x-0" : "translate-x-full"}
+              xl:relative xl:translate-x-0 xl:flex
+              ${rightOpen() ? "translate-x-0" : "translate-x-full xl:translate-x-0"}
             `}
           >
-            <div class="flex items-center justify-between xl:hidden mb-2">
+            <div class="flex items-center justify-between px-3 py-3 border-b border-rim shrink-0">
               <span class="text-[10px] font-semibold uppercase tracking-widest text-muted">
                 Panel
               </span>
@@ -247,18 +258,19 @@ const Layout: ParentComponent = (props) => {
               onClick={closeAll}
             />
           </Show>
+
           {/* ═══════════════════════════════════════════════════════
-									MOBILE — "More" bottom sheet drawer
-							═══════════════════════════════════════════════════════ */}
+              MOBILE — "More" bottom sheet drawer
+          ═══════════════════════════════════════════════════════ */}
           <div
             class={`
-    fixed left-0 right-0 z-40 lg:hidden
-    bg-surface border-t border-rim
-    rounded-t-2xl shadow-2xl px-0 pt-0 pb-3
-    transform transition-transform duration-300 ease-in-out
-    max-h-[72vh] overflow-y-auto
-    ${moreOpen() ? "translate-y-0 bottom-16" : "translate-y-full bottom-16"}
-  `}
+              fixed left-0 right-0 z-40 lg:hidden
+              bg-surface border-t border-rim
+              rounded-t-2xl shadow-2xl px-0 pt-0 pb-3
+              transform transition-transform duration-300 ease-in-out
+              max-h-[72vh] overflow-y-auto
+              ${moreOpen() ? "translate-y-0 bottom-16" : "translate-y-full bottom-16"}
+            `}
           >
             <div class="mx-auto mt-3 mb-4 w-9 h-1 rounded-full bg-rim" />
 
@@ -278,9 +290,9 @@ const Layout: ParentComponent = (props) => {
                       }
                       onClick={closeAll}
                       class="flex flex-col items-center gap-1.5 py-2.5 px-1
-                   rounded-xl bg-elevated border border-rim
-                   text-txt text-[10px] font-medium leading-tight text-center
-                   hover:brightness-95 transition-all"
+                             rounded-xl bg-elevated border border-rim
+                             text-txt text-[10px] font-medium leading-tight text-center
+                             hover:brightness-95 transition-all"
                     >
                       <span class="text-muted">
                         {getNavIcon(item.icon, 20)}
@@ -296,22 +308,9 @@ const Layout: ParentComponent = (props) => {
               </div>
             </Show>
 
-            {/* ── Divider ── */}
-            <Show
-              when={
-                navItems().slice(bottomLimit()).length > 0 &&
-                actionItems().length > 0
-              }
-            >
-              <div class="mx-3.5 mb-3.5 h-px bg-rim" />
-            </Show>
-
-            {/* ── Action tiles ── */}
-            <Show when={actionItems().length > 0}>
-              <p class="px-4 pb-2 text-[10px] font-semibold uppercase tracking-widest text-muted">
-                Actions
-              </p>
-              <div class="grid grid-cols-4 gap-1.5 px-2.5 pb-2">
+            {/* Action items — toggled by avatar click */}
+            <Show when={actionsOpen() && actionItems().length > 0}>
+              <div class="grid grid-cols-4 gap-1.5 px-2.5 pb-4">
                 <For each={actionItems()}>
                   {(item) => (
                     <A
@@ -322,11 +321,13 @@ const Layout: ParentComponent = (props) => {
                       }
                       onClick={closeAll}
                       class="flex flex-col items-center gap-1.5 py-2.5 px-1
-                   rounded-xl bg-accent-muted border border-accent/20
-                   text-accent text-[10px] font-medium leading-tight text-center
-                   hover:brightness-95 transition-all"
+                             rounded-xl bg-elevated border border-rim
+                             text-txt text-[10px] font-medium leading-tight text-center
+                             hover:brightness-95 transition-all"
                     >
-                      <span>{getNavIcon(item.icon, 20)}</span>
+                      <span class="text-muted">
+                        {getNavIcon(item.icon, 20)}
+                      </span>
                       <span class="truncate w-full text-center">
                         {typeof item.label === "function"
                           ? item.label()
@@ -338,8 +339,14 @@ const Layout: ParentComponent = (props) => {
               </div>
             </Show>
 
-            <NavUtilities />
+            <NavUtilities
+              viewer={navViewer()}
+              actions={navActions()}
+              actionsOpen={actionsOpen()}
+              onUserMenuToggle={() => setActionsOpen((o) => !o)}
+            />
           </div>
+
           {/* ═══════════════════════════════════════════════════════
               MOBILE — Bottom Tab Bar
           ═══════════════════════════════════════════════════════ */}
@@ -399,9 +406,9 @@ const Layout: ParentComponent = (props) => {
                 <Show when={!rightOpen() && notifCount() > 0}>
                   <span
                     class="absolute -top-2 -right-1.5 min-w-[14px] h-[14px] px-[3px]
-                    rounded-full bg-accent text-accent-txt
-                    text-[9px] font-bold leading-[14px] text-center
-                    pointer-events-none select-none"
+                           rounded-full bg-accent text-accent-txt
+                           text-[9px] font-bold leading-[14px] text-center
+                           pointer-events-none select-none"
                   >
                     {notifCount() > 99 ? "99+" : notifCount()}
                   </span>
@@ -423,9 +430,9 @@ const Layout: ParentComponent = (props) => {
               <Show when={!rightOpen() && notifCount() > 0}>
                 <span
                   class="absolute top-0 right-0 translate-x-3/2 -translate-y-3/2 min-w-[14px] h-[14px] px-[3px]
-                    rounded-full bg-accent text-accent-txt
-                    text-[9px] font-bold leading-[14px] text-center
-                    pointer-events-none select-none"
+                         rounded-full bg-accent text-accent-txt
+                         text-[9px] font-bold leading-[14px] text-center
+                         pointer-events-none select-none"
                 >
                   {notifCount() > 99 ? "99+" : notifCount()}
                 </span>

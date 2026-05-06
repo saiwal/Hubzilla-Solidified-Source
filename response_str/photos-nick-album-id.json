@@ -1,0 +1,25 @@
+{
+	"data": [
+		{
+			"resource_id": "437ffe54-9912-461d-8dcb-f1fbd299fd20",
+			"filename": "f2b658c77dd10b86.png",
+			"description": "",
+			"album": "2026-01",
+			"created": "2026-01-27 22:49:27",
+			"src": "https://hz-ddev.ddev.site/photo/437ffe54-9912-461d-8dcb-f1fbd299fd20-2.png",
+			"link": "https://hz-ddev.ddev.site/photos/aristotle/image/437ffe54-9912-461d-8dcb-f1fbd299fd20"
+		},
+		{
+			"resource_id": "7e8544f0-7966-4d46-aad7-d76dd9ffd18a",
+			"filename": "Quotation-Aristotle-It-is-our-choice-of-good-or-evil-that-determines-67-77-80.jpg",
+			"description": "",
+			"album": "2026-01",
+			"created": "2026-01-27 15:29:05",
+			"src": "https://hz-ddev.ddev.site/photo/7e8544f0-7966-4d46-aad7-d76dd9ffd18a-2.jpg",
+			"link": "https://hz-ddev.ddev.site/photos/aristotle/image/7e8544f0-7966-4d46-aad7-d76dd9ffd18a"
+		}
+	],
+	"meta": {
+		"album_name": "2026-01"
+	}
+}

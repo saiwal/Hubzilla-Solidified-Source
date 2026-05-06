@@ -1,0 +1,21 @@
+{
+	"data": {
+		"theme": "solidified",
+		"thread_allow": 0,
+		"update_interval": 10,
+		"itemspage": 10,
+		"no_smilies": 1,
+		"title_tosource": 1,
+		"start_menu": 0,
+		"user_scalable": 0,
+		"themes": [
+			"adminlte",
+			"keepitsimple",
+			"lcars",
+			"redbasic",
+			"solidified",
+			"spurgeon",
+			"typerite"
+		]
+	}
+}

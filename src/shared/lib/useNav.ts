@@ -15,7 +15,6 @@ type ActionMeta = {
   icon: string;
   context: NavItemDef["context"];
 };
-// ── Bootstrap Icon → internal icon token ─────────────────────────────────────
 
 // ── Role matching ─────────────────────────────────────────────────────────────
 
@@ -142,7 +141,7 @@ export function useNavActionItems(): () => NavItemDef[] {
       navhome: {
         label: t("nav.navhome"),
         icon: "home",
-        context: ["remote"],
+        context: ["local", "remote"],
       },
       logout: {
         label: t("nav.logout"),

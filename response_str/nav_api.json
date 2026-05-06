@@ -1,0 +1,201 @@
+{
+	"viewer": {
+		"is_local": true,
+		"is_remote": false,
+		"is_admin": true,
+		"nick": "aristotle",
+		"name": "Aristotle",
+		"avatar": "https://hz-ddev.ddev.site/photo/profile/m/26",
+		"url": "https://hz-ddev.ddev.site/channel/aristotle",
+		"uid": 26,
+		"baseurl": "https://hz-ddev.ddev.site"
+	},
+	"actions": {
+		"profile": "https://hz-ddev.ddev.site/profile/aristotle",
+		"profiles": "https://hz-ddev.ddev.site/profiles",
+		"settings": "https://hz-ddev.ddev.site/settings",
+		"manage": "https://hz-ddev.ddev.site/manage",
+		"logout": "https://hz-ddev.ddev.site/logout"
+	},
+	"pinned": [
+		{
+			"name": "Articles",
+			"label": "Articles",
+			"url": "https://hz-ddev.ddev.site/articles/aristotle",
+			"photo": "icon:newspaper",
+			"requires": "local_channel"
+		},
+		{
+			"name": "Calendar",
+			"label": "Calendar",
+			"url": "https://hz-ddev.ddev.site/cdav/calendar",
+			"photo": "icon:calendar-date",
+			"requires": "local_channel"
+		},
+		{
+			"name": "Cart",
+			"label": "Cart",
+			"url": "https://hz-ddev.ddev.site/cart/aristotle",
+			"photo": "icon:cart",
+			"requires": "local_channel"
+		},
+		{
+			"name": "Chatrooms",
+			"label": "Chatrooms",
+			"url": "https://hz-ddev.ddev.site/chat/aristotle",
+			"photo": "icon:chat-text",
+			"requires": "local_channel"
+		},
+		{
+			"name": "HQ",
+			"label": "HQ",
+			"url": "https://hz-ddev.ddev.site/hq",
+			"photo": "icon:person-circle",
+			"requires": "local_channel"
+		},
+		{
+			"name": "Network",
+			"label": "Network",
+			"url": "https://hz-ddev.ddev.site/network",
+			"photo": "icon:grid-3x3",
+			"requires": "local_channel"
+		},
+		{
+			"name": "Webpages",
+			"label": "Webpages",
+			"url": "https://hz-ddev.ddev.site/webpages/aristotle",
+			"photo": "icon:layout-text-sidebar",
+			"requires": "local_channel"
+		},
+		{
+			"name": "Wiki",
+			"label": "Wiki",
+			"url": "https://hz-ddev.ddev.site/wiki/aristotle",
+			"photo": "icon:pencil-square",
+			"requires": "local_channel"
+		}
+	],
+	"featured": [
+		{
+			"name": "Bookmarks",
+			"label": "Bookmarks",
+			"url": "https://hz-ddev.ddev.site/bookmarks",
+			"photo": "icon:bookmark",
+			"requires": "local_channel"
+		},
+		{
+			"name": "CardDAV",
+			"label": "CardDAV",
+			"url": "https://hz-ddev.ddev.site/cdav/addressbook",
+			"photo": "icon:person-vcard",
+			"requires": "local_channel"
+		},
+		{
+			"name": "Channel",
+			"label": "Channel",
+			"url": "https://hz-ddev.ddev.site/channel/aristotle",
+			"photo": "icon:house",
+			"requires": "local_channel"
+		},
+		{
+			"name": "Connections",
+			"label": "Connections",
+			"url": "https://hz-ddev.ddev.site/connections",
+			"photo": "icon:people",
+			"requires": "local_channel"
+		},
+		{
+			"name": "Contact Roles",
+			"label": "Contact Roles",
+			"url": "https://hz-ddev.ddev.site/permcats",
+			"photo": "icon:person-lock",
+			"requires": "local_channel"
+		},
+		{
+			"name": "Directory",
+			"label": "Directory",
+			"url": "https://hz-ddev.ddev.site/directory",
+			"photo": "icon:diagram-3",
+			"requires": ""
+		},
+		{
+			"name": "Files",
+			"label": "Files",
+			"url": "https://hz-ddev.ddev.site/cloud/aristotle",
+			"photo": "icon:folder",
+			"requires": "local_channel"
+		},
+		{
+			"name": "Help",
+			"label": "Help",
+			"url": "https://hz-ddev.ddev.site/help",
+			"photo": "icon:question-lg",
+			"requires": ""
+		},
+		{
+			"name": "Invite",
+			"label": "Invite",
+			"url": "https://hz-ddev.ddev.site/invite",
+			"photo": "icon:person-plus",
+			"requires": "local_channel"
+		},
+		{
+			"name": "Notes",
+			"label": "Notes",
+			"url": "https://hz-ddev.ddev.site/notes",
+			"photo": "icon:sticky",
+			"requires": "local_channel"
+		},
+		{
+			"name": "PDL Editor",
+			"label": "PDL Editor",
+			"url": "https://hz-ddev.ddev.site/pdledit_gui",
+			"photo": "icon:columns-gap",
+			"requires": "local_channel"
+		},
+		{
+			"name": "Photos",
+			"label": "Photos",
+			"url": "https://hz-ddev.ddev.site/photos/aristotle",
+			"photo": "icon:image",
+			"requires": "local_channel"
+		},
+		{
+			"name": "Post",
+			"label": "Post",
+			"url": "https://hz-ddev.ddev.site/rpost",
+			"photo": "icon:pencil-fill",
+			"requires": "observer"
+		},
+		{
+			"name": "Privacy Groups",
+			"label": "Privacy Groups",
+			"url": "https://hz-ddev.ddev.site/group",
+			"photo": "icon:file-lock",
+			"requires": "local_channel"
+		},
+		{
+			"name": "Public Stream",
+			"label": "Public Stream",
+			"url": "https://hz-ddev.ddev.site/pubstream",
+			"photo": "icon:globe",
+			"requires": "public_stream"
+		},
+		{
+			"name": "Search",
+			"label": "Search",
+			"url": "https://hz-ddev.ddev.site/search",
+			"photo": "icon:search",
+			"requires": ""
+		},
+		{
+			"name": "Suggest Channels",
+			"label": "Suggest Channels",
+			"url": "https://hz-ddev.ddev.site/suggest",
+			"photo": "icon:person-lines-fill",
+			"requires": "local_channel"
+		}
+	],
+	"channel_tabs": [],
+	"has_public_stream": true
+}

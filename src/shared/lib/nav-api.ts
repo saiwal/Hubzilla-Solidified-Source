@@ -3,6 +3,7 @@
 export interface NavViewer {
   is_local: boolean;
   is_owner: boolean;
+is_remote: boolean;
   is_admin: boolean;
   nick: string;
   name: string;

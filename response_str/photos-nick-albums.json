@@ -1,0 +1,32 @@
+{
+	"data": [
+		{
+			"album": "2026-01",
+			"folder": "9251f648-b138-4290-9027-32043d7c2f63",
+			"total": 2,
+			"url": "https://hz-ddev.ddev.site/photos/aristotle/album/9251f648-b138-4290-9027-32043d7c2f63",
+			"thumb": "https://hz-ddev.ddev.site/photo/7e8544f0-7966-4d46-aad7-d76dd9ffd18a-2.jpg"
+		},
+		{
+			"album": "2026-02",
+			"folder": "f2f8c777-f228-4aef-a6b6-92c862bb229e",
+			"total": 2,
+			"url": "https://hz-ddev.ddev.site/photos/aristotle/album/f2f8c777-f228-4aef-a6b6-92c862bb229e",
+			"thumb": "https://hz-ddev.ddev.site/photo/aac3ba6c-4973-4cde-ae41-100a0046178b-2.webp"
+		},
+		{
+			"album": "Cover Photos",
+			"folder": "7009eb3c-3053-4069-929b-aa5be63d4e90",
+			"total": 1,
+			"url": "https://hz-ddev.ddev.site/photos/aristotle/album/7009eb3c-3053-4069-929b-aa5be63d4e90",
+			"thumb": "https://hz-ddev.ddev.site/photo/93e4bd3e-037c-4089-8bcc-09e0d6ac7e55-2.jpg"
+		},
+		{
+			"album": "Profile Photos",
+			"folder": "811e4ab9-39d6-4c5e-b973-e56d9ba2973c",
+			"total": 1,
+			"url": "https://hz-ddev.ddev.site/photos/aristotle/album/811e4ab9-39d6-4c5e-b973-e56d9ba2973c",
+			"thumb": "https://hz-ddev.ddev.site/photo/89db8f8e-e1c1-48db-8a98-6fd9661b3e8f-2.png"
+		}
+	]
+}
