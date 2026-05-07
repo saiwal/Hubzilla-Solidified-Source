@@ -2,6 +2,7 @@
 import { createMemo } from "solid-js";
 import { useLocation } from "@solidjs/router";
 import { useAuth } from "./auth-store";
+import { useNavViewer } from "./nav-store";
 
 export type ViewerRole = "owner" | "local" | "remote" | "anonymous" | "admin";
 
@@ -18,7 +19,18 @@ export function useSubjectNick(): () => string {
     const parts = location.pathname.split("/").filter(Boolean);
     // Any route with shape /:module/:nick — channel, photos, etc.
     // parts[0] = module, parts[1] = nick
-    const modulesWithNick = ["channel", "photos", "articles", "cart", "chat", "calendar", "cloud", "webpages","wiki" ,"cal"];
+    const modulesWithNick = [
+      "channel",
+      "photos",
+      "articles",
+      "cart",
+      "chat",
+      "calendar",
+      "cloud",
+      "webpages",
+      "wiki",
+      "cal",
+    ];
     if (parts[1] && modulesWithNick.includes(parts[0])) return parts[1];
     return "";
   });
@@ -36,18 +48,19 @@ export function useSubjectNick(): () => string {
 export function useViewerRole(): () => ViewerRole {
   const auth = useAuth();
   const subjectNick = useSubjectNick();
-
+  const navViewer = useNavViewer();
   return createMemo((): ViewerRole => {
     const a = auth();
-    if (!a) return "anonymous";
-    if (!a.isLoggedIn) return "anonymous";
+    const viewer = navViewer();
+
+    if (viewer?.is_remote) return "remote";
+
+    if (!a || !a.isLoggedIn) return "anonymous";
     if (!a.isLocal) return "remote";
-    // if (a.isAdmin) return "admin";
-    // On a channel page, check if it's their own
+
     if (subjectNick()) {
       return a.nick === subjectNick() ? "owner" : "local";
     }
-    // No subject in URL (e.g. /hq, /network) — local user is always owner
     return "owner";
   });
 }

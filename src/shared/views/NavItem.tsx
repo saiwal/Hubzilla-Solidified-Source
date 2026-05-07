@@ -1,5 +1,6 @@
 import { A } from "@solidjs/router";
 import type { Component, JSX } from "solid-js";
+import { Show } from "solid-js";
 import {
   MdFillHome,
   MdFillGrid_view,
@@ -83,26 +84,52 @@ interface Props {
   icon?: string;
 }
 
+const itemClass =
+  "group relative flex items-center gap-3 rounded-xl px-2.5 py-2 " +
+  "text-sm text-[var(--nav-text)] transition-colors duration-150 " +
+  "hover:bg-[var(--nav-hover)] hover:text-[var(--nav-text-active)]";
+
+// const activeClass = "!bg-[var(--nav-active)] !text-[var(--nav-text-active)] font-medium";
+
 const NavItem: Component<Props> = (props) => {
   const href = () =>
     typeof props.href === "function" ? props.href() : props.href;
   const label = () =>
     typeof props.label === "function" ? props.label() : props.label;
 
-  return (
-    <A
-      href={href()}
-      end={href() === "/"}
-      class="group relative flex items-center gap-3 rounded-xl px-2.5 py-2
-             text-sm text-[var(--nav-text)] transition-colors duration-150
-             hover:bg-[var(--nav-hover)] hover:text-[var(--nav-text-active)]"
-      activeClass="!bg-[var(--nav-active)] !text-[var(--nav-text-active)] font-medium"
-    >
+  // Absolute URLs (http/https) must do a hard navigation so the target
+  // domain serves its own theme rather than the SPA intercepting the route.
+  const isAbsolute = () => /^https?:\/\//.test(href());
+
+  const content = () => (
+    <>
       <span class="shrink-0 w-5 h-5 flex items-center justify-center">
         {getNavIcon(props.icon, 20)}
       </span>
       <span class="truncate leading-none label">{label()}</span>
-    </A>
+    </>
+  );
+
+  return (
+    <Show
+      when={isAbsolute()}
+      fallback={
+        <A href={href()} end={href() === "/"} class={itemClass}>
+          {content()}
+        </A>
+      }
+    >
+      <a
+        href={href()}
+        class={itemClass}
+        onClick={(e) => {
+          e.preventDefault();
+          window.location.replace(href());
+        }}
+      >
+        {content()}
+      </a>
+    </Show>
   );
 };
 

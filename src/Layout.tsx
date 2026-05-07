@@ -84,7 +84,6 @@ const Layout: ParentComponent = (props) => {
   const isMedium = createMediaQuery("(min-width: 768px)");
   const bottomLimit = () => (isMedium() ? 8 : 4);
   const bottomItems = () => navItems().slice(0, bottomLimit());
-  const moreItems = () => navItems().slice(bottomLimit());
 
   return (
     <div class="fixed inset-0 bg-base text-txt">

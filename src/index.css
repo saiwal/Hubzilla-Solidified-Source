@@ -33,5 +33,7 @@
   /* accent */
   --color-accent:       var(--color-accent);
   --color-accent-muted: var(--color-accent-muted);
-  --color-accent-txt:   var(--color-accent-txt);
+  --color-accent-txt:   var(--color-accent-txt); 
+
+  /* --radius-xl: var(--radius-xl); */
 }
