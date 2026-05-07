@@ -19,6 +19,7 @@ import {
 import { useI18n } from "@/i18n";
 import { BiRegularLinkExternal } from "solid-icons/bi";
 import CommentComposer from "@/shared/editor/composers/CommentComposer";
+import DOMPurify from "dompurify";
 
 export type { StreamHandlers as PostActions };
 
@@ -276,7 +277,7 @@ export default function PostCard(props: {
         <div
           class="mt-6 prose prose-sm dark:prose-invert max-w-none
                  [&>*]:font-bold [&>*]:tracking-tight [&>*]:text-lg [&>*]:text-txt"
-          innerHTML={props.post.title}
+          innerHTML={DOMPurify.sanitize(props.post.title!)}
         />
       </Show>
 

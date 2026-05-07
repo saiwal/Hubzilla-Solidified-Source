@@ -5,6 +5,7 @@ import type { StreamHandlers } from "../types";
 import PostDetailModal from "@/shared/views/PostDetailModal";
 import formatPostDate from "@/shared/lib/date";
 import { useI18n } from "@/i18n";
+import DOMPurify from "dompurify";
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
@@ -40,7 +41,7 @@ function ListRow(props: { post: ThreadNode; handlers: StreamHandlers; index: num
 
         <span class="flex-1 text-xs text-muted truncate min-w-0">
           <Show when={p.title}>
-            <span class="font-medium text-txt mr-1.5">{p.title}</span>
+            <span class="font-medium text-txt mr-1.5" innerHTML={DOMPurify.sanitize(p.title!)} />
           </Show>
           {preview}
         </span>

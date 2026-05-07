@@ -6,6 +6,7 @@ import formatPostDate from "@/shared/lib/date";
 import { useI18n } from "@/i18n";
 import CommentComposer from "@/shared/editor/composers/CommentComposer";
 import { useAuth } from "@/shared/store/auth-store";
+import DOMPurify from "dompurify";
 function flattenThread(node: ThreadNode): ThreadNode[] {
   return [node, ...node.children.flatMap(flattenThread)];
 }
@@ -192,7 +193,7 @@ function InboxRow(props: {
 
         <span class="flex-1 text-xs min-w-0 truncate">
           <Show when={p.title}>
-            <span class="font-medium text-txt mr-1.5">{p.title}</span>
+            <span class="font-medium text-txt mr-1.5" innerHTML={DOMPurify.sanitize(p.title!)} />
           </Show>
           <span class="text-muted">{preview}</span>
         </span>
