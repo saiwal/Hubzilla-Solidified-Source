@@ -43,6 +43,7 @@ const ICON_MAP: Record<string, (size: number) => JSX.Element> = {
   photos: (s) => <MdFillImage size={s} />,
   folder: (s) => <MdFillFolder size={s} />,
   files: (s) => <MdFillFolder size={s} />,
+  cloud: (s) => <MdFillFolder size={s} />,
   calendar: (s) => <MdFillCalendar_month size={s} />,
   chat: (s) => <MdFillChat size={s} />,
   bookmark: (s) => <MdFillBookmark size={s} />,

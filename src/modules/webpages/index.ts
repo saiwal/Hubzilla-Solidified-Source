@@ -14,7 +14,7 @@ registerModule({
     icon: 'webpages',
     path: '/webpages',
     href: () => `/webpages/${usePageNick()()}`,
-    context: ['all'],
+    context: 'all',
   },
   permissions: [],
 });

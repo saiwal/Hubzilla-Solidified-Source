@@ -5,13 +5,14 @@ import { usePageNick } from "@/shared/store/site-config";
 registerModule({
   id: "files",
   routes: [
+    { path: "/cloud", component: () => import("./views/FilesView") },
     { path: "/cloud/:nick", component: () => import("./views/FilesView") },
   ],
 
   navItem: {
     label: () => useI18n().t("nav.files"),
-    icon: "grid",
-    path: "/files",
+    icon: "folder",
+    path: "/cloud",
     href: () => `/cloud/${usePageNick()()}`,
 		context: "all",
   },
