@@ -59,7 +59,7 @@ const sortedThemes = createMemo(() =>
                   <button
                     onClick={() => {
                       switchTheme(t.id);
-                      setOpen(false);
+                      // setOpen(false);
                     }}
                     class={`group rounded-lg border p-2 text-left transition-all
                       ${
