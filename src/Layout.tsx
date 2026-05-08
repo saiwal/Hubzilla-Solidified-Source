@@ -265,7 +265,7 @@ const Layout: ParentComponent = (props) => {
               bg-surface border-t border-rim
               rounded-t-2xl shadow-2xl px-0 pt-0 pb-3
               transform transition-transform duration-300 ease-in-out
-              max-h-[72vh] overflow-y-auto
+              max-h-[72vh] overflow-visible
               ${moreOpen() ? "translate-y-0 bottom-16" : "translate-y-full bottom-16"}
             `}
           >
