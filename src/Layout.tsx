@@ -251,7 +251,7 @@ const Layout: ParentComponent = (props) => {
           {/* Backdrop */}
           <Show when={rightOpen() || moreOpen()}>
             <div
-              class="fixed inset-0 z-30 bg-black/25 backdrop-blur-[1px] lg:hidden"
+              class="fixed inset-0 z-30 bg-black/25 lg:hidden"
               onClick={closeAll}
             />
           </Show>
