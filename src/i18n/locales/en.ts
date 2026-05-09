@@ -27,6 +27,7 @@ export type RawDictionary = {
     register: string;
     siteinfo: string;
     pubsites: string;
+    pubstream: string;
   };
   layout: {
     title: string;
@@ -78,6 +79,7 @@ export const dict: RawDictionary = {
     register: "Register",
     siteinfo: "Siteinfo",
     pubsites: "Pubsites",
+    pubstream: "Pubstream",
   },
   layout: {
     title: "Hubzilla",
@@ -98,5 +100,4 @@ export const dict: RawDictionary = {
     load_error: "Load Error",
     show_more_tags: "Show more tags",
   },
-
 };
