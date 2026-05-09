@@ -1,0 +1,167 @@
+// src/shared/stream/components/TagWidget.tsx
+//
+// API: GET /api/stream-widgets/tags?channel_nick=<nick>&type=<articles|posts>
+// Response: { data: { tags: { name: string; count: number }[] } }
+
+import {
+  type Component,
+  createResource,
+  createSignal,
+  For,
+  Show,
+} from "solid-js";
+import { useI18n } from "@/i18n";
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export interface TagItem {
+  name: string;
+  count: number;
+}
+
+// ---------------------------------------------------------------------------
+// Fetch
+// ---------------------------------------------------------------------------
+
+async function fetchTags(params: {
+  channelNick?: string;
+  type?: "articles" | "posts";
+}): Promise<TagItem[]> {
+  const url = new URL("/api/stream-widgets/tags", window.location.origin);
+  if (params.channelNick) url.searchParams.set("channel_nick", params.channelNick);
+  if (params.type) url.searchParams.set("type", params.type);
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+  const data = json.data ?? json;
+  return data.tags ?? [];
+}
+
+// ---------------------------------------------------------------------------
+// Skeleton
+// ---------------------------------------------------------------------------
+
+function TagSkeleton() {
+  const widths = [60, 80, 45, 70, 55, 90, 50, 65];
+  return (
+    <div class="px-4 py-3 flex flex-wrap gap-1.5 animate-pulse">
+      <For each={widths}>
+        {(w) => (
+          <div
+            class="h-6 bg-elevated rounded-full"
+            style={{ width: `${w}px` }}
+          />
+        )}
+      </For>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Props
+// ---------------------------------------------------------------------------
+
+export interface TagWidgetProps {
+  channelNick?: string;
+  type?: "articles" | "posts";
+  /** Called when the user clicks a tag */
+  onTagClick?: (tag: string) => void;
+  /** Pre-fetched data — skips the internal fetch when provided */
+  data?: TagItem[];
+  /** Max tags before the "show more" collapse. Default: 20 */
+  maxVisible?: number;
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+const TagWidget: Component<TagWidgetProps> = (props) => {
+  const { t } = useI18n();
+  const [expanded, setExpanded] = createSignal(false);
+  const max = () => props.maxVisible ?? 20;
+
+  const [remote] = createResource(
+    () =>
+      props.data
+        ? null
+        : { channelNick: props.channelNick, type: props.type },
+    (p) => (p ? fetchTags(p) : Promise.resolve([])),
+  );
+
+  const tags = (): TagItem[] => props.data ?? remote() ?? [];
+  const maxCount = () => Math.max(...tags().map((t) => t.count), 1);
+  const visibleTags = () => (expanded() ? tags() : tags().slice(0, max()));
+  const hiddenCount = () => tags().length - max();
+
+  return (
+    <div class="bg-surface border border-rim rounded-xl overflow-hidden">
+      {/* Header */}
+      <div class="px-4 py-3 border-b border-rim">
+        <h3 class="text-sm font-semibold text-txt">{t("widgets.tags")}</h3>
+      </div>
+
+      {/* Loading */}
+      <Show when={!props.data && remote.loading}>
+        <TagSkeleton />
+      </Show>
+
+      {/* Error */}
+      <Show when={remote.error && !remote.loading}>
+        <p class="px-4 py-3 text-xs text-red-500">
+          {t("widgets.load_error")}: {remote.error?.message}
+        </p>
+      </Show>
+
+      {/* Content */}
+      <Show when={!remote.loading && !remote.error}>
+        <Show
+          when={tags().length > 0}
+          fallback={
+            <p class="px-4 py-3 text-xs text-muted">{t("widgets.no_tags")}</p>
+          }
+        >
+          <div class="px-4 py-3 flex flex-wrap gap-1.5">
+            <For each={visibleTags()}>
+              {(tag) => {
+                // Scale font between 11 px (min) and 17 px (max) by relative weight
+                const weight = tag.count / maxCount();
+                const size = Math.round(11 + weight * 6);
+                return (
+                  <button
+                    onClick={() => props.onTagClick?.(tag.name)}
+                    style={{ "font-size": `${size}px` }}
+                    class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full
+                           bg-accent-muted text-accent hover:bg-accent hover:text-base
+                           transition-colors leading-tight"
+                    title={`${tag.count} post${tag.count !== 1 ? "s" : ""}`}
+                  >
+                    <span>#</span>
+                    <span>{tag.name}</span>
+                  </button>
+                );
+              }}
+            </For>
+          </div>
+
+          {/* Expand / collapse */}
+          <Show when={tags().length > max()}>
+            <button
+              onClick={() => setExpanded((v) => !v)}
+              class="w-full px-4 py-2 text-xs text-muted hover:text-txt
+                     border-t border-rim text-center transition-colors"
+            >
+              {expanded()
+                ? t("ui.show_less")
+                : t("widgets.show_more_tags", { count: hiddenCount() })}
+            </button>
+          </Show>
+        </Show>
+      </Show>
+    </div>
+  );
+};
+
+export default TagWidget;

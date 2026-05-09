@@ -2,6 +2,19 @@ import { registerModule } from "@/shared/lib/module-registry";
 import { useI18n } from "@/i18n";
 import { usePageNick } from "@/shared/store/site-config";
 
+const popularLoader = () =>
+  import("./widgets/ArticleWidgets").then((m) => ({
+    default: m.ArticlePopularWidget,
+  }));
+const categoryLoader = () =>
+  import("./widgets/ArticleWidgets").then((m) => ({
+    default: m.ArticleCategoryWidget,
+  }));
+const tagLoader = () =>
+  import("./widgets/ArticleWidgets").then((m) => ({
+    default: m.ArticleTagWidget,
+  }));
+
 registerModule({
   id: "articles",
   routes: [
@@ -15,7 +28,6 @@ registerModule({
       component: () => import("./views/ArticleView"),
     },
   ],
-
   navItem: {
     label: () => useI18n().t("nav.articles"),
     icon: "article",
@@ -24,6 +36,8 @@ registerModule({
     context: "all",
     hidden: false,
   },
-  slots: { },
+  slots: {
+    right: [popularLoader, categoryLoader, tagLoader],
+  },
   permissions: [],
 });
