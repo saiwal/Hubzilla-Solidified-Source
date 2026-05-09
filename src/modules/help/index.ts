@@ -1,20 +1,24 @@
+// src/modules/help/index.tsx
 import { registerModule } from "@/shared/lib/module-registry";
-import { useI18n } from "@/i18n";
 
 registerModule({
   id: "help",
   routes: [
-    { path: "/help", component: () => import("./views/HelpView") },
+    {
+      path: "/help",
+      component: () => import("./views/HelpView"),
+    },
+    {
+      // Wildcard captures any depth: /help/about, /help/admin/toc, etc.
+      path: "/help/*topic",
+      component: () => import("./views/HelpView"),
+    },
   ],
-
   navItem: {
-    label: () => useI18n().t("nav.help"),
-    icon: "help",
+    label: () => "Help",
+    href: "/help",
     path: "/help",
-    href: "/help/",
-		context: "all",
+    icon: "question",
+    context: "all",
   },
-  slots: {
-  },
-  permissions: [],
 });
