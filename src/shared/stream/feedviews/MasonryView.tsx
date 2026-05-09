@@ -242,7 +242,7 @@ function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers }) {
       </div>
 
       <Show when={showModal()}>
-        <PostDetailModal uuid={p.uuid} onClose={() => setShowModal(false)} />
+        <PostDetailModal uuid={p.uuid} onClose={() => setShowModal(false)}  handlers={props.handlers}/>
       </Show>
     </>
   );

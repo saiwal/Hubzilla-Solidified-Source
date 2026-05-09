@@ -133,13 +133,13 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
   return (
     <Portal>
       <div
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
         onClick={(e) => {
           if (e.target === e.currentTarget) props.onClose();
         }}
       >
         <div
-          class="relative w-full max-w-full lg:max-w-[50%] max-h-[90vh] flex flex-col
+          class="relative w-full max-w-full lg:max-w-[50%] max-h-[90svh] flex flex-col
                  bg-base rounded-2xl shadow-2xl overflow-hidden"
         >
           {/* Header */}
@@ -158,7 +158,7 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
           </div>
 
           {/* Scrollable body */}
-          <div class="flex-1 overflow-y-auto p-4">
+          <div class="flex-1 overflow-y-auto p-4" style={{ "-webkit-overflow-scrolling": "touch" }} onClick={(e) => e.stopPropagation()}>
             <Show when={node.loading}>
               <div class="space-y-4 animate-pulse">
                 <div class="bg-surface rounded-2xl p-5">
