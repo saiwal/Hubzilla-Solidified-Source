@@ -149,20 +149,7 @@ function DocNav(props: {
 
   return (
     <nav aria-label="Documentation navigation"
-      class="w-56 shrink-0 space-y-4">
-
-      {/* Section switcher */}
-      <div class="flex gap-1 p-1 bg-elevated rounded-lg">
-        {(["user", "dev"] as const).map((s) => (
-          <A href={`/help/${s}`}
-            class={`flex-1 text-center text-xs py-1 rounded-md transition-colors font-medium
-              ${props.section === s
-                ? "bg-accent text-accent-txt"
-                : "text-muted hover:text-txt"}`}>
-            {s === "user" ? "User" : "Developer"}
-          </A>
-        ))}
-      </div>
+      class="w-56 shrink-0 space-y-2">
 
       {/* Tree */}
       <Show when={!navData.loading} fallback={<NavSkeleton />}>
@@ -215,6 +202,52 @@ function ContentSkeleton() {
   );
 }
 
+// ── Mobile nav drawer ─────────────────────────────────────────────────────────
+
+function MobileNavDrawer(props: {
+  section: string;
+  lang: string;
+  activePath: string;
+  toc: TocEntry[];
+  activeId: string;
+}) {
+  const [open, setOpen] = createSignal(false);
+
+  return (
+    <div class="border border-rim rounded-xl overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        class="flex items-center justify-between w-full px-4 py-2.5
+               bg-surface text-sm font-medium text-txt"
+      >
+        <span>Navigation</span>
+        <svg
+          class={`w-4 h-4 text-muted transition-transform ${open() ? "rotate-180" : ""}`}
+          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      <Show when={open()}>
+        <div class="border-t border-rim bg-surface p-3 space-y-4"
+          onClick={() => setOpen(false)}>
+          <Show when={props.toc.length > 1}>
+            <TableOfContents entries={props.toc} activeId={props.activeId} />
+            <hr class="border-rim" />
+          </Show>
+          <DocNav
+            section={props.section}
+            lang={props.lang}
+            activePath={props.activePath}
+          />
+        </div>
+      </Show>
+    </div>
+  );
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function HelpView() {
@@ -243,6 +276,13 @@ export default function HelpView() {
   const [activeId, setActiveId] = createSignal("");
   let bodyRef: HTMLDivElement | undefined;
 
+  // Clear TOC whenever the route changes so stale entries don't linger
+  createEffect(() => {
+    section(); topic(); // track both
+    setToc([]);
+    setActiveId("");
+  });
+
   createEffect(() => {
     const html = rendered();
     if (!html || !bodyRef) return;
@@ -270,12 +310,31 @@ export default function HelpView() {
   });
 
   return (
-    <div class="max-w-6xl mx-auto py-4">
+    <div class="max-w-6xl mx-auto py-4 space-y-4">
+
+      {/* ── Section switcher — always visible ── */}
+      <div class="flex gap-1 p-1 bg-elevated rounded-lg w-fit">
+        {(["user", "admin", "dev"] as const).map((s) => (
+          <A href={`/help/${s}`}
+            class={`px-3 text-center text-xs py-1 rounded-md transition-colors font-medium
+              ${section() === s
+                ? "bg-accent text-base font-semibold"
+                : "text-muted hover:text-txt"}`}>
+            {s === "user" ? "User" : s === "admin" ? "Admin" : "Developer"}
+          </A>
+        ))}
+      </div>
+
       <div class="flex gap-6">
 
-        {/* ── Sidebar nav ── */}
-        <div class="hidden md:block">
-          <div class="sticky top-20">
+        {/* ── Left sidebar: TOC + nav ── */}
+        {/* ── Desktop sidebar: TOC + nav ── */}
+        <div class="hidden md:block w-56 shrink-0">
+          <div class="sticky top-20 space-y-4">
+            <Show when={toc().length > 1}>
+              <TableOfContents entries={toc()} activeId={activeId()} />
+              <hr class="border-rim" />
+            </Show>
             <DocNav
               section={section()}
               lang={lang()}
@@ -285,8 +344,8 @@ export default function HelpView() {
         </div>
 
         {/* ── Content ── */}
-        <div class="flex-1 min-w-0 xl:flex xl:gap-8">
-          <article class="flex-1 min-w-0 space-y-5">
+        <div class="flex-1 min-w-0">
+          <article class="min-w-0 space-y-5">
 
             <Show when={topicData.loading}>
               <ContentSkeleton />
@@ -305,12 +364,16 @@ export default function HelpView() {
 
             <Show when={!topicData.loading && topicData()}>
               <>
-                {/* TOC inline on small screens */}
-                <Show when={toc().length > 2}>
-                  <div class="xl:hidden">
-                    <TableOfContents entries={toc()} activeId={activeId()} />
-                  </div>
-                </Show>
+                {/* Mobile: collapsible TOC + nav drawer */}
+                <div class="md:hidden space-y-3">
+                  <MobileNavDrawer
+                    section={section()}
+                    lang={lang()}
+                    activePath={topic()}
+                    toc={toc()}
+                    activeId={activeId()}
+                  />
+                </div>
 
                 {/* Body */}
                 <div
@@ -325,15 +388,6 @@ export default function HelpView() {
               </>
             </Show>
           </article>
-
-          {/* ── Floating TOC sidebar (xl+) ── */}
-          <Show when={toc().length > 2}>
-            <aside class="hidden xl:block shrink-0 w-48">
-              <div class="sticky top-20">
-                <TableOfContents entries={toc()} activeId={activeId()} />
-              </div>
-            </aside>
-          </Show>
         </div>
       </div>
     </div>
