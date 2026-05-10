@@ -36,32 +36,37 @@ function TableOfContents(props: { entries: TocEntry[]; activeId: string }) {
 
   return (
     <nav aria-label="On this page"
-      class="bg-surface xl:bg-transparent border border-rim xl:border-0
-             rounded-xl xl:rounded-none p-3 xl:p-0">
+      class="bg-surface md:bg-transparent border border-rim md:border-0
+             rounded-xl md:rounded-none p-3 md:p-0">
       <button type="button" onClick={() => setOpen((v) => !v)}
-        class="flex items-center justify-between w-full xl:cursor-default">
+        class="flex items-center justify-between w-full md:cursor-default md:pointer-events-none">
         <span class="text-xs font-semibold uppercase tracking-wide text-muted">On this page</span>
-        <span class="xl:hidden text-muted text-xs">{open() ? "▲" : "▼"}</span>
+        <span class="md:hidden text-muted text-xs">{open() ? "▲" : "▼"}</span>
       </button>
-      <Show when={open()}>
-        <div class="mt-2 space-y-0.5 max-h-[40vh] xl:max-h-[60vh] overflow-y-auto">
-          <For each={props.entries}>
-            {(e) => (
-              <a href={`#${e.id}`}
-                onClick={(ev) => {
-                  ev.preventDefault();
-                  document.getElementById(e.id)?.scrollIntoView({ behavior: "smooth" });
-                  if (window.innerWidth < 1280) setOpen(false);
-                }}
-                class={`block text-xs py-0.5 px-1 rounded transition-colors truncate ${indent(e.level)}
-                  ${props.activeId === e.id ? "text-accent font-medium" : "text-muted hover:text-txt"}`}>
-                {e.text}
-              </a>
-            )}
-          </For>
-        </div>
+      <Show when={open()} fallback={<div class="md:block hidden"><TocList entries={props.entries} activeId={props.activeId} min={min()} indent={indent} /></div>}>
+        <TocList entries={props.entries} activeId={props.activeId} min={min()} indent={indent} />
       </Show>
     </nav>
+  );
+}
+
+function TocList(props: { entries: TocEntry[]; activeId: string; min: number; indent: (l: number) => string }) {
+  return (
+    <div class="mt-2 space-y-0.5 max-h-[40vh] md:max-h-[60vh] overflow-y-auto">
+      <For each={props.entries}>
+        {(e) => (
+          <a href={`#${e.id}`}
+            onClick={(ev) => {
+              ev.preventDefault();
+              document.getElementById(e.id)?.scrollIntoView({ behavior: "smooth" });
+            }}
+            class={`block text-xs py-0.5 px-1 rounded transition-colors truncate ${props.indent(e.level)}
+              ${props.activeId === e.id ? "text-accent font-medium" : "text-muted hover:text-txt"}`}>
+            {e.text}
+          </a>
+        )}
+      </For>
+    </div>
   );
 }
 
