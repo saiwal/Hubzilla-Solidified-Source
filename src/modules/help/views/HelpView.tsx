@@ -14,7 +14,11 @@ import { fetchNav, fetchTopic, type NavNode } from "../api";
 
 // ── types ─────────────────────────────────────────────────────────────────────
 
-interface TocEntry { id: string; text: string; level: number }
+interface TocEntry {
+  id: string;
+  text: string;
+  level: number;
+}
 
 // ── TOC ───────────────────────────────────────────────────────────────────────
 
@@ -35,33 +39,66 @@ function TableOfContents(props: { entries: TocEntry[]; activeId: string }) {
   const indent = (l: number) => ["", "pl-3", "pl-6"][Math.min(l - min(), 2)];
 
   return (
-    <nav aria-label="On this page"
+    <nav
+      aria-label="On this page"
       class="bg-surface md:bg-transparent border border-rim md:border-0
-             rounded-xl md:rounded-none p-3 md:p-0">
-      <button type="button" onClick={() => setOpen((v) => !v)}
-        class="flex items-center justify-between w-full md:cursor-default md:pointer-events-none">
-        <span class="text-xs font-semibold uppercase tracking-wide text-muted">On this page</span>
+             rounded-xl md:rounded-none p-3 md:p-0"
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        class="flex items-center justify-between w-full md:cursor-default md:pointer-events-none"
+      >
+        <span class="text-xs font-semibold uppercase tracking-wide text-muted">
+          On this page
+        </span>
         <span class="md:hidden text-muted text-xs">{open() ? "▲" : "▼"}</span>
       </button>
-      <Show when={open()} fallback={<div class="md:block hidden"><TocList entries={props.entries} activeId={props.activeId} min={min()} indent={indent} /></div>}>
-        <TocList entries={props.entries} activeId={props.activeId} min={min()} indent={indent} />
+      <Show
+        when={open()}
+        fallback={
+          <div class="md:block hidden">
+            <TocList
+              entries={props.entries}
+              activeId={props.activeId}
+              min={min()}
+              indent={indent}
+            />
+          </div>
+        }
+      >
+        <TocList
+          entries={props.entries}
+          activeId={props.activeId}
+          min={min()}
+          indent={indent}
+        />
       </Show>
     </nav>
   );
 }
 
-function TocList(props: { entries: TocEntry[]; activeId: string; min: number; indent: (l: number) => string }) {
+function TocList(props: {
+  entries: TocEntry[];
+  activeId: string;
+  min: number;
+  indent: (l: number) => string;
+}) {
   return (
     <div class="mt-2 space-y-0.5 max-h-[40vh] md:max-h-[60vh] overflow-y-auto">
       <For each={props.entries}>
         {(e) => (
-          <a href={`#${e.id}`}
+          <a
+            href={`#${e.id}`}
             onClick={(ev) => {
               ev.preventDefault();
-              document.getElementById(e.id)?.scrollIntoView({ behavior: "smooth" });
+              document
+                .getElementById(e.id)
+                ?.scrollIntoView({ behavior: "smooth" });
             }}
             class={`block text-xs py-0.5 px-1 rounded transition-colors truncate ${props.indent(e.level)}
-              ${props.activeId === e.id ? "text-accent font-medium" : "text-muted hover:text-txt"}`}>
+              ${props.activeId === e.id ? "text-accent font-medium" : "text-muted hover:text-txt"}`}
+          >
             {e.text}
           </a>
         )}
@@ -79,11 +116,14 @@ function NavItem(props: {
   depth: number;
 }) {
   const isActive = () => props.activePath === props.node.path;
-  const anyChildActive = () => props.activePath.startsWith(props.node.path + "/");
+  const anyChildActive = () =>
+    props.activePath.startsWith(props.node.path + "/");
   const [open, setOpen] = createSignal(isActive() || anyChildActive());
 
   // Keep open when a child becomes active
-  createEffect(() => { if (anyChildActive()) setOpen(true); });
+  createEffect(() => {
+    if (anyChildActive()) setOpen(true);
+  });
 
   const href = `/help/${props.section}/${props.node.path}`;
   const hasChildren = props.node.children.length > 0;
@@ -93,32 +133,51 @@ function NavItem(props: {
     <li>
       <div class="flex items-center gap-1" style={{ "padding-left": indent }}>
         {/* Expand toggle — only shown when has children */}
-        <Show when={hasChildren}
-          fallback={<span class="w-4 shrink-0" />}>
-          <button type="button"
+        <Show when={hasChildren} fallback={<span class="w-4 shrink-0" />}>
+          <button
+            type="button"
             onClick={() => setOpen((v) => !v)}
             class="w-4 h-4 shrink-0 flex items-center justify-center
-                   text-subtle hover:text-txt transition-colors rounded">
-            <svg class={`w-2.5 h-2.5 transition-transform ${open() ? "rotate-90" : ""}`}
-              fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+                   text-subtle hover:text-txt transition-colors rounded"
+          >
+            <svg
+              class={`w-2.5 h-2.5 transition-transform ${open() ? "rotate-90" : ""}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.5"
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </button>
         </Show>
 
-        <Show when={props.node.hasContent}
+        <Show
+          when={props.node.hasContent}
           fallback={
-            <button type="button" onClick={() => setOpen((v) => !v)}
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
               class={`flex-1 text-left text-xs py-1 px-1.5 rounded transition-colors
-                ${isActive() ? "text-accent font-semibold" : "text-muted hover:text-txt font-medium"}`}>
+                ${isActive() ? "text-accent font-semibold" : "text-muted hover:text-txt font-medium"}`}
+            >
               {props.node.label}
             </button>
-          }>
-          <A href={href}
+          }
+        >
+          <A
+            href={href}
             class={`flex-1 text-xs py-1 px-1.5 rounded transition-colors truncate
-              ${isActive()
-                ? "text-accent font-semibold bg-accent-muted"
-                : "text-muted hover:text-txt hover:bg-elevated"}`}>
+              ${
+                isActive()
+                  ? "text-accent font-semibold bg-accent-muted"
+                  : "text-muted hover:text-txt hover:bg-elevated"
+              }`}
+          >
             {props.node.label}
           </A>
         </Show>
@@ -142,20 +201,14 @@ function NavItem(props: {
   );
 }
 
-function DocNav(props: {
-  section: string;
-  lang: string;
-  activePath: string;
-}) {
+function DocNav(props: { section: string; lang: string; activePath: string }) {
   const [navData] = createResource(
     () => ({ section: props.section, lang: props.lang }),
     ({ section, lang }) => fetchNav(section, lang),
   );
 
   return (
-    <nav aria-label="Documentation navigation"
-      class="w-56 shrink-0 space-y-2">
-
+    <nav aria-label="Documentation navigation" class="w-56 shrink-0 space-y-2">
       {/* Tree */}
       <Show when={!navData.loading} fallback={<NavSkeleton />}>
         <Show when={navData()} keyed>
@@ -184,8 +237,13 @@ function NavSkeleton() {
     <div class="space-y-2 animate-pulse">
       <For each={Array(6).fill(0)}>
         {(_, i) => (
-          <div class="h-3 bg-elevated rounded"
-            style={{ width: `${60 + (i() % 3) * 15}%`, "margin-left": `${(i() % 2) * 12}px` }} />
+          <div
+            class="h-3 bg-elevated rounded"
+            style={{
+              width: `${60 + (i() % 3) * 15}%`,
+              "margin-left": `${(i() % 2) * 12}px`,
+            }}
+          />
         )}
       </For>
     </div>
@@ -200,7 +258,12 @@ function ContentSkeleton() {
       <div class="h-7 bg-elevated rounded w-1/2" />
       <div class="space-y-2">
         <For each={Array(12).fill(0)}>
-          {() => <div class="h-3 bg-elevated rounded" style={{ width: `${50 + Math.random() * 50}%` }} />}
+          {() => (
+            <div
+              class="h-3 bg-elevated rounded"
+              style={{ width: `${50 + Math.random() * 50}%` }}
+            />
+          )}
         </For>
       </div>
     </div>
@@ -229,24 +292,33 @@ function MobileNavDrawer(props: {
         <span>Navigation</span>
         <svg
           class={`w-4 h-4 text-muted transition-transform ${open() ? "rotate-180" : ""}`}
-          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
         >
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
 
       <Show when={open()}>
-        <div class="border-t border-rim bg-surface p-3 space-y-4"
-          onClick={() => setOpen(false)}>
-          <Show when={props.toc.length > 1}>
-            <TableOfContents entries={props.toc} activeId={props.activeId} />
-            <hr class="border-rim" />
-          </Show>
+        <div
+          class="border-t border-rim bg-surface p-3 space-y-4"
+          onClick={() => setOpen(false)}
+        >
           <DocNav
             section={props.section}
             lang={props.lang}
             activePath={props.activePath}
           />
+          <Show when={props.toc.length > 1}>
+            <TableOfContents entries={props.toc} activeId={props.activeId} />
+            <hr class="border-rim" />
+          </Show>
         </div>
       </Show>
     </div>
@@ -260,11 +332,11 @@ export default function HelpView() {
   const params = useParams<{ rest: string }>();
   const { locale } = useI18n();
 
-  const parts   = () => (params.rest ?? "").split("/").filter(Boolean);
+  const parts = () => (params.rest ?? "").split("/").filter(Boolean);
   const section = () => parts()[0] || "user";
-  const topic   = () => parts().slice(1).join("/");
+  const topic = () => parts().slice(1).join("/");
   // Use app locale as doc lang; PHP falls back to any available lang if not found
-  const lang    = () => locale().split("-")[0]; // "en-US" → "en"
+  const lang = () => locale().split("-")[0]; // "en-US" → "en"
 
   const [topicData] = createResource(
     () => ({ section: section(), lang: lang(), topic: topic() }),
@@ -272,9 +344,7 @@ export default function HelpView() {
   );
 
   const rendered = () =>
-    topicData()?.html
-      ? DOMPurify.sanitize(topicData()!.html)
-      : "";
+    topicData()?.html ? DOMPurify.sanitize(topicData()!.html) : "";
 
   // TOC
   const [toc, setToc] = createSignal<TocEntry[]>([]);
@@ -283,7 +353,8 @@ export default function HelpView() {
 
   // Clear TOC whenever the route changes so stale entries don't linger
   createEffect(() => {
-    section(); topic(); // track both
+    section();
+    topic(); // track both
     setToc([]);
     setActiveId("");
   });
@@ -301,7 +372,9 @@ export default function HelpView() {
         (obs) => {
           const visible = obs
             .filter((o) => o.isIntersecting)
-            .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+            .sort(
+              (a, b) => a.boundingClientRect.top - b.boundingClientRect.top,
+            );
           if (visible.length) setActiveId(visible[0].target.id);
         },
         { rootMargin: "0px 0px -60% 0px", threshold: 0 },
@@ -316,42 +389,39 @@ export default function HelpView() {
 
   return (
     <div class="max-w-6xl mx-auto py-4 space-y-4">
-
       {/* ── Section switcher — always visible ── */}
       <div class="flex gap-1 p-1 bg-elevated rounded-lg w-fit">
         {(["user", "admin", "dev"] as const).map((s) => (
-          <A href={`/help/${s}`}
+          <A
+            href={`/help/${s}`}
             class={`px-3 text-center text-xs py-1 rounded-md transition-colors font-medium
-              ${section() === s
-                ? "bg-accent text-base font-semibold"
-                : "text-muted hover:text-txt"}`}>
+              ${
+                section() === s
+                  ? "bg-accent text-base font-semibold"
+                  : "text-muted hover:text-txt"
+              }`}
+          >
             {s === "user" ? "User" : s === "admin" ? "Admin" : "Developer"}
           </A>
         ))}
       </div>
 
       <div class="flex gap-6">
-
         {/* ── Left sidebar: TOC + nav ── */}
         {/* ── Desktop sidebar: TOC + nav ── */}
         <div class="hidden md:block w-56 shrink-0">
           <div class="sticky top-20 space-y-4">
+            <DocNav section={section()} lang={lang()} activePath={topic()} />{" "}
             <Show when={toc().length > 1}>
               <TableOfContents entries={toc()} activeId={activeId()} />
               <hr class="border-rim" />
             </Show>
-            <DocNav
-              section={section()}
-              lang={lang()}
-              activePath={topic()}
-            />
           </div>
         </div>
 
         {/* ── Content ── */}
         <div class="flex-1 min-w-0">
           <article class="min-w-0 space-y-5">
-
             <Show when={topicData.loading}>
               <ContentSkeleton />
             </Show>
@@ -361,7 +431,10 @@ export default function HelpView() {
                 <p class="text-sm text-red-500">
                   {topicData.error?.message ?? "Page not found."}
                 </p>
-                <A href={`/help/${section()}`} class="text-sm text-accent hover:underline">
+                <A
+                  href={`/help/${section()}`}
+                  class="text-sm text-accent hover:underline"
+                >
                   ← Back
                 </A>
               </div>
