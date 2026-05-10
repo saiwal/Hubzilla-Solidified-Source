@@ -3,7 +3,7 @@ import { useI18n } from "@/i18n";
 import { usePageNick } from "@/shared/store/site-config";
 
 registerModule({
-  id: "files",
+  id: "cloud",
   routes: [
     { path: "/cloud", component: () => import("./views/FilesView") },
     { path: "/cloud/:nick", component: () => import("./views/FilesView") },
@@ -11,7 +11,7 @@ registerModule({
 
   navItem: {
     label: () => useI18n().t("nav.files"),
-    icon: "folder",
+    icon: "files",
     path: "/cloud",
     href: () => `/cloud/${usePageNick()()}`,
 		context: "all",

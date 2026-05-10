@@ -14,7 +14,7 @@ registerModule({
     label: () => "Help",
     href: "/help/user/",
     path: "/help",
-    icon: "question",
+    icon: "help",
     context: "all",
   },
 });
