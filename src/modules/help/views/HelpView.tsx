@@ -7,8 +7,9 @@ import {
   Show,
   For,
 } from "solid-js";
-import { useParams, useNavigate, A } from "@solidjs/router";
+import { useParams, A } from "@solidjs/router";
 import DOMPurify from "dompurify";
+import { useI18n } from "@/i18n";
 import { fetchNav, fetchTopic, type NavNode } from "../api";
 
 // ── types ─────────────────────────────────────────────────────────────────────
@@ -69,7 +70,6 @@ function TableOfContents(props: { entries: TocEntry[]; activeId: string }) {
 function NavItem(props: {
   node: NavNode;
   section: string;
-  lang: string;
   activePath: string;
   depth: number;
 }) {
@@ -80,7 +80,7 @@ function NavItem(props: {
   // Keep open when a child becomes active
   createEffect(() => { if (anyChildActive()) setOpen(true); });
 
-  const href = `/help/${props.section}/${props.lang}/${props.node.path}`;
+  const href = `/help/${props.section}/${props.node.path}`;
   const hasChildren = props.node.children.length > 0;
   const indent = `${props.depth * 12}px`;
 
@@ -126,7 +126,6 @@ function NavItem(props: {
               <NavItem
                 node={child}
                 section={props.section}
-                lang={props.lang}
                 activePath={props.activePath}
                 depth={props.depth + 1}
               />
@@ -142,8 +141,6 @@ function DocNav(props: {
   section: string;
   lang: string;
   activePath: string;
-  langs: string[];
-  onLangChange: (l: string) => void;
 }) {
   const [navData] = createResource(
     () => ({ section: props.section, lang: props.lang }),
@@ -157,7 +154,7 @@ function DocNav(props: {
       {/* Section switcher */}
       <div class="flex gap-1 p-1 bg-elevated rounded-lg">
         {(["user", "dev"] as const).map((s) => (
-          <A href={`/help/${s}/${props.lang}`}
+          <A href={`/help/${s}`}
             class={`flex-1 text-center text-xs py-1 rounded-md transition-colors font-medium
               ${props.section === s
                 ? "bg-accent text-accent-txt"
@@ -167,35 +164,16 @@ function DocNav(props: {
         ))}
       </div>
 
-      {/* Language switcher */}
-      <Show when={props.langs.length > 1}>
-        <div class="flex gap-1 flex-wrap">
-          <For each={props.langs}>
-            {(l) => (
-              <button type="button"
-                onClick={() => props.onLangChange(l)}
-                class={`px-2 py-0.5 text-xs rounded border transition-colors
-                  ${props.lang === l
-                    ? "border-accent text-accent bg-accent-muted"
-                    : "border-rim text-muted hover:border-rim-strong hover:text-txt"}`}>
-                {l.toUpperCase()}
-              </button>
-            )}
-          </For>
-        </div>
-      </Show>
-
       {/* Tree */}
       <Show when={!navData.loading} fallback={<NavSkeleton />}>
-        <Show when={navData()}>
+        <Show when={navData()} keyed>
           {(d) => (
             <ul class="space-y-0.5">
-              <For each={d().tree}>
+              <For each={d.tree}>
                 {(node) => (
                   <NavItem
                     node={node}
                     section={props.section}
-                    lang={props.lang}
                     activePath={props.activePath}
                     depth={0}
                   />
@@ -240,26 +218,20 @@ function ContentSkeleton() {
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function HelpView() {
-  // Route: /help/:section/:lang/*topic
-  const params  = useParams<{ section: string; lang: string; topic: string }>();
-  const navigate = useNavigate();
+  // Route: /help/*rest → rest = "section/...topic" (no lang in URL)
+  const params = useParams<{ rest: string }>();
+  const { locale } = useI18n();
 
-  const section = () => params.section || "user";
-  const lang    = () => params.lang || "en";
-  const topic   = () => params.topic || "";
-
-  const [langs, setLangs] = createSignal<string[]>([]);
+  const parts   = () => (params.rest ?? "").split("/").filter(Boolean);
+  const section = () => parts()[0] || "user";
+  const topic   = () => parts().slice(1).join("/");
+  // Use app locale as doc lang; PHP falls back to any available lang if not found
+  const lang    = () => locale().split("-")[0]; // "en-US" → "en"
 
   const [topicData] = createResource(
     () => ({ section: section(), lang: lang(), topic: topic() }),
     ({ section, lang, topic }) => fetchTopic(section, lang, topic),
   );
-
-  // Keep langs list updated from topic response
-  createEffect(() => {
-    const d = topicData();
-    if (d?.langs?.length) setLangs(d.langs);
-  });
 
   const rendered = () =>
     topicData()?.html
@@ -297,10 +269,6 @@ export default function HelpView() {
     });
   });
 
-  function switchLang(l: string) {
-    navigate(`/help/${section()}/${l}/${topic()}`);
-  }
-
   return (
     <div class="max-w-6xl mx-auto py-4">
       <div class="flex gap-6">
@@ -312,8 +280,6 @@ export default function HelpView() {
               section={section()}
               lang={lang()}
               activePath={topic()}
-              langs={langs()}
-              onLangChange={switchLang}
             />
           </div>
         </div>
@@ -331,34 +297,32 @@ export default function HelpView() {
                 <p class="text-sm text-red-500">
                   {topicData.error?.message ?? "Page not found."}
                 </p>
-                <A href={`/help/${section()}/${lang()}`} class="text-sm text-accent hover:underline">
+                <A href={`/help/${section()}`} class="text-sm text-accent hover:underline">
                   ← Back
                 </A>
               </div>
             </Show>
 
             <Show when={!topicData.loading && topicData()}>
-              {(d) => (
-                <>
-                  {/* TOC inline on small screens */}
-                  <Show when={toc().length > 2}>
-                    <div class="xl:hidden">
-                      <TableOfContents entries={toc()} activeId={activeId()} />
-                    </div>
-                  </Show>
-						      <div>{d().title}</div>
-                  {/* Body */}
-                  <div
-                    ref={bodyRef}
-                    class="prose dark:prose-invert max-w-none
-                           prose-a:text-accent prose-a:no-underline hover:prose-a:underline
-                           prose-blockquote:not-italic prose-blockquote:border-accent
-                           prose-code:bg-overlay prose-code:px-1 prose-code:rounded prose-code:text-sm
-                           prose-img:rounded-lg break-words"
-                    innerHTML={rendered()}
-                  />
-                </>
-              )}
+              <>
+                {/* TOC inline on small screens */}
+                <Show when={toc().length > 2}>
+                  <div class="xl:hidden">
+                    <TableOfContents entries={toc()} activeId={activeId()} />
+                  </div>
+                </Show>
+
+                {/* Body */}
+                <div
+                  ref={bodyRef}
+                  class="prose dark:prose-invert max-w-none
+                         prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+                         prose-blockquote:not-italic prose-blockquote:border-accent
+                         prose-code:bg-overlay prose-code:px-1 prose-code:rounded prose-code:text-sm
+                         prose-img:rounded-lg break-words"
+                  innerHTML={rendered()}
+                />
+              </>
             </Show>
           </article>
 
