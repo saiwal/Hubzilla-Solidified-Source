@@ -25,7 +25,7 @@ function applyTheme(id: ThemeId) {
 
 export function useTheme() {
   onMount(() => {
-    const stored = localStorage.getItem("theme") as ThemeId | null;
+    const stored = localStorage.getItem("color-scheme") as ThemeId | null;
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const resolved: ThemeId = stored ?? (prefersDark ? "dark" : "light");
     setTheme(resolved);
@@ -35,7 +35,7 @@ export function useTheme() {
   const switchTheme = (id: ThemeId) => {
     setTheme(id);
     applyTheme(id);
-    localStorage.setItem("theme", id);
+    localStorage.setItem("color-scheme", id);
   };
 
   return { theme, switchTheme };
