@@ -1,49 +1,29 @@
-import { createSignal, createEffect, onMount } from "solid-js";
-
-// qrcode is a tiny (~10 kB) lib; load it once via dynamic import from CDN.
-// We use the UMD build on unpkg so it works without bundler config changes.
-declare global {
-  interface Window {
-    QRCode: {
-      toDataURL: (text: string, opts: object) => Promise<string>;
-    };
-  }
-}
-
-let qrLoaded = false;
-async function ensureQR(): Promise<void> {
-  if (qrLoaded || window.QRCode) { qrLoaded = true; return; }
-  return new Promise((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = "https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js";
-    s.onload = () => { qrLoaded = true; resolve(); };
-    s.onerror = reject;
-    document.head.appendChild(s);
-  });
-}
+import { createSignal, createEffect } from "solid-js";
+import QRCode from "qrcode";
 
 export function QRGenerator() {
   const [text, setText] = createSignal("https://hz-ddev.ddev.site");
+  const [size, setSize] = createSignal(240);
   const [dataUrl, setDataUrl] = createSignal<string | null>(null);
   const [error, setError] = createSignal<string | null>(null);
-  const [size, setSize] = createSignal(200);
 
-  const generate = async () => {
+  createEffect(async () => {
     const val = text().trim();
-    if (!val) return;
+    if (!val) { setDataUrl(null); return; }
     setError(null);
     try {
-      await ensureQR();
-      const url: string = await window.QRCode.toDataURL(val, {
+      const url = await QRCode.toDataURL(val, {
         width: size(),
         margin: 2,
+        errorCorrectionLevel: "M",
         color: { dark: "#000000", light: "#ffffff" },
       });
       setDataUrl(url);
     } catch (e) {
-      setError("Could not generate QR code.");
+      setError(e instanceof Error ? e.message : "Could not generate QR code.");
+      setDataUrl(null);
     }
-  };
+  });
 
   const download = () => {
     if (!dataUrl()) return;
@@ -52,13 +32,6 @@ export function QRGenerator() {
     a.download = "qrcode.png";
     a.click();
   };
-
-  onMount(generate);
-  createEffect(() => {
-    // regenerate when size changes
-    size();
-    generate();
-  });
 
   return (
     <div class="flex flex-col gap-5 items-center max-w-sm w-full mx-auto">
@@ -69,7 +42,6 @@ export function QRGenerator() {
           rows={3}
           value={text()}
           onInput={(e) => setText(e.currentTarget.value)}
-          onBlur={generate}
           placeholder="Enter text or a URL…"
         />
       </div>
@@ -80,26 +52,24 @@ export function QRGenerator() {
           <span class="text-txt font-mono">{size()}px</span>
         </div>
         <input
-          type="range"
-          min={128}
-          max={512}
-          step={8}
+          type="range" min={128} max={512} step={8}
           value={size()}
           class="w-full"
           onInput={(e) => setSize(Number(e.currentTarget.value))}
-          onMouseUp={generate}
-          onTouchEnd={generate}
         />
       </div>
 
-      {error() && (
-        <p class="text-sm text-red-500">{error()}</p>
-      )}
+      {error() && <p class="text-sm text-red-500">{error()}</p>}
 
       {dataUrl() && (
         <div class="flex flex-col items-center gap-4">
           <div class="bg-white p-3 rounded-xl border border-rim">
-            <img src={dataUrl()!} alt="Generated QR code" class="block" style={{ width: `${Math.min(size(), 240)}px`, height: `${Math.min(size(), 240)}px` }} />
+            <img
+              src={dataUrl()!}
+              alt="Generated QR code"
+              class="block"
+              style={{ width: `${Math.min(size(), 280)}px`, height: `${Math.min(size(), 280)}px` }}
+            />
           </div>
           <button
             onClick={download}
