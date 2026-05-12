@@ -73,15 +73,7 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
       .filter((mod) => {
         if (!mod || seen.has(mod.id) || mod.navItem.hidden) return false;
         seen.add(mod.id);
-        const baseurl = viewer.baseurl ?? "";
-        const allApps = [...(data.pinned ?? []), ...(data.featured ?? [])];
-        return allApps.some((app) => {
-          const url = app.url
-            .split(",")[0]
-            .trim()
-            .replace(/\$baseurl/g, baseurl);
-          return moduleSegment(url) === mod.id;
-        });
+        return true;
       })
       .map((mod) => ({ ...mod!.navItem }));
 
@@ -94,9 +86,7 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
     return items;
   });
 }
-function moduleSegment(url: string): string {
-  return urlToPath(url).split("/").filter(Boolean)[0] ?? "";
-}
+
 // ── useNavActionItems ─────────────────────────────────────────────────────────
 
 const ACTION_ORDER = [
@@ -161,7 +151,7 @@ export function useNavActionItems(): () => NavItemDef[] {
       },
     };
     return ACTION_ORDER.filter((key) => {
-      if (key === "admin") return isAdmin(); 
+      if (key === "admin") return isAdmin();
       if (!actions[key]) return false;
       return matchesRole(ACTION_META[key].context, role);
     }).map((key): NavItemDef => {

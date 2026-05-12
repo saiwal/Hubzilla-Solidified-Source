@@ -15,11 +15,10 @@ registerModule({
     path: "/siteinfo",
     href: "/siteinfo",
     context: "all",
-		hidden: true,
+    hidden: true,
   },
 
-  slots: {
-  },
+  slots: {},
 
   permissions: [],
 });

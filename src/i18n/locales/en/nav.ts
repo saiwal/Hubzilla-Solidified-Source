@@ -1,0 +1,33 @@
+import type { RawDictionary } from "../namespaces/types";
+
+export const nav: RawDictionary["nav"] = {
+  articles:      "Articles",
+  calendar:      "Calendar",
+  cart:          "Cart",
+  chat:          "Chatrooms",
+  directory:     "Directory",
+  files:         "Files",
+  help:          "Help",
+  hq:            "HQ",
+  network:       "Network",
+  channel:       "Channel",
+  photos:        "Photos",
+  notifications: "Notifications",
+  settings:      "Settings",
+  admin:         "Admin",
+  webpages:      "Webpages",
+  wiki:          "Wiki",
+  tools:         "Tools",
+  // action items
+  profile:       "Profile",
+  edit_profile:  "Edit Profile",
+  channels:      "Channels",
+  navhome:       "Take me Home",
+  logout:        "Logout",
+  login:         "Login",
+  remote_login:  "Remote Login",
+  register:      "Register",
+  siteinfo:      "Siteinfo",
+  pubsites:      "Pubsites",
+  pubstream:     "Pubstream",
+};
