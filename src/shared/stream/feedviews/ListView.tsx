@@ -203,6 +203,7 @@ function ListRow(props: {
             </button>
 
             {/* comments */}
+              <Show when={replyCount > 0}>
             <button
               onClick={() => setShowModal(true)}
               class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-md
@@ -212,13 +213,13 @@ function ListRow(props: {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
-              <Show when={replyCount > 0}>
+
                 <span>{replyCount}</span>
-              </Show>
               <span class="hidden sm:inline">
-                {replyCount === 1 ? "Comment" : "Comments"}
+                {replyCount > 1 ? "Comments" : "Comment"}
               </span>
             </button>
+              </Show>
           </div>
 
         </div>
