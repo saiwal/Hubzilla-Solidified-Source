@@ -30,6 +30,7 @@ export function useSubjectNick(): () => string {
       "webpages",
       "wiki",
       "cal",
+      "page",
     ];
     if (parts[1] && modulesWithNick.includes(parts[0])) return parts[1];
     return "";

@@ -1,20 +1,18 @@
 import { createEffect, Show, For, createSignal } from 'solid-js';
 import { useParams } from '@solidjs/router';
 import { useAuth } from '@/shared/store/auth-store';
-import { pages, loading, error, loadWebpages, removePage } from '../store/store';
-import type { WebPage } from '../api/api';
-// import { useI18n } from '@/i18n';
+import { pages, loading, error, loadWebpages, removePage } from '../store';
+import type { WebPage } from '../api';
 
 export default function WebpagesView() {
   const params = useParams<{ nick: string }>();
-  const auth = useAuth();
-  // const { t } = useI18n();
+  const auth   = useAuth();
   const [confirmIid, setConfirmIid] = createSignal<number | null>(null);
 
   const nick = () => params.nick || auth()?.nick || '';
 
   createEffect(() => {
-    if (auth.loading || !nick()) return;
+    if ((auth as any).loading || !nick()) return;
     loadWebpages(nick());
   });
 
@@ -26,27 +24,25 @@ export default function WebpagesView() {
 
   return (
     <div class="max-w-4xl mx-auto space-y-6">
+
       {/* Header */}
       <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-bold">Webpages</h1>
-				<a        
+        <h1 class="text-2xl font-bold text-txt">Webpages</h1>
+        <a
           href={`/webpages/${nick()}/new`}
-          class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+          class="px-4 py-2 rounded-lg bg-accent text-accent-txt text-sm font-medium hover:opacity-90 transition-opacity"
         >
           + New Page
         </a>
       </div>
 
       <Show when={error()}>
-        <div class="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-sm">
+        <div class="p-3 rounded-lg bg-red-100 text-red-700 text-sm border border-red-200">
           {error()}
         </div>
       </Show>
 
-      <Show
-        when={!loading()}
-        fallback={<WebpagesPlaceholder />}
-      >
+      <Show when={!loading()} fallback={<WebpagesPlaceholder />}>
         <Show
           when={pages().length > 0}
           fallback={<EmptyState nick={nick()} />}
@@ -62,7 +58,7 @@ export default function WebpagesView() {
                   <th class="px-4 py-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+              <tbody>
                 <For each={pages()}>
                   {(page) => (
                     <PageRow
@@ -94,19 +90,19 @@ function PageRow(props: {
     });
 
   return (
-    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors group">
+    <tr class="border-b border-rim hover:bg-elevated transition-colors group">
       <td class="px-4 py-3">
-       <a 
+        <a
           href={props.page.view_url}
           target="_blank"
           rel="noopener noreferrer"
-          class="font-medium text-txt hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          class="font-medium text-txt hover:text-accent transition-colors"
         >
           {props.page.title || '(untitled)'}
         </a>
       </td>
       <td class="px-4 py-3 hidden md:table-cell">
-        <span class="font-mono text-xs text-muted bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+        <span class="font-mono text-xs text-muted bg-overlay px-2 py-1 rounded">
           /{props.page.pagelink}
         </span>
       </td>
@@ -117,8 +113,8 @@ function PageRow(props: {
         <span
           class={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
             props.page.is_private
-              ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
-              : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+              ? 'bg-amber-100 text-amber-700'
+              : 'bg-green-100 text-green-700'
           }`}
         >
           {props.page.is_private ? '🔒 Private' : '🌐 Public'}
@@ -138,7 +134,7 @@ function PageRow(props: {
               </button>
               <button
                 onClick={props.onCancelDelete}
-                class="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 transition-colors"
+                class="text-xs px-2 py-1 rounded border border-rim text-muted hover:bg-elevated transition-colors"
               >
                 No
               </button>
@@ -146,23 +142,23 @@ function PageRow(props: {
           }
         >
           <span class="inline-flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <a    
+            <a
               href={props.page.view_url}
               target="_blank"
               rel="noopener noreferrer"
-              class="text-xs px-2 py-1 rounded border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-elevated transition-colors"
+              class="text-xs px-2 py-1 rounded border border-rim text-muted hover:bg-elevated transition-colors"
             >
               View
             </a>
-         <a   
+            <a
               href={props.page.edit_url}
-              class="text-xs px-2 py-1 rounded border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-elevated transition-colors"
+              class="text-xs px-2 py-1 rounded border border-rim text-muted hover:bg-elevated transition-colors"
             >
               Edit
             </a>
             <button
               onClick={props.onDelete}
-              class="text-xs px-2 py-1 rounded border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              class="text-xs px-2 py-1 rounded border border-red-300 text-red-600 hover:bg-red-50 transition-colors"
             >
               Delete
             </button>
@@ -178,9 +174,9 @@ function EmptyState(props: { nick: string }) {
     <div class="text-center py-16 space-y-4">
       <div class="text-5xl">📄</div>
       <p class="text-muted">No webpages yet.</p>
-     <a 
+      <a
         href={`/webpages/${props.nick}/new`}
-        class="inline-block px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+        class="inline-block px-4 py-2 rounded-lg bg-accent text-accent-txt text-sm font-medium hover:opacity-90 transition-opacity"
       >
         Create your first page
       </a>
@@ -191,7 +187,7 @@ function EmptyState(props: { nick: string }) {
 function WebpagesPlaceholder() {
   return (
     <div class="bg-surface rounded-xl border border-rim overflow-hidden">
-      <div class="divide-y divide-gray-100 dark:divide-gray-700">
+      <div class="divide-y divide-rim">
         <For each={Array(5).fill(0)}>
           {() => (
             <div class="px-4 py-3 flex items-center gap-4 animate-pulse">

@@ -16,5 +16,10 @@ registerModule({
     href: () => `/webpages/${usePageNick()()}`,
     context: 'all',
   },
+  slots: {
+    right: [
+    ],
+  },
+
   permissions: [],
 });

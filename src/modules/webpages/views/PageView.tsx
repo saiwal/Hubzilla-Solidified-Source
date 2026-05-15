@@ -1,46 +1,94 @@
-import { useParams } from "@solidjs/router";
+import { createResource, Show } from "solid-js";
+import { useParams, A } from "@solidjs/router";
+import DOMPurify from "dompurify";
+import { bbcodeToHtml } from "@/shared/lib/bbcode";
+import { fetchWebPageByPagelink } from "../api";
 
-// The page module renders server-side HTML via Hubzilla's existing /page/ route.
-// We proxy-display it by fetching the JSON body and rendering ourselves,
-// or just open the Hubzilla page URL directly via redirect/link.
-// Here we fetch the body via the API and display it.
+// Renders a Hubzilla webpage inline in the SPA by fetching its body via the
+// JSON API. Branches on mimetype so BBCode goes through bbcodeToHtml first,
+// HTML is sanitized directly. Markdown support can be added later if needed.
+//
+// Note: pages with custom Comanche layouts will still render their body content
+// correctly here; only the layout chrome (sidebars, regions) is intentionally
+// omitted — the page body is what the author actually wrote.
+
+function renderBody(body: string, mimetype: string): string {
+  switch (mimetype) {
+    case "text/bbcode":
+      return DOMPurify.sanitize(bbcodeToHtml(body));
+    case "text/html":
+      return DOMPurify.sanitize(body);
+    case "text/markdown":
+      // Markdown: treat as plain text wrapped in <pre> until a Markdown lib is added
+      return `<pre class="whitespace-pre-wrap">${DOMPurify.sanitize(body)}</pre>`;
+    default:
+      return DOMPurify.sanitize(body);
+  }
+}
 
 export default function PageView() {
   const params = useParams<{ nick: string; path: string }>();
 
-  // Fetch raw body from our JSON endpoint using the pagelink
-  // We need the mid — so we first list pages and find by pagelink,
-  // OR we add a ?pagelink= param to the endpoint.
-  // Simplest: redirect to Hubzilla's native /page/ route for rendering,
-  // since pages can have custom Comanche layouts which we can't replicate.
+  // params.path is the wildcard segment after /page/:nick/
+  const pagelink = () => params.path ?? "";
+  const nick = () => params.nick ?? "";
 
-  const hubzillaUrl = () => `/page/${params.nick}/${params.path || ""}`;
+  const [detail] = createResource(
+    () => ({ nick: nick(), pagelink: pagelink() }),
+    ({ nick, pagelink }) => fetchWebPageByPagelink(nick, pagelink),
+  );
+
+  const rendered = () => {
+    const d = detail();
+    if (!d) return "";
+    return renderBody(d.body ?? "", d.mimetype ?? "text/bbcode");
+  };
 
   return (
-    <div class="max-w-4xl mx-auto">
-      <div class="mb-4 flex items-center gap-2 text-sm text-muted">
-        <a
-          href={`/webpages/${params.nick}`}
-          class="hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+    <div class="max-w-4xl mx-auto space-y-4 py-4">
+      {/* Breadcrumb */}
+      <div class="flex items-center gap-2 text-sm text-muted">
+        <A
+          href={`/webpages/${nick()}`}
+          class="hover:text-txt transition-colors"
         >
           ← Webpages
-        </a>
+        </A>
         <span>/</span>
-        <span class="font-mono">{params.path}</span>
-        <a
-          href={hubzillaUrl()}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="ml-auto text-xs px-2 py-1 rounded border border-gray-200 dark:border-gray-600 hover:bg-elevated transition-colors"
-        >
-          Open original ↗
-        </a>
+        <span class="font-mono text-subtle">{pagelink()}</span>
       </div>
-      <iframe
-        src={hubzillaUrl()}
-        class="w-full min-h-screen rounded-xl border border-rim bg-white"
-        title="Page content"
-      />
+
+      {/* Loading skeleton */}
+      <Show when={detail.loading}>
+        <div class="space-y-3 animate-pulse">
+          <div class="h-8 bg-elevated rounded w-2/3" />
+          <div class="h-3 bg-elevated rounded w-full" />
+          <div class="h-3 bg-elevated rounded w-5/6" />
+          <div class="h-3 bg-elevated rounded w-full" />
+          <div class="h-3 bg-elevated rounded w-4/5" />
+        </div>
+      </Show>
+
+      {/* Error */}
+      <Show when={detail.error}>
+        <div class="p-4 rounded-xl border border-red-300 bg-red-50 text-red-700 text-sm">
+          {detail.error?.message ?? "Failed to load page"}
+        </div>
+      </Show>
+
+      {/* Page content */}
+      <Show when={!detail.loading && detail()}>
+        <article class="bg-surface rounded-xl border border-rim p-6 space-y-4">
+          <Show when={detail()!.title}>
+            <h1 class="text-2xl font-bold text-txt">{detail()!.title}</h1>
+          </Show>
+          <div
+            class="prose dark:prose-invert max-w-none"
+            // eslint-disable-next-line solid/no-innerhtml
+            innerHTML={rendered()}
+          />
+        </article>
+      </Show>
     </div>
   );
 }
