@@ -14,7 +14,7 @@ registerModule({
   navItem: {
     path: "/pubstream",
     label: () => useI18n().t("nav.pubstream"),
-    icon: "Public",
+    icon: "pubstream",
 		href: "/pubstream",
 		context: "all",
   },

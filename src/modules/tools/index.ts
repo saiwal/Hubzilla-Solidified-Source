@@ -15,7 +15,7 @@ registerModule({
     path: "/tools",
     href: "tools",
     label: () => useI18n().t("nav.tools"),
-    icon: "MdFillHandyman",
+    icon: "tools",
   },
 });
 
