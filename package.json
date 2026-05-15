@@ -24,6 +24,7 @@
     "qrcode": "^1.5.4",
     "solid-icons": "^1.2.0",
     "solid-js": "^1.9.10",
+    "solid-motionone": "^1.0.4",
     "vite-plugin-static-copy": "^3.4.0"
   },
   "devDependencies": {
