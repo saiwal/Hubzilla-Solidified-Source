@@ -1,26 +1,16 @@
 // src/modules/wiki/views/WikiPagesView.tsx
-import { createEffect, Show } from "solid-js";
+// Thin redirect: /:nick/:wikiName → /:nick/:wikiName/Home
+// No data loading here — WikiPageView owns all fetching.
 import { useParams, useNavigate } from "@solidjs/router";
-import { pagesLoading, loadWikiPages } from "../store";
+import { onMount } from "solid-js";
 
 export default function WikiPagesView() {
   const params   = useParams<{ nick: string; wikiName: string }>();
   const navigate = useNavigate();
 
-  createEffect(() => {
-    const { nick, wikiName } = params;
-    if (nick && wikiName) {
-      loadWikiPages(nick, wikiName).then(() => {
-        navigate(`/wiki/${nick}/${wikiName}/Home`, { replace: true });
-      });
-    }
+  onMount(() => {
+    navigate(`/wiki/${params.nick}/${params.wikiName}/Home`, { replace: true });
   });
 
-  return (
-    <div class="flex items-center justify-center h-40">
-      <Show when={pagesLoading()}>
-        <span class="text-muted text-sm">Loading…</span>
-      </Show>
-    </div>
-  );
+  return null;
 }

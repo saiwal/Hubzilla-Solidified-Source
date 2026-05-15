@@ -20,11 +20,21 @@ export default function WikiPageView() {
   const [saveError, setSaveError]   = createSignal("");
   const [confirmDel, setConfirmDel] = createSignal(false);
 
+  // Track which wiki was last loaded so we only refetch the page list on wiki change.
+  // Read currentWiki() outside the effect to avoid it becoming a reactive dependency
+  // that re-triggers the effect when loadWikiPages updates it.
+  let lastWikiName = "";
+
   createEffect(() => {
     const { nick, wikiName, pageName } = params;
     if (!nick || !wikiName || !pageName) return;
+
+    // Always load the page when params change
     loadPage(nick, wikiName, pageName);
-    if (!currentWiki() || currentWiki()!.url_name !== wikiName) {
+
+    // Only fetch the sidebar page list when the wiki itself changes
+    if (lastWikiName !== wikiName) {
+      lastWikiName = wikiName;
       loadWikiPages(nick, wikiName);
     }
   });
@@ -199,7 +209,7 @@ export default function WikiPageView() {
           {/* Rendered view */}
           <Show when={!editMode()}>
             <article
-              class="prose dark:prose-invert prose-neutral max-w-none
+              class="prose prose-neutral dark:prose-invert max-w-none
                      [&_a]:text-accent [&_a]:no-underline [&_a:hover]:underline
                      [&_pre]:bg-elevated [&_pre]:border [&_pre]:border-rim [&_pre]:rounded-xl
                      [&_blockquote]:border-l-2 [&_blockquote]:border-rim [&_blockquote]:text-muted"
