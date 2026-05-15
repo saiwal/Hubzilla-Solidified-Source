@@ -60,6 +60,7 @@ const ICON_MAP: Record<string, (size: number) => JSX.Element> = {
   groups: (s) => <MdFillLock size={s} />,
   pdl: (s) => <MdFillView_column size={s} />,
   network: (s) => <MdFillRss_feed size={s} />,
+  pubstream: (s) => <MdFillPublic size={s} />,
   channel: (s) => <MdFillPerson size={s} />,
   settings: (s) => <MdFillSettings size={s} />,
   manage: (s) => <MdFillManage_accounts size={s} />,
@@ -72,7 +73,7 @@ const ICON_MAP: Record<string, (size: number) => JSX.Element> = {
   person: (s) => <MdFillPerson size={s} />,
   edit: (s) => <MdFillEdit size={s} />,
   notes: (s) => <MdFillNote size={s} />,
-	tools: (s) => <MdFillHardware size={s} />,
+  tools: (s) => <MdFillHardware size={s} />,
 };
 
 export function getNavIcon(token?: string, size = 20): JSX.Element {
