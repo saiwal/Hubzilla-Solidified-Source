@@ -251,7 +251,7 @@ export default function StreamFilters() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div class="space-y-1.5" use:helpable="network/index.activity-filters">
+    <div class="space-y-1.5 pb-2" use:helpable="network/index.activity-filters">
 
       {/* ══════════════════════════════════════════════════════════════════════
           Row 1 — always visible: refresh, order, toggles, utility icons
