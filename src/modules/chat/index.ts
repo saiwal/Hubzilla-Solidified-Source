@@ -1,3 +1,4 @@
+// src/modules/chat/index.ts
 import { registerModule } from "@/shared/lib/module-registry";
 import { useI18n } from "@/i18n";
 import { usePageNick } from "@/shared/store/site-config";
@@ -5,18 +6,26 @@ import { usePageNick } from "@/shared/store/site-config";
 registerModule({
   id: "chat",
   routes: [
-    { path: "/chat/:nick", component: () => import("./views/RoomListView") },
-    { path: "/chat/:nick/:roomId", component: () => import("./views/RoomView") },
+    // Room list: /chat/:nick
+    {
+      path: "/chat/:nick",
+      component: () => import("./views/ChatRoomsView"),
+    },
+    // Individual room: /chat/:nick/:roomId
+    {
+      path: "/chat/:nick/:roomId",
+      component: () => import("./views/ChatRoomView"),
+    },
   ],
   navItem: {
     label: () => useI18n().t("nav.chat"),
     icon: "chat",
-    path: "/chat/:nick",
-    href: () => {
-      const nick = usePageNick()();
-      return nick ? `/chat/${nick}` : "/chat";
-    },
-    context: ["owner", "local", "remote"],
+    path: "/chat",
+    // nav link always targets the subject nick's chat
+    href: () => `/chat/${usePageNick()()}`,
+    context: "all", // only shown in channel context
+    // hidden: true,       // excluded from main nav; shown via channel_tabs
   },
+  slots: {},
   permissions: [],
 });
