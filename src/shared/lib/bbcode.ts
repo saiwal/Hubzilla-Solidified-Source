@@ -98,14 +98,13 @@ function randomString(len = 10): string {
   return out;
 }
 
-/** Base64-encode (browser) */
+/** Base64-encode (browser) — handles full Unicode, not just Latin-1 */
 function b64encode(s: string): string {
-  return btoa(s);
+  return btoa(unescape(encodeURIComponent(s)));
 }
 function b64decode(s: string): string {
-  return atob(s);
+  return decodeURIComponent(escape(atob(s)));
 }
-
 // ---------------------------------------------------------------------------
 // Code-block protection (prevents inner content being processed as BBCode)
 // ---------------------------------------------------------------------------

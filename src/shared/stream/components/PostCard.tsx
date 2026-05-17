@@ -33,7 +33,9 @@ function flattenThread(nodes: ThreadNode[]): ThreadNode[] {
   }
   return result;
 }
-
+function hasNestedComments(nodes: ThreadNode[]): boolean {
+  return nodes.some(n => n.children.length > 0);
+}
 export default function PostCard(props: {
   post: ThreadNode;
   handlers: StreamHandlers;
@@ -170,7 +172,7 @@ export default function PostCard(props: {
           </Show>
 
           {/* Thread/flat toggle — compact */}
-          <Show when={props.post.children.length > 1}>
+<Show when={hasNestedComments(props.post.children)}>
             <button
               onClick={() => setThreaded((v) => !v)}
               class="flex items-center gap-1 px-2 py-1 rounded-md text-xs
@@ -368,7 +370,7 @@ export default function PostCard(props: {
         </Show>
 
         {/* Thread/flat toggle — full */}
-        <Show when={props.post.children.length > 1}>
+<Show when={hasNestedComments(props.post.children)}>
           <button
             onClick={() => setThreaded((v) => !v)}
             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
