@@ -7,6 +7,7 @@ registerModule({
   routes: [
     { path: "/cloud", component: () => import("./views/FilesView") },
     { path: "/cloud/:nick", component: () => import("./views/FilesView") },
+    { path: "/cloud/:nick/*", component: () => import("./views/FilesView") },
   ],
 
   navItem: {
