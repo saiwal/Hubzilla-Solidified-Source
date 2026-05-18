@@ -10,6 +10,7 @@ const SECTIONS: Record<string, ReturnType<typeof lazy>> = {
   "hubs":           lazy(() => import("./sections/HubsSection")),
   "people":         lazy(() => import("./sections/DirectorySection")),
   "privacy-groups": lazy(() => import("./sections/PrivacyGroupsView")),
+  "contact-roles":  lazy(() => import("./sections/ContactRolesSection")),
 };
 
 const PrivacyGroupDetail = lazy(() => import("./sections/PrivacyGroupDetailView"));

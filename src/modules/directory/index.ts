@@ -4,6 +4,7 @@ import type { SubPageItem } from "@/shared/views/SubPageLayout";
 
 export const CONNECTIONS_ITEMS: SubPageItem[] = [
   { path: "connections", label: "Connections", context: "owner" },
+  { path: "contact-roles", label: "Contact roles", context: "owner" },
   {
     path: "privacy-groups",
     label: "Privacy groups",
