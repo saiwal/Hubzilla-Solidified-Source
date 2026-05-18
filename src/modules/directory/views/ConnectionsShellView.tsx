@@ -1,18 +1,19 @@
-import { lazy, createMemo, Suspense } from "solid-js";
+import { lazy, createMemo, Suspense, Show } from "solid-js";
 import { Dynamic } from "solid-js/web";
-import { useLocation } from "@solidjs/router";
+import { useLocation, useNavigate } from "@solidjs/router";
 import SubPageLayout from "@/shared/views/SubPageLayout";
 import { useViewerRole } from "@/shared/store/site-config";
 import { CONNECTIONS_ITEMS } from "../index";
 
 const SECTIONS: Record<string, ReturnType<typeof lazy>> = {
-  "connections":           lazy(() => import("./sections/ConnectionsSection")),
+  "connections":    lazy(() => import("./sections/ConnectionsSection")),
   "hubs":           lazy(() => import("./sections/HubsSection")),
-  "people":      lazy(() => import("./sections/DirectorySection")),
-  "privacy-groups": lazy(() => import("./sections/PrivacyGroupsSection")),
+  "people":         lazy(() => import("./sections/DirectorySection")),
+  "privacy-groups": lazy(() => import("./sections/PrivacyGroupsView")),
 };
 
-// Per-role default: what section to land on when hitting /directory bare
+const PrivacyGroupDetail = lazy(() => import("./sections/PrivacyGroupDetailView"));
+
 const DEFAULT_BY_ROLE: Partial<Record<string, string>> = {
   owner:     "connections",
   local:     "people",
@@ -22,19 +23,41 @@ const DEFAULT_BY_ROLE: Partial<Record<string, string>> = {
 
 export default function ConnectionsShellView() {
   const location = useLocation();
+  const navigate = useNavigate();
   const role = useViewerRole();
 
+  // parts[0] = section slug, parts[1] = optional id
+  // e.g. /directory/privacy-groups/26  →  ["privacy-groups", "26"]
+  //      /directory/privacy-groups     →  ["privacy-groups"]
+  //      /directory                    →  []
+  const pathParts = createMemo<string[]>(() =>
+    location.pathname.replace(/^\/directory\/?/, "").split("/").filter(Boolean)
+  );
+
   const activeKey = createMemo<string>(() => {
-    const seg = location.pathname.replace(/^\/directory\/?/, "").split("/")[0];
+    const seg = pathParts()[0] ?? "";
     if (seg && seg in SECTIONS) return seg;
-    // No segment — pick the role-appropriate default
     return DEFAULT_BY_ROLE[role()] ?? "people";
+  });
+
+  // Id is whatever sits after the section slug in the URL — no useParams needed.
+  const groupId = createMemo<string | null>(() => {
+    if (activeKey() !== "privacy-groups") return null;
+    return pathParts()[1] ?? null;
   });
 
   return (
     <SubPageLayout base="/directory" items={CONNECTIONS_ITEMS} activeKey={activeKey()}>
       <Suspense fallback={<SectionSkeleton />}>
-        <Dynamic component={SECTIONS[activeKey()]} />
+        <Show
+          when={groupId() !== null}
+          fallback={<Dynamic component={SECTIONS[activeKey()]} />}
+        >
+          <PrivacyGroupDetail
+            id={groupId()!}
+            onDeleted={() => navigate("/directory/privacy-groups", { replace: true })}
+          />
+        </Show>
       </Suspense>
     </SubPageLayout>
   );

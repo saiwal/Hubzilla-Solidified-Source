@@ -30,6 +30,10 @@ registerModule({
       path: "/directory",
       component: () => import("./views/ConnectionsShellView"),
     },
+    {
+      path: "/directory/*",
+      component: () => import("./views/ConnectionsShellView"),
+    },
     ...subRoutes,
   ],
   navItem: {
