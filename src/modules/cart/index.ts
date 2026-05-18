@@ -17,6 +17,7 @@ registerModule({
 		context: "all",
   },
   slots: {
+    right: () => import('./widgets/CartWidget'),
   },
   permissions: [],
 });
