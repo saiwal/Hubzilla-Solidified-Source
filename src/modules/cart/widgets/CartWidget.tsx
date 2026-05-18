@@ -1,4 +1,4 @@
-import { Show } from 'solid-js';
+import { Show, For } from 'solid-js';
 import { A } from '@solidjs/router';
 import { MdFillShopping_cart } from 'solid-icons/md';
 import { cartCount, cartItems, nick } from '../store/store';
@@ -26,12 +26,14 @@ export default function CartWidget() {
               <p class="text-xs text-zinc-400 dark:text-zinc-500">No items yet.</p>
             }
           >
-            {cartItems().slice(0, 3).map(item => (
-              <div class="flex items-center justify-between text-xs gap-2">
-                <span class="truncate text-zinc-700 dark:text-zinc-300">{item.desc}</span>
-                <span class="shrink-0 text-zinc-400 dark:text-zinc-500">×{item.orderQty}</span>
-              </div>
-            ))}
+            <For each={cartItems().slice(0, 3)}>
+              {(item) => (
+                <div class="flex items-center justify-between text-xs gap-2">
+                  <span class="truncate text-zinc-700 dark:text-zinc-300">{item.desc}</span>
+                  <span class="shrink-0 text-zinc-400 dark:text-zinc-500">×{item.orderQty}</span>
+                </div>
+              )}
+            </For>
             <Show when={cartItems().length > 3}>
               <p class="text-xs text-zinc-400 dark:text-zinc-500">
                 +{cartItems().length - 3} more
