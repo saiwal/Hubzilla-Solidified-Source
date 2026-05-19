@@ -36,6 +36,9 @@ function flattenThread(nodes: ThreadNode[]): ThreadNode[] {
 function hasNestedComments(nodes: ThreadNode[]): boolean {
   return nodes.some(n => n.children.length > 0);
 }
+// Persists across remounts caused by setNodeChildren updating the post reference.
+const openedByMid = new Set<string>();
+
 export default function PostCard(props: {
   post: ThreadNode;
   handlers: StreamHandlers;
@@ -43,10 +46,38 @@ export default function PostCard(props: {
   compact?: boolean;
 }) {
   const [replyOpen, setReplyOpen] = createSignal(false);
-  const [showComments, setShowComments] = createSignal(false);
+  const [showComments, setShowComments] = createSignal(openedByMid.has(props.post.mid));
   const [threaded, setThreaded] = createSignal(true);
+  const [commentsLoaded, setCommentsLoaded] = createSignal(props.post.children.length > 0);
+  const [commentsLoading, setCommentsLoading] = createSignal(false);
   const { locale } = useI18n();
   let cardRef!: HTMLDivElement;
+
+  const totalComments = () =>
+    props.post.children.length > 0
+      ? props.post.children.length
+      : (props.post.commentCount ?? 0);
+
+  function persistShow(v: boolean) {
+    if (v) openedByMid.add(props.post.mid);
+    else openedByMid.delete(props.post.mid);
+    setShowComments(v);
+  }
+
+  async function toggleComments() {
+    if (!showComments() && !commentsLoaded() && totalComments() > 0) {
+      persistShow(true);
+      setCommentsLoading(true);
+      try {
+        await props.handlers.onLoadComments(props.post.mid, props.post.uuid);
+        setCommentsLoaded(true);
+      } finally {
+        setCommentsLoading(false);
+      }
+    } else {
+      persistShow(!showComments());
+    }
+  }
 
   onMount(() => {
     const uuid = props.post.uuid;
@@ -155,9 +186,9 @@ export default function PostCard(props: {
             active={props.post.viewerRepeated}
           />
 
-          <Show when={props.post.children.length > 0}>
+          <Show when={totalComments() > 0}>
             <button
-              onClick={() => setShowComments((v) => !v)}
+              onClick={toggleComments}
               class="flex items-center gap-1 px-2 py-1 rounded-md text-xs
                      text-subtle hover:bg-overlay hover:text-txt transition-colors"
             >
@@ -167,7 +198,7 @@ export default function PostCard(props: {
               >
                 <MdFillKeyboard_arrow_up size={14} />
               </Show>
-              <span>{props.post.children.length}</span>
+              <span>{totalComments()}</span>
             </button>
           </Show>
 
@@ -186,7 +217,7 @@ export default function PostCard(props: {
           </Show>
 
           <button
-            onClick={() => { setReplyOpen((v) => !v); setShowComments(true); }}
+            onClick={() => { setReplyOpen((v) => !v); if (!showComments()) toggleComments(); }}
             class="ml-auto flex items-center gap-1 px-2 py-1 rounded-md text-xs
                    text-subtle hover:bg-overlay hover:text-txt transition-colors"
           >
@@ -210,9 +241,12 @@ export default function PostCard(props: {
             }}
           />
         </Show>
+        <Show when={commentsLoading()}>
+          <div class="mt-2 ml-2 text-xs text-subtle animate-pulse">Loading comments…</div>
+        </Show>
         <CommentThread
           comments={visibleComments()}
-          show={showComments()}
+          show={showComments() && !commentsLoading()}
           handlers={props.handlers}
         />
       </div>
@@ -349,9 +383,9 @@ export default function PostCard(props: {
           </button>
         </Show>
 
-        <Show when={props.post.children.length > 0}>
+        <Show when={totalComments() > 0}>
           <button
-            onClick={() => setShowComments((v) => !v)}
+            onClick={toggleComments}
             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
                    text-muted hover:bg-overlay hover:text-txt transition-colors"
             title="Toggle comments"
@@ -363,8 +397,7 @@ export default function PostCard(props: {
               <MdFillKeyboard_arrow_up size={17} />
             </Show>
             <span>
-              {props.post.children.length} comment
-              {props.post.children.length !== 1 ? "s" : ""}
+              {totalComments()} comment{totalComments() !== 1 ? "s" : ""}
             </span>
           </button>
         </Show>
@@ -385,7 +418,7 @@ export default function PostCard(props: {
         </Show>
 
         <button
-          onClick={() => { setReplyOpen((v) => !v); setShowComments(true); }}
+          onClick={() => { setReplyOpen((v) => !v); if (!showComments()) toggleComments(); }}
           class="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
                  text-muted hover:bg-overlay hover:text-txt transition-colors"
           title="Reply"
@@ -410,9 +443,12 @@ export default function PostCard(props: {
           }}
         />
       </Show>
+      <Show when={commentsLoading()}>
+        <div class="mt-3 text-sm text-subtle animate-pulse">Loading comments…</div>
+      </Show>
       <CommentThread
         comments={visibleComments()}
-        show={showComments()}
+        show={showComments() && !commentsLoading()}
         handlers={props.handlers}
       />
     </div>

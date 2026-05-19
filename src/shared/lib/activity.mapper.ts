@@ -60,6 +60,7 @@ export function mapActivityToPost(activity: any): Post {
     viewerRepeated: activity.viewer_repeated ?? false,
     dislikeCount: activity.dislike_count ?? 0,
     repeatCount: activity.announce_count ?? 0,
+    commentCount: activity.comment_count ?? 0,
     children: [],
   };
 }

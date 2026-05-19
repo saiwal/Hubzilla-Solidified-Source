@@ -52,6 +52,7 @@ function usePubstreamHandlers(tag: () => string): StreamHandlers {
     ) {
       loadPubstream(tag() || undefined);
     },
+    onLoadComments: (_mid: string, _uuid: string) => Promise.resolve(),
   };
 }
 

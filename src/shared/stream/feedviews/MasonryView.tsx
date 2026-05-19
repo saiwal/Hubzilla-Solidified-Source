@@ -39,7 +39,8 @@ const COLLAPSED_MAX_PX = 200;
 
 function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers }) {
   const p = props.post;
-  const replyCount = p.children.length;
+  const replyCount = () =>
+    p.children.length > 0 ? p.children.length : (p.commentCount ?? 0);
   const [showModal, setShowModal] = createSignal(false);
   const [expanded, setExpanded] = createSignal(false);
   let bodyRef!: HTMLDivElement;
@@ -233,9 +234,9 @@ function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers }) {
             {p.repeatCount || ""}
           </button>
 
-          <Show when={replyCount > 0}>
+          <Show when={replyCount() > 0}>
             <span class="ml-auto text-xs text-muted">
-              {replyCount} {replyCount === 1 ? t("ui.reply") : t("ui.replies")}
+              {replyCount()} {replyCount() === 1 ? t("ui.reply") : t("ui.replies")}
             </span>
           </Show>
         </div>

@@ -161,6 +161,9 @@ function InlineThread(props: {
   );
 }
 
+// Persists across remounts caused by setNodeChildren updating the thread reference.
+const expandedByMid = new Set<string>();
+
 // ── single inbox row ──────────────────────────────────────────────────────────
 
 function InboxRow(props: {
@@ -168,12 +171,32 @@ function InboxRow(props: {
   handlers: StreamHandlers;
   profileUid: number;
 }) {
-  const [expanded, setExpanded] = createSignal(false);
+  const p = props.thread;
+  const [expanded, setExpanded] = createSignal(expandedByMid.has(p.mid));
+  const [commentsLoaded, setCommentsLoaded] = createSignal(p.children.length > 0);
+  const [commentsLoading, setCommentsLoading] = createSignal(false);
   const { locale } = useI18n();
 
-  const p = props.thread;
-  const replyCount = () => flattenThread(p).length - 1;
+  const replyCount = () =>
+    p.children.length > 0 ? flattenThread(p).length - 1 : (p.commentCount ?? 0);
   const participants = () => getParticipants(p);
+
+  async function toggleExpand() {
+    const next = !expanded();
+    if (next) expandedByMid.add(p.mid);
+    else expandedByMid.delete(p.mid);
+    setExpanded(next);
+
+    if (next && !commentsLoaded() && (p.commentCount ?? 0) > 0) {
+      setCommentsLoading(true);
+      try {
+        await props.handlers.onLoadComments(p.mid, p.uuid);
+        setCommentsLoaded(true);
+      } finally {
+        setCommentsLoading(false);
+      }
+    }
+  }
   const score = () => (p.likeCount ?? 0) - (p.dislikeCount ?? 0);
   const preview = () => stripHtml(p.body).slice(0, 160);
   const isUnread = () => !p.viewerLiked && replyCount() === 0;
@@ -216,11 +239,11 @@ function InboxRow(props: {
 
         {/* clickable body — toggles inline thread */}
         <div
-          onClick={() => setExpanded((v) => !v)}
+          onClick={toggleExpand}
           class="flex-1 min-w-0 px-3 pt-2.5 pb-1.5 cursor-pointer space-y-0.5 select-none"
           role="button"
           tabIndex={0}
-          onKeyDown={(e) => e.key === "Enter" && setExpanded((v) => !v)}
+          onKeyDown={(e) => e.key === "Enter" && toggleExpand()}
         >
           {/* title */}
           <Show
@@ -312,7 +335,7 @@ function InboxRow(props: {
         >
           {/* replies — toggles inline thread */}
           <button
-            onClick={() => setExpanded((v) => !v)}
+            onClick={toggleExpand}
             class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-md
                    text-muted hover:text-txt hover:bg-elevated transition-colors"
             classList={{ "text-accent bg-accent-muted": expanded() }}
@@ -348,7 +371,12 @@ function InboxRow(props: {
         </div>
 
         {/* inline thread */}
-        <Show when={expanded()}>
+        <Show when={expanded() && commentsLoading()}>
+          <div class="px-3 py-2 text-xs text-subtle animate-pulse border-t border-rim">
+            Loading replies…
+          </div>
+        </Show>
+        <Show when={expanded() && !commentsLoading()}>
           <InlineThread
             thread={p}
             handlers={props.handlers}

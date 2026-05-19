@@ -210,6 +210,10 @@ export function createStreamStore<P extends StreamParams>(
 
   // ── misc ────────────────────────────────────────────────────────────────────
 
+  function setNodeChildren(mid: string, children: ThreadNode[]) {
+    setPosts((prev) => updateNode(prev, mid, (n) => ({ ...n, children })));
+  }
+
   function flushNewPosts() {
     setPosts((prev) => [...newPosts(), ...prev]);
     setNewPosts([]);
@@ -236,7 +240,7 @@ export function createStreamStore<P extends StreamParams>(
     reset,
     stopPolling,
     optimisticToggle,
-    // exposed for comment insertion in module stores
     setPosts,
+    setNodeChildren,
   };
 }

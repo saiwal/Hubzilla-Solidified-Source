@@ -15,6 +15,7 @@ import {
   handleDislike,
   handleRepeat,
   handleComment,
+  loadComments,
 } from "../store";
 import StreamList from "@/shared/stream/feedviews/StreamList";
 import type { StreamHandlers } from "@/shared/stream/types";
@@ -28,10 +29,11 @@ import { viewMode, changeView } from "../store";
 import { useViewerRole } from "@/shared/store/site-config";
 
 const handlers: StreamHandlers = {
-  onLike: handleLike,
-  onDislike: handleDislike,
-  onRepeat: handleRepeat,
-  onComment: handleComment,
+  onLike:          handleLike,
+  onDislike:       handleDislike,
+  onRepeat:        handleRepeat,
+  onComment:       handleComment,
+  onLoadComments:  loadComments,
 };
 
 export default function ChannelView() {

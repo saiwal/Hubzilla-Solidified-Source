@@ -10,6 +10,7 @@ export interface StreamHandlers {
     authorName: string,
     authorAvatar: string,
   ) => void;
+  onLoadComments: (mid: string, uuid: string) => Promise<void>;
 }
 
 export type ViewMode = "feed" | "masonry" | "list" | "inbox";

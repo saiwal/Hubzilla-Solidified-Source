@@ -127,6 +127,8 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
           props.handlers!.onComment(parentMid, body, authorName, authorAvatar);
           refetch();
         },
+        onLoadComments: (mid: string, uuid: string) =>
+          props.handlers!.onLoadComments(mid, uuid),
       }
     : undefined;
 
@@ -196,6 +198,7 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
                       onDislike: () => {},
                       onRepeat: () => {},
                       onComment: () => {},
+                      onLoadComments: () => Promise.resolve(),
                     }
                   }
                 />

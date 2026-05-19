@@ -5,8 +5,11 @@ import { createStreamStore, updateNode } from "@/shared/stream/store/createStrea
 import { fetchChannelPosts, postComment } from "./api";
 import type { ChannelParams, ChannelStreamResult } from "./api";
 import type { ThreadNode } from "@/shared/lib/thread";
+import { buildThreadTree } from "@/shared/lib/thread";
 import { createActionHandlers } from "@/shared/stream/store/actions-store";
 import type { ViewMode } from "@/shared/stream/types";
+import { fetchComments } from "@/shared/lib/item-api";
+import { mapActivityToPost } from "@/shared/lib/activity.mapper";
 // ── nick signal (channel-specific, not part of generic store) ─────────────────
 const [nick, setNick] = createSignal<string>("");
 export { nick };
@@ -57,7 +60,13 @@ function iidFor(mid: string): number {
   return node ? Number(node.id) : 0;
 }
 
-// ── comment ───────────────────────────────────────────────────────────────────
+// ── comments ──────────────────────────────────────────────────────────────────
+export async function loadComments(mid: string, uuid: string): Promise<void> {
+  const result = await fetchComments(uuid);
+  const nodes = buildThreadTree((result.comments ?? []).map(mapActivityToPost));
+  store.setNodeChildren(mid, nodes);
+}
+
 export async function handleComment(
   parentMid: string,
   body: string,

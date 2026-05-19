@@ -5,7 +5,10 @@ import { createStreamStore, updateNode } from "@/shared/stream/store/createStrea
 import { fetchNetworkStream, postComment, apiDeleteItem as deleteItem} from "./api";
 import type { NetworkParams } from "./api";
 import type { ThreadNode } from "@/shared/lib/thread";
+import { buildThreadTree } from "@/shared/lib/thread";
 import { createActionHandlers, toggleVerb } from "@/shared/stream/store/actions-store";
+import { fetchComments } from "@/shared/lib/item-api";
+import { mapActivityToPost } from "@/shared/lib/activity.mapper";
 
 // ── viewMode (stays network-local) ───────────────────────────────────────────
 export type ViewMode = "feed" | "masonry" | "list" | "inbox";
@@ -52,6 +55,12 @@ function iidFor(mid: string): number {
 export function handleStar(mid: string) {
   const iid = iidFor(mid);
   store.optimisticToggle(mid, "like", "likeCount", () => toggleVerb(iid, "star"));
+}
+
+export async function loadComments(mid: string, uuid: string): Promise<void> {
+  const result = await fetchComments(uuid);
+  const nodes = buildThreadTree((result.comments ?? []).map(mapActivityToPost));
+  store.setNodeChildren(mid, nodes);
 }
 
 export async function handleDelete(mid: string) {

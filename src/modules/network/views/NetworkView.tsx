@@ -10,13 +10,14 @@ import StreamFilters from "./StreamFilters";
 import {
   viewMode, posts, loadNetwork, resetPosts,
   loading, loadMore, loadingMore, hasMore, newPosts, flushNewPosts,
-  handleLike, handleDislike, handleRepeat, handleComment,
+  handleLike, handleDislike, handleRepeat, handleComment, loadComments,
 } from "../store";
 const handlers: StreamHandlers = {
-  onLike:    handleLike,
-  onDislike: handleDislike,
-  onRepeat:  handleRepeat,
-  onComment: handleComment,
+  onLike:           handleLike,
+  onDislike:        handleDislike,
+  onRepeat:         handleRepeat,
+  onComment:        handleComment,
+  onLoadComments:   loadComments,
 };
 
 export default function NetworkView() {
