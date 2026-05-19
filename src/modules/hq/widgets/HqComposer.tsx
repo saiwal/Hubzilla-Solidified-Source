@@ -1,21 +1,12 @@
-import { createSignal, createResource, createEffect, onCleanup, Show, For } from "solid-js";
-import { Portal } from "solid-js/web";
+import { createSignal, createEffect, onCleanup, Show, For } from "solid-js";
 import { useAuth } from "@/shared/store/auth-store";
-import { fetchConnections } from "@/modules/network/api";
-import type { AclEntry } from "@/modules/network/api";
-import { useDropdown } from "@/shared/lib/useDropdown";
 import { motion } from "solid-motionone";
 import PostComposer from "@/shared/editor/composers/PostComposer";
+import AclPicker, { entryKey, type AclMode, type AclEntry } from "@/shared/editor/components/AclPicker";
 import { storageGet, storageSet, storageDel } from "@/shared/lib/storage";
 void motion;
 
 const DRAFT_KEY = "hz_hq_draft";
-
-type AclMode = "public" | "connections" | "custom";
-
-function entryKey(e: AclEntry): string {
-  return `${e.type}:${e.xid}`;
-}
 
 function insertBb(
   ta: HTMLTextAreaElement,
@@ -43,8 +34,8 @@ function HqComposer() {
   const auth = useAuth();
   const [body, setBody] = createSignal("");
   const [aclMode, setAclMode] = createSignal<AclMode>("connections");
-  const [allowKeys, setAllowKeys] = createSignal<Set<string>>(new Set());
-  const [connQuery, setConnQuery] = createSignal("");
+  const [allowKeys, setAllowKeys] = createSignal<Set<string>>(new Set<string>());
+  const [denyKeys, setDenyKeys] = createSignal<Set<string>>(new Set<string>());
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError] = createSignal("");
   const [fullOpen, setFullOpen] = createSignal(false);
@@ -64,23 +55,7 @@ function HqComposer() {
   });
   onCleanup(() => clearTimeout(draftTimer));
 
-  // Only fetch connections when custom mode has been opened at least once
-  const [fetchEnabled, setFetchEnabled] = createSignal(false);
-  const [connections] = createResource(fetchEnabled, fetchConnections);
-
-  const { open: aclOpen, setOpen: setAclOpen, toggle: toggleAcl, floatStyle, setTriggerRef, setPanelRef } =
-    useDropdown({ placement: "bottom-start", offset: 6 });
-
   let taRef!: HTMLTextAreaElement;
-
-  const filtered = () => {
-    const q = connQuery().toLowerCase().trim();
-    const all = connections() ?? [];
-    return q ? all.filter(c =>
-      c.name.toLowerCase().includes(q) ||
-      (c.nick ?? "").toLowerCase().includes(q)
-    ) : all;
-  };
 
   function wrapBb(open: string, close: string, placeholder = "…") {
     const { value, cursor } = insertBb(taRef, open, close, placeholder);
@@ -96,22 +71,22 @@ function HqComposer() {
     taRef.style.height = Math.min(taRef.scrollHeight, 480) + "px";
   }
 
-  function toggleAllow(c: AclEntry) {
-    const key = entryKey(c);
-    setAllowKeys(prev => {
-      const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
-      return next;
-    });
-  }
-
-  function handleModeClick(m: AclMode) {
-    setAclMode(m);
-    if (m === "custom") {
-      setFetchEnabled(true);
-      toggleAcl();
+  function toggleEntry(entry: AclEntry, list: "allow" | "deny") {
+    const key = entryKey(entry);
+    if (list === "allow") {
+      setAllowKeys((prev) => {
+        const next = new Set(prev);
+        next.has(key) ? next.delete(key) : next.add(key);
+        return next;
+      });
+      setDenyKeys((prev) => { const next = new Set(prev); next.delete(key); return next; });
     } else {
-      setAclOpen(false);
+      setDenyKeys((prev) => {
+        const next = new Set(prev);
+        next.has(key) ? next.delete(key) : next.add(key);
+        return next;
+      });
+      setAllowKeys((prev) => { const next = new Set(prev); next.delete(key); return next; });
     }
   }
 
@@ -142,7 +117,6 @@ function HqComposer() {
       fd.append("group_deny", "");
       fd.append("public_policy", "contacts");
     } else {
-      // custom
       if (allowKeys().size === 0) {
         setError("Select at least one connection to allow.");
         setSubmitting(false);
@@ -154,8 +128,12 @@ function HqComposer() {
         if (type === "c") fd.append("contact_allow[]", xid);
         if (type === "g") fd.append("group_allow[]", xid);
       }
-      fd.append("contact_deny", "");
-      fd.append("group_deny", "");
+      for (const key of denyKeys()) {
+        const [type, ...rest] = key.split(":");
+        const xid = rest.join(":");
+        if (type === "c") fd.append("contact_deny[]", xid);
+        if (type === "g") fd.append("group_deny[]", xid);
+      }
     }
 
     try {
@@ -175,17 +153,12 @@ function HqComposer() {
   function resetComposer() {
     setBody("");
     setAllowKeys(new Set<string>());
+    setDenyKeys(new Set<string>());
     setAclMode("connections");
     setError("");
     if (taRef) taRef.style.height = "auto";
     storageDel(DRAFT_KEY);
   }
-
-  const modeLabel: Record<AclMode, string> = {
-    public: "🌐 Public",
-    connections: "🔒 Connections",
-    custom: "🤫 Custom",
-  };
 
   const toolbar = [
     { title: "Bold",     label: "B",  cls: "font-bold", action: () => wrapBb("[b]", "[/b]") },
@@ -270,22 +243,15 @@ function HqComposer() {
 
       {/* ACL + submit row */}
       <div class="flex items-center gap-1 mt-2 flex-wrap">
-        <div ref={setTriggerRef} class="flex items-center gap-1">
-          <For each={["public", "connections", "custom"] as AclMode[]}>
-            {(m) => (
-              <button
-                type="button"
-                onClick={() => handleModeClick(m)}
-                class={`px-2 py-0.5 rounded-md text-xs border transition-all
-                        ${aclMode() === m
-                          ? "border-accent text-accent bg-accent/10"
-                          : "border-rim text-muted hover:border-elevated hover:text-txt"}`}
-              >
-                {modeLabel[m]}
-              </button>
-            )}
-          </For>
-        </div>
+        <AclPicker
+          mode={aclMode()}
+          onModeChange={setAclMode}
+          allowEntries={allowKeys()}
+          denyEntries={denyKeys()}
+          onToggle={toggleEntry}
+          onClear={() => { setAllowKeys(new Set<string>()); setDenyKeys(new Set<string>()); }}
+          showDeny={false}
+        />
 
         <button
           type="button"
@@ -301,99 +267,6 @@ function HqComposer() {
       {/* Error */}
       <Show when={error()}>
         <p class="mt-1.5 text-xs text-red-500">{error()}</p>
-      </Show>
-
-      {/* Custom ACL dropdown */}
-      <Show when={aclOpen() && aclMode() === "custom"}>
-        <Portal>
-          <div
-            ref={(el) => setPanelRef(el)}
-            use:motion={{
-              initial: { opacity: 0, scale: 0.97, y: -4 },
-              animate: { opacity: 1, scale: 1, y: 0 },
-              transition: { duration: 0.12 },
-            }}
-            style={floatStyle()}
-            class="z-50 w-72 rounded-xl border border-rim bg-surface shadow-xl
-                   overflow-hidden flex flex-col max-h-72"
-          >
-            {/* Search */}
-            <div class="px-3 py-2 border-b border-rim shrink-0">
-              <input
-                type="text"
-                placeholder="Search connections…"
-                value={connQuery()}
-                onInput={(e) => setConnQuery(e.currentTarget.value)}
-                class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-rim bg-elevated
-                       text-txt placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent"
-              />
-            </div>
-
-            {/* Selected chips */}
-            <Show when={allowKeys().size > 0}>
-              <div class="flex flex-wrap gap-1 px-3 py-1.5 border-b border-rim shrink-0 max-h-20 overflow-y-auto">
-                <For each={[...allowKeys()]}>
-                  {(key) => {
-                    const conn = (connections() ?? []).find(c => entryKey(c) === key);
-                    return (
-                      <span class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs
-                                   bg-accent/10 border border-accent/40 text-accent">
-                        {conn?.name ?? key.slice(0, 14) + "…"}
-                        <button type="button"
-                          onClick={() => conn && toggleAllow(conn)}
-                          class="hover:opacity-70 leading-none">
-                          ✕
-                        </button>
-                      </span>
-                    );
-                  }}
-                </For>
-              </div>
-            </Show>
-
-            {/* List */}
-            <ul class="overflow-y-auto flex-1 py-1">
-              <Show when={connections.loading}>
-                <li class="px-4 py-3 text-xs text-muted text-center">Loading…</li>
-              </Show>
-              <For each={filtered()}>
-                {(c) => {
-                  const key = entryKey(c);
-                  const allowed = () => allowKeys().has(key);
-                  return (
-                    <li>
-                      <button
-                        type="button"
-                        onClick={() => toggleAllow(c)}
-                        class={`w-full flex items-center gap-2.5 px-3 py-1.5 text-left text-xs
-                                transition-colors ${allowed()
-                                  ? "bg-accent/10 text-accent"
-                                  : "text-muted hover:bg-elevated hover:text-txt"}`}
-                      >
-                        <Show when={c.photo} fallback={
-                          <span class="w-5 h-5 rounded-full bg-elevated flex items-center
-                                       justify-center text-[10px] shrink-0">
-                            {c.type === "g" ? "g" : "?"}
-                          </span>
-                        }>
-                          <img src={c.photo} alt="" class="w-5 h-5 rounded-full shrink-0 object-cover" />
-                        </Show>
-                        <span class="truncate flex-1">
-                          {c.type === "g" ? "👥 " : ""}{c.name}
-                        </span>
-                        <Show when={allowed()}>
-                          <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
-                          </svg>
-                        </Show>
-                      </button>
-                    </li>
-                  );
-                }}
-              </For>
-            </ul>
-          </div>
-        </Portal>
       </Show>
 
       {/* Full composer modal — remounts on open so initialBody/initialAclMode capture current state */}

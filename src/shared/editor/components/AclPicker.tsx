@@ -21,6 +21,7 @@ void motion;
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type AclMode = "public" | "connections" | "custom";
+export type { AclEntry };
 
 // Key format: "{type}:{xid}" — e.g. "c:abc123..." or "g:d7ac40c2-..."
 export function entryKey(e: AclEntry): string {
@@ -34,20 +35,26 @@ export interface AclPickerProps {
   denyEntries: Set<string>;
   onToggle: (entry: AclEntry, list: "allow" | "deny") => void;
   onClear: () => void;
+  /** Optional pre-fetched entries — skips internal fetchConnections when provided. */
+  entries?: AclEntry[];
+  /** Show deny buttons per row (default: true). */
+  showDeny?: boolean;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const AclPicker: Component<AclPickerProps> = (props) => {
-  const [connections] = createResource(fetchConnections);
+  const [fetched] = createResource(() => !props.entries, fetchConnections);
   const [query, setQuery] = createSignal("");
+  const loading = () => !props.entries && fetched.loading;
+  const allEntries = () => props.entries ?? fetched() ?? [];
 
   const { open, setOpen, toggle, floatStyle, setTriggerRef, setPanelRef } =
     useDropdown({ placement: "top-start", offset: 8 });
 
   const filtered = () => {
     const q = query().toLowerCase().trim();
-    const all = connections() ?? [];
+    const all = allEntries();
     if (!q) return all;
     return all.filter(
       (c) =>
@@ -120,7 +127,7 @@ const AclPicker: Component<AclPickerProps> = (props) => {
             <div class="flex flex-wrap gap-1 px-3 py-2 border-b border-gray-100 dark:border-gray-800 shrink-0 max-h-24 overflow-y-auto">
               <For each={[...props.allowEntries]}>
                 {(key) => {
-                  const conn = (connections() ?? []).find(
+                  const conn = allEntries().find(
                     (c) => entryKey(c) === key,
                   );
                   return (
@@ -143,7 +150,7 @@ const AclPicker: Component<AclPickerProps> = (props) => {
               </For>
               <For each={[...props.denyEntries]}>
                 {(key) => {
-                  const conn = (connections() ?? []).find(
+                  const conn = allEntries().find(
                     (c) => entryKey(c) === key,
                   );
                   return (
@@ -191,7 +198,7 @@ const AclPicker: Component<AclPickerProps> = (props) => {
 
           {/* List */}
           <ul class="overflow-y-auto flex-1 py-1">
-            <Show when={connections.loading}>
+            <Show when={loading()}>
               <li class="px-4 py-3 text-xs text-gray-400 text-center">
                 Loading…
               </li>
@@ -251,20 +258,22 @@ const AclPicker: Component<AclPickerProps> = (props) => {
                       </Show>
                     </button>
 
-                    {/* Deny button */}
-                    <button
-                      type="button"
-                      title="Deny this connection"
-                      onClick={() => props.onToggle(c, "deny")}
-                      class={
-                        "shrink-0 w-6 h-6 rounded flex items-center justify-center text-xs transition-colors " +
-                        (isDenied()
-                          ? "bg-red-100 dark:bg-red-500/20 text-red-500 dark:text-red-400"
-                          : "text-gray-300 dark:text-gray-600 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-400")
-                      }
-                    >
-                      ✕
-                    </button>
+                    {/* Deny button — hidden when showDeny=false */}
+                    <Show when={props.showDeny !== false}>
+                      <button
+                        type="button"
+                        title="Deny this connection"
+                        onClick={() => props.onToggle(c, "deny")}
+                        class={
+                          "shrink-0 w-6 h-6 rounded flex items-center justify-center text-xs transition-colors " +
+                          (isDenied()
+                            ? "bg-red-100 dark:bg-red-500/20 text-red-500 dark:text-red-400"
+                            : "text-gray-300 dark:text-gray-600 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-400")
+                        }
+                      >
+                        ✕
+                      </button>
+                    </Show>
                   </li>
                 );
               }}

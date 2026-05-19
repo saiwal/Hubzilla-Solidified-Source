@@ -4,6 +4,7 @@ import RichEditor from "../core/RichEditor";
 import EditorPreview from "../core/EditorPreview";
 import { CAPABILITIES } from "../types/editor.types";
 import { apiFetch } from "@/shared/lib/fetch";
+import AclPicker, { entryKey, type AclMode, type AclEntry } from "../components/AclPicker";
 
 interface Props {
   profileUid: number;
@@ -26,13 +27,76 @@ export default function ArticleComposer(props: Props) {
   const [wordCount, setWordCount] = createSignal(0);
   const isEditing = () => !!props.initial?.mid;
 
+  // ── ACL state ────────────────────────────────────────────────────────────────
+  const [aclMode, setAclMode] = createSignal<AclMode>("connections");
+  const [allowEntries, setAllowEntries] = createSignal<Set<string>>(new Set<string>());
+  const [denyEntries, setDenyEntries] = createSignal<Set<string>>(new Set<string>());
+
+  function toggleEntry(entry: AclEntry, list: "allow" | "deny") {
+    const key = entryKey(entry);
+    const [getSet, setSet] = list === "allow"
+      ? [allowEntries, setAllowEntries]
+      : [denyEntries, setDenyEntries];
+    const setOther = list === "allow" ? setDenyEntries : setAllowEntries;
+    void getSet();
+    setSet((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+    setOther((prev) => { const next = new Set(prev); next.delete(key); return next; });
+  }
+
+  function clearEntries() {
+    setAllowEntries(new Set<string>());
+    setDenyEntries(new Set<string>());
+  }
+
+  // ── Scope + store ────────────────────────────────────────────────────────────
   const scope = props.initial?.mid
     ? `article:edit:${props.initial.mid}`
     : "article:new";
 
   const store = createComposerStore(async (body, meta) => {
     if (isEditing()) {
-      // ── Edit existing article via /api/item/:mid/edit ──────────────────────
+      // ── Edit existing article ─────────────────────────────────────────────────
+      const mode = aclMode();
+      const aclPayload: Record<string, unknown> = {};
+      if (mode === "public") {
+        aclPayload.contact_allow = [];
+        aclPayload.group_allow   = [];
+        aclPayload.contact_deny  = [];
+        aclPayload.group_deny    = [];
+        aclPayload.public_policy = "";
+      } else if (mode === "connections") {
+        aclPayload.contact_allow = [];
+        aclPayload.group_allow   = [];
+        aclPayload.contact_deny  = [];
+        aclPayload.group_deny    = [];
+        aclPayload.public_policy = "contacts";
+      } else {
+        if (allowEntries().size === 0)
+          throw new Error("Select at least one connection or group to allow.");
+        const cAllow: string[] = [];
+        const gAllow: string[] = [];
+        const cDeny: string[]  = [];
+        const gDeny: string[]  = [];
+        for (const key of allowEntries()) {
+          const [type, ...rest] = key.split(":");
+          if (type === "c") cAllow.push(rest.join(":"));
+          if (type === "g") gAllow.push(rest.join(":"));
+        }
+        for (const key of denyEntries()) {
+          const [type, ...rest] = key.split(":");
+          if (type === "c") cDeny.push(rest.join(":"));
+          if (type === "g") gDeny.push(rest.join(":"));
+        }
+        aclPayload.contact_allow = cAllow;
+        aclPayload.group_allow   = gAllow;
+        aclPayload.contact_deny  = cDeny;
+        aclPayload.group_deny    = gDeny;
+      }
+
       const res = await apiFetch(
         `/api/item/${encodeURIComponent(props.initial!.mid)}/edit`,
         {
@@ -41,11 +105,10 @@ export default function ArticleComposer(props: Props) {
             body,
             title:    meta.title    ?? "",
             summary:  meta.summary  ?? "",
-            // slug and category are stored as item fields Hubzilla manages
-            // separately; pass them so the handler can update if supported
             slug:     meta.slug     ?? "",
             category: meta.category ?? "",
             mimetype: meta.mimetype ?? "text/bbcode",
+            ...aclPayload,
           }),
         },
       );
@@ -54,33 +117,62 @@ export default function ArticleComposer(props: Props) {
         throw new Error(err?.error ?? "Save failed");
       }
     } else {
-      // ── Create new article via /item (Hubzilla native) ─────────────────────
+      // ── Create new article ────────────────────────────────────────────────────
       const csrf =
         document.querySelector<HTMLMetaElement>('meta[name="form_security_token"]')
           ?.content ?? "";
 
-      const params = new URLSearchParams({
-        mimetype:    meta.mimetype ?? "text/bbcode",
-        obj_type:    "",
-        profile_uid: String(props.profileUid),
-        return:      `articles/${props.nick}`,
-        webpage:     "7",   // ITEM_TYPE_ARTICLE
-        preview:     "0",
-        consensus:   "0",
-        nocomment:   "0",
-        title:       meta.title    ?? "",
-        summary:     meta.summary  ?? "",
-        category:    meta.category ?? "",
-        pagetitle:   meta.slug     ?? "",
-        body,
-      });
-      if (csrf) params.set("form_security_token", csrf);
+      const fd = new FormData();
+      fd.append("mimetype",    meta.mimetype ?? "text/bbcode");
+      fd.append("obj_type",    "");
+      fd.append("profile_uid", String(props.profileUid));
+      fd.append("return",      `articles/${props.nick}`);
+      fd.append("webpage",     "7");   // ITEM_TYPE_ARTICLE
+      fd.append("preview",     "0");
+      fd.append("consensus",   "0");
+      fd.append("nocomment",   "0");
+      fd.append("title",       meta.title    ?? "");
+      fd.append("summary",     meta.summary  ?? "");
+      fd.append("category",    meta.category ?? "");
+      fd.append("pagetitle",   meta.slug     ?? "");
+      fd.append("body",        body);
+      if (csrf) fd.append("form_security_token", csrf);
+
+      // ACL
+      const mode = aclMode();
+      if (mode === "public") {
+        fd.append("contact_allow", "");
+        fd.append("group_allow",   "");
+        fd.append("contact_deny",  "");
+        fd.append("group_deny",    "");
+        fd.append("public_policy", "");
+      } else if (mode === "connections") {
+        fd.append("contact_allow", "");
+        fd.append("group_allow",   "");
+        fd.append("contact_deny",  "");
+        fd.append("group_deny",    "");
+        fd.append("public_policy", "contacts");
+      } else {
+        if (allowEntries().size === 0)
+          throw new Error("Select at least one connection or group to allow.");
+        for (const key of allowEntries()) {
+          const [type, ...rest] = key.split(":");
+          const xid = rest.join(":");
+          if (type === "c") fd.append("contact_allow[]", xid);
+          if (type === "g") fd.append("group_allow[]", xid);
+        }
+        for (const key of denyEntries()) {
+          const [type, ...rest] = key.split(":");
+          const xid = rest.join(":");
+          if (type === "c") fd.append("contact_deny[]", xid);
+          if (type === "g") fd.append("group_deny[]", xid);
+        }
+      }
 
       const res = await fetch("/item", {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: params.toString(),
+        body: fd,
       });
       if (!res.ok) throw new Error("Save failed");
     }
@@ -212,7 +304,8 @@ export default function ArticleComposer(props: Props) {
       </Show>
 
       {/* Actions */}
-      <div class="flex items-center justify-between border-t border-rim pt-4">
+      <div class="flex flex-wrap items-center gap-3 border-t border-rim pt-4">
+        {/* Left: preview / discard */}
         <div class="flex gap-2">
           <button
             type="button"
@@ -224,13 +317,27 @@ export default function ArticleComposer(props: Props) {
           </button>
           <button
             type="button"
-            onClick={store.reset}
+            onClick={() => { store.reset(); clearEntries(); setAclMode("connections"); }}
             class="px-3 py-1.5 text-sm rounded-lg border border-rim text-muted
                    hover:bg-elevated transition-colors"
           >
             {isEditing() ? "Cancel" : "Discard"}
           </button>
         </div>
+
+        {/* Centre: ACL picker */}
+        <Show when={caps.aclPicker}>
+          <AclPicker
+            mode={aclMode()}
+            onModeChange={setAclMode}
+            allowEntries={allowEntries()}
+            denyEntries={denyEntries()}
+            onToggle={toggleEntry}
+            onClear={clearEntries}
+          />
+        </Show>
+
+        {/* Right: publish */}
         <button
           type="button"
           onClick={() => store.submit()}
@@ -239,7 +346,7 @@ export default function ArticleComposer(props: Props) {
             !store.body().trim() ||
             !store.title().trim()
           }
-          class="px-5 py-1.5 text-sm font-medium rounded-lg bg-accent text-accent-txt
+          class="ml-auto px-5 py-1.5 text-sm font-medium rounded-lg bg-accent text-accent-txt
                  hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
         >
           {store.submitting()

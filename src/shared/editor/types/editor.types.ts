@@ -57,7 +57,7 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
     slug: true,
     category: true,
     attachments: false,
-    aclPicker: false,
+    aclPicker: true,
     submitOnCtrlEnter: false,
   },
   // Hubzilla webpage (static page with slug)
