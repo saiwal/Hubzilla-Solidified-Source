@@ -15,16 +15,16 @@ import {
   handleDislike,
   handleRepeat,
   handleComment,
-} from "../store/store";
+} from "../store";
 import StreamList from "@/shared/stream/feedviews/StreamList";
 import type { StreamHandlers } from "@/shared/stream/types";
 import { ListPlaceholder } from "@/shared/stream/feedviews/ListView";
 import { MasonryPlaceholder } from "@/shared/stream/feedviews/MasonryView";
 import { FeedPlaceholder } from "@/shared/stream/feedviews/FeedView";
-import type { ChannelParams } from "../api/api";
+import type { ChannelParams } from "../api";
 import ProfileView from "./ProfileView";
 import { ViewSwitcher } from "@/shared/stream/filters";
-import { viewMode, changeView } from "../store/store";
+import { viewMode, changeView } from "../store";
 import { useViewerRole } from "@/shared/store/site-config";
 
 const handlers: StreamHandlers = {

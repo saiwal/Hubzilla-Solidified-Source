@@ -1,6 +1,7 @@
-import { createContext, useContext, createMemo, createSignal } from "solid-js";
+import { createContext, useContext, createMemo, createSignal, onMount } from "solid-js";
 import type { ParentComponent } from "solid-js";
 import * as i18n from "@solid-primitives/i18n";
+import { storageGet, storageSet } from "@/shared/lib/storage";
 import { localeRegistry } from "./locales/index";
 import type { Locale, RawDictionary } from "./locales/index";
 
@@ -22,13 +23,15 @@ const I18nContext = createContext<I18nCtx>();
 const FALLBACK: Locale = "en";
 
 export const I18nProvider: ParentComponent = (props) => {
-  const saved = localStorage.getItem("hz-locale") ?? FALLBACK;
-  const initial: Locale =
-    saved in localeRegistry ? (saved as Locale) : FALLBACK;
-
-  const [locale, setLocaleSignal] = createSignal<Locale>(initial);
+  const [locale, setLocaleSignal] = createSignal<Locale>(FALLBACK);
   const dict = createMemo(() => i18n.flatten(localeRegistry[locale()].dict));
   const rawT = i18n.translator(dict, i18n.resolveTemplate);
+
+  onMount(async () => {
+    const saved = await storageGet<string>("hz-locale", FALLBACK);
+    const initial: Locale = saved in localeRegistry ? (saved as Locale) : FALLBACK;
+    setLocaleSignal(initial);
+  });
 
   const t = (key: any, ...args: any[]) => {
     try {
@@ -40,7 +43,7 @@ export const I18nProvider: ParentComponent = (props) => {
     }
   };
   const setLocale = (l: Locale) => {
-    localStorage.setItem("hz-locale", l);
+    storageSet("hz-locale", l);
     setLocaleSignal(l);
   };
 

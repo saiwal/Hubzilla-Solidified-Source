@@ -12,7 +12,7 @@ import {
   Show,
 } from "solid-js";
 import { useSearchParams } from "@solidjs/router";
-import { loadNetwork, loading, resetPosts, viewMode, changeView } from "../store/store";
+import { loadNetwork, loading, resetPosts, viewMode, changeView } from "../store";
 import {
   MdFillFilter_list,
   MdFillMail,
@@ -34,7 +34,7 @@ import {
   fetchConnections,
   type AclConnection,
   type NetworkParams,
-} from "../api/api";
+} from "../api";
 void helpable;
 
 // ── Constants ─────────────────────────────────────────────────────────────────

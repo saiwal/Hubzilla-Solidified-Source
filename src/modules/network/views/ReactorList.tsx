@@ -1,7 +1,7 @@
 // src/modules/network/views/ReactorList.tsx
 
 import { createResource, Show, For } from 'solid-js';
-import { fetchDislikes, fetchLikes, fetchRepeats } from '../api/api';
+import { fetchDislikes, fetchLikes, fetchRepeats } from '../api';
 
 interface Props {
   mid: string;

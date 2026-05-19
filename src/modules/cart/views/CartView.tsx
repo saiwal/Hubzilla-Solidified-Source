@@ -8,7 +8,7 @@ import {
 import {
   catalog, loading, error, cartItems, cartCount, cartSubtotal, nick,
   loadCatalog, addItem, removeItem,
-} from '../store/store';
+} from '../store';
 
 type Tab = 'catalog' | 'cart';
 

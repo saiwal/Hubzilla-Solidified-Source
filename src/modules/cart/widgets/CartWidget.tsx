@@ -1,7 +1,7 @@
 import { Show, For } from 'solid-js';
 import { A } from '@solidjs/router';
 import { MdFillShopping_cart } from 'solid-icons/md';
-import { cartCount, cartItems, nick } from '../store/store';
+import { cartCount, cartItems, nick } from '../store';
 
 export default function CartWidget() {
   return (

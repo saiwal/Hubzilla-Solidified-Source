@@ -1,17 +1,18 @@
 // src/modules/network/store/store.ts
 import { createSignal } from "solid-js";
+import { storageGet, storageSet } from "@/shared/lib/storage";
 import { createStreamStore, updateNode } from "@/shared/stream/store/createStreamStore";
-import { fetchNetworkStream, postComment, apiDeleteItem as deleteItem} from "../api/api";
-import type { NetworkParams } from "../api/api";
+import { fetchNetworkStream, postComment, apiDeleteItem as deleteItem} from "./api";
+import type { NetworkParams } from "./api";
 import type { ThreadNode } from "@/shared/lib/thread";
 import { createActionHandlers, toggleVerb } from "@/shared/stream/store/actions-store";
 
 // ── viewMode (stays network-local) ───────────────────────────────────────────
 export type ViewMode = "feed" | "masonry" | "list" | "inbox";
-const storedView = (localStorage.getItem("network:viewMode") ?? "feed") as ViewMode;
-const [viewMode, setViewMode] = createSignal<ViewMode>(storedView);
+const [viewMode, setViewMode] = createSignal<ViewMode>("feed");
+storageGet<ViewMode>("network:viewMode", "feed").then(setViewMode);
 export function changeView(v: ViewMode) {
-  localStorage.setItem("network:viewMode", v);
+  storageSet("network:viewMode", v);
   setViewMode(v);
 }
 export { viewMode };

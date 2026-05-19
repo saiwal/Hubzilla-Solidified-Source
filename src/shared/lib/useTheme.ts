@@ -1,5 +1,6 @@
 import { createSignal, onMount } from "solid-js";
 import type { ThemeId } from "../types/theme.types";
+import { storageGet, storageSet } from "./storage";
 
 const [theme, setTheme] = createSignal<ThemeId>("light");
 
@@ -24,10 +25,10 @@ function applyTheme(id: ThemeId) {
 }
 
 export function useTheme() {
-  onMount(() => {
-    const stored = localStorage.getItem("color-scheme") as ThemeId | null;
+  onMount(async () => {
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const resolved: ThemeId = stored ?? (prefersDark ? "dark" : "light");
+    const defaultTheme: ThemeId = prefersDark ? "dark" : "light";
+    const resolved = await storageGet<ThemeId>("color-scheme", defaultTheme);
     setTheme(resolved);
     applyTheme(resolved);
   });
@@ -35,7 +36,7 @@ export function useTheme() {
   const switchTheme = (id: ThemeId) => {
     setTheme(id);
     applyTheme(id);
-    localStorage.setItem("color-scheme", id);
+    storageSet("color-scheme", id);
   };
 
   return { theme, switchTheme };

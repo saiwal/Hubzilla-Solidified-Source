@@ -1,6 +1,6 @@
 import { createSignal, createMemo } from 'solid-js';
-import type { CatalogItem } from '../api/api';
-import { fetchCatalog, addItem as apiAdd, removeItem as apiRemove } from '../api/api';
+import type { CatalogItem } from './api';
+import { fetchCatalog, addItem as apiAdd, removeItem as apiRemove } from './api';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 

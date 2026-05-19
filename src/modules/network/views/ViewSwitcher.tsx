@@ -1,7 +1,7 @@
 // components/ViewSwitcher.tsx
 import { MdFillAll_inbox, MdFillApps, MdFillFormat_list_bulleted, MdFillShort_text } from 'solid-icons/md';
-import { changeView, viewMode } from '../store/store';
-import type { ViewMode } from '../store/store';
+import { changeView, viewMode } from '../store';
+import type { ViewMode } from '../store';
 import { For, type Component } from 'solid-js';
 type IconType = Component<{ size?: number; class?: string }>;
 const views: { id: ViewMode; label: string; icon: IconType  }[]  = [

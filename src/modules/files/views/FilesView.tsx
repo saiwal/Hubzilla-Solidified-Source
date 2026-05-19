@@ -19,8 +19,8 @@ import {
   createFolder,
   davDirPath,
   davPath,
-} from "../api/api";
-import type { FileMeta, FileAcl } from "../api/api";
+} from "../api";
+import type { FileMeta, FileAcl } from "../api";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

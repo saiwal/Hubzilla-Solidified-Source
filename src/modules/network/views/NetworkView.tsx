@@ -11,7 +11,7 @@ import {
   viewMode, posts, loadNetwork, resetPosts,
   loading, loadMore, loadingMore, hasMore, newPosts, flushNewPosts,
   handleLike, handleDislike, handleRepeat, handleComment,
-} from "../store/store";
+} from "../store";
 const handlers: StreamHandlers = {
   onLike:    handleLike,
   onDislike: handleDislike,

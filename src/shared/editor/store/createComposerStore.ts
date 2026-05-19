@@ -1,4 +1,5 @@
 import { createSignal, createEffect } from "solid-js";
+import { storageGet, storageSet, storageDel } from "@/shared/lib/storage";
 import type { MimeType, ComposerMeta } from "../types/editor.types";
 
 export type SubmitFn = (body: string, meta: ComposerMeta) => Promise<void>;
@@ -9,13 +10,13 @@ export type ComposerStore = ReturnType<typeof createComposerStore>;
  * Factory — call once per composer *instance* (inside the component body),
  * never at module level unless the composer is a true singleton.
  *
- * `scope` is used as the localStorage draft key, so make it unique:
+ * `scope` is used as the IDB draft key, so make it unique:
  *   "hq:post", "article:new", "comment:<parentMid>"
  */
 export function createComposerStore(submitFn: SubmitFn, scope: string) {
   const DRAFT_KEY = `draft:${scope}`;
 
-  const [body, setBody]         = createSignal(localStorage.getItem(DRAFT_KEY) ?? "");
+  const [body, setBody]         = createSignal("");
   const [title, setTitle]       = createSignal("");
   const [summary, setSummary]   = createSignal("");
   const [slug, setSlug]         = createSignal("");
@@ -25,11 +26,13 @@ export function createComposerStore(submitFn: SubmitFn, scope: string) {
   const [error, setError]       = createSignal<string | null>(null);
   const [tab, setTab]           = createSignal<"wysiwyg" | "source">("wysiwyg");
 
+  storageGet<string>(DRAFT_KEY, "").then(setBody);
+
   // Persist body as draft while typing; remove when submitted or cleared
   createEffect(() => {
     const b = body();
-    if (b) localStorage.setItem(DRAFT_KEY, b);
-    else localStorage.removeItem(DRAFT_KEY);
+    if (b) storageSet(DRAFT_KEY, b);
+    else storageDel(DRAFT_KEY);
   });
 
   async function submit(extra: ComposerMeta = {}) {
@@ -51,7 +54,7 @@ export function createComposerStore(submitFn: SubmitFn, scope: string) {
       setSummary("");
       setSlug("");
       setCategory("");
-      localStorage.removeItem(DRAFT_KEY);
+      storageDel(DRAFT_KEY);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Submit failed");
     } finally {
@@ -66,7 +69,7 @@ export function createComposerStore(submitFn: SubmitFn, scope: string) {
     setSlug("");
     setCategory("");
     setError(null);
-    localStorage.removeItem(DRAFT_KEY);
+    storageDel(DRAFT_KEY);
   }
 
   return {

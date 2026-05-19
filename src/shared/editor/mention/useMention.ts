@@ -12,7 +12,7 @@
  */
 
 import { createSignal, createMemo, createResource } from "solid-js";
-import { fetchConnections } from "@/modules/network/api/api";
+import { fetchConnections } from "@/modules/network/api";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

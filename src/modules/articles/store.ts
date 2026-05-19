@@ -1,5 +1,6 @@
 // src/modules/articles/store.ts
 import { createSignal } from "solid-js";
+import { storageGet, storageSet } from "@/shared/lib/storage";
 import { createStreamStore, updateNode } from "@/shared/stream/store/createStreamStore";
 import { fetchArticles, postComment } from "./api";
 import type { ThreadNode } from "@/shared/lib/thread";
@@ -38,11 +39,10 @@ export const {
 } = store;
 
 // ── viewMode ──────────────────────────────────────────────────────────────────
-const [viewMode, setViewMode] = createSignal<ViewMode>(
-  (localStorage.getItem("articles:viewMode") ?? "list") as ViewMode
-);
+const [viewMode, setViewMode] = createSignal<ViewMode>("list");
+storageGet<ViewMode>("articles:viewMode", "list").then(setViewMode);
 export function changeView(v: ViewMode) {
-  localStorage.setItem("articles:viewMode", v);
+  storageSet("articles:viewMode", v);
   setViewMode(v);
 }
 export { viewMode };

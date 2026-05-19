@@ -1,8 +1,9 @@
 // src/modules/channel/store/store.ts
 import { createSignal } from "solid-js";
+import { storageGet, storageSet } from "@/shared/lib/storage";
 import { createStreamStore, updateNode } from "@/shared/stream/store/createStreamStore";
-import { fetchChannelPosts, postComment } from "../api/api";
-import type { ChannelParams, ChannelStreamResult } from "../api/api";
+import { fetchChannelPosts, postComment } from "./api";
+import type { ChannelParams, ChannelStreamResult } from "./api";
 import type { ThreadNode } from "@/shared/lib/thread";
 import { createActionHandlers } from "@/shared/stream/store/actions-store";
 import type { ViewMode } from "@/shared/stream/types";
@@ -25,11 +26,10 @@ export const {
   posts, loading, loadingMore, hasMore, newPosts, profileUid,
   loadMore, flushNewPosts, stopPolling,
 } = store;
-const [viewMode, setViewMode] = createSignal<ViewMode>(
-  (localStorage.getItem("channel:viewMode") ?? "masonry") as ViewMode
-);
+const [viewMode, setViewMode] = createSignal<ViewMode>("masonry");
+storageGet<ViewMode>("channel:viewMode", "masonry").then(setViewMode);
 export function changeView(v: ViewMode) {
-  localStorage.setItem("channel:viewMode", v);
+  storageSet("channel:viewMode", v);
   setViewMode(v);
 }
 export { viewMode };

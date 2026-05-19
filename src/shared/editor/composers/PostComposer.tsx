@@ -11,7 +11,7 @@
  * - Character count display
  * - ACL picker with per-connection allow/deny (contacts + groups)
  * - Expiry picker, collapsible extra fields
- * - Draft auto-save to localStorage
+ * - Draft auto-save to IndexedDB (idb-keyval)
  * - Ctrl+Enter to post, Escape to close
  * - Submits to POST /item (Hubzilla Item::post())
  */
@@ -26,8 +26,9 @@ import {
   type Component,
 } from "solid-js";
 import { Portal } from "solid-js/web";
-import { fetchConnections } from "@/modules/network/api/api";
-import type { AclEntry } from "@/modules/network/api/api";
+import { fetchConnections } from "@/modules/network/api";
+import { storageGet, storageSet, storageDel } from "@/shared/lib/storage";
+import type { AclEntry } from "@/modules/network/api";
 import { helpable } from "@/shared/lib/helpable";
 void helpable;
 import { useMention } from "../mention/useMention";
@@ -557,29 +558,14 @@ const TOOLBAR: ToolbarItem[] = [
 // ─── Draft helpers ────────────────────────────────────────────────────────────
 
 const DRAFT_KEY = "hz_composer_draft";
-function loadDraft(): Record<string, string> {
-  try {
-    return JSON.parse(localStorage.getItem(DRAFT_KEY) ?? "{}") as Record<
-      string,
-      string
-    >;
-  } catch {
-    return {};
-  }
+async function loadDraft(): Promise<Record<string, string>> {
+  return storageGet<Record<string, string>>(DRAFT_KEY, {});
 }
 function saveDraft(data: object) {
-  try {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
-  } catch {
-    /**/
-  }
+  storageSet(DRAFT_KEY, data);
 }
 function clearDraft() {
-  try {
-    localStorage.removeItem(DRAFT_KEY);
-  } catch {
-    /**/
-  }
+  storageDel(DRAFT_KEY);
 }
 
 // ─── ACL Picker ───────────────────────────────────────────────────────────────
@@ -827,15 +813,19 @@ const AclPicker: Component<AclPickerProps> = (props) => {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const PostComposer: Component<ComposerProps> = (props) => {
-  const draft = loadDraft();
+  const [title, setTitle] = createSignal("");
+  const [summary, setSummary] = createSignal("");
+  const [category, setCategory] = createSignal("");
+  const [body, setBody] = createSignal(props.initialBody ?? "");
+  const [aclMode, setAclMode] = createSignal<AclMode>("connections");
 
-  const [title, setTitle] = createSignal(draft.title ?? "");
-  const [summary, setSummary] = createSignal(draft.summary ?? "");
-  const [category, setCategory] = createSignal(draft.category ?? "");
-  const [body, setBody] = createSignal(props.initialBody ?? draft.body ?? "");
-  const [aclMode, setAclMode] = createSignal<AclMode>(
-    (draft.aclMode as AclMode) ?? "connections",
-  );
+  loadDraft().then((draft) => {
+    if (!title()) setTitle(draft.title ?? "");
+    if (!summary()) setSummary(draft.summary ?? "");
+    if (!category()) setCategory(draft.category ?? "");
+    if (!body()) setBody(draft.body ?? "");
+    if (draft.aclMode) setAclMode((draft.aclMode as AclMode) ?? "connections");
+  });
   const [allowEntries, setAllowEntries] = createSignal<Set<string>>(
     new Set<string>(),
   );

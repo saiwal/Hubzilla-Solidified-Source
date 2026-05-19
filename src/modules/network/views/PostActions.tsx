@@ -7,7 +7,7 @@ import {
   handleRepeat,
   handleStar,
   handleDelete,
-} from "../store/store";
+} from "../store";
 import type { ThreadNode } from "@/shared/lib/thread";
 
 interface Props {
