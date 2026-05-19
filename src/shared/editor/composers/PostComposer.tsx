@@ -25,6 +25,13 @@ import { CAPABILITIES } from "../types/editor.types";
 import AclPicker, { entryKey } from "../components/AclPicker";
 import type { AclMode } from "../components/AclPicker";
 import type { AclEntry } from "@/modules/network/api";
+import {
+  useMention,
+  getWysiwygMentionQuery,
+  getTextareaMentionQuery,
+  getCaretRect,
+} from "../mention/useMention";
+import MentionPopup from "../mention/MentionPopup";
 import { helpable } from "@/shared/lib/helpable";
 void helpable;
 
@@ -76,6 +83,8 @@ const PostComposer: Component<ComposerProps> = (props) => {
       fd.append("profile_uid", String(props.profileUid));
       fd.append("type", props.parentId ? "net-comment" : "wall");
       if (props.parentId) fd.append("parent", String(props.parentId));
+      if (meta.title) fd.append("title", meta.title);
+      if (meta.category) fd.append("category", meta.category);
       if (expiry()) fd.append("expire", expiry());
       fd.append("return", "");
 
@@ -173,8 +182,61 @@ const PostComposer: Component<ComposerProps> = (props) => {
     setExpiry("");
   }
 
+  // ── Mention autocomplete ───────────────────────────────────────────────────
+  const mention = useMention();
+  let editorWrapRef: HTMLDivElement | undefined;
+
+  const getEditor = () =>
+    editorWrapRef?.querySelector<HTMLDivElement>("[contenteditable]") ?? null;
+  const getTA = () =>
+    editorWrapRef?.querySelector<HTMLTextAreaElement>("textarea") ?? null;
+
+  createEffect(() => {
+    void store.body();
+    const editor = getEditor();
+    if (editor) {
+      const q = getWysiwygMentionQuery();
+      if (q !== null) {
+        const rect = getCaretRect();
+        if (rect) mention.openWithQuery(q, rect);
+        return;
+      }
+    }
+    const ta = getTA();
+    if (ta) {
+      const q = getTextareaMentionQuery(ta);
+      if (q !== null) {
+        mention.openWithQuery(q, ta.getBoundingClientRect());
+        return;
+      }
+    }
+    mention.close();
+  });
+
+  function insertSelected() {
+    const entry = mention.filtered()[mention.activeIdx()];
+    if (!entry) return;
+    const editor = getEditor();
+    if (editor) {
+      mention.insertWysiwyg(entry, () => store.setBody(editor.innerHTML));
+      return;
+    }
+    const ta = getTA();
+    if (ta) mention.insertTextarea(entry, ta, store.setBody);
+  }
+
   // ── Keyboard shortcuts ─────────────────────────────────────────────────────
   function onKey(e: KeyboardEvent) {
+    if (mention.open()) {
+      const consumed = mention.onKeyDown(e);
+      if (consumed) {
+        if (e.key === "Enter" || e.key === "Tab") insertSelected();
+        return;
+      }
+      // mention.onKeyDown calls stopPropagation on Escape — but we're in a
+      // direct listener so we must check the return value to avoid closing modal
+      if (e.key === "Escape") return;
+    }
     if (e.key === "Escape") {
       props.onClose();
       return;
@@ -203,7 +265,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
         >
           <div
             class={
-              "flex flex-col bg-white dark:bg-gray-900 border border-rim " +
+              "flex flex-col bg-surface border border-rim " +
               "shadow-2xl text-txt overflow-hidden " +
               (fullscreen()
                 ? "fixed inset-0 w-full max-h-full rounded-none"
@@ -215,7 +277,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
           >
             {/* ── Header ── */}
             <header class="flex items-center justify-between px-4 py-3 border-b border-rim shrink-0">
-              <span class="text-xs font-semibold tracking-widest uppercase text-gray-400 dark:text-gray-500 select-none">
+              <span class="text-xs font-semibold tracking-widest uppercase text-muted select-none">
                 {props.parentId ? "Reply" : "New Post"}
               </span>
               <div class="flex items-center gap-1">
@@ -223,7 +285,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
                   type="button"
                   title={fullscreen() ? "Exit fullscreen" : "Fullscreen"}
                   onClick={() => setFullscreen((f) => !f)}
-                  class="p-1.5 rounded-md text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  class="p-1.5 rounded-md text-muted hover:text-txt hover:bg-elevated transition-colors"
                 >
                   <Show
                     when={fullscreen()}
@@ -254,7 +316,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
                   type="button"
                   title="Close (Esc)"
                   onClick={props.onClose}
-                  class="p-1.5 rounded-md text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  class="p-1.5 rounded-md text-muted hover:text-txt hover:bg-elevated transition-colors"
                 >
                   <svg
                     class="w-4 h-4"
@@ -269,22 +331,48 @@ const PostComposer: Component<ComposerProps> = (props) => {
               </div>
             </header>
 
+            {/* ── Meta fields (title / category) ── */}
+            <Show when={caps.title || caps.category}>
+              <div class="flex gap-2 px-4 pt-3 pb-2 border-b border-rim shrink-0">
+                <Show when={caps.title}>
+                  <input
+                    type="text"
+                    placeholder="Title (optional)"
+                    value={store.title()}
+                    onInput={(e) => store.setTitle(e.currentTarget.value)}
+                    class="flex-1 min-w-0 bg-transparent text-sm font-medium text-txt
+                           placeholder:text-muted outline-none"
+                  />
+                </Show>
+                <Show when={caps.category}>
+                  <input
+                    type="text"
+                    placeholder="Category"
+                    value={store.category()}
+                    onInput={(e) => store.setCategory(e.currentTarget.value)}
+                    class="w-32 shrink-0 bg-transparent text-sm text-txt
+                           placeholder:text-muted outline-none border-l border-rim pl-2"
+                  />
+                </Show>
+              </div>
+            </Show>
+
             {/* ── Editor area (flex-1) ── */}
-            <div class="flex-1 overflow-hidden min-h-0 flex flex-col">
+            <div ref={editorWrapRef} class="flex-1 overflow-hidden min-h-0 flex flex-col">
               <RichEditor
                 body={store.body()}
                 onInput={store.setBody}
                 capabilities={caps}
                 tab={store.tab()}
                 onTabChange={store.setTab}
-                onCtrlEnter={() => void store.submit()}
+                onCtrlEnter={() => { if (!mention.open()) void store.submit(); }}
                 placeholder={props.parentId ? "Write a reply…" : "What's on your mind?"}
                 minHeight="200px"
               />
             </div>
 
             {/* ── Footer ── */}
-            <footer class="flex flex-wrap items-center gap-2 px-3.5 py-2.5 border-t border-rim bg-gray-50 dark:bg-gray-800/40 shrink-0">
+            <footer class="flex flex-wrap items-center gap-2 px-3.5 py-2.5 border-t border-rim bg-elevated shrink-0">
               {/* ACL Picker */}
               <AclPicker
                 mode={aclMode()}
@@ -298,7 +386,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
               {/* Expiry */}
               <div class="hidden sm:flex items-center gap-1.5 min-w-0">
                 <span
-                  class="text-gray-400 dark:text-gray-500 text-xs shrink-0"
+                  class="text-muted text-xs shrink-0"
                   title="Post expiry"
                 >
                   ⏱
@@ -307,13 +395,13 @@ const PostComposer: Component<ComposerProps> = (props) => {
                   type="datetime-local"
                   value={expiry()}
                   onInput={(e) => setExpiry(e.currentTarget.value)}
-                  class="bg-transparent border border-rim rounded px-1.5 py-0.5 text-xs text-gray-400 dark:text-gray-500 focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 focus:text-gray-700 dark:focus:text-gray-300 transition-colors"
+                  class="bg-transparent border border-rim rounded px-1.5 py-0.5 text-xs text-muted focus:outline-none focus:border-rim-strong focus:text-txt transition-colors"
                 />
               </div>
 
               {/* Character count + reset + submit */}
               <div class="flex items-center gap-3 ml-auto shrink-0">
-                <span class="font-mono text-xs tabular-nums text-gray-400 dark:text-gray-500">
+                <span class="font-mono text-xs tabular-nums text-muted">
                   {store.body().length}
                 </span>
                 <Show when={store.body().trim()}>
@@ -321,7 +409,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
                     type="button"
                     title="Clear composer"
                     onClick={resetAll}
-                    class="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                    class="p-1.5 rounded-md text-muted hover:text-red-500 hover:bg-red-500/10 transition-colors"
                   >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -332,7 +420,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
                   type="button"
                   disabled={store.submitting()}
                   onClick={() => void store.submit()}
-                  class="px-5 py-1.5 rounded-lg text-sm font-semibold bg-indigo-500 hover:bg-indigo-600 active:bg-indigo-700 text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+                  class="px-5 py-1.5 rounded-lg text-sm font-semibold bg-accent text-accent-txt hover:opacity-90 active:opacity-80 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {store.submitting() ? "Posting…" : "Post"}
                 </button>
@@ -347,6 +435,25 @@ const PostComposer: Component<ComposerProps> = (props) => {
             </Show>
           </div>
         </div>
+
+        {/* ── Mention popup (its own Portal → floats above the modal) ── */}
+        <Show when={mention.open() && mention.rect() !== null}>
+          <MentionPopup
+            query={mention.query()!}
+            entries={mention.filtered()}
+            anchorRect={mention.rect()!}
+            activeIdx={mention.activeIdx()}
+            onSelect={(entry) => {
+              const editor = getEditor();
+              if (editor) {
+                mention.insertWysiwyg(entry, () => store.setBody(editor.innerHTML));
+                return;
+              }
+              const ta = getTA();
+              if (ta) mention.insertTextarea(entry, ta, store.setBody);
+            }}
+          />
+        </Show>
       </Portal>
     </Show>
   );

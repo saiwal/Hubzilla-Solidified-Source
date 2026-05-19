@@ -177,8 +177,11 @@ function InboxRow(props: {
   const [commentsLoading, setCommentsLoading] = createSignal(false);
   const { locale } = useI18n();
 
+  const REACTION_VERBS = new Set(['Like', 'Dislike', 'Announce', 'Accept', 'Reject', 'TentativeAccept', 'Add', 'Remove']);
   const replyCount = () =>
-    p.children.length > 0 ? flattenThread(p).length - 1 : (p.commentCount ?? 0);
+    p.children.length > 0
+      ? flattenThread(p).filter(n => !REACTION_VERBS.has(n.verb ?? '')).length - 1
+      : (p.commentCount ?? 0);
   const participants = () => getParticipants(p);
 
   async function toggleExpand() {

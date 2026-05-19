@@ -39,8 +39,11 @@ const COLLAPSED_MAX_PX = 200;
 
 function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers }) {
   const p = props.post;
+  const REACTION_VERBS = new Set(['Like', 'Dislike', 'Announce', 'Accept', 'Reject', 'TentativeAccept', 'Add', 'Remove']);
   const replyCount = () =>
-    p.children.length > 0 ? p.children.length : (p.commentCount ?? 0);
+    p.children.length > 0
+      ? p.children.filter(c => !REACTION_VERBS.has(c.verb ?? '')).length
+      : (p.commentCount ?? 0);
   const [showModal, setShowModal] = createSignal(false);
   const [expanded, setExpanded] = createSignal(false);
   let bodyRef!: HTMLDivElement;

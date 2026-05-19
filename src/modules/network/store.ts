@@ -57,9 +57,12 @@ export function handleStar(mid: string) {
   store.optimisticToggle(mid, "like", "likeCount", () => toggleVerb(iid, "star"));
 }
 
+const REACTION_VERBS = new Set(['Like', 'Dislike', 'Announce', 'Accept', 'Reject', 'TentativeAccept', 'Add', 'Remove']);
+
 export async function loadComments(mid: string, uuid: string): Promise<void> {
   const result = await fetchComments(uuid);
-  const nodes = buildThreadTree((result.comments ?? []).map(mapActivityToPost));
+  const comments = (result.comments ?? []).filter((a: any) => !REACTION_VERBS.has(a.verb));
+  const nodes = buildThreadTree(comments.map(mapActivityToPost));
   store.setNodeChildren(mid, nodes);
 }
 

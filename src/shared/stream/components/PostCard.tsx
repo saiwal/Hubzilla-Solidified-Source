@@ -53,9 +53,11 @@ export default function PostCard(props: {
   const { locale } = useI18n();
   let cardRef!: HTMLDivElement;
 
+  const REACTION_VERBS = new Set(['Like', 'Dislike', 'Announce', 'Accept', 'Reject', 'TentativeAccept', 'Add', 'Remove']);
+  const commentChildren = () => props.post.children.filter(c => !REACTION_VERBS.has(c.verb ?? ''));
   const totalComments = () =>
     props.post.children.length > 0
-      ? props.post.children.length
+      ? commentChildren().length
       : (props.post.commentCount ?? 0);
 
   function persistShow(v: boolean) {

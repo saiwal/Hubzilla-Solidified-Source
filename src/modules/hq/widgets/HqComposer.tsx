@@ -4,6 +4,8 @@ import { motion } from "solid-motionone";
 import PostComposer from "@/shared/editor/composers/PostComposer";
 import AclPicker, { entryKey, type AclMode, type AclEntry } from "@/shared/editor/components/AclPicker";
 import { storageGet, storageSet, storageDel } from "@/shared/lib/storage";
+import { useMention, getTextareaMentionQuery } from "@/shared/editor/mention/useMention";
+import MentionPopup from "@/shared/editor/mention/MentionPopup";
 void motion;
 
 const DRAFT_KEY = "hz_hq_draft";
@@ -56,6 +58,31 @@ function HqComposer() {
   onCleanup(() => clearTimeout(draftTimer));
 
   let taRef!: HTMLTextAreaElement;
+
+  // ── Mention autocomplete ──────────────────────────────────────────────────
+  const mention = useMention();
+
+  createEffect(() => {
+    void body();
+    const q = getTextareaMentionQuery(taRef);
+    if (q !== null) {
+      mention.openWithQuery(q, taRef.getBoundingClientRect());
+    } else {
+      mention.close();
+    }
+  });
+
+  function onKeyDown(e: KeyboardEvent) {
+    if (!mention.open()) return;
+    const consumed = mention.onKeyDown(e);
+    if (consumed && (e.key === "Enter" || e.key === "Tab")) {
+      const entry = mention.filtered()[mention.activeIdx()];
+      if (entry) mention.insertTextarea(entry, taRef, setBody);
+    }
+  }
+
+  window.addEventListener("keydown", onKeyDown);
+  onCleanup(() => window.removeEventListener("keydown", onKeyDown));
 
   function wrapBb(open: string, close: string, placeholder = "…") {
     const { value, cursor } = insertBb(taRef, open, close, placeholder);
@@ -167,7 +194,7 @@ function HqComposer() {
       const url = window.prompt("URL:", "https://");
       if (url) wrapBb(`[url=${url}]`, "[/url]", "Link text");
     }},
-    { title: "Mention",  label: "@",  cls: "",          action: () => wrapBb("@", "", "nick@domain") },
+    { title: "Mention",  label: "@",  cls: "",          action: () => wrapBb("@", "") },
     { title: "Hashtag",  label: "#",  cls: "",          action: () => wrapBb("#", "", "tag") },
   ];
 
@@ -267,6 +294,17 @@ function HqComposer() {
       {/* Error */}
       <Show when={error()}>
         <p class="mt-1.5 text-xs text-red-500">{error()}</p>
+      </Show>
+
+      {/* Mention popup */}
+      <Show when={mention.open() && mention.rect() !== null}>
+        <MentionPopup
+          query={mention.query()!}
+          entries={mention.filtered()}
+          anchorRect={mention.rect()!}
+          activeIdx={mention.activeIdx()}
+          onSelect={(entry) => mention.insertTextarea(entry, taRef, setBody)}
+        />
       </Show>
 
       {/* Full composer modal — remounts on open so initialBody/initialAclMode capture current state */}

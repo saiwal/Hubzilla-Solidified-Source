@@ -1,10 +1,17 @@
-import { createSignal, Show } from "solid-js";
+import { createSignal, Show, onCleanup } from "solid-js";
 import { createComposerStore } from "../store/createComposerStore";
 import RichEditor from "../core/RichEditor";
 import EditorPreview from "../core/EditorPreview";
 import { CAPABILITIES } from "../types/editor.types";
 import { apiFetch } from "@/shared/lib/fetch";
 import AclPicker, { entryKey, type AclMode, type AclEntry } from "../components/AclPicker";
+import {
+  useMention,
+  getWysiwygMentionQuery,
+  getTextareaMentionQuery,
+  getCaretRect,
+} from "../mention/useMention";
+import MentionPopup from "../mention/MentionPopup";
 
 interface Props {
   profileUid: number;
@@ -51,6 +58,15 @@ export default function ArticleComposer(props: Props) {
     setAllowEntries(new Set<string>());
     setDenyEntries(new Set<string>());
   }
+
+  // ── Mention autocomplete ─────────────────────────────────────────────────────
+  const mention = useMention();
+  let editorWrapRef: HTMLDivElement | undefined;
+
+  const getEditor = () =>
+    editorWrapRef?.querySelector<HTMLDivElement>("[contenteditable]") ?? null;
+  const getTA = () =>
+    editorWrapRef?.querySelector<HTMLTextAreaElement>("textarea") ?? null;
 
   // ── Scope + store ────────────────────────────────────────────────────────────
   const scope = props.initial?.mid
@@ -189,10 +205,50 @@ export default function ArticleComposer(props: Props) {
     store.setBody(props.initial.body);
   }
 
+  function insertSelected() {
+    const entry = mention.filtered()[mention.activeIdx()];
+    if (!entry) return;
+    const editor = getEditor();
+    if (editor) {
+      mention.insertWysiwyg(entry, () => store.setBody(editor.innerHTML));
+      return;
+    }
+    const ta = getTA();
+    if (ta) mention.insertTextarea(entry, ta, store.setBody);
+  }
+
+  function onKeyDown(e: KeyboardEvent) {
+    if (!mention.open()) return;
+    const consumed = mention.onKeyDown(e);
+    if (consumed && (e.key === "Enter" || e.key === "Tab")) insertSelected();
+  }
+
+  window.addEventListener("keydown", onKeyDown);
+  onCleanup(() => window.removeEventListener("keydown", onKeyDown));
+
   const onBodyChange = (v: string) => {
     store.setBody(v);
     const text = v.replace(/<[^>]*>/g, " ");
     setWordCount(text.trim().split(/\s+/).filter(Boolean).length);
+
+    // Detect @-mention synchronously while still inside the input event
+    // (window.getSelection() is only reliable at this point, not in a deferred effect)
+    const editor = getEditor();
+    if (editor) {
+      const q = getWysiwygMentionQuery();
+      if (q !== null) {
+        const rect = getCaretRect();
+        if (rect) { mention.openWithQuery(q, rect); return; }
+      }
+      mention.close();
+      return;
+    }
+    const ta = getTA();
+    if (ta) {
+      const q = getTextareaMentionQuery(ta);
+      if (q !== null) { mention.openWithQuery(q, ta.getBoundingClientRect()); return; }
+    }
+    mention.close();
   };
 
   const onTitleChange = (v: string) => {
@@ -281,15 +337,36 @@ export default function ArticleComposer(props: Props) {
       </div>
 
       {/* Editor */}
-      <RichEditor
-        body={store.body()}
-        onInput={onBodyChange}
-        capabilities={caps}
-        tab={store.tab()}
-        onTabChange={store.setTab}
-        placeholder="Start writing…"
-        minHeight="400px"
-      />
+      <div ref={editorWrapRef}>
+        <RichEditor
+          body={store.body()}
+          onInput={onBodyChange}
+          capabilities={caps}
+          tab={store.tab()}
+          onTabChange={store.setTab}
+          placeholder="Start writing…"
+          minHeight="400px"
+        />
+      </div>
+
+      {/* Mention popup */}
+      <Show when={mention.open() && mention.rect() !== null}>
+        <MentionPopup
+          query={mention.query()!}
+          entries={mention.filtered()}
+          anchorRect={mention.rect()!}
+          activeIdx={mention.activeIdx()}
+          onSelect={(entry) => {
+            const editor = getEditor();
+            if (editor) {
+              mention.insertWysiwyg(entry, () => store.setBody(editor.innerHTML));
+              return;
+            }
+            const ta = getTA();
+            if (ta) mention.insertTextarea(entry, ta, store.setBody);
+          }}
+        />
+      </Show>
 
       {/* Preview */}
       <Show when={showPreview() && store.body().trim()}>

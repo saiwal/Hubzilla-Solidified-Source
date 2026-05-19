@@ -87,8 +87,8 @@ const AclPicker: Component<AclPickerProps> = (props) => {
             class={
               "flex items-center gap-1 px-2.5 py-1 rounded-md text-xs border transition-all " +
               (props.mode === m
-                ? "border-indigo-400 text-indigo-500 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10"
-                : "border-rim text-gray-400 dark:text-gray-500 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-600 dark:hover:text-gray-300")
+                ? "border-accent text-accent bg-accent/10"
+                : "border-rim text-muted hover:border-rim-strong hover:text-txt")
             }
           >
             {modeLabel[m]}
@@ -107,24 +107,24 @@ const AclPicker: Component<AclPickerProps> = (props) => {
               transition: { duration: 0.15 },
             }}
             style={floatStyle()}
-            class="z-[60] w-80 rounded-xl border border-rim bg-white dark:bg-gray-900 shadow-xl overflow-hidden flex flex-col max-h-96"
+            class="z-[60] w-80 rounded-xl border border-rim bg-surface shadow-xl overflow-hidden flex flex-col max-h-96"
           >
           {/* Search */}
-          <div class="px-3 py-2 border-b border-gray-100 dark:border-gray-800 shrink-0">
+          <div class="px-3 py-2 border-b border-rim shrink-0">
             <input
               type="text"
               placeholder="Search connections & groups…"
               value={query()}
               onInput={(e) => setQuery(e.currentTarget.value)}
               class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-rim
-                     bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200
-                     placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                     bg-elevated text-txt
+                     placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent/50"
             />
           </div>
 
           {/* Selected chips */}
           <Show when={totalSelected() > 0}>
-            <div class="flex flex-wrap gap-1 px-3 py-2 border-b border-gray-100 dark:border-gray-800 shrink-0 max-h-24 overflow-y-auto">
+            <div class="flex flex-wrap gap-1 px-3 py-2 border-b border-rim shrink-0 max-h-24 overflow-y-auto">
               <For each={[...props.allowEntries]}>
                 {(key) => {
                   const conn = allEntries().find(
@@ -174,7 +174,7 @@ const AclPicker: Component<AclPickerProps> = (props) => {
               <button
                 type="button"
                 onClick={props.onClear}
-                class="px-2 py-0.5 rounded-full text-xs text-gray-400 hover:text-red-500 transition-colors border border-rim"
+                class="px-2 py-0.5 rounded-full text-xs text-muted hover:text-red-500 transition-colors border border-rim"
               >
                 Clear all
               </button>
@@ -182,8 +182,8 @@ const AclPicker: Component<AclPickerProps> = (props) => {
           </Show>
 
           {/* Legend */}
-          <div class="flex items-center gap-4 px-3 py-1.5 border-b border-gray-100 dark:border-gray-800 shrink-0">
-            <span class="text-[10px] text-gray-400">
+          <div class="flex items-center gap-4 px-3 py-1.5 border-b border-rim shrink-0">
+            <span class="text-[10px] text-muted">
               Row = allow &nbsp;|&nbsp; ✕ button = deny
             </span>
             <span class="flex items-center gap-1 text-[10px] text-green-600 dark:text-green-400 ml-auto">
@@ -199,7 +199,7 @@ const AclPicker: Component<AclPickerProps> = (props) => {
           {/* List */}
           <ul class="overflow-y-auto flex-1 py-1">
             <Show when={loading()}>
-              <li class="px-4 py-3 text-xs text-gray-400 text-center">
+              <li class="px-4 py-3 text-xs text-muted text-center">
                 Loading…
               </li>
             </Show>
@@ -220,14 +220,14 @@ const AclPicker: Component<AclPickerProps> = (props) => {
                           ? "bg-green-50 dark:bg-green-500/10"
                           : isDenied()
                             ? "bg-red-50 dark:bg-red-500/10"
-                            : "hover:bg-gray-50 dark:hover:bg-gray-800")
+                            : "hover:bg-elevated")
                       }
                     >
                       {/* Avatar */}
                       <Show
                         when={c.photo}
                         fallback={
-                          <span class="w-6 h-6 rounded-full shrink-0 bg-elevated flex items-center justify-center text-[10px] text-gray-500">
+                          <span class="w-6 h-6 rounded-full shrink-0 bg-elevated flex items-center justify-center text-[10px] text-muted">
                             {c.type === "g" ? "g" : "?"}
                           </span>
                         }
@@ -240,12 +240,12 @@ const AclPicker: Component<AclPickerProps> = (props) => {
                       </Show>
 
                       <span class="flex flex-col min-w-0 flex-1">
-                        <span class="truncate text-xs font-medium text-gray-800 dark:text-gray-200">
+                        <span class="truncate text-xs font-medium text-txt">
                           {c.type === "g" ? "👥 " : ""}
                           {c.name}
                         </span>
                         <Show when={c.link}>
-                          <span class="truncate text-[10px] text-gray-400">
+                          <span class="truncate text-[10px] text-muted">
                             {c.link}
                           </span>
                         </Show>
@@ -268,7 +268,7 @@ const AclPicker: Component<AclPickerProps> = (props) => {
                           "shrink-0 w-6 h-6 rounded flex items-center justify-center text-xs transition-colors " +
                           (isDenied()
                             ? "bg-red-100 dark:bg-red-500/20 text-red-500 dark:text-red-400"
-                            : "text-gray-300 dark:text-gray-600 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-400")
+                            : "text-muted/50 hover:bg-red-500/10 hover:text-red-400")
                         }
                       >
                         ✕

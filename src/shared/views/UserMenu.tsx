@@ -13,35 +13,50 @@ const Usermenu = (props: NavUtilitiesProps) => {
     props.viewer?.is_local || props.viewer?.is_remote || props.viewer?.is_admin;
   return (
     <Show when={isAuthenticated() && props.onUserMenuToggle}>
-      <div class="mt-3 pt-2 border-t border-rim flex items-center gap-0.5 px-2.5 justify-start">
+      <div class="mt-3 pt-2 border-t border-rim px-2.5">
         <button
           onClick={props.onUserMenuToggle}
           title={props.viewer!.name}
-          class={`relative p-0.5 rounded-lg transition-colors hover:bg-elevated
-                  focus-visible:outline-none flex items-center justify-start min-w-0
-                  ${props.actionsOpen ? "bg-elevated ring-2 ring-accent/40" : ""}`}
+          class={`
+            w-full p-1.5 rounded-xl transition-all duration-150 ease-out
+            flex items-center gap-2.5 min-w-0
+            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60
+            ${props.actionsOpen
+              ? "bg-elevated ring-1 ring-accent/30 shadow-sm"
+              : "hover:bg-elevated"
+            }
+          `}
         >
-          <div class="flex items-center gap-2 min-w-0">
-            {/* Avatar */}
-            <div class="relative flex-shrink-0 pe-2">
-              <img
-                src={props.viewer!.avatar}
-                alt={props.viewer!.name}
-                class="w-10 h-10 rounded-lg object-cover select-none"
-                loading="lazy"
-              />
-              <span
-                class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full
-                       bg-green-500 border-2 border-surface"
-                aria-hidden="true"
-              />
-            </div>
-
-            {/* Text (stacked) */}
-              <span class="text-md font-medium text-txt truncate">
-                {props.viewer!.name}
-              </span>
+          {/* Avatar */}
+          <div class="relative shrink-0">
+            <img
+              src={props.viewer!.avatar}
+              alt={props.viewer!.name}
+              class="w-9 h-9 rounded-lg object-cover select-none"
+              loading="lazy"
+            />
+            <span
+              class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full
+                     bg-green-500 border-2 border-surface"
+              aria-hidden="true"
+            />
           </div>
+
+          {/* Name */}
+          <span class="flex-1 text-sm font-medium text-txt truncate text-left">
+            {props.viewer!.name}
+          </span>
+
+          {/* Chevron — rotates when open */}
+          <svg
+            class={`w-3.5 h-3.5 shrink-0 text-muted transition-transform duration-200 ease-out
+                    ${props.actionsOpen ? "rotate-180" : "rotate-0"}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
         </button>
       </div>
     </Show>

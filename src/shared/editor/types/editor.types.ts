@@ -31,7 +31,7 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
     title: true,
     summary: false,
     slug: false,
-    category: false,
+    category: true,
     attachments: false,
     aclPicker: true,
     submitOnCtrlEnter: true,

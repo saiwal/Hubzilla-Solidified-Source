@@ -18,6 +18,8 @@ import NavUtilities from "./shared/views/NavUtilities";
 import { notifCount } from "@/shared/lib/notificationCount";
 import { createMediaQuery } from "@solid-primitives/media";
 import { useNavActions, useNavViewer } from "./shared/store/nav-store";
+import { motion } from "solid-motionone";
+void motion;
 
 // ── Mobile bottom tab ─────────────────────────────────────────────────────────
 function MobileTab(props: {
@@ -153,7 +155,14 @@ const Layout: ParentComponent = (props) => {
             {/* Action items — toggled by avatar click */}
             <Show when={actionsOpen() && actionItems().length > 0}>
               <div class="my-2 h-px bg-rim" />
-              <div class="flex flex-col gap-0.5">
+              <div
+                use:motion={{
+                  initial: { opacity: 0, y: 8 },
+                  animate: { opacity: 1, y: 0 },
+                  transition: { duration: 0.18, easing: "ease-out" },
+                }}
+                class="flex flex-col gap-0.5"
+              >
                 <For each={actionItems()}>
                   {(item) => (
                     <NavItem
@@ -307,7 +316,14 @@ const Layout: ParentComponent = (props) => {
 
             {/* Action items — toggled by avatar click */}
             <Show when={actionsOpen() && actionItems().length > 0}>
-              <div class="grid grid-cols-4 gap-1.5 px-2.5 pb-4">
+              <div
+                use:motion={{
+                  initial: { opacity: 0, y: 14 },
+                  animate: { opacity: 1, y: 0 },
+                  transition: { duration: 0.2, easing: [0.25, 0.46, 0.45, 0.94] },
+                }}
+                class="grid grid-cols-4 gap-1.5 px-2.5 pb-4"
+              >
                 <For each={actionItems()}>
                   {(item) => (
                     <A
