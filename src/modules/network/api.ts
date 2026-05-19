@@ -6,8 +6,8 @@ const HIDDEN_VERBS = new Set(['Like', 'Dislike', 'Announce', 'Accept', 'Reject',
 function shouldDisplay(a: any): boolean {
   if (a.verb === 'Add' || a.verb === 'Remove') return false;
   if (a.flags?.includes('notshown')) return false;
-  if (a.object_type === 'Answer') return false;
-  const isThreadTop = a.message_id === a.message_top;
+  if (a.obj_type === 'Answer') return false;
+  const isThreadTop = a.mid === a.message_top;
   if (HIDDEN_VERBS.has(a.verb) && !isThreadTop) return false;
   return true;
 }

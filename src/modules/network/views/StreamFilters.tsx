@@ -8,9 +8,13 @@
 import {
   createSignal,
   createResource,
+  createEffect,
   For,
   Show,
 } from "solid-js";
+import { motion } from "solid-motionone";
+import { useFloating } from "@/shared/lib/useFloating";
+void motion;
 import { useSearchParams } from "@solidjs/router";
 import { loadNetwork, loading, resetPosts, viewMode, changeView } from "../store";
 import {
@@ -91,6 +95,17 @@ export default function StreamFilters() {
 
   let searchInputRef: HTMLInputElement | undefined;
   let connInputRef:   HTMLInputElement | undefined;
+  let suggPanelEl:    HTMLUListElement | undefined;
+
+  const { x: suggX, y: suggY, mount: suggMount, unmount: suggUnmount } =
+    useFloating({ placement: "bottom-start", offset: 4 });
+
+  createEffect(() => {
+    if (connSuggestOpen() && suggestions().length > 0 && connInputRef && suggPanelEl)
+      suggMount(connInputRef, suggPanelEl);
+    else
+      suggUnmount();
+  });
 
   // ── Derived ───────────────────────────────────────────────────────────────
 
@@ -334,7 +349,7 @@ export default function StreamFilters() {
                 </button>
               }
             >
-              <div class="relative shrink-0">
+              <div class="shrink-0">
                 <input
                   ref={connInputRef}
                   type="text"
@@ -346,9 +361,17 @@ export default function StreamFilters() {
                   class={`${INPUT_CLS} w-28 sm:w-36`}
                 />
                 <Show when={connSuggestOpen() && suggestions().length > 0}>
-                  <ul class="absolute z-50 top-full mt-1 right-0 w-60 max-h-56
-                             overflow-y-auto rounded-lg border border-rim
-                             bg-surface shadow-lg py-1">
+                  <ul
+                    ref={(el) => { suggPanelEl = el; }}
+                    use:motion={{
+                      initial: { opacity: 0, y: -4 },
+                      animate: { opacity: 1, y: 0 },
+                      transition: { duration: 0.12 },
+                    }}
+                    style={{ position: "fixed", top: `${suggY()}px`, left: `${suggX()}px` }}
+                    class="z-50 w-60 max-h-56 overflow-y-auto rounded-lg border border-rim
+                           bg-surface shadow-lg py-1"
+                  >
                     <For each={suggestions()}>
                       {(c) => (
                         <li>

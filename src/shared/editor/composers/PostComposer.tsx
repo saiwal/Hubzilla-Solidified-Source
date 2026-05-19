@@ -30,7 +30,10 @@ import { fetchConnections } from "@/modules/network/api";
 import { storageGet, storageSet, storageDel } from "@/shared/lib/storage";
 import type { AclEntry } from "@/modules/network/api";
 import { helpable } from "@/shared/lib/helpable";
+import { motion } from "solid-motionone";
+import { useDropdown } from "@/shared/lib/useDropdown";
 void helpable;
+void motion;
 import { useMention } from "../mention/useMention";
 import MentionPopup from "../mention/MentionPopup";
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -586,8 +589,10 @@ interface AclPickerProps {
 
 const AclPicker: Component<AclPickerProps> = (props) => {
   const [connections] = createResource(fetchConnections);
-  const [open, setOpen] = createSignal(false);
   const [query, setQuery] = createSignal("");
+
+  const { open, setOpen, toggle, floatStyle, setTriggerRef, setPanelRef } =
+    useDropdown({ placement: "top-start", offset: 8 });
 
   const filtered = () => {
     const q = query().toLowerCase().trim();
@@ -610,15 +615,15 @@ const AclPicker: Component<AclPickerProps> = (props) => {
   };
 
   return (
-    <div class="relative shrink-0">
+    <div class="shrink-0">
       {/* Mode pills */}
-      <div class="flex items-center gap-1">
+      <div ref={setTriggerRef} class="flex items-center gap-1">
         {(["public", "connections", "custom"] as AclMode[]).map((m) => (
           <button
             type="button"
             onClick={() => {
               props.onModeChange(m);
-              if (m === "custom") setOpen((o) => !o);
+              if (m === "custom") toggle();
               else setOpen(false);
             }}
             class={
@@ -633,9 +638,19 @@ const AclPicker: Component<AclPickerProps> = (props) => {
         ))}
       </div>
 
-      {/* Dropdown */}
+      {/* Dropdown — Portal to escape the modal's z-50 stacking context */}
       <Show when={open() && props.mode === "custom"}>
-        <div class="absolute bottom-full mb-2 left-0 z-50 w-80 rounded-xl border border-rim bg-white dark:bg-gray-900 shadow-xl overflow-hidden flex flex-col max-h-96">
+        <Portal>
+          <div
+            ref={(el) => setPanelRef(el)}
+            use:motion={{
+              initial: { opacity: 0, scale: 0.97, y: 6 },
+              animate: { opacity: 1, scale: 1, y: 0 },
+              transition: { duration: 0.15 },
+            }}
+            style={floatStyle()}
+            class="z-[60] w-80 rounded-xl border border-rim bg-white dark:bg-gray-900 shadow-xl overflow-hidden flex flex-col max-h-96"
+          >
           {/* Search */}
           <div class="px-3 py-2 border-b border-gray-100 dark:border-gray-800 shrink-0">
             <input
@@ -804,7 +819,8 @@ const AclPicker: Component<AclPickerProps> = (props) => {
               }}
             </For>
           </ul>
-        </div>
+          </div>
+        </Portal>
       </Show>
     </div>
   );
