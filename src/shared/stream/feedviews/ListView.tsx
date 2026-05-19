@@ -1,6 +1,7 @@
 // src/shared/stream/feedviews/ListView.tsx
 import { For, Show, createSignal, lazy } from "solid-js";
 import type { ThreadNode } from "@/shared/lib/thread";
+import { countAllComments } from "@/shared/lib/thread";
 import type { StreamHandlers } from "../types";
 import formatPostDate from "@/shared/lib/date";
 import { useI18n } from "@/i18n";
@@ -97,10 +98,9 @@ function ListRow(props: {
 }) {
   const p = props.post;
   const preview = () => stripHtml(p.body).slice(0, 160);
-  const REACTION_VERBS = new Set(['Like', 'Dislike', 'Announce', 'Accept', 'Reject', 'TentativeAccept', 'Add', 'Remove']);
   const replyCount = () =>
     p.children.length > 0
-      ? p.children.filter(c => !REACTION_VERBS.has(c.verb ?? '')).length
+      ? countAllComments(p.children)
       : (p.commentCount ?? 0);
   const [showModal, setShowModal] = createSignal(false);
   const { locale } = useI18n();

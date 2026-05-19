@@ -50,3 +50,15 @@ export function buildThreadTree(posts: Post[]): ThreadNode[] {
 export function flattenThread(node: ThreadNode): Post[] {
   return [node, ...node.children.flatMap(flattenThread)];
 }
+
+const REACTION_VERBS = new Set(['Like', 'Dislike', 'Announce', 'Accept', 'Reject', 'TentativeAccept', 'Add', 'Remove']);
+
+export function countAllComments(nodes: ThreadNode[]): number {
+  let count = 0;
+  for (const node of nodes) {
+    if (!REACTION_VERBS.has(node.verb ?? '')) {
+      count += 1 + countAllComments(node.children);
+    }
+  }
+  return count;
+}

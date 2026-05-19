@@ -8,6 +8,7 @@ import {
   onCleanup,
 } from "solid-js";
 import type { ThreadNode } from "@/shared/lib/thread";
+import { countAllComments } from "@/shared/lib/thread";
 import type { StreamHandlers } from "../types";
 import PostDetailModal from "@/shared/views/PostDetailModal";
 import formatPostDate from "@/shared/lib/date";
@@ -39,10 +40,9 @@ const COLLAPSED_MAX_PX = 200;
 
 function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers }) {
   const p = props.post;
-  const REACTION_VERBS = new Set(['Like', 'Dislike', 'Announce', 'Accept', 'Reject', 'TentativeAccept', 'Add', 'Remove']);
   const replyCount = () =>
     p.children.length > 0
-      ? p.children.filter(c => !REACTION_VERBS.has(c.verb ?? '')).length
+      ? countAllComments(p.children)
       : (p.commentCount ?? 0);
   const [showModal, setShowModal] = createSignal(false);
   const [expanded, setExpanded] = createSignal(false);

@@ -1,6 +1,7 @@
 // src/shared/stream/components/PostCard.tsx
 import { createSignal, onMount, onCleanup, Show } from "solid-js";
 import type { ThreadNode } from "@/shared/lib/thread";
+import { countAllComments } from "@/shared/lib/thread";
 import type { StreamHandlers } from "../types";
 import CommentThread from "@/shared/views/CommentThread";
 import formatPostDate from "@/shared/lib/date";
@@ -36,6 +37,7 @@ function flattenThread(nodes: ThreadNode[]): ThreadNode[] {
 function hasNestedComments(nodes: ThreadNode[]): boolean {
   return nodes.some(n => n.children.length > 0);
 }
+
 // Persists across remounts caused by setNodeChildren updating the post reference.
 const openedByMid = new Set<string>();
 
@@ -53,11 +55,9 @@ export default function PostCard(props: {
   const { locale } = useI18n();
   let cardRef!: HTMLDivElement;
 
-  const REACTION_VERBS = new Set(['Like', 'Dislike', 'Announce', 'Accept', 'Reject', 'TentativeAccept', 'Add', 'Remove']);
-  const commentChildren = () => props.post.children.filter(c => !REACTION_VERBS.has(c.verb ?? ''));
   const totalComments = () =>
     props.post.children.length > 0
-      ? commentChildren().length
+      ? countAllComments(props.post.children)
       : (props.post.commentCount ?? 0);
 
   function persistShow(v: boolean) {
