@@ -6,6 +6,7 @@ type SlotLoader = () => Promise<{ default: Component }>;
 const modules = new Map<string, ModuleDef>();
 const [navItems, setNavItems] = createSignal<NavItemDef[]>([]);
 const [routes, setRoutes] = createSignal<RouteDef[]>([]);
+const [globalVersion, setGlobalVersion] = createSignal(0);
 
 // Lazy component cache — prevents remounting when memos recompute
 const lazyCache = new WeakMap<SlotLoader, Component>();
@@ -38,6 +39,7 @@ export function registerModule(def: ModuleDef) {
           const key = slot as keyof SlotsDef;
           if (!globalLoaders.has(key)) globalLoaders.set(key, new Set());
           globalLoaders.get(key)!.add(l);
+          setGlobalVersion((v) => v + 1);
         }
       }
     }
@@ -57,6 +59,10 @@ export function getRoutes() {
 
 export function getModule(id: string) {
   return modules.get(id) ?? null;
+}
+
+export function getGlobalVersion() {
+  return globalVersion;
 }
 
 // Global widgets — always mounted, never torn down

@@ -1,0 +1,280 @@
+/**
+ * AclPicker.tsx
+ * ACL (Access Control List) picker component shared between PostComposer and other editors.
+ * Allows selecting public/connections/custom visibility for posts.
+ */
+
+import {
+  createSignal,
+  createResource,
+  Show,
+  For,
+  type Component,
+} from "solid-js";
+import { Portal } from "solid-js/web";
+import { fetchConnections } from "@/modules/network/api";
+import type { AclEntry } from "@/modules/network/api";
+import { useDropdown } from "@/shared/lib/useDropdown";
+import { motion } from "solid-motionone";
+void motion;
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+export type AclMode = "public" | "connections" | "custom";
+
+// Key format: "{type}:{xid}" — e.g. "c:abc123..." or "g:d7ac40c2-..."
+export function entryKey(e: AclEntry): string {
+  return `${e.type}:${e.xid}`;
+}
+
+export interface AclPickerProps {
+  mode: AclMode;
+  onModeChange: (m: AclMode) => void;
+  allowEntries: Set<string>;
+  denyEntries: Set<string>;
+  onToggle: (entry: AclEntry, list: "allow" | "deny") => void;
+  onClear: () => void;
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
+const AclPicker: Component<AclPickerProps> = (props) => {
+  const [connections] = createResource(fetchConnections);
+  const [query, setQuery] = createSignal("");
+
+  const { open, setOpen, toggle, floatStyle, setTriggerRef, setPanelRef } =
+    useDropdown({ placement: "top-start", offset: 8 });
+
+  const filtered = () => {
+    const q = query().toLowerCase().trim();
+    const all = connections() ?? [];
+    if (!q) return all;
+    return all.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        (c.nick ?? "").toLowerCase().includes(q) ||
+        (c.link ?? "").toLowerCase().includes(q),
+    );
+  };
+
+  const totalSelected = () => props.allowEntries.size + props.denyEntries.size;
+
+  const modeLabel: Record<AclMode, string> = {
+    public: "🌐 Public",
+    connections: "🔒 Connections",
+    custom: `🤫 Custom${totalSelected() > 0 ? ` (${totalSelected()})` : ""}`,
+  };
+
+  return (
+    <div class="shrink-0">
+      {/* Mode pills */}
+      <div ref={setTriggerRef} class="flex items-center gap-1">
+        {(["public", "connections", "custom"] as AclMode[]).map((m) => (
+          <button
+            type="button"
+            onClick={() => {
+              props.onModeChange(m);
+              if (m === "custom") toggle();
+              else setOpen(false);
+            }}
+            class={
+              "flex items-center gap-1 px-2.5 py-1 rounded-md text-xs border transition-all " +
+              (props.mode === m
+                ? "border-indigo-400 text-indigo-500 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10"
+                : "border-rim text-gray-400 dark:text-gray-500 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-600 dark:hover:text-gray-300")
+            }
+          >
+            {modeLabel[m]}
+          </button>
+        ))}
+      </div>
+
+      {/* Dropdown — Portal to escape the modal's z-50 stacking context */}
+      <Show when={open() && props.mode === "custom"}>
+        <Portal>
+          <div
+            ref={(el) => setPanelRef(el)}
+            use:motion={{
+              initial: { opacity: 0, scale: 0.97, y: 6 },
+              animate: { opacity: 1, scale: 1, y: 0 },
+              transition: { duration: 0.15 },
+            }}
+            style={floatStyle()}
+            class="z-[60] w-80 rounded-xl border border-rim bg-white dark:bg-gray-900 shadow-xl overflow-hidden flex flex-col max-h-96"
+          >
+          {/* Search */}
+          <div class="px-3 py-2 border-b border-gray-100 dark:border-gray-800 shrink-0">
+            <input
+              type="text"
+              placeholder="Search connections & groups…"
+              value={query()}
+              onInput={(e) => setQuery(e.currentTarget.value)}
+              class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-rim
+                     bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200
+                     placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+            />
+          </div>
+
+          {/* Selected chips */}
+          <Show when={totalSelected() > 0}>
+            <div class="flex flex-wrap gap-1 px-3 py-2 border-b border-gray-100 dark:border-gray-800 shrink-0 max-h-24 overflow-y-auto">
+              <For each={[...props.allowEntries]}>
+                {(key) => {
+                  const conn = (connections() ?? []).find(
+                    (c) => entryKey(c) === key,
+                  );
+                  return (
+                    <span
+                      class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs
+                                 bg-green-50 dark:bg-green-500/10 border border-green-300 dark:border-green-600
+                                 text-green-700 dark:text-green-300"
+                    >
+                      ✓ {conn?.name ?? key.slice(0, 14) + "…"}
+                      <button
+                        type="button"
+                        onClick={() => conn && props.onToggle(conn, "allow")}
+                        class="hover:text-green-900 dark:hover:text-green-100 leading-none"
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  );
+                }}
+              </For>
+              <For each={[...props.denyEntries]}>
+                {(key) => {
+                  const conn = (connections() ?? []).find(
+                    (c) => entryKey(c) === key,
+                  );
+                  return (
+                    <span
+                      class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs
+                                 bg-red-50 dark:bg-red-500/10 border border-red-300 dark:border-red-600
+                                 text-red-700 dark:text-red-300"
+                    >
+                      ✕ {conn?.name ?? key.slice(0, 14) + "…"}
+                      <button
+                        type="button"
+                        onClick={() => conn && props.onToggle(conn, "deny")}
+                        class="hover:text-red-900 dark:hover:text-red-100 leading-none"
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  );
+                }}
+              </For>
+              <button
+                type="button"
+                onClick={props.onClear}
+                class="px-2 py-0.5 rounded-full text-xs text-gray-400 hover:text-red-500 transition-colors border border-rim"
+              >
+                Clear all
+              </button>
+            </div>
+          </Show>
+
+          {/* Legend */}
+          <div class="flex items-center gap-4 px-3 py-1.5 border-b border-gray-100 dark:border-gray-800 shrink-0">
+            <span class="text-[10px] text-gray-400">
+              Row = allow &nbsp;|&nbsp; ✕ button = deny
+            </span>
+            <span class="flex items-center gap-1 text-[10px] text-green-600 dark:text-green-400 ml-auto">
+              <span class="w-2 h-2 rounded-full bg-green-400 inline-block" />{" "}
+              allowed
+            </span>
+            <span class="flex items-center gap-1 text-[10px] text-red-500 dark:text-red-400">
+              <span class="w-2 h-2 rounded-full bg-red-400 inline-block" />{" "}
+              denied
+            </span>
+          </div>
+
+          {/* List */}
+          <ul class="overflow-y-auto flex-1 py-1">
+            <Show when={connections.loading}>
+              <li class="px-4 py-3 text-xs text-gray-400 text-center">
+                Loading…
+              </li>
+            </Show>
+            <For each={filtered()}>
+              {(c) => {
+                const key = entryKey(c);
+                const isAllowed = () => props.allowEntries.has(key);
+                const isDenied = () => props.denyEntries.has(key);
+                return (
+                  <li class="flex items-center gap-1 pr-2">
+                    {/* Main row — click = toggle allow */}
+                    <button
+                      type="button"
+                      onClick={() => props.onToggle(c, "allow")}
+                      class={
+                        "flex-1 flex items-center gap-2.5 px-3 py-1.5 text-left transition-colors min-w-0 " +
+                        (isAllowed()
+                          ? "bg-green-50 dark:bg-green-500/10"
+                          : isDenied()
+                            ? "bg-red-50 dark:bg-red-500/10"
+                            : "hover:bg-gray-50 dark:hover:bg-gray-800")
+                      }
+                    >
+                      {/* Avatar */}
+                      <Show
+                        when={c.photo}
+                        fallback={
+                          <span class="w-6 h-6 rounded-full shrink-0 bg-elevated flex items-center justify-center text-[10px] text-gray-500">
+                            {c.type === "g" ? "g" : "?"}
+                          </span>
+                        }
+                      >
+                        <img
+                          src={c.photo}
+                          alt=""
+                          class="w-6 h-6 rounded-full shrink-0 object-cover bg-elevated"
+                        />
+                      </Show>
+
+                      <span class="flex flex-col min-w-0 flex-1">
+                        <span class="truncate text-xs font-medium text-gray-800 dark:text-gray-200">
+                          {c.type === "g" ? "👥 " : ""}
+                          {c.name}
+                        </span>
+                        <Show when={c.link}>
+                          <span class="truncate text-[10px] text-gray-400">
+                            {c.link}
+                          </span>
+                        </Show>
+                      </span>
+
+                      <Show when={isAllowed()}>
+                        <span class="text-green-500 text-xs shrink-0 font-bold">
+                          ✓
+                        </span>
+                      </Show>
+                    </button>
+
+                    {/* Deny button */}
+                    <button
+                      type="button"
+                      title="Deny this connection"
+                      onClick={() => props.onToggle(c, "deny")}
+                      class={
+                        "shrink-0 w-6 h-6 rounded flex items-center justify-center text-xs transition-colors " +
+                        (isDenied()
+                          ? "bg-red-100 dark:bg-red-500/20 text-red-500 dark:text-red-400"
+                          : "text-gray-300 dark:text-gray-600 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-400")
+                      }
+                    >
+                      ✕
+                    </button>
+                  </li>
+                );
+              }}
+            </For>
+          </ul>
+          </div>
+        </Portal>
+      </Show>
+    </div>
+  );
+};
+
+export default AclPicker;

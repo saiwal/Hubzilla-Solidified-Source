@@ -24,8 +24,14 @@ interface TimePoint {
 }
 
 export default function PerfStatsPanel() {
-  if (!isAdmin()) return null;
+  return (
+    <Show when={isAdmin()}>
+      <PerfStatsPanelInner />
+    </Show>
+  );
+}
 
+function PerfStatsPanelInner() {
   const [points, setPoints] = createSignal<TimePoint[]>([]);
   const [latest, setLatest] = createSignal<PerfStats | null>(null);
   const [error, setError] = createSignal<string | null>(null);

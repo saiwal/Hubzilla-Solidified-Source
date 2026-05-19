@@ -33,8 +33,8 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
     slug: false,
     category: false,
     attachments: false,
-    aclPicker: false,
-    submitOnCtrlEnter: false,
+    aclPicker: true,
+    submitOnCtrlEnter: true,
   },
   // Inline comment box under a PostCard
   comment: {

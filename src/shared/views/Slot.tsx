@@ -4,6 +4,7 @@ import {
   resolveModuleSlot,
   resolveGlobalSlots,
   getLazy,
+  getGlobalVersion,
 } from "@/shared/lib/module-registry";
 import type { SlotsDef } from "../types/module.types";
 
@@ -20,9 +21,12 @@ const Slot: Component<SlotProps> = (props) => {
     return location.pathname.split("/").filter(Boolean)[0] ?? "";
   };
 
-  // Global widgets — stable array, computed once (modules don't unregister)
-  // getLazy caches by loader identity so components are never recreated
-  const globalWidgets = resolveGlobalSlots(props.name).map(getLazy);
+  const globalVersion = getGlobalVersion();
+  // Reactive: re-derives when new modules register global loaders after async import
+  const globalWidgets = createMemo(() => {
+    globalVersion(); // track
+    return resolveGlobalSlots(props.name).map(getLazy);
+  });
 
   // Module-local widgets — reactive, change when activeModuleId changes
   const localWidgets = createMemo(() =>
@@ -32,7 +36,7 @@ const Slot: Component<SlotProps> = (props) => {
   return (
     <>
       {/* Always mounted — never torn down on module navigation */}
-      <For each={globalWidgets}>{(Widget) => <Widget />}</For>
+      <For each={globalWidgets()}>{(Widget) => <Widget />}</For>
 
       {/* Swapped per active module */}
       <For each={localWidgets()}>{(Widget) => <Widget />}</For>

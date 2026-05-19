@@ -12,11 +12,17 @@ export type ComposerStore = ReturnType<typeof createComposerStore>;
  *
  * `scope` is used as the IDB draft key, so make it unique:
  *   "hq:post", "article:new", "comment:<parentMid>"
+ *
+ * When `options.initialBody` is provided the IDB draft will NOT override it.
  */
-export function createComposerStore(submitFn: SubmitFn, scope: string) {
+export function createComposerStore(
+  submitFn: SubmitFn,
+  scope: string,
+  options?: { initialBody?: string },
+) {
   const DRAFT_KEY = `draft:${scope}`;
 
-  const [body, setBody]         = createSignal("");
+  const [body, setBody]         = createSignal(options?.initialBody ?? "");
   const [title, setTitle]       = createSignal("");
   const [summary, setSummary]   = createSignal("");
   const [slug, setSlug]         = createSignal("");
@@ -26,7 +32,10 @@ export function createComposerStore(submitFn: SubmitFn, scope: string) {
   const [error, setError]       = createSignal<string | null>(null);
   const [tab, setTab]           = createSignal<"wysiwyg" | "source">("wysiwyg");
 
-  storageGet<string>(DRAFT_KEY, "").then(setBody);
+  // Only load draft if no initialBody was seeded
+  storageGet<string>(DRAFT_KEY, "").then((v) => {
+    if (!options?.initialBody && v) setBody(v);
+  });
 
   // Persist body as draft while typing; remove when submitted or cleared
   createEffect(() => {
