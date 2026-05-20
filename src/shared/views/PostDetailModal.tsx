@@ -47,6 +47,8 @@ interface RawItem {
   viewer_liked: boolean;
   viewer_disliked: boolean;
   viewer_repeated: boolean;
+  item_starred?: boolean;
+  item_origin?: number;
 }
 
 function rawToPost(r: RawItem): Post {
@@ -65,6 +67,7 @@ function rawToPost(r: RawItem): Post {
     authorName: r.author.name,
     authorAvatar: r.author.photo.src,
     authorUrl: r.author.url,
+    authorAddress: r.author.address,
     created: r.created,
     commented: r.commented,
     edited: r.edited,
@@ -80,6 +83,8 @@ function rawToPost(r: RawItem): Post {
     viewerLiked: r.viewer_liked,
     viewerDisliked: r.viewer_disliked,
     viewerRepeated: r.viewer_repeated,
+    viewerStarred: (r.flags ?? []).includes('starred'),
+    item_origin: r.item_origin ?? 0,
   };
 }
 
@@ -129,6 +134,12 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
         },
         onLoadComments: (mid: string, uuid: string) =>
           props.handlers!.onLoadComments(mid, uuid),
+        onStar: props.handlers!.onStar
+          ? (mid: string) => props.handlers!.onStar!(mid)
+          : undefined,
+        onDelete: props.handlers!.onDelete
+          ? async (mid: string) => { await props.handlers!.onDelete!(mid); props.onClose(); }
+          : undefined,
       }
     : undefined;
 

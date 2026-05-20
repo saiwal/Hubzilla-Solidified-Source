@@ -46,6 +46,7 @@ export function mapActivityToPost(activity: any): Post {
     authorName: activity.author?.name ?? "",
     authorAvatar: activity.author?.photo?.src ?? "",
     authorUrl: activity.author?.url ?? "",
+    authorAddress: activity.author?.address ?? "",
     created: activity.created,
     commented: activity.commented,
     edited: activity.edited,
@@ -58,9 +59,13 @@ export function mapActivityToPost(activity: any): Post {
     viewerLiked: activity.viewer_liked ?? false,
     viewerDisliked: activity.viewer_disliked ?? false,
     viewerRepeated: activity.viewer_repeated ?? false,
+    viewerStarred: (activity.flags ?? []).includes('starred'),
+    item_origin: activity.item_origin ?? 0,
     dislikeCount: activity.dislike_count ?? 0,
     repeatCount: activity.announce_count ?? 0,
     commentCount: activity.comment_count ?? 0,
+    categories: activity.categories ?? [],
+    tags: activity.tags ?? [],
     children: [],
   };
 }

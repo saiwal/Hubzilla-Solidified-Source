@@ -16,11 +16,15 @@ import {
   MdFillAccount_tree,
   MdOutlineThumb_down,
   MdOutlineThumb_up,
+  MdFillStar,
+  MdFillStar_border,
+  MdOutlineDelete,
 } from "solid-icons/md";
 import { useI18n } from "@/i18n";
 import { BiRegularLinkExternal } from "solid-icons/bi";
 import CommentComposer from "@/shared/editor/composers/CommentComposer";
 import DOMPurify from "dompurify";
+import { useAuth } from "@/shared/store/auth-store";
 
 export type { StreamHandlers as PostActions };
 
@@ -52,13 +56,29 @@ export default function PostCard(props: {
   const [threaded, setThreaded] = createSignal(true);
   const [commentsLoaded, setCommentsLoaded] = createSignal(props.post.children.length > 0);
   const [commentsLoading, setCommentsLoading] = createSignal(false);
+  const [deleteConfirming, setDeleteConfirming] = createSignal(false);
+  let deleteTimer: ReturnType<typeof setTimeout> | null = null;
   const { locale } = useI18n();
+  const auth = useAuth();
   let cardRef!: HTMLDivElement;
 
   const totalComments = () =>
     props.post.children.length > 0
       ? countAllComments(props.post.children)
       : (props.post.commentCount ?? 0);
+
+  // Star: only meaningful for local authenticated users
+  const canStar = () =>
+    !!props.handlers.onStar && auth()?.isLocal === true;
+
+  // Delete: viewer must be a local user and the post's author address must
+  // match their own channel address (nick@hostname)
+  const canDelete = () => {
+    const a = auth();
+    if (!props.handlers.onDelete || !a?.isLocal || !a.nick) return false;
+    const viewerAddr = `${a.nick}@${window.location.hostname}`;
+    return !!props.post.authorAddress && props.post.authorAddress === viewerAddr;
+  };
 
   function persistShow(v: boolean) {
     if (v) openedByMid.add(props.post.mid);
@@ -98,9 +118,25 @@ export default function PostCard(props: {
     onCleanup(() => observer.disconnect());
   });
 
+  onCleanup(() => {
+    if (deleteTimer) clearTimeout(deleteTimer);
+  });
+
   function onLike() { props.handlers.onLike(props.post.mid); }
   function onDislike() { props.handlers.onDislike(props.post.mid); }
   function onRepeat() { props.handlers.onRepeat(props.post.mid); }
+  function onStar() { props.handlers.onStar?.(props.post.mid); }
+
+  function onDeleteClick() {
+    if (!deleteConfirming()) {
+      setDeleteConfirming(true);
+      deleteTimer = setTimeout(() => setDeleteConfirming(false), 3000);
+    } else {
+      if (deleteTimer) clearTimeout(deleteTimer);
+      setDeleteConfirming(false);
+      props.handlers.onDelete?.(props.post.mid);
+    }
+  }
 
   const visibleComments = () =>
     threaded() ? props.post.children : flattenThread(props.post.children);
@@ -188,6 +224,20 @@ export default function PostCard(props: {
             active={props.post.viewerRepeated}
           />
 
+          <Show when={canStar()}>
+            <button
+              onClick={onStar}
+              title={props.post.viewerStarred ? "Unstar" : "Star"}
+              class={`flex items-center gap-1 px-2 py-1 rounded-md text-xs
+                     transition-colors select-none hover:bg-overlay
+                     ${props.post.viewerStarred ? "text-yellow-500" : "text-subtle hover:text-txt"}`}
+            >
+              <Show when={props.post.viewerStarred} fallback={<MdFillStar_border size={14} />}>
+                <MdFillStar size={14} />
+              </Show>
+            </button>
+          </Show>
+
           <Show when={totalComments() > 0}>
             <button
               onClick={toggleComments}
@@ -205,7 +255,7 @@ export default function PostCard(props: {
           </Show>
 
           {/* Thread/flat toggle — compact */}
-<Show when={hasNestedComments(props.post.children)}>
+          <Show when={hasNestedComments(props.post.children)}>
             <button
               onClick={() => setThreaded((v) => !v)}
               class="flex items-center gap-1 px-2 py-1 rounded-md text-xs
@@ -226,6 +276,23 @@ export default function PostCard(props: {
             <MdFillChat size={14} />
             <span>Reply</span>
           </button>
+
+          <Show when={canDelete()}>
+            <button
+              onClick={onDeleteClick}
+              title="Delete post"
+              class={`flex items-center gap-1 px-2 py-1 rounded-md text-xs
+                     transition-colors select-none
+                     ${deleteConfirming()
+                       ? "text-red-500 hover:bg-red-500/10"
+                       : "text-subtle hover:bg-overlay hover:text-red-400"}`}
+            >
+              <MdOutlineDelete size={14} />
+              <Show when={deleteConfirming()}>
+                <span>Confirm?</span>
+              </Show>
+            </button>
+          </Show>
         </div>
 
         <Show when={replyOpen() && props.post.iid && props.post.profileUid}>
@@ -369,6 +436,20 @@ export default function PostCard(props: {
           activeClass="text-accent"
         />
 
+        <Show when={canStar()}>
+          <button
+            onClick={onStar}
+            title={props.post.viewerStarred ? "Unstar" : "Star"}
+            class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                   transition-colors select-none hover:bg-overlay
+                   ${props.post.viewerStarred ? "text-yellow-500" : "text-muted hover:text-txt"}`}
+          >
+            <Show when={props.post.viewerStarred} fallback={<MdFillStar_border size={17} />}>
+              <MdFillStar size={17} />
+            </Show>
+          </button>
+        </Show>
+
         <Show
           when={
             props.post.likeCount > 0 ||
@@ -405,7 +486,7 @@ export default function PostCard(props: {
         </Show>
 
         {/* Thread/flat toggle — full */}
-<Show when={hasNestedComments(props.post.children)}>
+        <Show when={hasNestedComments(props.post.children)}>
           <button
             onClick={() => setThreaded((v) => !v)}
             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
@@ -428,6 +509,23 @@ export default function PostCard(props: {
           <MdFillChat size={17} />
           <span>Reply</span>
         </button>
+
+        <Show when={canDelete()}>
+          <button
+            onClick={onDeleteClick}
+            title="Delete post"
+            class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                   transition-colors select-none
+                   ${deleteConfirming()
+                     ? "text-red-500 hover:bg-red-500/10"
+                     : "text-muted hover:bg-overlay hover:text-red-400"}`}
+          >
+            <MdOutlineDelete size={17} />
+            <Show when={deleteConfirming()}>
+              <span>Confirm?</span>
+            </Show>
+          </button>
+        </Show>
       </div>
 
       <Show when={replyOpen() && props.post.iid && props.post.profileUid}>

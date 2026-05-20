@@ -14,6 +14,7 @@ export interface Post {
   authorName: string;
   authorAvatar: string;
   authorUrl: string;
+  authorAddress?: string;
   created: string;
   commented?: string;
   edited?: string;
@@ -25,9 +26,13 @@ export interface Post {
   children: Post[];
   commentCount?: number;
   likeCount: number;
+  categories?: string[];
+  tags?: string[];
   viewerLiked: boolean;
   viewerDisliked: boolean;
   viewerRepeated: boolean;
+  viewerStarred?: boolean;
+  item_origin?: number; // 1 = authored by this channel (viewer is the author)
   dislikeCount: number;
   repeatCount: number;
 }

@@ -14,6 +14,8 @@ import {
   handleLike,
   handleDislike,
   handleRepeat,
+  handleStar,
+  handleDelete,
   handleComment,
   loadComments,
 } from "../store";
@@ -34,11 +36,13 @@ const handlers: StreamHandlers = {
   onRepeat:        handleRepeat,
   onComment:       handleComment,
   onLoadComments:  loadComments,
+  onStar:          handleStar,
+  onDelete:        handleDelete,
 };
 
 export default function ChannelView() {
   const params = useParams<{ nick: string }>();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
 const role = useViewerRole();
   createEffect(() => {
@@ -85,6 +89,25 @@ const role = useViewerRole();
             : ["feed", "masonry"]
         }
       />
+      <Show when={searchParams.cat || searchParams.tag}>
+        <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/10 border border-accent/25 text-sm mb-3">
+          <span class="text-muted">Filtered by:</span>
+          <Show when={searchParams.cat}>
+            <span class="font-medium text-accent">{searchParams.cat}</span>
+          </Show>
+          <Show when={searchParams.tag}>
+            <span class="font-medium text-accent">#{searchParams.tag}</span>
+          </Show>
+          <button
+            type="button"
+            onClick={() => setSearchParams({ cat: undefined, tag: undefined })}
+            class="ml-auto text-xs text-muted hover:text-txt transition-colors"
+          >
+            Clear
+          </button>
+        </div>
+      </Show>
+
       <Show when={newPosts().length > 0}>
         <button
           onClick={flushNewPosts}

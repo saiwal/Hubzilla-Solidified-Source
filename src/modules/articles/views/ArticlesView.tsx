@@ -1,5 +1,5 @@
 // src/modules/articles/views/ArticlesView.tsx
-import { createEffect, createSignal, onMount, Show, For } from "solid-js";
+import { createEffect, createSignal, onMount, Show, For, Index } from "solid-js";
 import { useParams, useNavigate } from "@solidjs/router";
 import { Portal } from "solid-js/web";
 import { useAuth } from "@/shared/store/auth-store";
@@ -9,6 +9,7 @@ import ArticleComposer from "@/shared/editor/composers/ArticleComposer";
 import {
   posts, loading, hasMore,
   loadArticles, resetPosts, loadMore,
+  activeCategory, activeTag, clearArticleFilter,
 } from "../store";
 import type { Post } from "@/shared/types/post.types";
 
@@ -63,6 +64,27 @@ function ArticleCard(props: { post: Post; nick: string; onOpen: () => void }) {
         <p class={`text-sm leading-relaxed ${ex().fromSummary ? "text-txt" : "text-muted"}`}>
           {ex().text}
         </p>
+      </Show>
+
+      <Show when={(props.post.categories?.length ?? 0) > 0 || (props.post.tags?.length ?? 0) > 0}>
+        <div class="flex flex-wrap gap-1.5 pt-1">
+          <Index each={props.post.categories}>
+            {(cat) => (
+              <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium
+                           bg-accent/15 text-accent border border-accent/30">
+                {cat()}
+              </span>
+            )}
+          </Index>
+          <Index each={props.post.tags}>
+            {(tag) => (
+              <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium
+                           bg-elevated text-muted border border-rim">
+                #{tag()}
+              </span>
+            )}
+          </Index>
+        </div>
       </Show>
 
       <div class="flex items-center gap-3 pt-1 text-xs text-muted">
@@ -189,6 +211,26 @@ export default function ArticlesView() {
           </button>
         </Show>
       </div>
+
+      {/* ── Active filter banner ── */}
+      <Show when={activeCategory() || activeTag()}>
+        <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/10 border border-accent/25 text-sm">
+          <span class="text-muted">Filtered by:</span>
+          <Show when={activeCategory()}>
+            <span class="font-medium text-accent">{activeCategory()}</span>
+          </Show>
+          <Show when={activeTag()}>
+            <span class="font-medium text-accent">#{activeTag()}</span>
+          </Show>
+          <button
+            type="button"
+            onClick={clearArticleFilter}
+            class="ml-auto text-xs text-muted hover:text-txt transition-colors"
+          >
+            Clear
+          </button>
+        </div>
+      </Show>
 
       {/* ── List ── */}
       <Show when={!loading()} fallback={<ArticlesListSkeleton />}>

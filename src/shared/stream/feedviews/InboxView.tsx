@@ -2,6 +2,7 @@
 import { For, Show, createSignal } from "solid-js";
 import type { ThreadNode } from "@/shared/lib/thread";
 import { flattenThread } from "@/shared/lib/thread";
+import { REACTION_VERBS } from "@/shared/stream/store/actions-store";
 import type { StreamHandlers } from "../types";
 import formatPostDate from "@/shared/lib/date";
 import { useI18n } from "@/i18n";
@@ -177,7 +178,6 @@ function InboxRow(props: {
   const [commentsLoading, setCommentsLoading] = createSignal(false);
   const { locale } = useI18n();
 
-  const REACTION_VERBS = new Set(['Like', 'Dislike', 'Announce', 'Accept', 'Reject', 'TentativeAccept', 'Add', 'Remove']);
   const replyCount = () =>
     p.children.length > 0
       ? flattenThread(p).filter(n => !REACTION_VERBS.has(n.verb ?? '')).length - 1

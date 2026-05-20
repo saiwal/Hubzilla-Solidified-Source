@@ -68,6 +68,8 @@ export interface TagWidgetProps {
   type?: "articles" | "posts";
   /** Called when the user clicks a tag */
   onTagClick?: (tag: string) => void;
+  /** Name of the currently active/filtered tag */
+  activeTag?: string;
   /** Pre-fetched data — skips the internal fetch when provided */
   data?: TagItem[];
   /** Max tags before the "show more" collapse. Default: 20 */
@@ -126,6 +128,7 @@ const TagWidget: Component<TagWidgetProps> = (props) => {
           <div class="px-4 py-3 flex flex-wrap gap-1.5">
             <For each={visibleTags()}>
               {(tag) => {
+                const isActive = () => props.activeTag === tag.name;
                 // Scale font between 11 px (min) and 17 px (max) by relative weight
                 const weight = tag.count / maxCount();
                 const size = Math.round(11 + weight * 6);
@@ -134,8 +137,11 @@ const TagWidget: Component<TagWidgetProps> = (props) => {
                     onClick={() => props.onTagClick?.(tag.name)}
                     style={{ "font-size": `${size}px` }}
                     class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full
-                           bg-accent-muted text-accent hover:bg-accent hover:text-base
                            transition-colors leading-tight"
+                    classList={{
+                      "bg-accent text-base": isActive(),
+                      "bg-accent-muted text-accent hover:bg-accent hover:text-base": !isActive(),
+                    }}
                     title={`${tag.count} post${tag.count !== 1 ? "s" : ""}`}
                   >
                     <span>#</span>

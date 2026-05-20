@@ -21,33 +21,7 @@ export interface StreamParams {
 // ── private helpers (not exported) ───────────────────────────────────────────
 
 function postToThreadNode(p: Post): ThreadNode {
-  return {
-    uuid: p.uuid,
-    id: p.id,
-    mid: p.mid,
-    parent_mid: p.parent_mid,
-    thr_parent: p.thr_parent,
-    top_mid: p.top_mid,
-    parent: p.parent_mid,
-    body: p.body,
-    title: p.title,
-    authorName: p.authorName,
-    authorAvatar: p.authorAvatar,
-    authorUrl: p.authorUrl,
-    created: p.created,
-    verb: p.verb,
-    obj_type: p.obj_type,
-    flags: p.flags,
-    permalink: p.permalink,
-    likeCount: p.likeCount,
-    dislikeCount: p.dislikeCount,
-    repeatCount: p.repeatCount,
-    viewerLiked: p.viewerLiked,
-    viewerDisliked: p.viewerDisliked,
-    viewerRepeated: p.viewerRepeated,
-    item_thread_top: p.item_thread_top,
-    children: [],
-  };
+  return { ...p, children: [] };
 }
 
 function registerActivated(set: Set<string>, data: Post[]) {

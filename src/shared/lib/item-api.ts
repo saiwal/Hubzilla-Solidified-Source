@@ -74,5 +74,28 @@ export const apiCreateComment = (parentUuid: string, content: string, title = ''
 export const apiEditItem = (uuid: string, content: string, title = '') =>
   post<{ success: boolean }>(`${BASE}/${encodeId(uuid)}/edit`, { body: content, title });
 
-export const apiDeleteItem = (iid: number) =>
-  post<{ success: boolean }>(`${BASE}/${iid}/delete`);
+export const apiDeleteItem = (uuid: string) =>
+  post<{ success: boolean }>(`${BASE}/${encodeId(uuid)}/delete`);
+
+export async function postComment(params: {
+  body: string;
+  parent_iid: number;
+  profile_uid: number;
+}): Promise<void> {
+  const formData = new URLSearchParams();
+  formData.set("type", "net-comment");
+  formData.set("profile_uid", String(params.profile_uid));
+  formData.set("parent", String(params.parent_iid));
+  formData.set("body", params.body);
+  formData.set("return", "");
+  formData.set("jsreload", "");
+  formData.set("preview", "0");
+  formData.set("conv_mode", "");
+  const res = await fetch("/item", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: formData.toString(),
+  });
+  if (!res.ok) throw new Error(`Comment failed: ${res.status}`);
+}
