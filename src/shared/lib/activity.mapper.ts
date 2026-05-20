@@ -60,6 +60,7 @@ export function mapActivityToPost(activity: any): Post {
     viewerDisliked: activity.viewer_disliked ?? false,
     viewerRepeated: activity.viewer_repeated ?? false,
     viewerStarred: (activity.flags ?? []).includes('starred'),
+    viewerFollowing: activity.viewer_following ?? false,
     item_origin: activity.item_origin ?? 0,
     dislikeCount: activity.dislike_count ?? 0,
     repeatCount: activity.announce_count ?? 0,

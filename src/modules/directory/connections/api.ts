@@ -86,3 +86,24 @@ export async function deleteConnection(abookId: number): Promise<void> {
     credentials: "include",
   });
 }
+
+export async function fetchConnectionByAddress(address: string): Promise<Connection | null> {
+  const q = new URLSearchParams({ format: "json", search: address, filter: "all", limit: "5" });
+  const res = await fetch(`/connections-api?${q}`, { credentials: "include" });
+  if (!res.ok) return null;
+  const data: ConnectionsResponse = await res.json();
+  return data.connections.find((c) => c.address === address) ?? null;
+}
+
+export async function updateConnection(
+  abookId: number,
+  fields: { role?: string; closeness?: number },
+): Promise<void> {
+  const fd = new FormData();
+  if (fields.role !== undefined) fd.append("permcat", fields.role);
+  if (fields.closeness !== undefined) fd.append("abook_closeness", String(fields.closeness));
+  const token =
+    document.querySelector<HTMLMetaElement>('meta[name="form_security_token"]')?.content ?? "";
+  if (token) fd.append("form_security_token", token);
+  await fetch(`/contactedit/${abookId}`, { method: "POST", credentials: "include", body: fd });
+}

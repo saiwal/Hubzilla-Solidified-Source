@@ -95,6 +95,7 @@ function ListRow(props: {
   post: ThreadNode;
   handlers: StreamHandlers;
   index: number;
+  onOpenModal: () => void;
 }) {
   const p = props.post;
   const preview = () => stripHtml(p.body).slice(0, 160);
@@ -102,19 +103,10 @@ function ListRow(props: {
     p.children.length > 0
       ? countAllComments(p.children)
       : (p.commentCount ?? 0);
-  const [showModal, setShowModal] = createSignal(false);
   const { locale } = useI18n();
 
   return (
     <>
-      <Show when={showModal()}>
-        <PostDetailModal
-          uuid={p.uuid}
-          onClose={() => setShowModal(false)}
-          handlers={props.handlers}
-        />
-      </Show>
-
       <div class="group flex items-stretch border-b border-rim last:border-0 hover:bg-overlay transition-colors">
         {/* vote gutter */}
         <VoteGutter post={p} handlers={props.handlers} />
@@ -124,7 +116,7 @@ function ListRow(props: {
 
           {/* clickable body — title → preview → author */}
           <div
-            onClick={() => setShowModal(true)}
+            onClick={() => props.onOpenModal()}
             class="flex-1 min-w-0 px-3 pt-2.5 pb-1.5 cursor-pointer space-y-0.5"
           >
             {/* title */}
@@ -209,7 +201,7 @@ function ListRow(props: {
             {/* comments */}
             <Show when={replyCount() > 0}>
               <button
-                onClick={() => setShowModal(true)}
+                onClick={() => props.onOpenModal()}
                 class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-md
                        text-muted hover:text-txt hover:bg-elevated transition-colors"
               >
@@ -272,35 +264,52 @@ export default function ListView(props: {
   posts: ThreadNode[];
   handlers: StreamHandlers;
 }) {
+  const [modalUuid, setModalUuid] = createSignal<string | null>(null);
+
   return (
-    <div class="bg-surface rounded-xl border border-rim shadow-sm overflow-hidden">
-      {/* rows */}
-      <For
-        each={props.posts}
-        fallback={
-          <div class="flex flex-col items-center justify-center py-16 gap-2 text-muted">
-            <svg
-              class="w-8 h-8 opacity-30"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="1.5"
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-              />
-            </svg>
-            <p class="text-sm">Nothing here yet.</p>
-          </div>
-        }
-      >
-        {(post, i) => (
-          <ListRow post={post} handlers={props.handlers} index={i()} />
+    <>
+      <div class="bg-surface rounded-xl border border-rim shadow-sm overflow-hidden">
+        <For
+          each={props.posts}
+          fallback={
+            <div class="flex flex-col items-center justify-center py-16 gap-2 text-muted">
+              <svg
+                class="w-8 h-8 opacity-30"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
+              </svg>
+              <p class="text-sm">Nothing here yet.</p>
+            </div>
+          }
+        >
+          {(post, i) => (
+            <ListRow
+              post={post}
+              handlers={props.handlers}
+              index={i()}
+              onOpenModal={() => setModalUuid(post.uuid)}
+            />
+          )}
+        </For>
+      </div>
+      <Show when={modalUuid()}>
+        {(uuid) => (
+          <PostDetailModal
+            uuid={uuid()}
+            onClose={() => setModalUuid(null)}
+            handlers={props.handlers}
+          />
         )}
-      </For>
-    </div>
+      </Show>
+    </>
   );
 }
 

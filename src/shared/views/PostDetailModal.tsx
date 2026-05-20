@@ -173,7 +173,7 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
 
           {/* Scrollable body */}
           <div class="flex-1 overflow-y-auto p-4" style={{ "-webkit-overflow-scrolling": "touch" }} onClick={(e) => e.stopPropagation()}>
-            <Show when={node.loading}>
+            <Show when={node.loading && !node()}>
               <div class="space-y-4 animate-pulse">
                 <div class="bg-surface rounded-2xl p-5">
                   <div class="flex gap-3 mb-4">

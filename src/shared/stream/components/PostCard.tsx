@@ -1,5 +1,6 @@
 // src/shared/stream/components/PostCard.tsx
 import { createSignal, onMount, onCleanup, Show } from "solid-js";
+import AuthorPopover from "./AuthorPopover";
 import type { ThreadNode } from "@/shared/lib/thread";
 import { countAllComments } from "@/shared/lib/thread";
 import type { StreamHandlers } from "../types";
@@ -20,12 +21,15 @@ import {
   MdFillStar_border,
   MdOutlineDelete,
   MdOutlineRefresh,
+  MdFillNotifications,
+  MdOutlineNotifications_none,
 } from "solid-icons/md";
 import { useI18n } from "@/i18n";
 import { BiRegularLinkExternal } from "solid-icons/bi";
 import CommentComposer from "@/shared/editor/composers/CommentComposer";
 import DOMPurify from "dompurify";
 import { useAuth } from "@/shared/store/auth-store";
+import { apiFollowPost, apiUnfollowPost } from "@/shared/lib/item-api";
 
 export type { StreamHandlers as PostActions };
 
@@ -59,6 +63,8 @@ export default function PostCard(props: {
   const [commentsLoading, setCommentsLoading] = createSignal(false);
   const [deleteConfirming, setDeleteConfirming] = createSignal(false);
   const [refreshing, setRefreshing] = createSignal(false);
+  const [following, setFollowing] = createSignal(props.post.viewerFollowing ?? false);
+  const [followPending, setFollowPending] = createSignal(false);
   let deleteTimer: ReturnType<typeof setTimeout> | null = null;
   const { locale } = useI18n();
   const auth = useAuth();
@@ -72,6 +78,9 @@ export default function PostCard(props: {
   // Star: only meaningful for local authenticated users
   const canStar = () =>
     !!props.handlers.onStar && auth()?.isLocal === true;
+
+  // Follow: available to local users when the post has a local iid
+  const canFollow = () => auth()?.isLocal === true && !!props.post.iid;
 
   // Delete: viewer must be a local user and the post's author address must
   // match their own channel address (nick@hostname)
@@ -139,6 +148,20 @@ export default function PostCard(props: {
     }
   }
 
+  async function onFollowToggle() {
+    if (!props.post.iid || followPending()) return;
+    const next = !following();
+    setFollowing(next);
+    setFollowPending(true);
+    try {
+      await (next ? apiFollowPost(props.post.iid) : apiUnfollowPost(props.post.iid));
+    } catch {
+      setFollowing(!next);
+    } finally {
+      setFollowPending(false);
+    }
+  }
+
   function onDeleteClick() {
     if (!deleteConfirming()) {
       setDeleteConfirming(true);
@@ -159,22 +182,29 @@ export default function PostCard(props: {
       <div ref={cardRef} class="rounded-tl-lg rounded-bl-lg pl-3 py-2.5 mb-1 border border-rim">
         {/* Single-line author header */}
         <div class="flex items-center gap-2 min-w-0">
-          <Show
-            when={props.post.authorAvatar}
-            fallback={
-              <div class="w-6 h-6 rounded-full bg-gradient-to-br from-accent to-accent-txt
-                          shrink-0 flex items-center justify-center text-white text-[10px] font-bold">
-                {props.post.authorName?.[0]?.toUpperCase() ?? "?"}
-              </div>
-            }
+          <AuthorPopover
+            name={props.post.authorName}
+            avatar={props.post.authorAvatar}
+            url={props.post.authorUrl}
+            address={props.post.authorAddress}
           >
-            <img
-              src={props.post.authorAvatar}
-              width="24"
-              height="24"
-              class="rounded-full object-cover shrink-0"
-            />
-          </Show>
+            <Show
+              when={props.post.authorAvatar}
+              fallback={
+                <div class="w-6 h-6 rounded-full bg-gradient-to-br from-accent to-accent-txt
+                            shrink-0 flex items-center justify-center text-white text-[10px] font-bold cursor-pointer">
+                  {props.post.authorName?.[0]?.toUpperCase() ?? "?"}
+                </div>
+              }
+            >
+              <img
+                src={props.post.authorAvatar}
+                width="24"
+                height="24"
+                class="rounded-full object-cover shrink-0 cursor-pointer"
+              />
+            </Show>
+          </AuthorPopover>
           <a
             href={props.post.authorUrl}
             class="font-medium text-sm text-txt hover:underline truncate"
@@ -246,6 +276,21 @@ export default function PostCard(props: {
             >
               <Show when={props.post.viewerStarred} fallback={<MdFillStar_border size={14} />}>
                 <MdFillStar size={14} />
+              </Show>
+            </button>
+          </Show>
+
+          <Show when={canFollow()}>
+            <button
+              onClick={onFollowToggle}
+              disabled={followPending()}
+              title={following() ? "Unfollow post" : "Follow post for notifications"}
+              class={`flex items-center gap-1 px-2 py-1 rounded-md text-xs
+                     transition-colors select-none hover:bg-overlay disabled:opacity-50
+                     ${following() ? "text-accent" : "text-subtle hover:text-txt"}`}
+            >
+              <Show when={following()} fallback={<MdOutlineNotifications_none size={14} />}>
+                <MdFillNotifications size={14} />
               </Show>
             </button>
           </Show>
@@ -342,22 +387,30 @@ export default function PostCard(props: {
     >
       {/* Header */}
       <div class="flex items-start gap-3">
-        <Show
-          when={props.post.authorAvatar}
-          fallback={
-            <div class="w-11 h-11 rounded-full bg-gradient-to-br from-accent to-accent-txt
-                        shrink-0 flex items-center justify-center text-white text-sm font-bold ring-1 ring-rim">
-              {props.post.authorName?.[0]?.toUpperCase() ?? "?"}
-            </div>
-          }
+        <AuthorPopover
+          name={props.post.authorName}
+          avatar={props.post.authorAvatar}
+          url={props.post.authorUrl}
+          address={props.post.authorAddress}
         >
-          <img
-            src={props.post.authorAvatar}
-            width="44"
-            height="44"
-            class="rounded-full object-cover ring-1 ring-rim"
-          />
-        </Show>
+          <Show
+            when={props.post.authorAvatar}
+            fallback={
+              <div class="w-11 h-11 rounded-full bg-gradient-to-br from-accent to-accent-txt
+                          shrink-0 flex items-center justify-center text-white text-sm font-bold ring-1 ring-rim
+                          cursor-pointer">
+                {props.post.authorName?.[0]?.toUpperCase() ?? "?"}
+              </div>
+            }
+          >
+            <img
+              src={props.post.authorAvatar}
+              width="44"
+              height="44"
+              class="rounded-full object-cover ring-1 ring-rim cursor-pointer"
+            />
+          </Show>
+        </AuthorPopover>
         <div class="flex flex-col">
           <a
             href={props.post.authorUrl}
@@ -458,6 +511,21 @@ export default function PostCard(props: {
           >
             <Show when={props.post.viewerStarred} fallback={<MdFillStar_border size={17} />}>
               <MdFillStar size={17} />
+            </Show>
+          </button>
+        </Show>
+
+        <Show when={canFollow()}>
+          <button
+            onClick={onFollowToggle}
+            disabled={followPending()}
+            title={following() ? "Unfollow post" : "Follow post for notifications"}
+            class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                   transition-colors select-none hover:bg-overlay disabled:opacity-50
+                   ${following() ? "text-accent" : "text-muted hover:text-txt"}`}
+          >
+            <Show when={following()} fallback={<MdOutlineNotifications_none size={17} />}>
+              <MdFillNotifications size={17} />
             </Show>
           </button>
         </Show>

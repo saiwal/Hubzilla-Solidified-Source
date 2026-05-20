@@ -32,6 +32,7 @@ export interface Post {
   viewerDisliked: boolean;
   viewerRepeated: boolean;
   viewerStarred?: boolean;
+  viewerFollowing?: boolean;
   item_origin?: number; // 1 = authored by this channel (viewer is the author)
   dislikeCount: number;
   repeatCount: number;

@@ -38,13 +38,12 @@ function splitIntoColumns<T>(items: T[], n: number): T[][] {
 
 const COLLAPSED_MAX_PX = 200;
 
-function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers }) {
+function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers; onOpenModal: () => void }) {
   const p = props.post;
   const replyCount = () =>
     p.children.length > 0
       ? countAllComments(p.children)
       : (p.commentCount ?? 0);
-  const [showModal, setShowModal] = createSignal(false);
   const [expanded, setExpanded] = createSignal(false);
   let bodyRef!: HTMLDivElement;
   const [overflows, setOverflows] = createSignal(false);
@@ -62,7 +61,7 @@ function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers }) {
   return (
     <>
       <div
-        onClick={() => setShowModal(true)}
+        onClick={() => props.onOpenModal()}
         class="mb-3 bg-surface border border-rim rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
       >
         {/* Author */}
@@ -245,9 +244,6 @@ function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers }) {
         </div>
       </div>
 
-      <Show when={showModal()}>
-        <PostDetailModal uuid={p.uuid} onClose={() => setShowModal(false)}  handlers={props.handlers}/>
-      </Show>
     </>
   );
 }
@@ -256,30 +252,46 @@ export default function MasonryView(props: {
   posts: ThreadNode[];
   handlers: StreamHandlers;
 }) {
+  const [modalUuid, setModalUuid] = createSignal<string | null>(null);
   const colCount = useColumnCount();
   const columns = createMemo(() => splitIntoColumns(props.posts, colCount()));
 
   return (
-    <Show
-      when={props.posts.length > 0}
-      fallback={
-        <p class="text-center py-16 text-muted text-sm">Nothing here yet.</p>
-      }
-    >
-      <div class="flex gap-3 items-start">
-        <For each={columns()}>
-          {(col) => (
-            <div class="flex-1 flex flex-col min-w-0">
-              <For each={col}>
-                {(post) => (
-                  <MasonryCard post={post} handlers={props.handlers} />
-                )}
-              </For>
-            </div>
-          )}
-        </For>
-      </div>
-    </Show>
+    <>
+      <Show
+        when={props.posts.length > 0}
+        fallback={
+          <p class="text-center py-16 text-muted text-sm">Nothing here yet.</p>
+        }
+      >
+        <div class="flex gap-3 items-start">
+          <For each={columns()}>
+            {(col) => (
+              <div class="flex-1 flex flex-col min-w-0">
+                <For each={col}>
+                  {(post) => (
+                    <MasonryCard
+                      post={post}
+                      handlers={props.handlers}
+                      onOpenModal={() => setModalUuid(post.uuid)}
+                    />
+                  )}
+                </For>
+              </div>
+            )}
+          </For>
+        </div>
+      </Show>
+      <Show when={modalUuid()}>
+        {(uuid) => (
+          <PostDetailModal
+            uuid={uuid()}
+            onClose={() => setModalUuid(null)}
+            handlers={props.handlers}
+          />
+        )}
+      </Show>
+    </>
   );
 }
 

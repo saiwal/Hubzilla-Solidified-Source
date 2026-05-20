@@ -77,6 +77,12 @@ export const apiEditItem = (uuid: string, content: string, title = '') =>
 export const apiDeleteItem = (uuid: string) =>
   post<{ success: boolean }>(`${BASE}/${encodeId(uuid)}/delete`);
 
+export const apiFollowPost = (iid: number): Promise<void> =>
+  fetch(`/subthread/sub/${iid}`, { credentials: 'include' }).then(() => undefined);
+
+export const apiUnfollowPost = (iid: number): Promise<void> =>
+  fetch(`/subthread/unsub/${iid}`, { credentials: 'include' }).then(() => undefined);
+
 export async function postComment(params: {
   body: string;
   parent_iid: number;
