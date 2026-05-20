@@ -19,6 +19,7 @@ import {
   MdFillStar,
   MdFillStar_border,
   MdOutlineDelete,
+  MdOutlineRefresh,
 } from "solid-icons/md";
 import { useI18n } from "@/i18n";
 import { BiRegularLinkExternal } from "solid-icons/bi";
@@ -57,6 +58,7 @@ export default function PostCard(props: {
   const [commentsLoaded, setCommentsLoaded] = createSignal(props.post.children.length > 0);
   const [commentsLoading, setCommentsLoading] = createSignal(false);
   const [deleteConfirming, setDeleteConfirming] = createSignal(false);
+  const [refreshing, setRefreshing] = createSignal(false);
   let deleteTimer: ReturnType<typeof setTimeout> | null = null;
   const { locale } = useI18n();
   const auth = useAuth();
@@ -126,6 +128,16 @@ export default function PostCard(props: {
   function onDislike() { props.handlers.onDislike(props.post.mid); }
   function onRepeat() { props.handlers.onRepeat(props.post.mid); }
   function onStar() { props.handlers.onStar?.(props.post.mid); }
+
+  async function onRefresh() {
+    if (refreshing() || !props.handlers.onRefresh) return;
+    setRefreshing(true);
+    try {
+      await props.handlers.onRefresh(props.post.mid, props.post.uuid);
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   function onDeleteClick() {
     if (!deleteConfirming()) {
@@ -497,6 +509,21 @@ export default function PostCard(props: {
               <MdFillFormat_list_bulleted size={17} />
             </Show>
             <span>{threaded() ? "Flat" : "Threaded"}</span>
+          </button>
+        </Show>
+
+        <Show when={!!props.handlers.onRefresh}>
+          <button
+            onClick={onRefresh}
+            disabled={refreshing()}
+            title="Refresh"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                   text-muted hover:bg-overlay hover:text-txt transition-colors disabled:opacity-50"
+          >
+            <MdOutlineRefresh
+              size={17}
+              class={refreshing() ? "animate-spin" : ""}
+            />
           </button>
         </Show>
 

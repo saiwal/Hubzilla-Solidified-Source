@@ -15,7 +15,7 @@ import type { ThreadNode } from "@/shared/lib/thread";
 import { buildThreadTree } from "@/shared/lib/thread";
 import type { createStreamStore } from "./createStreamStore";
 import { updateNode } from "./createStreamStore";
-import { fetchComments, apiDeleteItem, apiToggleStar, postComment } from "@/shared/lib/item-api";
+import { fetchComments, fetchItemDetail, apiDeleteItem, apiToggleStar, postComment } from "@/shared/lib/item-api";
 import { mapActivityToPost } from "@/shared/lib/activity.mapper";
 
 type StreamStore = ReturnType<typeof createStreamStore>;
@@ -172,6 +172,34 @@ export function createActionHandlers(store: StreamStore) {
       );
       const nodes = buildThreadTree(comments.map(mapActivityToPost));
       store.setNodeChildren(mid, nodes);
+    },
+
+    async handleRefresh(mid: string, uuid: string): Promise<void> {
+      const detail = await fetchItemDetail(uuid);
+      const item = detail?.item;
+      if (item) {
+        store.setPosts((prev) =>
+          updateNode(prev, mid, (n) => ({
+            ...n,
+            likeCount:       item.like_count      ?? n.likeCount,
+            dislikeCount:    item.dislike_count   ?? n.dislikeCount,
+            repeatCount:     item.announce_count  ?? n.repeatCount,
+            commentCount:    item.comment_count   ?? n.commentCount,
+            viewerLiked:     item.viewer_liked    ?? n.viewerLiked,
+            viewerDisliked:  item.viewer_disliked ?? n.viewerDisliked,
+            viewerRepeated:  item.viewer_repeated ?? n.viewerRepeated,
+          })),
+        );
+      }
+      // Reload comments only if they were already fetched
+      const node = findNode(store.posts(), mid);
+      if (node && node.children.length > 0) {
+        const result = await fetchComments(uuid);
+        const comments = (result.comments ?? []).filter(
+          (a: any) => !REACTION_VERBS.has(a.verb),
+        );
+        store.setNodeChildren(mid, buildThreadTree(comments.map(mapActivityToPost)));
+      }
     },
   };
 }

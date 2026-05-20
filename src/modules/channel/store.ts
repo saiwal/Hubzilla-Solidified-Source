@@ -42,5 +42,5 @@ export async function loadChannel(nickname: string, params?: ChannelParams) {
 export const {
   handleLike, handleDislike, handleRepeat,
   handleStar, handleDelete,
-  handleComment, loadComments,
+  handleComment, loadComments, handleRefresh,
 } = createActionHandlers(store);

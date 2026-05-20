@@ -18,6 +18,7 @@ import {
   handleDelete,
   handleComment,
   loadComments,
+  handleRefresh,
 } from "../store";
 import StreamList from "@/shared/stream/feedviews/StreamList";
 import type { StreamHandlers } from "@/shared/stream/types";
@@ -38,6 +39,7 @@ const handlers: StreamHandlers = {
   onLoadComments:  loadComments,
   onStar:          handleStar,
   onDelete:        handleDelete,
+  onRefresh:       handleRefresh,
 };
 
 export default function ChannelView() {

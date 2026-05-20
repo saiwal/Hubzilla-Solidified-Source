@@ -29,7 +29,7 @@ export async function loadDirectory(params: DirectoryParams = {}) {
     setEntries(data.entries);
     setTotal(data.meta.total);
     currentStart = data.entries.length;
-    setHasMore(currentStart < data.meta.total);
+    setHasMore(data.entries.length >= data.meta.limit);
   } catch (err) {
     setError(err instanceof Error ? err.message : "Unknown error");
     setEntries([]);
@@ -50,7 +50,7 @@ export async function loadMoreDirectory() {
     const fresh = data.entries.filter((e) => !existingHashes.has(e.hash));
     setEntries((prev) => [...prev, ...fresh]);
     currentStart += data.entries.length;
-    setHasMore(currentStart < data.meta.total);
+    setHasMore(data.entries.length >= data.meta.limit && fresh.length > 0);
   } catch (err) {
     console.error("Load more failed:", err);
   } finally {

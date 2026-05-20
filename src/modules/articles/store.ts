@@ -82,5 +82,5 @@ export async function loadArticles(nickname: string, params?: ArticleParams) {
 export const {
   handleLike, handleDislike, handleRepeat,
   handleStar, handleDelete,
-  handleComment, loadComments,
+  handleComment, loadComments, handleRefresh,
 } = createActionHandlers(store);

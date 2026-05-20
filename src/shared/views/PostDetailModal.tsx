@@ -140,6 +140,7 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
         onDelete: props.handlers!.onDelete
           ? async (mid: string) => { await props.handlers!.onDelete!(mid); props.onClose(); }
           : undefined,
+        onRefresh: async () => { refetch(); },
       }
     : undefined;
 

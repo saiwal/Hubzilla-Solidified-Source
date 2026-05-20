@@ -12,7 +12,7 @@ import {
   loading, loadMore, loadingMore, hasMore, newPosts, flushNewPosts,
   handleLike, handleDislike, handleRepeat,
   handleStar, handleDelete,
-  handleComment, loadComments,
+  handleComment, loadComments, handleRefresh,
 } from "../store";
 const handlers: StreamHandlers = {
   onLike:           handleLike,
@@ -22,6 +22,7 @@ const handlers: StreamHandlers = {
   onLoadComments:   loadComments,
   onStar:           handleStar,
   onDelete:         handleDelete,
+  onRefresh:        handleRefresh,
 };
 
 export default function NetworkView() {

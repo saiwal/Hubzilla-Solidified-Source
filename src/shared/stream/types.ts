@@ -13,7 +13,7 @@ export interface StreamHandlers {
   onLoadComments: (mid: string, uuid: string) => Promise<void>;
   onStar?: (mid: string) => void;
   onDelete?: (mid: string) => Promise<void>;
-  // onFileInFolder?: (mid: string, folderId: string) => Promise<void>
+  onRefresh?: (mid: string, uuid: string) => Promise<void>;
 }
 
 export type ViewMode = "feed" | "masonry" | "list" | "inbox";

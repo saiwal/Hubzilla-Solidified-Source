@@ -22,6 +22,8 @@ import {
 } from "../api";
 import type { FileMeta, FileAcl } from "../api";
 
+type ViewMode = "list" | "grid";
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function formatSize(bytes: number): string {
@@ -338,6 +340,141 @@ function Skeleton() {
   );
 }
 
+// ── Thumbnail grid ────────────────────────────────────────────────────────────
+
+const ThumbnailGrid: Component<{
+  files: FileMeta[];
+  nick: string;
+  deleting: string | null;
+  permItem: FileMeta | null;
+  onOpen: (item: FileMeta) => void;
+  onDelete: (item: FileMeta) => void;
+  onPermissions: (item: FileMeta) => void;
+}> = (props) => (
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+    <For each={props.files}>
+      {(item) => {
+        const isImage = () => item.filetype.startsWith("image/");
+        const isActive = () => props.permItem?.hash === item.hash;
+        return (
+          <div
+            class={`relative group rounded-xl border overflow-hidden cursor-pointer
+                    transition-colors bg-elevated ${
+              isActive() ? "border-accent" : "border-rim hover:border-accent/50"
+            }`}
+            onClick={() => props.onOpen(item)}
+          >
+            {/* Thumbnail or icon */}
+            <div class="aspect-square w-full flex items-center justify-center overflow-hidden bg-overlay">
+              <Show
+                when={isImage()}
+                fallback={
+                  <span class="text-5xl select-none">{fileEmoji(item)}</span>
+                }
+              >
+                <img
+                  src={davPath(props.nick, item.display_path)}
+                  alt={item.filename}
+                  loading="lazy"
+                  class="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                    (e.currentTarget.nextSibling as HTMLElement | null)?.removeAttribute("style");
+                  }}
+                />
+                {/* fallback shown if img errors */}
+                <span class="text-5xl select-none hidden">{fileEmoji(item)}</span>
+              </Show>
+            </div>
+
+            {/* Filename bar */}
+            <div class="px-2 py-1.5 border-t border-rim/50 bg-elevated">
+              <p class="text-xs font-medium text-txt truncate">{item.filename}</p>
+              <Show when={!item.is_dir}>
+                <p class="text-[10px] text-muted">{formatSize(item.filesize)}</p>
+              </Show>
+            </div>
+
+            {/* Hover action overlay — pointer-events-none so clicks pass through to card */}
+            <div
+              class="absolute inset-0 flex items-start justify-end p-1.5 gap-1
+                     opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+            >
+              <button
+                onClick={(e) => { e.stopPropagation(); props.onPermissions(item); }}
+                class={`p-1 rounded-md backdrop-blur-sm text-xs transition-colors pointer-events-auto ${
+                  isActive()
+                    ? "bg-accent text-accent-txt"
+                    : "bg-surface/80 text-muted hover:text-txt"
+                }`}
+                title="Permissions"
+              >
+                <MdFillLock size={13} />
+              </button>
+
+              <Show when={!item.is_dir}>
+                <a
+                  href={davPath(props.nick, item.display_path)}
+                  download={item.filename}
+                  onClick={(e) => e.stopPropagation()}
+                  class="p-1 rounded-md bg-surface/80 backdrop-blur-sm text-muted
+                         hover:text-txt transition-colors pointer-events-auto"
+                  title="Download"
+                >
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                </a>
+              </Show>
+
+              <button
+                onClick={(e) => { e.stopPropagation(); props.onDelete(item); }}
+                disabled={props.deleting === item.hash}
+                class="p-1 rounded-md bg-surface/80 backdrop-blur-sm text-muted
+                       hover:text-red-500 disabled:opacity-40 transition-colors pointer-events-auto"
+                title="Delete"
+              >
+                <MdFillDelete size={13} />
+              </button>
+            </div>
+
+            {/* Private badge */}
+            <Show when={isPrivate(item.acl)}>
+              <div class="absolute bottom-8 left-1.5 flex items-center gap-0.5
+                          bg-surface/80 backdrop-blur-sm text-accent text-[9px]
+                          px-1.5 py-0.5 rounded-full">
+                <MdFillLock size={9} />
+                Restricted
+              </div>
+            </Show>
+          </div>
+        );
+      }}
+    </For>
+  </div>
+);
+
+// ── View mode icons ───────────────────────────────────────────────────────────
+
+function ListIcon() {
+  return (
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+    </svg>
+  );
+}
+
+function GridIcon() {
+  return (
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+    </svg>
+  );
+}
+
 // ── Main view ─────────────────────────────────────────────────────────────────
 
 export default function FilesView() {
@@ -391,6 +528,16 @@ export default function FilesView() {
 
   // Delete
   const [deleting, setDeleting] = createSignal<string | null>(null);
+
+  // View mode
+  const [viewMode, setViewMode] = createSignal<ViewMode>(
+    (localStorage.getItem("hz-files-view") as ViewMode) ?? "list"
+  );
+  function toggleViewMode() {
+    const next: ViewMode = viewMode() === "list" ? "grid" : "list";
+    setViewMode(next);
+    localStorage.setItem("hz-files-view", next);
+  }
 
   // Permissions
   const [permItem, setPermItem] = createSignal<FileMeta | null>(null);
@@ -457,6 +604,18 @@ export default function FilesView() {
         <Breadcrumb stack={navStack()} onNavigate={navigateTo} />
 
         <div class="flex items-center gap-2 shrink-0">
+          {/* View mode toggle */}
+          <button
+            onClick={toggleViewMode}
+            class="p-1.5 rounded-lg border border-rim text-muted hover:bg-elevated
+                   transition-colors"
+            title={viewMode() === "list" ? "Switch to grid view" : "Switch to list view"}
+          >
+            <Show when={viewMode() === "list"} fallback={<ListIcon />}>
+              <GridIcon />
+            </Show>
+          </button>
+
           <button
             onClick={() => setShowNewFolder((v) => !v)}
             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rim
@@ -523,18 +682,20 @@ export default function FilesView() {
         </form>
       </Show>
 
-      {/* ── Column labels ── */}
-      <div class="border-t border-rim" />
-      <div class="flex items-center gap-3 px-3 text-[10px] font-semibold uppercase tracking-wide text-muted">
-        <span class="w-6 shrink-0" />
-        <span class="flex-1">Name</span>
-        <span class="hidden sm:block w-20 shrink-0 text-right">Access</span>
-        <span class="hidden sm:block w-20 shrink-0 text-right">Size</span>
-        <span class="hidden md:block w-28 shrink-0 text-right">Created</span>
-        <span class="w-20 shrink-0" />
-      </div>
+      {/* ── Column labels (list mode only) ── */}
+      <Show when={viewMode() === "list"}>
+        <div class="border-t border-rim" />
+        <div class="flex items-center gap-3 px-3 text-[10px] font-semibold uppercase tracking-wide text-muted">
+          <span class="w-6 shrink-0" />
+          <span class="flex-1">Name</span>
+          <span class="hidden sm:block w-20 shrink-0 text-right">Access</span>
+          <span class="hidden sm:block w-20 shrink-0 text-right">Size</span>
+          <span class="hidden md:block w-28 shrink-0 text-right">Created</span>
+          <span class="w-20 shrink-0" />
+        </div>
+      </Show>
 
-      {/* ── File list ── */}
+      {/* ── File list / grid ── */}
       <Show when={!files.loading} fallback={<Skeleton />}>
         <Show
           when={!files.error}
@@ -552,34 +713,72 @@ export default function FilesView() {
             when={displayFiles().length > 0}
             fallback={<p class="py-12 text-center text-sm text-muted">This folder is empty.</p>}
           >
-            <div class="space-y-0.5">
-              <For each={displayFiles()}>
-                {(item) => (
-                  <>
-                    <FileRow
-                      item={item}
-                      nick={nick()}
-                      onOpen={(it) => it.is_dir ? navigateInto(it) : window.open(davPath(nick(), it.display_path), "_blank")}
-                      onDelete={handleDelete}
-                      onPermissions={(it) =>
-                        setPermItem((prev) => (prev?.hash === it.hash ? null : it))
-                      }
-                      deleting={deleting() === item.hash}
-                      permOpen={permItem()?.hash === item.hash}
-                    />
-                    <Show when={permItem()?.hash === item.hash}>
-                      <PermissionsPanel
+            <Show
+              when={viewMode() === "list"}
+              fallback={
+                <>
+                  <ThumbnailGrid
+                    files={displayFiles()}
+                    nick={nick()}
+                    deleting={deleting()}
+                    permItem={permItem()}
+                    onOpen={(it) => it.is_dir
+                      ? navigateInto(it)
+                      : window.open(davPath(nick(), it.display_path), "_blank")}
+                    onDelete={handleDelete}
+                    onPermissions={(it) =>
+                      setPermItem((prev) => (prev?.hash === it.hash ? null : it))
+                    }
+                  />
+                  {/* Permissions panel for grid mode — centered modal */}
+                  <Show when={permItem()}>
+                    <div
+                      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+                      onClick={() => setPermItem(null)}
+                    >
+                      <div class="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+                        <PermissionsPanel
+                          item={permItem()!}
+                          nick={nick()}
+                          groups={groups() ?? []}
+                          onSaved={handlePermSaved}
+                          onClose={() => setPermItem(null)}
+                        />
+                      </div>
+                    </div>
+                  </Show>
+                </>
+              }
+            >
+              <div class="space-y-0.5">
+                <For each={displayFiles()}>
+                  {(item) => (
+                    <>
+                      <FileRow
                         item={item}
                         nick={nick()}
-                        groups={groups() ?? []}
-                        onSaved={handlePermSaved}
-                        onClose={() => setPermItem(null)}
+                        onOpen={(it) => it.is_dir ? navigateInto(it) : window.open(davPath(nick(), it.display_path), "_blank")}
+                        onDelete={handleDelete}
+                        onPermissions={(it) =>
+                          setPermItem((prev) => (prev?.hash === it.hash ? null : it))
+                        }
+                        deleting={deleting() === item.hash}
+                        permOpen={permItem()?.hash === item.hash}
                       />
-                    </Show>
-                  </>
-                )}
-              </For>
-            </div>
+                      <Show when={permItem()?.hash === item.hash}>
+                        <PermissionsPanel
+                          item={item}
+                          nick={nick()}
+                          groups={groups() ?? []}
+                          onSaved={handlePermSaved}
+                          onClose={() => setPermItem(null)}
+                        />
+                      </Show>
+                    </>
+                  )}
+                </For>
+              </div>
+            </Show>
           </Show>
         </Show>
       </Show>
