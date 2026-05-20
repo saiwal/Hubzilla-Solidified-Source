@@ -30,6 +30,8 @@ import CommentComposer from "@/shared/editor/composers/CommentComposer";
 import DOMPurify from "dompurify";
 import { useAuth } from "@/shared/store/auth-store";
 import { apiFollowPost, apiUnfollowPost } from "@/shared/lib/item-api";
+import EventCard from "./EventCard";
+import { parseEventData } from "@/shared/lib/activity.mapper";
 
 export type { StreamHandlers as PostActions };
 
@@ -69,6 +71,12 @@ export default function PostCard(props: {
   const { locale } = useI18n();
   const auth = useAuth();
   let cardRef!: HTMLDivElement;
+
+  // Detect event posts: prefer pre-parsed eventData from mapper, fall back to
+  // parsing the body directly (handles cases where obj_type wasn't "Event").
+  const eventData = () =>
+    props.post.eventData ??
+    (props.post.body.includes("[event-summary]") ? parseEventData(props.post.body) : undefined);
 
   const totalComments = () =>
     props.post.children.length > 0
@@ -231,16 +239,23 @@ export default function PostCard(props: {
           </a>
         </div>
 
+        {/* Event card (compact) */}
+        <Show when={eventData()}>
+          {(ev) => <EventCard post={props.post} event={ev()} />}
+        </Show>
+
         {/* Body — no title rendered for comments */}
-        <div
-          class="mt-1.5 prose prose-sm dark:prose-invert max-w-none text-muted
-                 prose-a:text-accent prose-a:no-underline hover:prose-a:underline
-                 prose-blockquote:not-italic prose-blockquote:border-accent
-                 prose-code:bg-overlay prose-code:px-1 prose-code:rounded prose-code:text-xs prose-code:text-txt
-                 prose-img:rounded-lg prose-img:my-1 break-words
-                 prose-p:my-1 prose-p:leading-snug"
-          innerHTML={props.post.body}
-        />
+        <Show when={!eventData()}>
+          <div
+            class="mt-1.5 prose prose-sm dark:prose-invert max-w-none text-muted
+                   prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+                   prose-blockquote:not-italic prose-blockquote:border-accent
+                   prose-code:bg-overlay prose-code:px-1 prose-code:rounded prose-code:text-xs prose-code:text-txt
+                   prose-img:rounded-lg prose-img:my-1 break-words
+                   prose-p:my-1 prose-p:leading-snug"
+            innerHTML={props.post.body}
+          />
+        </Show>
 
         {/* Compact action bar */}
         <div class="mt-2 flex items-center gap-0.5 flex-wrap">
@@ -451,28 +466,22 @@ export default function PostCard(props: {
         />
       </Show>
 
-      {/* Body */}
-      <div
-        class="mt-4 prose-code:break-all prose prose-sm dark:prose-invert max-w-none
-               prose-a:text-accent prose-a:no-underline hover:prose-a:underline
-               prose-blockquote:not-italic prose-blockquote:border-accent
-               prose-code:bg-overlay prose-code:px-1 prose-code:rounded prose-code:text-sm prose-code:text-txt
-               prose-img:rounded-lg prose-img:my-2 break-words text-muted
-               [&_.bb-share]:mt-3 [&_.bb-share]:rounded-xl [&_.bb-share]:border [&_.bb-share]:border-rim
-               [&_.bb-share]:bg-overlay [&_.bb-share]:overflow-hidden [&_.bb-share_br]:hidden
-               [&_.bb-share-header]:flex [&_.bb-share-header]:items-center
-               [&_.bb-share-header]:gap-2 [&_.bb-share-header]:px-3 [&_.bb-share-header]:py-2
-               [&_.bb-share-header]:text-xs [&_.bb-share-header]:text-muted
-               [&_.bb-share-header]:border-b [&_.bb-share-header]:border-rim
-               [&_.share-avatar]:!w-6 [&_.share-avatar]:!h-6 [&_.share-avatar]:rounded-full
-               [&_.share-avatar]:object-cover [&_.share-avatar]:shrink-0 [&_.share-avatar]:!my-0
-               [&_.bb-share-header_a]:font-medium [&_.bb-share-header_a]:text-txt [&_.bb-share-header_a:hover]:underline
-               [&_.bb-share-content]:block [&_.bb-share-content]:px-3 [&_.bb-share-content]:py-2.5
-               [&_.bb-share-content]:text-sm [&_.bb-share-content]:text-muted
-               [&_.bb-share-content]:!border-l-0 [&_.bb-share-content]:!pl-0
-               [&_.bb-share-content]:!not-italic [&_.bb-share-content]:!text-inherit"
-        innerHTML={props.post.body}
-      />
+      {/* Event card */}
+      <Show when={eventData()}>
+        {(ev) => <EventCard post={props.post} event={ev()} />}
+      </Show>
+
+      {/* Body — hidden for pure event posts (body is just BBCode tags) */}
+      <Show when={!eventData()}>
+        <div
+          class="mt-4 prose-code:break-all prose prose-sm dark:prose-invert max-w-none
+                 prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+                 prose-blockquote:not-italic prose-blockquote:border-accent
+                 prose-code:bg-overlay prose-code:px-1 prose-code:rounded prose-code:text-sm prose-code:text-txt
+                 prose-img:rounded-lg prose-img:my-2 break-words text-muted"
+          innerHTML={props.post.body}
+        />
+      </Show>
 
       {/* Action bar */}
       <div class="mt-4 pt-3 border-t border-rim flex items-center gap-1 flex-wrap">

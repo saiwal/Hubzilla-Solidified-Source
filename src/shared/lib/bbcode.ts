@@ -226,20 +226,25 @@ function bbShareAttributes(
     ? "article"
     : "post";
 
-  const reldate = posted ? new Date(posted).toLocaleString() : "";
+  const reldate = posted
+    ? new Date(posted).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+    : "";
 
   const avatarHtml = avatar
     ? `<img src="${escapeHtml(avatar)}" class="share-avatar" alt="${escapeHtml(author)}" />`
-    : "";
+    : `<div class="share-avatar share-avatar-init">${escapeHtml(author[0]?.toUpperCase() ?? "?")}</div>`;
+
+  const linkIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>`;
 
   return `<div class="bb-share">
   <div class="bb-share-header">
     ${avatarHtml}
-    <a href="${escapeHtml(profile)}">${escapeHtml(author)}</a>
-    wrote the following <a href="${escapeHtml(link)}">${escapeHtml(type)}</a>
-    <time datetime="${escapeHtml(posted)}">${escapeHtml(reldate)}</time>
+    <a class="bb-share-name" href="${escapeHtml(profile)}">${escapeHtml(author)}</a>
+    <span class="bb-share-sep">·</span>
+    <time class="bb-share-date" datetime="${escapeHtml(posted)}">${escapeHtml(reldate)}</time>
+    <a class="bb-share-link" href="${escapeHtml(link)}" title="View original ${escapeHtml(type)}" target="_blank" rel="noopener noreferrer">${linkIcon}</a>
   </div>
-  <blockquote class="bb-share-content">${content}</blockquote>
+  <div class="bb-share-body">${content}</div>
 </div>`;
 }
 

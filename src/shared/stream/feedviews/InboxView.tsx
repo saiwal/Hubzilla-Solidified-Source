@@ -113,11 +113,7 @@ function InlineThread(props: {
                 </div>
                 <div
                   class="text-sm text-txt/80 leading-relaxed
-                         [&>p]:my-0.5 [&_img]:max-w-xs [&_img]:rounded
-                         [&_.bb-share]:mt-1.5 [&_.bb-share]:rounded-lg [&_.bb-share]:border
-                         [&_.bb-share]:border-rim [&_.bb-share]:bg-surface [&_.bb-share]:overflow-hidden
-                         [&_.bb-share_br]:hidden [&_.bb-share-content]:px-2.5 [&_.bb-share-content]:py-2
-                         [&_.bb-share-content]:text-xs [&_.bb-share-content]:text-muted"
+                         [&>p]:my-0.5 [&_img]:max-w-xs [&_img]:rounded"
                   innerHTML={msg.body}
                 />
                 <button

@@ -1,7 +1,18 @@
 // mappers/activity.mapper.ts
 import { sanitizeHtml } from "@/shared/lib/sanitize";
 import { bbcodeToHtml } from "@/shared/lib/bbcode";
-import type { Post } from "@/shared/types/post.types";
+import type { Post, EventData } from "@/shared/types/post.types";
+
+export function parseEventData(raw: string): EventData | undefined {
+  const get = (tag: string) => {
+    const m = raw.match(new RegExp(`\\[${tag}\\]([^\\[]*?)\\[\\/${tag}\\]`));
+    return m ? m[1].trim() : "";
+  };
+  const summary = get("event-summary");
+  const start   = get("event-start");
+  if (!summary || !start) return undefined;
+  return { summary, start, finish: get("event-finish"), id: get("event-id") };
+}
 
 // Verbs that represent actual displayable content
 // const DISPLAYABLE_VERBS = new Set(['Create', 'Like', 'Dislike', 'Announce']);
@@ -15,15 +26,18 @@ export function shouldDisplayActivity(activity: any): boolean {
 }
 
 export function mapActivityToPost(activity: any): Post {
+  const rawBody: string = activity.body ?? "";
   let body = "";
 
   try {
-    const raw = bbcodeToHtml(activity.body ?? "");
-    body = sanitizeHtml(typeof raw === "string" ? raw : "");
+    const converted = bbcodeToHtml(rawBody);
+    body = sanitizeHtml(typeof converted === "string" ? converted : "");
   } catch (err) {
-    console.error("Body parse failed", activity.body, err);
+    console.error("Body parse failed", rawBody, err);
     body = "";
   }
+
+  const eventData = activity.obj_type === "Event" ? parseEventData(rawBody) : undefined;
 
   // summary: returned by Articles handler as 'summary', fallback to activity stream fields
   const rawSummary: string =
@@ -61,10 +75,17 @@ export function mapActivityToPost(activity: any): Post {
     viewerRepeated: activity.viewer_repeated ?? false,
     viewerStarred: (activity.flags ?? []).includes('starred'),
     viewerFollowing: activity.viewer_following ?? false,
+    viewerAttending: activity.viewer_attending ?? false,
+    viewerDeclining: activity.viewer_declining ?? false,
+    viewerMaybe: activity.viewer_maybe ?? false,
+    attendCount: activity.attend_count ?? 0,
+    declineCount: activity.decline_count ?? 0,
+    maybeCount: activity.maybe_count ?? 0,
     item_origin: activity.item_origin ?? 0,
     dislikeCount: activity.dislike_count ?? 0,
     repeatCount: activity.announce_count ?? 0,
     commentCount: activity.comment_count ?? 0,
+    eventData,
     categories: activity.categories ?? [],
     tags: activity.tags ?? [],
     children: [],

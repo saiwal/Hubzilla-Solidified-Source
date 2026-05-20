@@ -53,6 +53,14 @@ export interface CommentResult {
   uuid: string;
 }
 
+export interface RsvpResult {
+  success: boolean;
+  state: 'added' | 'removed';
+  attend_count: number;
+  decline_count: number;
+  maybe_count: number;
+}
+
 export const apiToggleLike    = (uuid: string) =>
   post<ReactionResult>(`${BASE}/${encodeId(uuid)}/like`);
 
@@ -64,6 +72,15 @@ export const apiToggleRepeat  = (uuid: string) =>
 
 export const apiToggleStar    = (uuid: string) =>
   post<{ success: boolean; starred: boolean }>(`${BASE}/${encodeId(uuid)}/star`);
+
+export const apiRsvpAttend  = (uuid: string) =>
+  post<RsvpResult>(`${BASE}/${encodeId(uuid)}/accept`);
+
+export const apiRsvpDecline = (uuid: string) =>
+  post<RsvpResult>(`${BASE}/${encodeId(uuid)}/reject`);
+
+export const apiRsvpMaybe   = (uuid: string) =>
+  post<RsvpResult>(`${BASE}/${encodeId(uuid)}/tentativeaccept`);
 
 export const apiCreatePost = (body: Record<string, unknown>) =>
   post<{ success: boolean; iid: number; mid: string; uuid: string }>(BASE, body);

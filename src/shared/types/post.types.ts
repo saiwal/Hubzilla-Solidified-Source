@@ -1,3 +1,10 @@
+export interface EventData {
+  summary: string;
+  start: string;
+  finish: string;
+  id: string;
+}
+
 export interface Post {
   id: string;
   iid?: number; // local integer item id — used by /like/{iid}
@@ -33,6 +40,13 @@ export interface Post {
   viewerRepeated: boolean;
   viewerStarred?: boolean;
   viewerFollowing?: boolean;
+  viewerAttending?: boolean;
+  viewerDeclining?: boolean;
+  viewerMaybe?: boolean;
+  attendCount?: number;
+  declineCount?: number;
+  maybeCount?: number;
+  eventData?: EventData;
   item_origin?: number; // 1 = authored by this channel (viewer is the author)
   dislikeCount: number;
   repeatCount: number;

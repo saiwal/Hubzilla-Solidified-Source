@@ -14,6 +14,8 @@ import PostDetailModal from "@/shared/views/PostDetailModal";
 import formatPostDate from "@/shared/lib/date";
 import { useI18n } from "@/i18n";
 import DOMPurify from "dompurify";
+import EventCard from "@/shared/stream/components/EventCard";
+import { parseEventData } from "@/shared/lib/activity.mapper";
 function useColumnCount(): () => number {
   const getCount = () => {
     const w = window.innerWidth;
@@ -48,9 +50,13 @@ function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers; onOpen
   let bodyRef!: HTMLDivElement;
   const [overflows, setOverflows] = createSignal(false);
   const { locale, t } = useI18n();
+  const eventData = () =>
+    p.eventData ??
+    (p.body.includes("[event-summary]") ? parseEventData(p.body) : undefined);
 
   onMount(() => {
     const el = bodyRef;
+    if (!el) return;
     const prev = el.style.maxHeight;
     el.style.maxHeight = "none";
     const natural = el.scrollHeight;
@@ -99,7 +105,13 @@ function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers; onOpen
             innerHTML={DOMPurify.sanitize(p.title!)}
           />
         </Show>
-        {/* Body with height cap */}
+        {/* Event card */}
+        <Show when={eventData()}>
+          {(ev) => <EventCard post={p} event={ev()} />}
+        </Show>
+
+        {/* Body with height cap — hidden for pure event posts */}
+        <Show when={!eventData()}>
         <div class="relative">
           <div
             class="overflow-hidden transition-[max-height] duration-300 ease-in-out"
@@ -110,20 +122,8 @@ function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers; onOpen
             <div
               ref={bodyRef}
               class="post-body text-sm text-muted leading-relaxed wrap-anywhere
-                     [&>p]:my-0.5 [&_img]:w-full [&_img]:rounded-lg [&_img]:mt-2 [&_img]:mb-1
-                     [&>blockquote]:border-l-2 [&>blockquote]:border-accent [&>blockquote]:pl-2 [&>blockquote]:text-accent
-                     [&_.bb-share]:mt-2 [&_.bb-share]:rounded-xl [&_.bb-share]:border [&_.bb-share]:border-rim
-                     [&_.bb-share]:bg-overlay [&_.bb-share_br]:hidden
-                     [&_.bb-share-header]:flex [&_.bb-share-header]:items-center
-                     [&_.bb-share-header]:gap-2 [&_.bb-share-header]:px-3 [&_.bb-share-header]:py-2
-                     [&_.bb-share-header]:text-xs [&_.bb-share-header]:text-muted
-                     [&_.bb-share-header]:border-b [&_.bb-share-header]:border-rim
-                     [&_.share-avatar]:!w-6 [&_.share-avatar]:!h-6 [&_.share-avatar]:rounded-full
-                     [&_.share-avatar]:object-cover [&_.share-avatar]:shrink-0 [&_.share-avatar]:!my-0
-                     [&_.bb-share-header_a]:font-medium [&_.bb-share-header_a]:text-txt
-                     [&_.bb-share-content]:block [&_.bb-share-content]:px-3 [&_.bb-share-content]:py-2.5
-                     [&_.bb-share-content]:text-sm [&_.bb-share-content]:text-muted
-                     [&_.bb-share-content]:border-l-0 [&_.bb-share-content]:pl-0"
+                     [&>p]:my-0.5 [&_img:not(.share-avatar)]:w-full [&_img:not(.share-avatar)]:rounded-lg [&_img:not(.share-avatar)]:mt-2 [&_img:not(.share-avatar)]:mb-1
+                     [&>blockquote]:border-l-2 [&>blockquote]:border-accent [&>blockquote]:pl-2 [&>blockquote]:text-accent"
               innerHTML={p.body}
             />
           </div>
@@ -182,6 +182,7 @@ function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers; onOpen
             {t("ui.show_less")}
           </button>
         </Show>
+        </Show>{/* end !eventData */}
 
         {/* Actions */}
         <div
