@@ -76,6 +76,7 @@ export type NetworkParams = {
   liked?: 1;
   conv?: 1;
   dm?: 1;
+  event?: 1;
   spam?: 1;
   unseen?: 1;
   nouveau?: 1;
@@ -117,8 +118,12 @@ export type NetworkStreamResult = {
   nouveau: boolean;
 };
 export async function fetchNetworkStream(params: NetworkParams = {}): Promise<NetworkStreamResult> {
+  // `event` is a UI-only convenience flag — translate to backend verb filter
+  const { event, ...rest } = params;
+  const apiParams = event ? { ...rest, verb: '.Event' } : rest;
+
   const qs = new URLSearchParams();
-  Object.entries(params).forEach(([k, v]) => {
+  Object.entries(apiParams).forEach(([k, v]) => {
     if (v !== undefined && v !== '') qs.set(k, String(v));
   });
 

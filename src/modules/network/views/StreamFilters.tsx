@@ -31,6 +31,7 @@ import {
   MdFillAll_inbox,
   MdFillSchedule,
   MdFillForum,
+  MdFillEvent,
 } from "solid-icons/md";
 import { helpable } from "@/shared/lib/helpable";
 import type { ViewMode } from "@/shared/stream/types";
@@ -115,6 +116,7 @@ export default function StreamFilters() {
   const star       = ()        => searchParams.star  === "1";
   const conv       = ()        => searchParams.conv  === "1";
   const dm         = ()        => searchParams.dm    === "1";
+  const event      = ()        => searchParams.event === "1";
   const dbegin     = ()        => str(searchParams.dbegin);
   const dend       = ()        => str(searchParams.dend);
   const cmin       = ()        => str(searchParams.cmin);
@@ -125,7 +127,7 @@ export default function StreamFilters() {
 
   const hasAdvanced  = () => !!(tag() || dbegin() || dend() || cmin() || cmax());
   const hasAnyFilter = () =>
-    order() !== "created" || !!search() || star() || conv() || dm() ||
+    order() !== "created" || !!search() || star() || conv() || dm() || event() ||
     hasAdvanced() || !!(cid() || gid());
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -141,6 +143,7 @@ export default function StreamFilters() {
     if (star())    p.star   = 1;
     if (conv())    p.conv   = 1;
     if (dm())      p.dm     = 1;
+    if (event())   p.event  = 1;
     if (dbegin())  p.dbegin = dbegin();
     if (dend())    p.dend   = dend();
     if (cmin())    p.cmin   = Number(cmin());
@@ -172,7 +175,7 @@ export default function StreamFilters() {
     setSearchParams(
       {
         order: undefined, search: undefined, tag: undefined,
-        star: undefined, conv: undefined, dm: undefined,
+        star: undefined, conv: undefined, dm: undefined, event: undefined,
         dbegin: undefined, dend: undefined,
         cmin: undefined, cmax: undefined,
         cid: undefined, gid: undefined, xchan_label: undefined,
@@ -332,6 +335,13 @@ export default function StreamFilters() {
           class={dm() ? ICON_BTN_ACTIVE : ICON_BTN}
         >
           <MdFillMail size={15} />
+        </button>
+        <button
+          title="Events"
+          onClick={() => toggleFlag("event", event())}
+          class={event() ? ICON_BTN_ACTIVE : ICON_BTN}
+        >
+          <MdFillEvent size={15} />
         </button>
 
         {/* Spacer */}
