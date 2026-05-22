@@ -1,7 +1,8 @@
-import { Show, For } from "solid-js";
+import { Show, For, createEffect } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchDisplaySettings, saveDisplaySettings } from "../../api/api";
 import { useSectionForm } from "../../store/useSectionForm";
+import { applyTypography } from "@/shared/lib/typography";
 
 export default function DisplaySection() {
   const { data, saving, saveError, saveOk, handleSubmit } = useSectionForm({
@@ -12,8 +13,13 @@ export default function DisplaySection() {
       "thread_allow", "no_smilies",
       "title_tosource", "start_menu", "user_scalable",
     ],
-  checkboxFields: ["thread_allow", "no_smilies", "title_tosource", "start_menu", "user_scalable"],
+    checkboxFields: ["thread_allow", "no_smilies", "title_tosource", "start_menu", "user_scalable"],
     reloadOn: (prev, next) => prev?.theme !== next.theme,
+  });
+
+  createEffect(() => {
+    const d = data();
+    if (d) applyTypography(d.font_size, d.font_family);
   });
 
   return (
@@ -71,6 +77,61 @@ export default function DisplaySection() {
                      hover:border-rim-strong focus:outline-none focus:border-rim-strong
                      transition-colors text-sm"
             />
+          </Field>
+
+          {/* Typography */}
+          <Field label="Font size" hint="Scales all text by adjusting the base font size.">
+            <div class="flex gap-3">
+              <For each={["small", "medium", "large"] as const}>
+                {(size) => (
+                  <label class="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="font_size"
+                      value={size}
+                      checked={data()!.font_size === size}
+                      class="accent-accent cursor-pointer"
+                    />
+                    <span class="text-sm text-txt capitalize">{size}</span>
+                  </label>
+                )}
+              </For>
+            </div>
+          </Field>
+
+          <Field label="Font family" hint="Changes take effect immediately on save.">
+            <select
+              name="font_family"
+              class="w-full px-3 py-2 rounded-lg border border-rim bg-surface text-txt
+                     hover:border-rim-strong focus:outline-none focus:border-rim-strong
+                     transition-colors text-sm"
+            >
+              <optgroup label="Standard">
+                <option value="system"    selected={data()!.font_family === "system"}>System (default)</option>
+                <option value="serif"     selected={data()!.font_family === "serif"}>Serif — Georgia</option>
+                <option value="monospace" selected={data()!.font_family === "monospace"}>Monospace</option>
+              </optgroup>
+              <optgroup label="Clean &amp; Friendly">
+                <option value="nunito"    selected={data()!.font_family === "nunito"}>Nunito — rounded, approachable</option>
+              </optgroup>
+              <optgroup label="Editorial">
+                <option value="playfair"  selected={data()!.font_family === "playfair"}>Playfair Display — elegant serif</option>
+              </optgroup>
+              <optgroup label="Retro &amp; Techy">
+                <option value="space-mono" selected={data()!.font_family === "space-mono"}>Space Mono — terminal vibes</option>
+                <option value="righteous"  selected={data()!.font_family === "righteous"}>Righteous — bold &amp; retro</option>
+              </optgroup>
+              <optgroup label="Rounded &amp; Playful">
+                <option value="comfortaa" selected={data()!.font_family === "comfortaa"}>Comfortaa — rounded geometric</option>
+                <option value="pacifico"  selected={data()!.font_family === "pacifico"}>Pacifico — friendly display</option>
+              </optgroup>
+              <optgroup label="Just for Fun">
+                <option value="comic"     selected={data()!.font_family === "comic"}>Comic Sans — the classic 😄</option>
+              </optgroup>
+              <optgroup label="Accessibility">
+                <option value="opendyslexic" selected={data()!.font_family === "opendyslexic"}>OpenDyslexic — easier to read</option>
+              </optgroup>
+            </select>
           </Field>
 
           {/* Toggles */}

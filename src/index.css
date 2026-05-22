@@ -5,6 +5,10 @@
 /* Enable class-based dark mode */
 @custom-variant dark (&:where(.dark, .dark *));
 @layer base {
+  body {
+    font-family: var(--hz-font-family, ui-sans-serif, system-ui, -apple-system, sans-serif);
+  }
+
   .post-body {
     overflow-x: hidden;
   }

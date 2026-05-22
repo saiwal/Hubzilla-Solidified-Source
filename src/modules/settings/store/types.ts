@@ -9,6 +9,8 @@ export interface DisplaySettings {
   title_tosource: number;    // 0 | 1
   start_menu: number;        // 0 | 1
   user_scalable: number;     // 0 | 1
+  font_size: "small" | "medium" | "large";
+  font_family: "system" | "serif" | "monospace" | "nunito" | "playfair" | "comfortaa" | "space-mono" | "pacifico" | "righteous" | "comic" | "opendyslexic";
 }
 
 // ── Privacy ──────────────────────────────────────────────────────────────────
