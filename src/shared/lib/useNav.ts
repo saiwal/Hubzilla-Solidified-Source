@@ -52,6 +52,7 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
   // const { t } = useI18n();
   const tabs = useChannelTabs(subjectNick);
   const navData = useNavData();
+  const viewerRole = useViewerRole();
 
   return createMemo((): NavItemDef[] => {
     const isOwnChannel = subjectNick() && auth()?.nick === subjectNick();
@@ -64,6 +65,7 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
     const data = navData();
     const viewer = data?.viewer;
     if (!data || !viewer) return [];
+    const role = viewerRole();
     const seen = new Set<string>();
     const items: NavItemDef[] = getRoutes()()
       .map((route) => {
@@ -73,6 +75,8 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
       .filter((mod) => {
         if (!mod || seen.has(mod.id) || mod.navItem.hidden) return false;
         seen.add(mod.id);
+        const ctx = mod.navItem.context;
+        if (ctx && !matchesRole(ctx, role)) return false;
         return true;
       })
       .map((mod) => ({ ...mod!.navItem }));
