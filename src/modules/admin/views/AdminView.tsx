@@ -4,16 +4,23 @@ import { useLocation } from "@solidjs/router";
 import SubPageLayout from "@/shared/views/SubPageLayout";
 import { ADMIN_ITEMS } from "../index";
 
-// ── Lazy section components ──────────────────────────────────────────────────
-
 const SECTIONS: Record<string, ReturnType<typeof lazy>> = {
-  summary:       lazy(() => import("./sections/SummarySection")),
-  site:       lazy(() => import("./sections/SiteSection")),
+  summary:        lazy(() => import("./sections/SummarySection")),
+  site:           lazy(() => import("./sections/SiteSection")),
+  accounts:       lazy(() => import("./sections/AccountsSection")),
+  channels:       lazy(() => import("./sections/ChannelsSection")),
+  security:       lazy(() => import("./sections/SecuritySection")),
+  features:       lazy(() => import("./sections/FeaturesSection")),
+  addons:         lazy(() => import("./sections/AddonsSection")),
+  themes:         lazy(() => import("./sections/ThemesSection")),
+  "inspect-queue":lazy(() => import("./sections/QueueSection")),
+  queueworker:    lazy(() => import("./sections/QueueworkerSection")),
+  "profile-fields":lazy(() => import("./sections/ProfileFieldsSection")),
+  "db-updates":   lazy(() => import("./sections/DbUpdatesSection")),
+  logs:           lazy(() => import("./sections/LogsSection")),
 };
 
 const DEFAULT_SECTION = "summary";
-
-// ── View ─────────────────────────────────────────────────────────────────────
 
 export default function AdminView() {
   const location = useLocation();
