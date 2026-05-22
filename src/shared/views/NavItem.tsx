@@ -90,10 +90,10 @@ interface Props {
 
 const itemClass =
   "group relative flex items-center gap-3 rounded-xl px-2.5 py-2 " +
-  "text-sm text-[var(--nav-text)] transition-colors duration-150 " +
-  "hover:bg-[var(--nav-hover)] hover:text-[var(--nav-text-active)]";
+  "text-sm text-muted transition-colors duration-150 " +
+  "hover:bg-elevated hover:text-txt";
 
-// const activeClass = "!bg-[var(--nav-active)] !text-[var(--nav-text-active)] font-medium";
+const activeClass = "!bg-elevated !text-txt font-medium";
 
 const NavItem: Component<Props> = (props) => {
   const href = () =>
@@ -118,7 +118,7 @@ const NavItem: Component<Props> = (props) => {
     <Show
       when={isAbsolute()}
       fallback={
-        <A href={href()} end={href() === "/"} class={itemClass}>
+        <A href={href()} end={href() === "/"} class={itemClass} activeClass={activeClass}>
           {content()}
         </A>
       }

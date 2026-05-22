@@ -88,7 +88,7 @@ const Layout: ParentComponent = (props) => {
   const bottomItems = () => navItems().slice(0, bottomLimit());
 
   return (
-    <div class="fixed inset-0 bg-base text-txt">
+    <div class="fixed inset-0 bg-base text-txt hz-app-root">
       <HelpOverlay />
 
       <div class="flex h-full flex-col">

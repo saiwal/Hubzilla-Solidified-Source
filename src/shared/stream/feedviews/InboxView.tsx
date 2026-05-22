@@ -2,6 +2,7 @@
 import { For, Show, createSignal } from "solid-js";
 import type { ThreadNode } from "@/shared/lib/thread";
 import { flattenThread } from "@/shared/lib/thread";
+import { useThreadMode } from "@/shared/store/thread-mode";
 import { REACTION_VERBS } from "@/shared/stream/store/actions-store";
 import type { StreamHandlers } from "../types";
 import formatPostDate from "@/shared/lib/date";
@@ -65,12 +66,91 @@ function VoteButton(props: {
 
 // ── inline thread expanded panel ──────────────────────────────────────────────
 
+function MessageRow(props: {
+  msg: ThreadNode;
+  depth: number;
+  handlers: StreamHandlers;
+  locale: string;
+}) {
+  return (
+    <div
+      class="flex gap-2.5 px-3 py-2.5"
+      style={{ "padding-left": `${12 + props.depth * 20}px` }}
+    >
+      <Show
+        when={props.msg.authorAvatar}
+        fallback={
+          <div class="w-6 h-6 rounded-full bg-accent-muted text-accent flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5 uppercase">
+            {props.msg.authorName?.[0] ?? "?"}
+          </div>
+        }
+      >
+        <img
+          src={props.msg.authorAvatar}
+          alt={props.msg.authorName}
+          class="w-6 h-6 rounded-full object-cover shrink-0 mt-0.5"
+        />
+      </Show>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-baseline gap-1.5 mb-0.5">
+          <span class="text-[11px] font-semibold text-txt">{props.msg.authorName}</span>
+          <span
+            class="text-[10px] text-muted"
+            title={new Date(props.msg.created + "Z").toLocaleString(props.locale)}
+          >
+            {formatPostDate(props.msg.created, props.locale)}
+          </span>
+        </div>
+        <div
+          class="text-sm text-txt/80 leading-relaxed [&>p]:my-0.5 [&_img]:max-w-xs [&_img]:rounded"
+          innerHTML={props.msg.body}
+        />
+        <button
+          onClick={() => props.handlers.onLike(props.msg.mid)}
+          class="mt-1 flex items-center gap-1 text-[10px] transition-colors"
+          classList={{
+            "text-accent": props.msg.viewerLiked,
+            "text-muted hover:text-accent": !props.msg.viewerLiked,
+          }}
+        >
+          <svg class="w-3 h-3" fill={props.msg.viewerLiked ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 15l-6-6-6 6" />
+          </svg>
+          <Show when={props.msg.likeCount > 0}>{props.msg.likeCount}</Show>
+          <span>upvote</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ThreadedNodes(props: {
+  nodes: ThreadNode[];
+  depth: number;
+  handlers: StreamHandlers;
+  locale: string;
+}) {
+  return (
+    <For each={props.nodes}>
+      {(node) => (
+        <>
+          <MessageRow msg={node} depth={props.depth} handlers={props.handlers} locale={props.locale} />
+          <Show when={node.children.length > 0}>
+            <ThreadedNodes nodes={node.children} depth={props.depth + 1} handlers={props.handlers} locale={props.locale} />
+          </Show>
+        </>
+      )}
+    </For>
+  );
+}
+
 function InlineThread(props: {
   thread: ThreadNode;
   handlers: StreamHandlers;
   profileUid: number;
 }) {
-  const all = () => flattenThread(props.thread);
+  const threadMode = useThreadMode();
+  const flat = () => flattenThread(props.thread);
   const { locale } = useI18n();
 
   return (
@@ -78,65 +158,28 @@ function InlineThread(props: {
       class="border-t border-rim bg-base"
       onClick={(e) => e.stopPropagation()}
     >
-      {/* messages */}
       <div class="max-h-72 overflow-y-auto divide-y divide-rim">
-        <For each={all()}>
-          {(msg, i) => (
-            <div
-              class="flex gap-2.5 px-3 py-2.5"
-              classList={{ "pl-9": i() > 0 }}
-            >
-              <Show
-                when={msg.authorAvatar}
-                fallback={
-                  <div class="w-6 h-6 rounded-full bg-accent-muted text-accent flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5 uppercase">
-                    {msg.authorName?.[0] ?? "?"}
-                  </div>
-                }
-              >
-                <img
-                  src={msg.authorAvatar}
-                  alt={msg.authorName}
-                  class="w-6 h-6 rounded-full object-cover shrink-0 mt-0.5"
+        <Show
+          when={threadMode()}
+          fallback={
+            <For each={flat()}>
+              {(msg, i) => (
+                <MessageRow
+                  msg={msg as ThreadNode}
+                  depth={i() === 0 ? 0 : 1}
+                  handlers={props.handlers}
+                  locale={locale()}
                 />
-              </Show>
-
-              <div class="flex-1 min-w-0">
-                <div class="flex items-baseline gap-1.5 mb-0.5">
-                  <span class="text-[11px] font-semibold text-txt">{msg.authorName}</span>
-                  <span
-                    class="text-[10px] text-muted"
-                    title={new Date(msg.created + "Z").toLocaleString(locale())}
-                  >
-                    {formatPostDate(msg.created, locale())}
-                  </span>
-                </div>
-                <div
-                  class="text-sm text-txt/80 leading-relaxed
-                         [&>p]:my-0.5 [&_img]:max-w-xs [&_img]:rounded"
-                  innerHTML={msg.body}
-                />
-                <button
-                  onClick={() => props.handlers.onLike(msg.mid)}
-                  class="mt-1 flex items-center gap-1 text-[10px] transition-colors"
-                  classList={{
-                    "text-accent": msg.viewerLiked,
-                    "text-muted hover:text-accent": !msg.viewerLiked,
-                  }}
-                >
-                  <svg class="w-3 h-3" fill={msg.viewerLiked ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 15l-6-6-6 6" />
-                  </svg>
-                  <Show when={msg.likeCount > 0}>{msg.likeCount}</Show>
-                  <span>upvote</span>
-                </button>
-              </div>
-            </div>
-          )}
-        </For>
+              )}
+            </For>
+          }
+        >
+          {/* threaded: root node first, then its children nested */}
+          <MessageRow msg={props.thread} depth={0} handlers={props.handlers} locale={locale()} />
+          <ThreadedNodes nodes={props.thread.children} depth={1} handlers={props.handlers} locale={locale()} />
+        </Show>
       </div>
 
-      {/* reply composer */}
       <Show when={props.thread.iid}>
         <div class="px-3 py-2.5 border-t border-rim bg-surface/40">
           <CommentComposer

@@ -2,15 +2,14 @@
 export interface DisplaySettings {
   theme: string;
   themes: string[];
+  color_scheme: string;
   update_interval: number;   // seconds (PHP divides ms by 1000)
   itemspage: number;
-  thread_allow: number;      // 0 | 1
-  no_smilies: number;        // 0 | 1
-  title_tosource: number;    // 0 | 1
   start_menu: number;        // 0 | 1
-  user_scalable: number;     // 0 | 1
   font_size: "small" | "medium" | "large";
   font_family: "system" | "serif" | "monospace" | "nunito" | "playfair" | "comfortaa" | "space-mono" | "pacifico" | "righteous" | "comic" | "opendyslexic";
+  bg_url: string;
+  bg_fit: "tile" | "cover";
 }
 
 // ── Privacy ──────────────────────────────────────────────────────────────────

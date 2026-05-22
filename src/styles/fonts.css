@@ -1,0 +1,143 @@
+/* Locally-hosted fonts — files live in public/fonts/ */
+/* Served at /view/theme/solidified/assets/fonts/ in both dev and prod */
+
+@font-face {
+  font-family: 'Nunito';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/Nunito-RegularItalic.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/Nunito-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/Nunito-SemiBold.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/Nunito-Bold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/PlayfairDisplay-RegularItalic.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/PlayfairDisplay-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/PlayfairDisplay-SemiBold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Comfortaa';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/Comfortaa-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Comfortaa';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/Comfortaa-SemiBold.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Comfortaa';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/Comfortaa-Bold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Space Mono';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/SpaceMono-RegularItalic.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/SpaceMono-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/SpaceMono-Bold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Pacifico';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/Pacifico-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Righteous';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/Righteous-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Comic Neue';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/ComicNeue-RegularItalic.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Comic Neue';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/ComicNeue-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Comic Neue';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/ComicNeue-Bold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'OpenDyslexic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/OpenDyslexic-Regular.woff') format('woff');
+}

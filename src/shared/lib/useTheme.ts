@@ -1,10 +1,10 @@
-import { createSignal, onMount } from "solid-js";
+import { createSignal } from "solid-js";
 import type { ThemeId } from "../types/theme.types";
-import { storageGet, storageSet } from "./storage";
+import { apiFetch } from "./fetch";
 
-const [theme, setTheme] = createSignal<ThemeId>("light");
+const STORAGE_KEY = "hz-theme";
 
-const DARK_THEMES = new Set<ThemeId>([
+export const DARK_THEMES = new Set<ThemeId>([
   "dark",
   "nord",
   "dracula",
@@ -19,24 +19,31 @@ const DARK_THEMES = new Set<ThemeId>([
   "rose-pine",
 ]);
 
-function applyTheme(id: ThemeId) {
+const [theme, setTheme] = createSignal<ThemeId>(
+  (localStorage.getItem(STORAGE_KEY) as ThemeId) ?? "light"
+);
+
+export function applyTheme(id: ThemeId) {
   document.documentElement.setAttribute("data-theme", id);
   document.documentElement.classList.toggle("dark", DARK_THEMES.has(id));
 }
 
-export function useTheme() {
-  onMount(async () => {
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const defaultTheme: ThemeId = prefersDark ? "dark" : "light";
-    const resolved = await storageGet<ThemeId>("color-scheme", defaultTheme);
-    setTheme(resolved);
-    applyTheme(resolved);
-  });
+/** Called by auth-store to sync the signal with the server value (no server round-trip). */
+export function initTheme(id: ThemeId) {
+  setTheme(id);
+  applyTheme(id);
+  localStorage.setItem(STORAGE_KEY, id);
+}
 
+export function useTheme() {
   const switchTheme = (id: ThemeId) => {
     setTheme(id);
     applyTheme(id);
-    storageSet("color-scheme", id);
+    localStorage.setItem(STORAGE_KEY, id);
+    apiFetch("/api/settings/display", {
+      method: "POST",
+      body: JSON.stringify({ color_scheme: id }),
+    }).catch(() => {});
   };
 
   return { theme, switchTheme };

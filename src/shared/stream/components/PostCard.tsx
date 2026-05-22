@@ -1,5 +1,6 @@
 // src/shared/stream/components/PostCard.tsx
 import { createSignal, onMount, onCleanup, Show } from "solid-js";
+import { useThreadMode } from "@/shared/store/thread-mode";
 import AuthorPopover from "./AuthorPopover";
 import type { ThreadNode } from "@/shared/lib/thread";
 import { countAllComments } from "@/shared/lib/thread";
@@ -58,9 +59,10 @@ export default function PostCard(props: {
   onSeen?: (uuid: string) => void;
   compact?: boolean;
 }) {
+  const threadMode = useThreadMode();
   const [replyOpen, setReplyOpen] = createSignal(false);
   const [showComments, setShowComments] = createSignal(openedByMid.has(props.post.mid));
-  const [threaded, setThreaded] = createSignal(true);
+  const [threaded, setThreaded] = createSignal(threadMode());
   const [commentsLoaded, setCommentsLoaded] = createSignal(props.post.children.length > 0);
   const [commentsLoading, setCommentsLoading] = createSignal(false);
   const [deleteConfirming, setDeleteConfirming] = createSignal(false);

@@ -117,13 +117,15 @@ export function normaliseApp(raw: {
 // ── Fetch ─────────────────────────────────────────────────────────────────────
 
 export async function fetchNavApi(channelNick?: string): Promise<NavApiResponse> {
-  const params = new URLSearchParams({ format: "json" });
+  const params = new URLSearchParams();
   if (channelNick) params.set("channel_nick", channelNick);
 
-  const res = await fetch(`/nav_api?${params}`);
+  const url = channelNick ? `/api/nav?${params}` : "/api/nav";
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`navapi HTTP ${res.status}`);
 
-  const raw = await res.json();
+  const json = await res.json();
+  const raw = json.data ?? json;
 
   // Normalise app arrays
   const pinned: NavApp[]   = (raw.pinned   ?? []).map(normaliseApp);
