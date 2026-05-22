@@ -1,5 +1,5 @@
 // src/modules/articles/views/ArticlesView.tsx
-import { createEffect, createSignal, onMount, Show, For, Index } from "solid-js";
+import { createEffect, createSignal, onMount, onCleanup, Show, For, Index } from "solid-js";
 import { useParams, useNavigate } from "@solidjs/router";
 import { Portal } from "solid-js/web";
 import { useAuth } from "@/shared/store/auth-store";
@@ -124,50 +124,50 @@ function ArticlesListSkeleton() {
 
 
 // ── modal wrapper ─────────────────────────────────────────────────────────────
-// Separate component so onMount fires after the dialog is connected to the DOM.
+// Uses a div-based modal (not <dialog>) so AclPicker's portaled dropdown
+// stays in the normal stacking context and can appear above the overlay.
 
 function ArticleModal(props: {
   uid: number;
   nick: string;
   onClose: () => void;
 }) {
-  let dialogRef: HTMLDialogElement | undefined;
-
-  onMount(() => dialogRef?.showModal());
-
-  const close = () => {
-    dialogRef?.close();
-    props.onClose();
-  };
+  onMount(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") props.onClose(); };
+    document.addEventListener("keydown", onKey);
+    onCleanup(() => document.removeEventListener("keydown", onKey));
+  });
 
   return (
     <Portal mount={document.body}>
-      <dialog
-        ref={dialogRef}
-        onClick={(e) => { if (e.target === dialogRef) close(); }}
-        class="m-auto w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-xl
-               bg-base border border-rim shadow-xl p-0 backdrop:bg-black/50"
+      {/* Backdrop */}
+      <div
+        class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto py-8 px-4 bg-black/50"
+        onClick={(e) => { if (e.target === e.currentTarget) props.onClose(); }}
       >
-        <div class="flex items-center justify-between px-4 py-3 border-b border-rim sticky top-0 bg-base z-10">
-          <h2 class="text-sm font-semibold text-txt">New article</h2>
-          <button
-            type="button"
-            onClick={close}
-            class="p-1 rounded text-muted hover:bg-elevated transition-colors"
-          >
-            <BiRegularX class="w-5 h-5" />
-          </button>
+        {/* Panel */}
+        <div class="relative w-full max-w-3xl rounded-xl bg-base border border-rim shadow-xl">
+          <div class="flex items-center justify-between px-4 py-3 border-b border-rim sticky top-0 bg-base z-10 rounded-t-xl">
+            <h2 class="text-sm font-semibold text-txt">New article</h2>
+            <button
+              type="button"
+              onClick={props.onClose}
+              class="p-1 rounded text-muted hover:bg-elevated transition-colors"
+            >
+              <BiRegularX class="w-5 h-5" />
+            </button>
+          </div>
+          <ArticleComposer
+            profileUid={props.uid}
+            nick={props.nick}
+            onSaved={() => {
+              props.onClose();
+              resetPosts();
+              loadArticles(props.nick);
+            }}
+          />
         </div>
-        <ArticleComposer
-          profileUid={props.uid}
-          nick={props.nick}
-          onSaved={() => {
-            close();
-            resetPosts();
-            loadArticles(props.nick);
-          }}
-        />
-      </dialog>
+      </div>
     </Portal>
   );
 }
