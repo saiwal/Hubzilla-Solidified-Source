@@ -3,13 +3,14 @@ import { registerModule } from "@/shared/lib/module-registry";
 import type { SubPageItem } from "@/shared/views/SubPageLayout";
 
 export const CONNECTIONS_ITEMS: SubPageItem[] = [
-  { path: "connections", label: "Connections", context: "owner" },
-  { path: "contact-roles", label: "Contact roles", context: "owner" },
+  { path: "connections", label: "Connections", context: "owner", requiresApp: "Connections" },
+  { path: "contact-roles", label: "Contact roles", context: "owner", requiresApp: "Contact Roles" },
   {
     path: "privacy-groups",
     label: "Privacy groups",
     context: "owner",
     dividerAfter: true,
+    requiresApp: "Privacy Groups",
   },
   {
     path: "people",
@@ -42,8 +43,9 @@ registerModule({
     icon: "directory",
     path: "/directory",
     href: "/directory",
-    context: ["all"],
+    context: "all",
   },
   slots: {},
   permissions: [],
+  absorbedApps: ["Connections", "Contact Roles", "Privacy Groups"],
 });

@@ -50,3 +50,7 @@ export function useNavActions() {
   return () => navData()?.actions ?? {};
 }
 
+export function useInstalledApps(): () => Set<string> {
+  return () => new Set(navData()?.installed_apps ?? []);
+}
+

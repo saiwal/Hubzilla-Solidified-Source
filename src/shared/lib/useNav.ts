@@ -3,12 +3,13 @@
 import { createMemo } from "solid-js";
 import { useNavData, useChannelTabs } from "../store/nav-store";
 import { isAdmin, useAuth } from "../store/auth-store";
-import { getModule, getRoutes } from "../lib/module-registry";
+import { getAbsorbedApps } from "../lib/module-registry";
 import type { NavItemDef } from "../types/module.types";
-import type { NavActions, NavChannelTab } from "../lib/nav-api";
+import type { NavActions, NavApp, NavChannelTab } from "../lib/nav-api";
 import { useI18n } from "@/i18n";
 import { useViewerRole } from "../store/site-config";
 import type { ViewerRole } from "../store/site-config";
+import { biToNavIcon } from "../views/NavItem";
 
 type ActionMeta = {
   label: string;
@@ -16,7 +17,7 @@ type ActionMeta = {
   context: NavItemDef["context"];
 };
 
-// ── Role matching ─────────────────────────────────────────────────────────────
+// ── Role matching (used by useNavActionItems) ─────────────────────────────────
 
 function matchesRole(
   context: NavItemDef["context"],
@@ -45,49 +46,59 @@ function tabToNavItem(tab: NavChannelTab): NavItemDef {
     path: urlToPath(tab.url),
   };
 }
+
+function appToNavItem(app: NavApp): NavItemDef {
+  const icon = biToNavIcon(app.bi_icon) || app.name.toLowerCase();
+  return {
+    label: app.label,
+    icon,
+    href: app.url,
+    path: urlToPath(app.url),
+  };
+}
+
+function filterAbsorbed(apps: NavApp[]): NavApp[] {
+  const absorbed = getAbsorbedApps();
+  return absorbed.size === 0 ? apps : apps.filter((a) => !absorbed.has(a.name));
+}
+
+function systemApps(featured: NavApp[]): NavItemDef[] {
+  return filterAbsorbed(featured).filter((a) => a.requires === "").map(appToNavItem);
+}
+
 // ── useNav ────────────────────────────────────────────────────────────────────
 export function useNav(subjectNick: () => string): () => NavItemDef[] {
-  // const navData = useNavData();
   const auth = useAuth();
-  // const { t } = useI18n();
   const tabs = useChannelTabs(subjectNick);
   const navData = useNavData();
   const viewerRole = useViewerRole();
 
   return createMemo((): NavItemDef[] => {
-    const isOwnChannel = subjectNick() && auth()?.nick === subjectNick();
-    // Channel page — tabs take over the sidebar regardless of viewer role
-    if (subjectNick() && !isOwnChannel) {
-      if (tabs.loading) return [];
-      return (tabs() ?? []).map(tabToNavItem);
-    }
-    if (!auth() || navData.loading) return [];
+    if (navData.loading) return [];
     const data = navData();
-    const viewer = data?.viewer;
-    if (!data || !viewer) return [];
+    if (!data) return [];
+
     const role = viewerRole();
-    const seen = new Set<string>();
-    const items: NavItemDef[] = getRoutes()()
-      .map((route) => {
-        const seg = route.path.split("/").filter(Boolean)[0] ?? "";
-        return getModule(seg);
-      })
-      .filter((mod) => {
-        if (!mod || seen.has(mod.id) || mod.navItem.hidden) return false;
-        seen.add(mod.id);
-        const ctx = mod.navItem.context;
-        if (ctx && !matchesRole(ctx, role)) return false;
-        return true;
-      })
-      .map((mod) => ({ ...mod!.navItem }));
+    const isOwnChannel = !!subjectNick() && auth()?.nick === subjectNick();
 
-    items.sort((a, b) => {
-      const labelA = typeof a.label === "function" ? a.label() : a.label;
-      const labelB = typeof b.label === "function" ? b.label() : b.label;
-      return labelA.localeCompare(labelB);
-    });
+    // Visiting someone else's channel → channel tabs + public system apps
+    if (subjectNick() && !isOwnChannel) {
+      const channelTabs = tabs.loading ? [] : (tabs() ?? []).map(tabToNavItem);
+      return [...channelTabs, ...systemApps(data.featured)];
+    }
 
-    return items;
+    // Logged-in user → pinned first, then featured (deduped, absorbed apps removed)
+    if (role !== "anonymous") {
+      const seen = new Set(data.pinned.map((a) => a.name));
+      const combined = filterAbsorbed([
+        ...data.pinned,
+        ...data.featured.filter((a) => !seen.has(a.name)),
+      ]);
+      return combined.map(appToNavItem);
+    }
+
+    // Anonymous → public system apps only
+    return systemApps(data.featured);
   });
 }
 

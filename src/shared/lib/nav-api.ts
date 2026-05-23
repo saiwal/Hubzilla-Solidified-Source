@@ -63,6 +63,8 @@ export interface NavApiResponse {
   featured: NavApp[];
   channel_tabs: NavChannelTab[];
   has_public_stream: boolean;
+  /** All installed app names for the local user — empty for visitors/anon */
+  installed_apps: string[];
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -132,11 +134,12 @@ export async function fetchNavApi(channelNick?: string): Promise<NavApiResponse>
   const featured: NavApp[] = (raw.featured ?? []).map(normaliseApp);
 
   return {
-    viewer:            raw.viewer,
-    actions:           raw.actions ?? {},
+    viewer:         raw.viewer,
+    actions:        raw.actions ?? {},
     pinned,
     featured,
-    channel_tabs:      raw.channel_tabs ?? [],
+    channel_tabs:   raw.channel_tabs ?? [],
     has_public_stream: raw.has_public_stream ?? false,
+    installed_apps: raw.installed_apps ?? [],
   };
 }

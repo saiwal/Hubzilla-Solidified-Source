@@ -1,6 +1,7 @@
 import { type JSX, Show, createMemo } from "solid-js";
 import { useLocation, useNavigate, A } from "@solidjs/router";
 import { useViewerRole } from "@/shared/store/site-config";
+import { useInstalledApps } from "@/shared/store/nav-store";
 
 export type SubPageContext = "owner" | "local" | "remote" | "anonymous" | "all";
 
@@ -11,6 +12,8 @@ export interface SubPageItem {
   dividerAfter?: boolean;
   /** Who can see this nav item. Omit or use "all" for everyone. */
   context?: SubPageContext | SubPageContext[];
+  /** Hubzilla app name that must be installed for this item to appear. */
+  requiresApp?: string;
 }
 
 interface Props {
@@ -20,9 +23,8 @@ interface Props {
   children: JSX.Element;
 }
 
-// role() returns ViewerRole which may include "admin" — accept string so we
-// don't have to mirror every value of ViewerRole inside SubPageContext.
-function isVisible(item: SubPageItem, role: string): boolean {
+function isVisible(item: SubPageItem, role: string, installed: Set<string>): boolean {
+  if (item.requiresApp && !installed.has(item.requiresApp)) return false;
   if (!item.context || item.context === "all") return true;
   // "admin" is a superset of "owner" for visibility purposes
   const effectiveRole = role === "admin" ? "owner" : role;
@@ -34,9 +36,10 @@ export default function SubPageLayout(props: Props) {
   const location = useLocation();
   const navigate = useNavigate();
   const role = useViewerRole();
+  const installedApps = useInstalledApps();
 
   const visibleItems = createMemo(() =>
-    props.items.filter((item) => isVisible(item, role())),
+    props.items.filter((item) => isVisible(item, role(), installedApps())),
   );
 
   const atBase = () =>
