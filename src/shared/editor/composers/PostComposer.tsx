@@ -365,6 +365,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
                 capabilities={caps}
                 tab={store.tab()}
                 onTabChange={store.setTab}
+                mimetype={store.mimetype()}
                 onCtrlEnter={() => { if (!mention.open()) void store.submit(); }}
                 placeholder={props.parentId ? "Write a reply…" : "What's on your mind?"}
                 minHeight="200px"
@@ -373,6 +374,20 @@ const PostComposer: Component<ComposerProps> = (props) => {
 
             {/* ── Footer ── */}
             <footer class="flex flex-wrap items-center gap-2 px-3.5 py-2.5 border-t border-rim bg-elevated shrink-0">
+              {/* Format picker */}
+              <select
+                value={store.mimetype()}
+                onChange={(e) =>
+                  store.setMimetype(e.currentTarget.value as import("../types/editor.types").MimeType)
+                }
+                class="text-xs px-2 py-1 rounded border border-rim bg-surface text-txt"
+                title="Input format"
+              >
+                <option value="text/bbcode">BBCode</option>
+                <option value="text/markdown">Markdown</option>
+                <option value="text/html">HTML</option>
+              </select>
+
               {/* ACL Picker */}
               <AclPicker
                 mode={aclMode()}

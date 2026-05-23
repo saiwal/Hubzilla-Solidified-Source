@@ -6,6 +6,7 @@ import { useNav, useNavActionItems } from "./shared/lib/useNav";
 import Slot from "./shared/views/Slot";
 import RemoteAuthBanner from "./shared/views/RemoteAuthBanner";
 import { useViewerRole, useSubjectNick } from "./shared/store/site-config";
+import { useChannelTheme } from "./shared/lib/useChannelTheme";
 import HelpOverlay from "./shared/views/HelpOverlay";
 import {
   MdFillClose,
@@ -56,6 +57,7 @@ const Layout: ParentComponent = (props) => {
   const [actionsOpen, setActionsOpen] = createSignal(false);
 
   const subjectNick = useSubjectNick();
+  useChannelTheme(subjectNick);
   const actionItems = useNavActionItems();
   const location = useLocation();
   const navItems = useNav(subjectNick);

@@ -47,6 +47,7 @@ interface RawItem {
   viewer_liked: boolean;
   viewer_disliked: boolean;
   viewer_repeated: boolean;
+  viewer_following?: boolean;
   item_starred?: boolean;
   item_origin?: number;
 }
@@ -83,6 +84,7 @@ function rawToPost(r: RawItem): Post {
     viewerLiked: r.viewer_liked,
     viewerDisliked: r.viewer_disliked,
     viewerRepeated: r.viewer_repeated,
+    viewerFollowing: r.viewer_following ?? false,
     viewerStarred: (r.flags ?? []).includes('starred'),
     item_origin: r.item_origin ?? 0,
   };

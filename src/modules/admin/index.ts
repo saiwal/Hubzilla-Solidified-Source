@@ -36,7 +36,7 @@ registerModule({
     icon: "admin",
     path: "/admin",
     href: "/admin/",
-    context: ["admin", "owner", "local"],
+    context: ["admin"],
 		hidden: true,
   },
   slots: {},

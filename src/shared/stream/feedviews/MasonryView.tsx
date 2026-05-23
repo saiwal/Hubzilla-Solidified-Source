@@ -54,7 +54,7 @@ function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers; onOpen
     p.eventData ??
     (p.body.includes("[event-summary]") ? parseEventData(p.body) : undefined);
 
-  onMount(() => {
+  const checkOverflow = () => {
     const el = bodyRef;
     if (!el) return;
     const prev = el.style.maxHeight;
@@ -62,6 +62,14 @@ function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers; onOpen
     const natural = el.scrollHeight;
     el.style.maxHeight = prev;
     setOverflows(natural > COLLAPSED_MAX_PX);
+  };
+
+  onMount(() => {
+    checkOverflow();
+    const imgs = bodyRef?.querySelectorAll("img");
+    imgs?.forEach((img) => {
+      if (!img.complete) img.addEventListener("load", checkOverflow, { once: true });
+    });
   });
 
   return (

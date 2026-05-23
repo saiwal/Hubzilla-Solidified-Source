@@ -7,10 +7,19 @@ import { useParams, A, useNavigate } from "@solidjs/router";
 import { Portal } from "solid-js/web";
 import { fetchArticle, deleteArticle } from "../api";
 import ArticleComposer from "@/shared/editor/composers/ArticleComposer";
+import CommentComposer from "@/shared/editor/composers/CommentComposer";
 import DOMPurify from "dompurify";
 import { usePageNick, useViewerRole } from "@/shared/store/site-config";
 import { useAuth } from "@/shared/store/auth-store";
 import { BiRegularEdit, BiRegularTrash } from "solid-icons/bi";
+import {
+  MdOutlineThumb_up,
+  MdOutlineThumb_down,
+  MdFillShare,
+  MdFillChat,
+} from "solid-icons/md";
+import { apiToggleLike, apiToggleDislike, apiToggleRepeat } from "@/shared/lib/item-api";
+import type { Post } from "@/shared/types/post.types";
 
 // ── types ─────────────────────────────────────────────────────────────────────
 
@@ -211,6 +220,68 @@ export default function ArticleView() {
   const [editing, setEditing] = createSignal(false);
   const [confirmDelete, setConfirmDelete] = createSignal(false);
 
+  // Reaction state — optimistic local copy initialised from fetched article
+  const [reactions, setReactions] = createSignal({
+    likeCount: 0, dislikeCount: 0, repeatCount: 0,
+    viewerLiked: false, viewerDisliked: false, viewerRepeated: false,
+  });
+  createEffect(() => {
+    const art = data()?.article;
+    if (!art) return;
+    setReactions({
+      likeCount: art.likeCount,
+      dislikeCount: art.dislikeCount,
+      repeatCount: art.repeatCount,
+      viewerLiked: art.viewerLiked,
+      viewerDisliked: art.viewerDisliked,
+      viewerRepeated: art.viewerRepeated,
+    });
+  });
+
+  // Local comments list — updated optimistically when a new comment is posted
+  const [localComments, setLocalComments] = createSignal<Post[]>([]);
+  createEffect(() => {
+    if (data()?.comments) setLocalComments(data()!.comments);
+  });
+
+  // Comment composer visibility
+  const [replyOpen, setReplyOpen] = createSignal(false);
+
+  function handleLike() {
+    const art = data()?.article;
+    if (!art?.uuid) return;
+    const wasLiked = reactions().viewerLiked;
+    const delta = wasLiked ? -1 : 1;
+    setReactions(r => ({ ...r, viewerLiked: !wasLiked, likeCount: r.likeCount + delta }));
+    apiToggleLike(art.uuid).then(res => {
+      setReactions(r => ({ ...r, likeCount: res.like_count, viewerLiked: res.state === "added" }));
+    }).catch(() => {
+      setReactions(r => ({ ...r, viewerLiked: wasLiked, likeCount: r.likeCount - delta }));
+    });
+  }
+
+  function handleDislike() {
+    const art = data()?.article;
+    if (!art?.uuid) return;
+    const wasDisliked = reactions().viewerDisliked;
+    const delta = wasDisliked ? -1 : 1;
+    setReactions(r => ({ ...r, viewerDisliked: !wasDisliked, dislikeCount: r.dislikeCount + delta }));
+    apiToggleDislike(art.uuid).then(res => {
+      setReactions(r => ({ ...r, dislikeCount: res.dislike_count, viewerDisliked: res.state === "added" }));
+    }).catch(() => {
+      setReactions(r => ({ ...r, viewerDisliked: wasDisliked, dislikeCount: r.dislikeCount - delta }));
+    });
+  }
+
+  function handleRepeat() {
+    const art = data()?.article;
+    if (!art?.uuid || reactions().viewerRepeated) return;
+    setReactions(r => ({ ...r, viewerRepeated: true, repeatCount: r.repeatCount + 1 }));
+    apiToggleRepeat(art.uuid).catch(() => {
+      setReactions(r => ({ ...r, viewerRepeated: false, repeatCount: r.repeatCount - 1 }));
+    });
+  }
+
   // TOC
   const [toc, setToc] = createSignal<TocEntry[]>([]);
   const [activeId, setActiveId] = createSignal("");
@@ -347,26 +418,106 @@ export default function ArticleView() {
                   innerHTML={rendered()}
                 />
 
-                {/* Reactions */}
-                <div class="flex gap-4 text-sm text-muted border-t border-rim pt-4">
-                  <span>♥ {d().article.likeCount}</span>
-                  <span>👎 {d().article.dislikeCount}</span>
-                  <span>🔁 {d().article.repeatCount}</span>
+                {/* Reactions / action bar */}
+                <div class="flex items-center gap-1 pt-4 border-t border-rim flex-wrap">
+                  <button
+                    onClick={handleLike}
+                    title="Like"
+                    class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                           transition-colors select-none hover:bg-overlay
+                           ${reactions().viewerLiked ? "text-accent" : "text-muted"}`}
+                  >
+                    <MdOutlineThumb_up size={17} />
+                    <Show when={reactions().likeCount > 0}>
+                      <span>{reactions().likeCount}</span>
+                    </Show>
+                  </button>
+
+                  <button
+                    onClick={handleDislike}
+                    title="Dislike"
+                    class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                           transition-colors select-none hover:bg-overlay
+                           ${reactions().viewerDisliked ? "text-accent" : "text-muted"}`}
+                  >
+                    <MdOutlineThumb_down size={17} />
+                    <Show when={reactions().dislikeCount > 0}>
+                      <span>{reactions().dislikeCount}</span>
+                    </Show>
+                  </button>
+
+                  <button
+                    onClick={handleRepeat}
+                    title="Repeat"
+                    class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                           transition-colors select-none hover:bg-overlay
+                           ${reactions().viewerRepeated ? "text-accent" : "text-muted"}`}
+                  >
+                    <MdFillShare size={17} />
+                    <Show when={reactions().repeatCount > 0}>
+                      <span>{reactions().repeatCount}</span>
+                    </Show>
+                  </button>
+
+                  <Show when={auth()?.isLocal}>
+                    <button
+                      onClick={() => setReplyOpen(v => !v)}
+                      class="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                             text-muted hover:bg-overlay hover:text-txt transition-colors"
+                    >
+                      <MdFillChat size={17} />
+                      <span>Comment</span>
+                    </button>
+                  </Show>
                 </div>
+
+                {/* Comment composer */}
+                <Show when={replyOpen() && d().article.iid && d().article.profileUid}>
+                  <CommentComposer
+                    parentMid={d().article.mid}
+                    parentIid={d().article.iid!}
+                    profileUid={d().article.profileUid!}
+                    onSubmitted={(body) => {
+                      const a = auth();
+                      setLocalComments(prev => [...prev, {
+                        uuid: crypto.randomUUID(), id: "", mid: crypto.randomUUID(),
+                        parent_mid: d().article.mid, thr_parent: d().article.mid,
+                        top_mid: d().article.mid, parent: d().article.mid,
+                        body, title: "",
+                        authorName: a?.nick ?? "You",
+                        authorAvatar: "",
+                        authorUrl: "",
+                        created: new Date().toISOString().replace("T", " ").slice(0, 19),
+                        verb: "Create", obj_type: "Note", flags: [], permalink: "",
+                        likeCount: 0, dislikeCount: 0, repeatCount: 0,
+                        viewerLiked: false, viewerDisliked: false, viewerRepeated: false,
+                        item_thread_top: 0, children: [],
+                      } satisfies Post]);
+                      setReplyOpen(false);
+                    }}
+                  />
+                </Show>
 
                 {/* Comments */}
                 <section class="space-y-4">
                   <h2 class="text-base font-semibold text-txt">
-                    Comments ({d().comments.length})
+                    Comments ({localComments().length})
                   </h2>
                   <Show
-                    when={d().comments.length > 0}
+                    when={localComments().length > 0}
                     fallback={<p class="text-sm text-muted">No comments yet.</p>}
                   >
-                    <For each={d().comments}>
+                    <For each={localComments()}>
                       {(c) => (
                         <div class="flex gap-3">
-                          <Show when={c.authorAvatar}>
+                          <Show
+                            when={c.authorAvatar}
+                            fallback={
+                              <div class="w-8 h-8 rounded-full bg-accent-muted text-accent flex items-center justify-center text-xs font-semibold shrink-0">
+                                {c.authorName?.[0]?.toUpperCase() ?? "?"}
+                              </div>
+                            }
+                          >
                             <img
                               src={c.authorAvatar}
                               alt={c.authorName}

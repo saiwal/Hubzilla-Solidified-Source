@@ -30,7 +30,7 @@ export function createComposerStore(
   const [mimetype, setMimetype] = createSignal<MimeType>("text/bbcode");
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError]       = createSignal<string | null>(null);
-  const [tab, setTab]           = createSignal<"wysiwyg" | "source">("wysiwyg");
+  const [tab, setTab]           = createSignal<"wysiwyg" | "source" | "preview">("wysiwyg");
 
   // Only load draft if no initialBody was seeded
   storageGet<string>(DRAFT_KEY, "").then((v) => {

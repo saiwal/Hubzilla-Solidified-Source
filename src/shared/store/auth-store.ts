@@ -61,9 +61,14 @@ async function fetchAuthState(): Promise<AuthState> {
       );
     }
 
-    const bgUrl = data.spa.bg_url ?? "";
-    const bgFit = data.spa.bg_fit ?? "cover";
-    initBackground(bgUrl, (validFits.has(bgFit) ? bgFit : "cover") as BgFit);
+    // Only update background from server when the key is explicitly present —
+    // an absent bg_url means the user has no server-side background saved yet,
+    // and we should not clobber whatever is in localStorage.
+    if ("bg_url" in data.spa) {
+      const bgUrl = data.spa.bg_url ?? "";
+      const bgFit = data.spa.bg_fit ?? "cover";
+      initBackground(bgUrl, (validFits.has(bgFit) ? bgFit : "cover") as BgFit);
+    }
 
     const validThemes = new Set(THEMES.map((t) => t.id));
     const serverTheme = data.spa.color_scheme ?? "";

@@ -1,6 +1,10 @@
 import { createEffect, onMount, Show } from "solid-js";
-import type { EditorCapabilities, EditorTab } from "../types/editor.types";
+import type { EditorCapabilities, EditorTab, MimeType } from "../types/editor.types";
 import EditorToolbar from "./EditorToolbar";
+import EditorPreview from "./EditorPreview";
+import BBCodeToolbar from "./BBCodeToolbar";
+import { sourceToHtml } from "./sourceToHtml";
+import { htmlToSource } from "./htmlToSource";
 
 interface Props {
   body: string;
@@ -8,6 +12,7 @@ interface Props {
   capabilities: EditorCapabilities;
   tab: EditorTab;
   onTabChange: (t: EditorTab) => void;
+  mimetype?: MimeType;
   onCtrlEnter?: () => void;
   placeholder?: string;
   minHeight?: string;
@@ -18,42 +23,45 @@ export default function RichEditor(props: Props) {
   let textareaRef: HTMLTextAreaElement | undefined;
   let isUserTyping = false;
 
+  const mime = (): MimeType => props.mimetype ?? "text/bbcode";
   const minH = () =>
     props.minHeight ??
     (props.capabilities.toolbar === "comment" ? "60px" : "140px");
 
-  // Seed contenteditable on mount
+  // Seed WYSIWYG on mount: convert source body → HTML for display
   onMount(() => {
-    if (editorRef) editorRef.innerHTML = props.body;
+    if (editorRef) editorRef.innerHTML = sourceToHtml(props.body, mime());
   });
 
-  // When body resets to "" externally (post-submit), clear the div too.
+  // When body resets to "" externally (post-submit), clear the editor too.
   createEffect(() => {
     if (props.body === "" && editorRef && editorRef.innerHTML !== "") {
       editorRef.innerHTML = "";
     }
   });
 
-  // When switching source→wysiwyg, push textarea content back into div
+  // When switching source→wysiwyg, re-render the source body as HTML
   createEffect(() => {
     if (props.tab === "wysiwyg" && editorRef && !isUserTyping) {
-      const currentContent = editorRef.innerHTML;
-      if (currentContent !== props.body) {
-        editorRef.innerHTML = props.body;
-        // Move cursor to end after update
+      const rendered = sourceToHtml(props.body, mime());
+      if (editorRef.innerHTML !== rendered) {
+        editorRef.innerHTML = rendered;
         const range = document.createRange();
-        const selection = window.getSelection();
+        const sel = window.getSelection();
         range.selectNodeContents(editorRef);
-        range.collapse(false); // false = move to end
-        selection?.removeAllRanges();
-        selection?.addRange(range);
+        range.collapse(false);
+        sel?.removeAllRanges();
+        sel?.addRange(range);
       }
     }
   });
 
   const onEditorInput = () => {
     isUserTyping = true;
-    if (editorRef) props.onInput(editorRef.innerHTML);
+    if (editorRef) {
+      // Convert WYSIWYG HTML back to the chosen source format before storing
+      props.onInput(htmlToSource(editorRef.innerHTML, mime()));
+    }
     isUserTyping = false;
   };
 
@@ -72,11 +80,8 @@ export default function RichEditor(props: Props) {
     }
   };
 
-  const switchTab = (t: EditorTab) => {
-    props.onTabChange(t);
-  };
-
   const showTabs = () => props.capabilities.toolbar !== "comment";
+  const showPreviewTab = () => showTabs() && props.capabilities.preview;
 
   return (
     <div class="rich-editor rounded-lg border border-rim overflow-hidden bg-surface">
@@ -85,16 +90,24 @@ export default function RichEditor(props: Props) {
         <div class="flex bg-elevated border-b border-rim">
           <TabBtn
             active={props.tab === "wysiwyg"}
-            onClick={() => switchTab("wysiwyg")}
+            onClick={() => props.onTabChange("wysiwyg")}
           >
             Write
           </TabBtn>
           <TabBtn
             active={props.tab === "source"}
-            onClick={() => switchTab("source")}
+            onClick={() => props.onTabChange("source")}
           >
-            BBCode
+            Source
           </TabBtn>
+          <Show when={showPreviewTab()}>
+            <TabBtn
+              active={props.tab === "preview"}
+              onClick={() => props.onTabChange("preview")}
+            >
+              Preview
+            </TabBtn>
+          </Show>
         </div>
       </Show>
 
@@ -103,6 +116,16 @@ export default function RichEditor(props: Props) {
         <EditorToolbar
           level={props.capabilities.toolbar}
           editorRef={() => editorRef}
+        />
+      </Show>
+
+      {/* ── BBCode toolbar (bbcode format, write + source tabs) ── */}
+      <Show when={mime() === "text/bbcode" && props.tab !== "preview"}>
+        <BBCodeToolbar
+          textareaRef={() => textareaRef}
+          editorRef={() => editorRef}
+          tab={props.tab}
+          onSourceChange={(v) => { props.onInput(v); }}
         />
       </Show>
 
@@ -122,7 +145,7 @@ export default function RichEditor(props: Props) {
         />
       </Show>
 
-      {/* ── BBCode source textarea ────────────────────────── */}
+      {/* ── Source textarea ───────────────────────────────── */}
       <Show when={props.tab === "source"}>
         <textarea
           ref={textareaRef}
@@ -131,11 +154,22 @@ export default function RichEditor(props: Props) {
           onKeyDown={handleKeyDown}
           style={{ "min-height": minH() }}
           class="w-full p-3 text-sm font-mono bg-surface text-txt outline-none resize-y"
-          placeholder="BBCode source…"
+          placeholder={sourcePlaceholder(mime())}
         />
+      </Show>
+
+      {/* ── Preview panel ────────────────────────────────── */}
+      <Show when={props.tab === "preview"}>
+        <EditorPreview body={props.body} mimetype={mime()} />
       </Show>
     </div>
   );
+}
+
+function sourcePlaceholder(mime: MimeType): string {
+  if (mime === "text/markdown") return "Markdown source…";
+  if (mime === "text/html") return "HTML source…";
+  return "BBCode source…";
 }
 
 function TabBtn(props: {

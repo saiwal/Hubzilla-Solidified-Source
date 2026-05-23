@@ -32,6 +32,7 @@ import {
   MdFillSchedule,
   MdFillForum,
   MdFillEvent,
+  MdFillNotifications,
 } from "solid-icons/md";
 import { helpable } from "@/shared/lib/helpable";
 import type { ViewMode } from "@/shared/stream/types";
@@ -114,6 +115,7 @@ export default function StreamFilters() {
   const search     = ()        => str(searchParams.search);
   const tag        = ()        => str(searchParams.tag);
   const star       = ()        => searchParams.star  === "1";
+  const pf         = ()        => searchParams.pf    === "1";
   const conv       = ()        => searchParams.conv  === "1";
   const dm         = ()        => searchParams.dm    === "1";
   const event      = ()        => searchParams.event === "1";
@@ -127,7 +129,7 @@ export default function StreamFilters() {
 
   const hasAdvanced  = () => !!(tag() || dbegin() || dend() || cmin() || cmax());
   const hasAnyFilter = () =>
-    order() !== "created" || !!search() || star() || conv() || dm() || event() ||
+    order() !== "created" || !!search() || star() || pf() || conv() || dm() || event() ||
     hasAdvanced() || !!(cid() || gid());
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -141,6 +143,7 @@ export default function StreamFilters() {
     if (search())  p.search = search();
     if (tag())     p.tag    = tag();
     if (star())    p.star   = 1;
+    if (pf())      p.pf     = 1;
     if (conv())    p.conv   = 1;
     if (dm())      p.dm     = 1;
     if (event())   p.event  = 1;
@@ -175,7 +178,7 @@ export default function StreamFilters() {
     setSearchParams(
       {
         order: undefined, search: undefined, tag: undefined,
-        star: undefined, conv: undefined, dm: undefined, event: undefined,
+        star: undefined, pf: undefined, conv: undefined, dm: undefined, event: undefined,
         dbegin: undefined, dend: undefined,
         cmin: undefined, cmax: undefined,
         cid: undefined, gid: undefined, xchan_label: undefined,
@@ -321,6 +324,13 @@ export default function StreamFilters() {
           class={star() ? ICON_BTN_ACTIVE : ICON_BTN}
         >
           <MdFillStar size={15} />
+        </button>
+        <button
+          title="Following"
+          onClick={() => toggleFlag("pf", pf())}
+          class={pf() ? ICON_BTN_ACTIVE : ICON_BTN}
+        >
+          <MdFillNotifications size={15} />
         </button>
         <button
           title="Conversations"

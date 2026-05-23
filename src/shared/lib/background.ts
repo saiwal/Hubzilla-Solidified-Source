@@ -10,7 +10,8 @@ const [bgFit, setBgFitSignal] = createSignal<BgFit>(
 export function useBgUrl() { return bgUrl; }
 export function useBgFit() { return bgFit; }
 
-export function applyBackground(url: string, fit: BgFit): void {
+/** Apply background CSS vars only — does NOT touch localStorage or signals. */
+export function applyBackgroundCSS(url: string, fit: BgFit): void {
   const root = document.documentElement;
   if (url) {
     root.style.setProperty("--hz-bg-image",  `url(${JSON.stringify(url)})`);
@@ -23,6 +24,10 @@ export function applyBackground(url: string, fit: BgFit): void {
     root.style.removeProperty("--hz-bg-repeat");
     root.style.removeProperty("--hz-bg-pos");
   }
+}
+
+export function applyBackground(url: string, fit: BgFit): void {
+  applyBackgroundCSS(url, fit);
   localStorage.setItem("hz-bg-url", url);
   localStorage.setItem("hz-bg-fit", fit);
 }

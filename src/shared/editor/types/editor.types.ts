@@ -1,5 +1,5 @@
-export type EditorTab = "wysiwyg" | "source";
-export type MimeType = "text/bbcode" | "text/html";
+export type EditorTab = "wysiwyg" | "source" | "preview";
+export type MimeType = "text/bbcode" | "text/html" | "text/markdown";
 
 export type ToolbarLevel = "full" | "minimal" | "comment";
 

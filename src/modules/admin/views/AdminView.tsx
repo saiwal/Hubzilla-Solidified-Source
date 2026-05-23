@@ -1,7 +1,8 @@
-import { lazy, createMemo, Suspense } from "solid-js";
+import { lazy, createMemo, Suspense, Show } from "solid-js";
 import { Dynamic } from "solid-js/web";
-import { useLocation } from "@solidjs/router";
+import { useLocation, Navigate } from "@solidjs/router";
 import SubPageLayout from "@/shared/views/SubPageLayout";
+import { useAuth } from "@/shared/store/auth-store";
 import { ADMIN_ITEMS } from "../index";
 
 const SECTIONS: Record<string, ReturnType<typeof lazy>> = {
@@ -23,6 +24,7 @@ const SECTIONS: Record<string, ReturnType<typeof lazy>> = {
 const DEFAULT_SECTION = "summary";
 
 export default function AdminView() {
+  const auth = useAuth();
   const location = useLocation();
 
   const activeKey = createMemo<string>(() => {
@@ -31,11 +33,13 @@ export default function AdminView() {
   });
 
   return (
-    <SubPageLayout base="/admin" items={ADMIN_ITEMS} activeKey={activeKey()}>
-      <Suspense fallback={<SectionSkeleton />}>
-        <Dynamic component={SECTIONS[activeKey()]} />
-      </Suspense>
-    </SubPageLayout>
+    <Show when={auth()?.isAdmin} fallback={<Navigate href="/" />}>
+      <SubPageLayout base="/admin" items={ADMIN_ITEMS} activeKey={activeKey()}>
+        <Suspense fallback={<SectionSkeleton />}>
+          <Dynamic component={SECTIONS[activeKey()]} />
+        </Suspense>
+      </SubPageLayout>
+    </Show>
   );
 }
 

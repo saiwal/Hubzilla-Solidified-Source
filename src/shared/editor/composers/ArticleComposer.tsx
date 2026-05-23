@@ -1,7 +1,6 @@
 import { createSignal, Show, onCleanup } from "solid-js";
 import { createComposerStore } from "../store/createComposerStore";
 import RichEditor from "../core/RichEditor";
-import EditorPreview from "../core/EditorPreview";
 import { CAPABILITIES } from "../types/editor.types";
 import { apiFetch } from "@/shared/lib/fetch";
 import AclPicker, { entryKey, type AclMode, type AclEntry } from "../components/AclPicker";
@@ -30,7 +29,6 @@ interface Props {
 
 export default function ArticleComposer(props: Props) {
   const caps = CAPABILITIES.article;
-  const [showPreview, setShowPreview] = createSignal(false);
   const [wordCount, setWordCount] = createSignal(0);
   const isEditing = () => !!props.initial?.mid;
 
@@ -324,13 +322,12 @@ export default function ArticleComposer(props: Props) {
         <select
           value={store.mimetype()}
           onChange={(e) =>
-            store.setMimetype(
-              e.currentTarget.value as "text/bbcode" | "text/html",
-            )
+            store.setMimetype(e.currentTarget.value as import("../types/editor.types").MimeType)
           }
           class="text-xs px-2 py-1 rounded border border-rim bg-surface text-txt"
         >
           <option value="text/bbcode">BBCode</option>
+          <option value="text/markdown">Markdown</option>
           <option value="text/html">HTML</option>
         </select>
         <span class="text-xs text-muted ml-auto">{wordCount()} words</span>
@@ -344,6 +341,7 @@ export default function ArticleComposer(props: Props) {
           capabilities={caps}
           tab={store.tab()}
           onTabChange={store.setTab}
+          mimetype={store.mimetype()}
           placeholder="Start writing…"
           minHeight="400px"
         />
@@ -368,11 +366,6 @@ export default function ArticleComposer(props: Props) {
         />
       </Show>
 
-      {/* Preview */}
-      <Show when={showPreview() && store.body().trim()}>
-        <EditorPreview body={store.body()} mimetype={store.mimetype()} />
-      </Show>
-
       {/* Error */}
       <Show when={store.error()}>
         <p class="text-sm text-red-500 bg-red-50/10 px-3 py-2 rounded-lg">
@@ -382,16 +375,8 @@ export default function ArticleComposer(props: Props) {
 
       {/* Actions */}
       <div class="flex flex-wrap items-center gap-3 border-t border-rim pt-4">
-        {/* Left: preview / discard */}
+        {/* Left: discard */}
         <div class="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setShowPreview((v) => !v)}
-            class="px-3 py-1.5 text-sm rounded-lg border border-rim text-muted
-                   hover:bg-elevated transition-colors"
-          >
-            {showPreview() ? "Hide preview" : "Preview"}
-          </button>
           <button
             type="button"
             onClick={() => { store.reset(); clearEntries(); setAclMode("connections"); }}

@@ -1,11 +1,15 @@
-// Fetched once per session, reused for all mutating requests
+const TOKEN_TTL_MS = 30 * 60 * 1000;
 
 let tokenPromise: Promise<string> | null = null;
+let tokenFetchedAt = 0;
 
 export function getCsrfToken(): Promise<string> {
+  if (tokenPromise && Date.now() - tokenFetchedAt > TOKEN_TTL_MS) {
+    tokenPromise = null;
+  }
   if (!tokenPromise) {
+    tokenFetchedAt = Date.now();
     tokenPromise = fetchToken().catch((err) => {
-      // Reset so next call retries
       tokenPromise = null;
       throw err;
     });
@@ -22,4 +26,5 @@ async function fetchToken(): Promise<string> {
 
 export function resetCsrfToken(): void {
   tokenPromise = null;
+  tokenFetchedAt = 0;
 }
