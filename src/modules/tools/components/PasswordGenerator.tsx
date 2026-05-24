@@ -158,7 +158,7 @@ export function PasswordGenerator() {
       {/* Generate button */}
       <button
         onClick={regen}
-        class="bg-accent text-accent-txt rounded-xl py-3 font-medium hover:opacity-90 active:scale-95 transition-all"
+        class="bg-accent text-accent-fg rounded-xl py-3 font-medium hover:opacity-90 active:scale-95 transition-all"
       >
         Generate new password
       </button>

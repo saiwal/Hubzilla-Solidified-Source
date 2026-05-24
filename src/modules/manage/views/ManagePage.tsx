@@ -33,7 +33,7 @@ const ChannelCard: Component<{
           class="w-10 h-10 rounded-full object-cover"
         />
         <Show when={props.channel.is_current}>
-          <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-blue-500 border-2 border-white dark:border-gray-800" />
+          <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-accent border-2 border-surface" />
         </Show>
       </div>
 
@@ -44,12 +44,12 @@ const ChannelCard: Component<{
             {props.channel.channel_name}
           </span>
           <Show when={props.channel.is_current}>
-            <span class="text-xs px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">
+            <span class="text-xs px-1.5 py-0.5 rounded bg-accent-muted text-accent-txt">
               current
             </span>
           </Show>
           <Show when={props.channel.is_default}>
-            <span class="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+            <span class="text-xs px-1.5 py-0.5 rounded bg-surface text-muted">
               default
             </span>
           </Show>
@@ -71,7 +71,7 @@ const ChannelCard: Component<{
             onClick={() => props.onSetDefault(props.channel.channel_id)}
             disabled={props.disabled}
             title="Make default"
-            class="p-1.5 rounded text-gray-400 hover:text-gray-700 dark:hover:text-gray-200
+            class="p-1.5 rounded text-subtle hover:text-txt
                    hover:bg-elevated disabled:opacity-40
                    transition-colors text-xs"
           >
@@ -83,8 +83,8 @@ const ChannelCard: Component<{
             onClick={() => props.onSwitch(props.channel.channel_id)}
             disabled={props.disabled}
             class="px-2.5 py-1 text-xs rounded-md font-medium
-                   bg-blue-600 hover:bg-blue-700 text-white
-                   disabled:opacity-40 transition-colors"
+                   bg-accent hover:opacity-90 text-accent-fg
+                   disabled:opacity-40 transition-opacity"
           >
             Switch
           </button>
@@ -103,9 +103,8 @@ const DelegateCard: Component<{ delegate: ManagedDelegate }> = (props) => {
   return (
 	<a    
       href={switchUrl()}
-      class="flex items-center gap-3 p-3 rounded-lg border border-gray-200
-             dark:border-gray-700 bg-surface
-             hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+      class="flex items-center gap-3 p-3 rounded-lg border border-rim bg-surface
+             hover:border-rim-strong transition-colors"
     >
       <img
         src={props.delegate.photo}
@@ -118,7 +117,7 @@ const DelegateCard: Component<{ delegate: ManagedDelegate }> = (props) => {
           {props.delegate.address}
         </p>
       </div>
-      <span class="text-xs text-gray-400 shrink-0">delegate →</span>
+      <span class="text-xs text-subtle shrink-0">delegate →</span>
     </a>
   );
 };
@@ -130,7 +129,7 @@ const ChannelSkeleton: Component = () => (
     <div class="w-10 h-10 rounded-full bg-elevated animate-pulse shrink-0" />
     <div class="flex-1 space-y-2">
       <div class="h-3 w-32 rounded bg-elevated animate-pulse" />
-      <div class="h-2.5 w-24 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
+      <div class="h-2.5 w-24 rounded bg-elevated animate-pulse" />
     </div>
   </div>
 );
@@ -185,8 +184,7 @@ const ManagePage: Component = () => {
 			<a     
           href={data()?.create_url ?? "/new_channel"}
           class="px-3 py-1.5 text-sm rounded-md font-medium
-                 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900
-                 hover:bg-gray-700 dark:hover:bg-gray-300 transition-colors"
+                 bg-accent text-accent-fg hover:opacity-90 transition-opacity"
         >
           + New channel
         </a>
@@ -246,15 +244,14 @@ const ManagePage: Component = () => {
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div class="bg-surface rounded-xl shadow-xl p-6 max-w-sm w-full mx-4 space-y-4">
             <h2 class="font-semibold text-lg">Switch channel?</h2>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
+            <p class="text-sm text-muted">
               You'll be switched to{" "}
               <strong>{channelToConfirm()?.channel_name}</strong>. The page will reload.
             </p>
             <div class="flex gap-2 justify-end">
               <button
                 onClick={() => setConfirmSwitch(null)}
-                class="px-3 py-1.5 text-sm rounded-md border border-gray-200
-                       dark:border-gray-700 hover:bg-elevated
+                class="px-3 py-1.5 text-sm rounded-md border border-rim hover:bg-elevated
                        transition-colors"
               >
                 Cancel
@@ -263,8 +260,8 @@ const ManagePage: Component = () => {
                 onClick={confirmSwitchAction}
                 disabled={isPending()}
                 class="px-3 py-1.5 text-sm rounded-md font-medium
-                       bg-blue-600 hover:bg-blue-700 text-white
-                       disabled:opacity-40 transition-colors"
+                       bg-accent hover:opacity-90 text-accent-fg
+                       disabled:opacity-40 transition-opacity"
               >
                 Switch
               </button>

@@ -49,7 +49,7 @@ function VisibilityPill(props: {
       onClick={props.onClick}
       class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border transition-all"
       classList={{
-        "bg-accent text-accent-txt border-accent": active(),
+        "bg-accent text-accent-fg border-accent": active(),
         "border-rim text-muted hover:bg-elevated hover:text-txt": !active(),
       }}
     >
@@ -127,7 +127,7 @@ function PrivatePicker(props: {
                     }}
                   >
                     <Show when={selected()}>
-                      <span class="text-accent-txt text-[10px] font-bold">✓</span>
+                      <span class="text-accent-fg text-[10px] font-bold">✓</span>
                     </Show>
                   </div>
                   <MdFillGroup class="text-muted text-sm shrink-0" />
@@ -161,7 +161,7 @@ function PrivatePicker(props: {
                     }}
                   >
                     <Show when={selected()}>
-                      <span class="text-accent-txt text-[10px] font-bold">✓</span>
+                      <span class="text-accent-fg text-[10px] font-bold">✓</span>
                     </Show>
                   </div>
                   <Show
@@ -401,7 +401,7 @@ export default function ChatRoomsView() {
             <button
               type="submit"
               disabled={creating()}
-              class="text-sm bg-accent text-accent-txt rounded-lg px-4 py-1.5 hover:opacity-90 transition-opacity disabled:opacity-50"
+              class="text-sm bg-accent text-accent-fg rounded-lg px-4 py-1.5 hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               {creating() ? "Creating…" : "Create"}
             </button>

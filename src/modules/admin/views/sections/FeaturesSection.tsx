@@ -46,7 +46,7 @@ export default function FeaturesSection() {
             form="features-form"
             type="submit"
             disabled={saving()}
-            class="px-4 py-2 text-sm font-medium rounded-lg bg-accent text-accent-txt
+            class="px-4 py-2 text-sm font-medium rounded-lg bg-accent text-accent-fg
                    hover:opacity-90 disabled:opacity-40 transition-opacity"
           >
             {saving() ? "Saving…" : "Save"}

@@ -435,7 +435,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
                   type="button"
                   disabled={store.submitting()}
                   onClick={() => void store.submit()}
-                  class="px-5 py-1.5 rounded-lg text-sm font-semibold bg-accent text-accent-txt hover:opacity-90 active:opacity-80 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                  class="px-5 py-1.5 rounded-lg text-sm font-semibold bg-accent text-accent-fg hover:opacity-90 active:opacity-80 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {store.submitting() ? "Posting…" : "Post"}
                 </button>

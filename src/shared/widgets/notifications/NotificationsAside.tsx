@@ -370,7 +370,7 @@ function StreamSection(props: {
           </Show>
           <Show when={props.bucket.count > 0}>
             <span
-              class="text-[10px] font-bold bg-accent text-base rounded-full
+              class="text-[10px] font-bold bg-accent text-accent-fg rounded-full
                          px-1.5 py-0.5 min-w-[18px] text-center leading-none"
             >
               {props.bucket.count > 99 ? "99+" : props.bucket.count}

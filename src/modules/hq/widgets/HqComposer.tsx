@@ -284,7 +284,7 @@ function HqComposer() {
           type="button"
           onClick={handleSubmit}
           disabled={submitting() || !body().trim()}
-          class="ml-auto px-4 py-1 rounded-lg text-xs font-semibold bg-accent text-accent-txt
+          class="ml-auto px-4 py-1 rounded-lg text-xs font-semibold bg-accent text-accent-fg
                  hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
         >
           {submitting() ? "Posting…" : "Post"}

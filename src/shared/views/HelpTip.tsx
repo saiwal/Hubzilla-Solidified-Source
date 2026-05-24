@@ -10,7 +10,7 @@ export default function HelpTip(props: Props) {
       <span
         tabIndex={0}
         class="inline-flex items-center justify-center w-4 h-4 rounded-full
-               bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600
+               bg-surface border border-rim
                cursor-default flex-shrink-0"
       >
         <span class="text-[10px] font-medium text-muted select-none leading-none">

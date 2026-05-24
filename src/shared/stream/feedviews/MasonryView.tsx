@@ -83,7 +83,7 @@ function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers; onOpen
           <Show
             when={p.authorAvatar}
             fallback={
-              <div class="w-7 h-7 rounded-full bg-gradient-to-br from-accent to-accent-txt flex items-center justify-center text-white text-xs font-bold shrink-0">
+              <div class="w-7 h-7 rounded-full bg-gradient-to-br from-accent to-accent-txt flex items-center justify-center text-accent-fg text-xs font-bold shrink-0">
                 {p.authorName?.[0]?.toUpperCase() ?? "?"}
               </div>
             }

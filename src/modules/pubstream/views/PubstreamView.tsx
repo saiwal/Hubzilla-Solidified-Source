@@ -87,7 +87,7 @@ function TagBar(props: { tag: string; onTag: (t: string) => void }) {
       </Show>
       <button
         onClick={submit}
-        class="text-xs px-3 py-1.5 rounded-lg bg-accent text-base font-medium
+        class="text-xs px-3 py-1.5 rounded-lg bg-accent text-accent-fg font-medium
                hover:opacity-90 transition-opacity"
       >
         Filter

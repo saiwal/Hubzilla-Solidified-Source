@@ -22,7 +22,7 @@ const LEVEL_META: Record<LogLevel, { severity: Severity; short: string }> = {
 const SEVERITY_CLASSES: Record<Severity, string> = {
   error:   "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
   warning: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  info:    "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  info:    "bg-accent-muted text-accent-txt",
   debug:   "bg-elevated text-muted",
   other:   "bg-elevated text-muted",
 };
@@ -151,7 +151,7 @@ export default function LogsSection() {
                       onClick={() => setLevelFilter(value)}
                       class={`px-3 py-1 text-xs rounded-full border transition-colors ${
                         active()
-                          ? "bg-accent text-accent-txt border-transparent"
+                          ? "bg-accent text-accent-fg border-transparent"
                           : "border-rim text-muted hover:bg-elevated"
                       }`}
                     >

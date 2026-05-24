@@ -45,7 +45,7 @@ export default function NetworkView() {
         <div class="sticky top-2 z-10 flex justify-center">
           <button
             onClick={flushNewPosts}
-            class="px-4 py-2 rounded-full bg-accent text-white text-sm font-medium shadow-lg hover:opacity-90 transition-opacity"
+            class="px-4 py-2 rounded-full bg-accent text-accent-fg text-sm font-medium shadow-lg hover:opacity-90 transition-opacity"
           >
             ↑ {newPosts().length} new {newPosts().length === 1 ? "post" : "posts"}
           </button>

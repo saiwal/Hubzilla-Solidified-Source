@@ -421,7 +421,7 @@ const Layout: ParentComponent = (props) => {
                 <Show when={!rightOpen() && notifCount() > 0}>
                   <span
                     class="absolute -top-2 -right-1.5 min-w-[14px] h-[14px] px-[3px]
-                           rounded-full bg-accent text-accent-txt
+                           rounded-full bg-accent text-accent-fg
                            text-[9px] font-bold leading-[14px] text-center
                            pointer-events-none select-none"
                   >
@@ -445,7 +445,7 @@ const Layout: ParentComponent = (props) => {
               <Show when={!rightOpen() && notifCount() > 0}>
                 <span
                   class="absolute top-0 right-0 translate-x-3/2 -translate-y-3/2 min-w-[14px] h-[14px] px-[3px]
-                         rounded-full bg-accent text-accent-txt
+                         rounded-full bg-accent text-accent-fg
                          text-[9px] font-bold leading-[14px] text-center
                          pointer-events-none select-none"
                 >

@@ -55,7 +55,7 @@ function HubCard(props: { site: PubSite }) {
     >
       <div class="flex items-start gap-3">
         <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-accent to-accent-txt
-                    flex items-center justify-center text-white text-sm font-semibold shrink-0">
+                    flex items-center justify-center text-accent-fg text-sm font-semibold shrink-0">
           {initial()}
         </div>
         <div class="min-w-0">

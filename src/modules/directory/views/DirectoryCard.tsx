@@ -107,7 +107,7 @@ const DirectoryCard: Component<Props> = (props) => {
         >
           <button
 						onclick={handleAdd}
-            class="flex-1 text-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-accent text-white hover:opacity-80 transition-opacity"
+            class="flex-1 text-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-accent text-accent-fg hover:opacity-80 transition-opacity"
           >
             {e().connect_url ? "Connect" : "View Profile"}
           </button>

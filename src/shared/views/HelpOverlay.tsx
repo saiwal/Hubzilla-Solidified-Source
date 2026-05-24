@@ -14,11 +14,11 @@ export default function HelpOverlay() {
         <Portal>
           <div class="fixed top-4 left-1/2 -translate-x-1/2 z-[9999]
                       flex items-center gap-3 px-4 py-2.5 rounded-xl
-                      bg-blue-600 text-white text-sm shadow-lg">
+                      bg-accent text-accent-fg text-sm shadow-lg">
             <span>Click on anything to get help with it</span>
             <button
               onClick={exit}
-              class="text-blue-200 hover:text-white transition-colors leading-none"
+              class="opacity-70 hover:opacity-100 transition-opacity leading-none"
             >
               ✕ Cancel
             </button>

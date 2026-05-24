@@ -185,7 +185,7 @@ const PermissionsPanel: Component<{
         <button
           onClick={save}
           disabled={busy()}
-          class="px-4 py-1.5 rounded-lg bg-accent text-accent-txt text-sm
+          class="px-4 py-1.5 rounded-lg bg-accent text-accent-fg text-sm
                  disabled:opacity-50 hover:opacity-90 transition-opacity"
         >
           {busy() ? "Saving…" : "Save"}
@@ -404,7 +404,7 @@ const ThumbnailGrid: Component<{
                 onClick={(e) => { e.stopPropagation(); props.onPermissions(item); }}
                 class={`p-1 rounded-md backdrop-blur-sm text-xs transition-colors pointer-events-auto ${
                   isActive()
-                    ? "bg-accent text-accent-txt"
+                    ? "bg-accent text-accent-fg"
                     : "bg-surface/80 text-muted hover:text-txt"
                 }`}
                 title="Permissions"
@@ -626,7 +626,7 @@ export default function FilesView() {
           </button>
 
           <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent
-                        text-accent-txt text-sm cursor-pointer hover:opacity-90 transition-opacity">
+                        text-accent-fg text-sm cursor-pointer hover:opacity-90 transition-opacity">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -665,7 +665,7 @@ export default function FilesView() {
           <button
             type="submit"
             disabled={folderBusy() || !folderName().trim()}
-            class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-accent text-accent-txt
+            class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-accent text-accent-fg
                    text-sm disabled:opacity-50 hover:opacity-90 transition-opacity"
           >
             <MdFillAdd size={14} />

@@ -22,8 +22,8 @@ export default function PostActions(props: Props) {
     <div class="flex items-center gap-3 text-sm text-muted">
       <button
         onClick={() => handleLike(props.post.mid)}
-        class={`flex items-center gap-1 transition-colors hover:text-blue-500
-          ${props.post.viewerLiked ? "text-blue-500" : ""}`}
+        class={`flex items-center gap-1 transition-colors hover:text-accent
+          ${props.post.viewerLiked ? "text-accent" : ""}`}
       >
         <span>👍</span>
         <Show when={props.post.likeCount > 0}>

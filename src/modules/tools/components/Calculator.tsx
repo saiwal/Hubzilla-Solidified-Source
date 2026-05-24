@@ -98,7 +98,7 @@ export function Calculator() {
 
   const BtnOp = (props: { label: string; onClick: () => void; active?: boolean }) => (
     <button
-      class={`${btnBase} border ${props.active ? "bg-accent text-accent-txt border-transparent" : "bg-accent-muted text-accent border-rim hover:border-rim-strong"}`}
+      class={`${btnBase} border ${props.active ? "bg-accent text-accent-fg border-transparent" : "bg-accent-muted text-accent border-rim hover:border-rim-strong"}`}
       onClick={props.onClick}
     >
       {props.label}
@@ -137,7 +137,7 @@ export function Calculator() {
         <BtnNum label="." onClick={inputDot} />
         <div class="col-span-2">
           <button
-            class={`${btnBase} w-full bg-accent text-accent-txt border-transparent hover:opacity-90`}
+            class={`${btnBase} w-full bg-accent text-accent-fg border-transparent hover:opacity-90`}
             onClick={equals}
           >
             =

@@ -202,7 +202,7 @@ export default function PostCard(props: {
               when={props.post.authorAvatar}
               fallback={
                 <div class="w-6 h-6 rounded-full bg-gradient-to-br from-accent to-accent-txt
-                            shrink-0 flex items-center justify-center text-white text-[10px] font-bold cursor-pointer">
+                            shrink-0 flex items-center justify-center text-accent-fg text-[10px] font-bold cursor-pointer">
                   {props.post.authorName?.[0]?.toUpperCase() ?? "?"}
                 </div>
               }
@@ -414,7 +414,7 @@ export default function PostCard(props: {
             when={props.post.authorAvatar}
             fallback={
               <div class="w-11 h-11 rounded-full bg-gradient-to-br from-accent to-accent-txt
-                          shrink-0 flex items-center justify-center text-white text-sm font-bold ring-1 ring-rim
+                          shrink-0 flex items-center justify-center text-accent-fg text-sm font-bold ring-1 ring-rim
                           cursor-pointer">
                 {props.post.authorName?.[0]?.toUpperCase() ?? "?"}
               </div>

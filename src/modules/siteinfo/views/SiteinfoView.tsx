@@ -16,7 +16,7 @@ export default function SiteinfoView() {
             <div class="rounded-xl border border-rim bg-surface p-6">
               <div class="flex items-start gap-4">
                 <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-accent to-accent-txt
-                            flex items-center justify-center text-white text-lg font-bold shrink-0">
+                            flex items-center justify-center text-accent-fg text-lg font-bold shrink-0">
                   {data().site_name.charAt(0).toUpperCase()}
                 </div>
                 <div class="min-w-0">

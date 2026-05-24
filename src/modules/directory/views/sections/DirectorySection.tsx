@@ -58,7 +58,7 @@ export default function DirectorySection() {
           />
           <button
             type="submit"
-            class="px-4 py-1.5 rounded-lg bg-accent text-accent-txt text-sm hover:opacity-80 transition-opacity"
+            class="px-4 py-1.5 rounded-lg bg-accent text-accent-fg text-sm hover:opacity-80 transition-opacity"
           >
             Search
           </button>

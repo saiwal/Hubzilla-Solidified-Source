@@ -43,7 +43,7 @@ export default function EditorToolbar(props: Props) {
         <span class="line-through text-xs">S</span>
       </ToolBtn>
       <ToolBtn title="Highlight" onMouseDown={() => exec("hiliteColor", "yellow")}>
-        <span class="text-xs bg-yellow-300 text-black px-0.5 rounded-sm leading-tight">H</span>
+        <span class="text-xs bg-yellow-300 text-yellow-900 px-0.5 rounded-sm leading-tight">H</span>
       </ToolBtn>
 
       {/* Comment level stops here */}

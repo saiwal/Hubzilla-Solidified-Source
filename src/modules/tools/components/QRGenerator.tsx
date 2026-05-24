@@ -63,7 +63,7 @@ export function QRGenerator() {
 
       {dataUrl() && (
         <div class="flex flex-col items-center gap-4">
-          <div class="bg-white p-3 rounded-xl border border-rim">
+          <div class="bg-elevated p-3 rounded-xl border border-rim">
             <img
               src={dataUrl()!}
               alt="Generated QR code"

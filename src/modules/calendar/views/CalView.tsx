@@ -221,7 +221,7 @@ export default function CalView() {
                     class={`
                       text-xs font-semibold w-5 h-5 flex items-center justify-center rounded-full
                       ${isToday()
-                        ? "bg-accent text-accent-txt"
+                        ? "bg-accent text-accent-fg"
                         : "text-txt"}
                     `}
                   >

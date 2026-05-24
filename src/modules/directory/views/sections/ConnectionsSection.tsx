@@ -112,7 +112,7 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
             <button
               onClick={handleApprove}
               disabled={busy()}
-              class="text-xs px-2 py-1 rounded bg-accent text-accent-txt hover:opacity-80 disabled:opacity-50 transition-opacity"
+              class="text-xs px-2 py-1 rounded bg-accent text-accent-fg hover:opacity-80 disabled:opacity-50 transition-opacity"
             >
               Approve
             </button>
@@ -230,7 +230,7 @@ export default function ConnectionsSection() {
               onClick={() => handleFilterChange(f.id)}
               class={`px-3 py-1 rounded-full text-sm transition-colors ${
                 filter() === f.id
-                  ? "bg-accent text-accent-txt"
+                  ? "bg-accent text-accent-fg"
                   : "bg-overlay text-muted hover:bg-surface"
               }`}
             >
@@ -254,7 +254,7 @@ export default function ConnectionsSection() {
         />
         <button
           onClick={applySearch}
-          class="px-4 py-2 rounded-lg bg-accent text-accent-txt text-sm hover:opacity-80 transition-opacity"
+          class="px-4 py-2 rounded-lg bg-accent text-accent-fg text-sm hover:opacity-80 transition-opacity"
         >
           Search
         </button>

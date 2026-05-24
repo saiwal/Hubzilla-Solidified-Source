@@ -155,7 +155,7 @@ const DirectoryEntryModal: Component<Props> = (props) => {
                   href={e()!.connect_url ?? e()!.profile_url}
                   target={e()!.connect_url ? undefined : "_blank"}
                   rel="noopener noreferrer"
-                  class="flex-1 text-center px-4 py-2 rounded-lg text-sm font-semibold bg-accent text-white hover:opacity-80 transition-opacity"
+                  class="flex-1 text-center px-4 py-2 rounded-lg text-sm font-semibold bg-accent text-accent-fg hover:opacity-80 transition-opacity"
                 >
                   {e()!.connect_url ? "Connect" : "View Profile"}
                 </a>

@@ -212,7 +212,7 @@ export default function ChatRoomView() {
 												<div
 													class="px-3 py-2 text-sm leading-relaxed rounded-2xl"
 													classList={{
-														"bg-accent text-accent-txt rounded-tr-sm": isSelf(),
+														"bg-accent text-accent-fg rounded-tr-sm": isSelf(),
 														"bg-elevated text-txt rounded-tl-sm": !isSelf(),
 														"rounded-tr-2xl": isSelf() && !msg.isFirst,
 														"rounded-tl-2xl": !isSelf() && !msg.isFirst,
@@ -257,7 +257,7 @@ export default function ChatRoomView() {
 							<button
 								onClick={handleSend}
 								disabled={!text().trim() || sending()}
-								class="p-2.5 rounded-xl bg-accent text-accent-txt hover:opacity-90 disabled:opacity-40 transition-all shrink-0"
+								class="p-2.5 rounded-xl bg-accent text-accent-fg hover:opacity-90 disabled:opacity-40 transition-all shrink-0"
 							>
 								<MdFillSend class="text-base" />
 							</button>

@@ -305,7 +305,7 @@ export default function StreamFilters() {
               class={`flex items-center gap-1 py-1.5 transition-colors
                 px-1.5 sm:px-2.5
                 ${order() === opt.value
-                  ? "bg-accent text-accent-txt"
+                  ? "bg-accent text-accent-fg"
                   : "bg-surface text-muted hover:bg-elevated"
                 }`}
             >

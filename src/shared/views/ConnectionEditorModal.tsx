@@ -77,7 +77,7 @@ export default function ConnectionEditorModal(props: Props) {
               when={props.authorAvatar}
               fallback={
                 <div class="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-accent-txt
-                            shrink-0 flex items-center justify-center text-white text-sm font-bold">
+                            shrink-0 flex items-center justify-center text-accent-fg text-sm font-bold">
                   {props.authorName[0]?.toUpperCase() ?? "?"}
                 </div>
               }

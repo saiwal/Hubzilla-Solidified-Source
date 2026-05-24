@@ -281,7 +281,7 @@ function FollowButton(props: { nick: string; connected: boolean; isVisitor: bool
 
   const cls = props.connected
     ? "border-rim text-muted hover:border-accent hover:text-accent"
-    : "border-accent bg-accent text-white hover:opacity-80";
+    : "border-accent bg-accent text-accent-fg hover:opacity-80";
 
   return (
     <a href={href()} class={`shrink-0 px-4 py-1.5 text-sm font-medium rounded-full border transition-colors ${cls}`}>

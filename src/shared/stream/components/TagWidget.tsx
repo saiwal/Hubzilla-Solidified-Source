@@ -139,7 +139,7 @@ const TagWidget: Component<TagWidgetProps> = (props) => {
                     class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full
                            transition-colors leading-tight"
                     classList={{
-                      "bg-accent text-base": isActive(),
+                      "bg-accent text-accent-fg": isActive(),
                       "bg-accent-muted text-accent hover:bg-accent hover:text-base": !isActive(),
                     }}
                     title={`${tag.count} post${tag.count !== 1 ? "s" : ""}`}

@@ -397,7 +397,7 @@ export default function HelpView() {
             class={`px-3 text-center text-xs py-1 rounded-md transition-colors font-medium
               ${
                 section() === s
-                  ? "bg-accent text-base font-semibold"
+                  ? "bg-accent text-accent-fg font-semibold"
                   : "text-muted hover:text-txt"
               }`}
           >

@@ -30,7 +30,7 @@ export default function WebpagesView() {
         <h1 class="text-2xl font-bold text-txt">Webpages</h1>
         <a
           href={`/webpages/${nick()}/new`}
-          class="px-4 py-2 rounded-lg bg-accent text-accent-txt text-sm font-medium hover:opacity-90 transition-opacity"
+          class="px-4 py-2 rounded-lg bg-accent text-accent-fg text-sm font-medium hover:opacity-90 transition-opacity"
         >
           + New Page
         </a>
@@ -176,7 +176,7 @@ function EmptyState(props: { nick: string }) {
       <p class="text-muted">No webpages yet.</p>
       <a
         href={`/webpages/${props.nick}/new`}
-        class="inline-block px-4 py-2 rounded-lg bg-accent text-accent-txt text-sm font-medium hover:opacity-90 transition-opacity"
+        class="inline-block px-4 py-2 rounded-lg bg-accent text-accent-fg text-sm font-medium hover:opacity-90 transition-opacity"
       >
         Create your first page
       </a>

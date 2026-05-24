@@ -16,6 +16,7 @@
   --color-accent: #4f6ef7;
   --color-accent-muted: #dde2fd;
   --color-accent-txt: #2a3ebf;
+  --color-accent-fg: #ffffff;
 }
 
 /* ── Dark ────────────────────────────────────────────────────── */
@@ -35,6 +36,7 @@
   --color-accent: #7c8ff5;
   --color-accent-muted: #1e2352;
   --color-accent-txt: #b0baff;
+  --color-accent-fg: #ffffff;
 }
 
 /* ── Nord ────────────────────────────────────────────────────── */
@@ -54,6 +56,7 @@
   --color-accent: #88c0d0;
   --color-accent-muted: #2d3f4f;
   --color-accent-txt: #81a1c1;
+  --color-accent-fg: #ffffff;
 
 	/* --radius-xl: 4px; */
 }
@@ -75,6 +78,7 @@
   --color-accent: #bd93f9;
   --color-accent-muted: #2e1f4a;
   --color-accent-txt: #caa9fa;
+  --color-accent-fg: #ffffff;
 }
 
 /* ── Monokai ─────────────────────────────────────────────────── */
@@ -94,6 +98,7 @@
   --color-accent: #a6e22e;
   --color-accent-muted: #1e2a10;
   --color-accent-txt: #b8f04a;
+  --color-accent-fg: #1e2019;
 }
 
 /* ── Gruvbox Dark ────────────────────────────────────────────── */
@@ -113,6 +118,7 @@
   --color-accent: #d79921;
   --color-accent-muted: #3a2e0a;
   --color-accent-txt: #fabd2f;
+  --color-accent-fg: #ffffff;
 }
 
 /* ── Gruvbox Light ───────────────────────────────────────────── */
@@ -132,6 +138,7 @@
   --color-accent: #d79921;
   --color-accent-muted: #f0e0a0;
   --color-accent-txt: #b57614;
+  --color-accent-fg: #3c3836;
 }
 
 /* ── Catppuccin Latte (light) ────────────────────────────────── */
@@ -151,6 +158,7 @@
   --color-accent: #1e66f5;
   --color-accent-muted: #d4e0fb;
   --color-accent-txt: #1e66f5;
+  --color-accent-fg: #ffffff;
 }
 
 /* ── Catppuccin Mocha (dark) ─────────────────────────────────── */
@@ -170,6 +178,7 @@
   --color-accent: #89b4fa;
   --color-accent-muted: #1a2550;
   --color-accent-txt: #b4befe;
+  --color-accent-fg: #ffffff;
 }
 
 /* ── Solarized Light ─────────────────────────────────────────── */
@@ -189,6 +198,7 @@
   --color-accent: #268bd2;
   --color-accent-muted: #d4eaf8;
   --color-accent-txt: #1a6fa8;
+  --color-accent-fg: #ffffff;
 }
 
 /* ── Solarized Dark ──────────────────────────────────────────── */
@@ -208,6 +218,7 @@
   --color-accent: #2aa198;
   --color-accent-muted: #0a2e2c;
   --color-accent-txt: #3dd6cb;
+  --color-accent-fg: #ffffff;
 }
 
 /* ── Tokyo Night ─────────────────────────────────────────────── */
@@ -227,6 +238,7 @@
   --color-accent: #7aa2f7;
   --color-accent-muted: #1a2050;
   --color-accent-txt: #a9b8f8;
+  --color-accent-fg: #ffffff;
 }
 
 /* ── One Dark ────────────────────────────────────────────── */
@@ -246,6 +258,7 @@
   --color-accent: #61afef;
   --color-accent-muted: #1c2a3a;
   --color-accent-txt: #8fc7ff;
+  --color-accent-fg: #ffffff;
 }
 
 /* ── CyberPunk ────────────────────────────────────────────── */
@@ -265,6 +278,7 @@
   --color-accent: #ff00cc;
   --color-accent-muted: #2a0030;
   --color-accent-txt: #ff66e0;
+  --color-accent-fg: #ffffff;
 }
 
 /* ── Rose Pine ────────────────────────────────────────────── */
@@ -284,6 +298,7 @@
   --color-accent: #eb6f92;
   --color-accent-muted: #3a1f2a;
   --color-accent-txt: #f6a6c1;
+  --color-accent-fg: #ffffff;
 }
 /* ── Pastel Soft ────────────────────────────────────────────── */
 [data-theme="pastel-soft"] {
@@ -302,6 +317,7 @@
   --color-accent: #7c8cff;
   --color-accent-muted: #e4e8ff;
   --color-accent-txt: #4a5af0;
+  --color-accent-fg: #ffffff;
 }
 /* ── Warm Paper ────────────────────────────────────────────── */
 [data-theme="warm-paper"] {
@@ -320,6 +336,7 @@
   --color-accent: #c97b63;
   --color-accent-muted: #f3ddd6;
   --color-accent-txt: #a65a45;
+  --color-accent-fg: #ffffff;
 }
 /* ── Mint Fresh ────────────────────────────────────────────── */
 [data-theme="mint"] {
@@ -338,6 +355,7 @@
   --color-accent: #2bbf9c;
   --color-accent-muted: #d5f5ec;
   --color-accent-txt: #1d9e80;
+  --color-accent-fg: #ffffff;
 }
 /* ── Sakura ────────────────────────────────────────────── */
 [data-theme="sakura"] {
@@ -356,6 +374,7 @@
   --color-accent: #ff6f91;
   --color-accent-muted: #ffdbe4;
   --color-accent-txt: #e05578;
+  --color-accent-fg: #ffffff;
 }
 /* ── Latte Cream ────────────────────────────────────────────── */
 [data-theme="latte-cream"] {
@@ -374,6 +393,7 @@
   --color-accent: #c89b5a;
   --color-accent-muted: #f2e6d2;
   --color-accent-txt: #a67c3d;
+  --color-accent-fg: #ffffff;
 }
 /* ── Matrix ─────────────────────────────────────────────────── */
 [data-theme="matrix"] {
@@ -392,4 +412,5 @@
   --color-accent:       #00ff66;
   --color-accent-muted: #003311;
   --color-accent-txt:   #66ff99;
+  --color-accent-fg:    #050805;
 }

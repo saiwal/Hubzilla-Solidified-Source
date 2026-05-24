@@ -215,7 +215,7 @@ export default function IntegrationsSection() {
                       disabled:opacity-40 disabled:cursor-not-allowed
                       ${app.installed
                         ? "border border-rim text-muted hover:bg-elevated"
-                        : "bg-accent text-accent-txt hover:opacity-90"
+                        : "bg-accent text-accent-fg hover:opacity-90"
                       }`}
                   >
                     {isBusy(app.name, app.installed ? "uninstall" : "install")

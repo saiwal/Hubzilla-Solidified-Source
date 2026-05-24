@@ -149,7 +149,7 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
   return (
     <Portal>
       <div
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay/80 backdrop-blur-sm"
         onClick={(e) => {
           if (e.target === e.currentTarget) props.onClose();
         }}
@@ -160,13 +160,13 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
         >
           {/* Header */}
           <div class="flex items-center justify-between px-5 py-3 shrink-0 border-b border-rim bg-surface">
-            <h2 class="text-sm font-semibold text-gray-600 dark:text-gray-400">
+            <h2 class="text-sm font-semibold text-muted">
               Post
             </h2>
             <button
               onClick={props.onClose}
               class="p-1.5 rounded-lg hover:bg-elevated
-                     text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                     text-subtle hover:text-txt transition-colors"
               aria-label="Close"
             >
               <BiRegularX />

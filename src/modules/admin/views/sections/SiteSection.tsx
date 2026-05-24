@@ -35,7 +35,7 @@ export default function SiteSection() {
             form="site-form"
             type="submit"
             disabled={saving()}
-            class="px-4 py-2 text-sm font-medium rounded-lg bg-accent text-accent-txt
+            class="px-4 py-2 text-sm font-medium rounded-lg bg-accent text-accent-fg
                    hover:opacity-90 disabled:opacity-40 transition-opacity"
           >
             {saving() ? "Saving…" : "Save"}
@@ -139,7 +139,7 @@ function Toggle(props: { name: string; label: string; checked: boolean }) {
   return (
     <label class="flex items-center gap-3 cursor-pointer select-none">
       <input type="checkbox" name={props.name} value="1" checked={props.checked} class="sr-only peer" />
-      <div class="relative w-9 h-5 bg-elevated rounded-full peer-checked:bg-accent transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-4 after:h-4 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-4" />
+      <div class="relative w-9 h-5 bg-rim-strong rounded-full peer-checked:bg-accent transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-4 after:h-4 after:rounded-full after:bg-elevated after:transition-transform peer-checked:after:translate-x-4" />
       <span class="text-sm text-txt">{props.label}</span>
     </label>
   );

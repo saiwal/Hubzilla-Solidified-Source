@@ -42,7 +42,7 @@ export default function EditorPreview(props: Props) {
     <iframe
       srcdoc={srcdoc()}
       sandbox="allow-same-origin"
-      class="w-full min-h-[120px] border-0 bg-white"
+      class="w-full min-h-[120px] border-0 bg-elevated"
       onLoad={(e) => {
         const iframe = e.currentTarget;
         try {

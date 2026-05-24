@@ -37,7 +37,7 @@ export default function CommentBox(props: {
       <div class="flex flex-col gap-1">
         <button
           onClick={submit}
-          class="px-3 py-1 text-xs font-medium rounded-lg bg-accent text-white hover:opacity-80 transition-opacity"
+          class="px-3 py-1 text-xs font-medium rounded-lg bg-accent text-accent-fg hover:opacity-80 transition-opacity"
         >
           Reply
         </button>

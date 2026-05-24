@@ -203,7 +203,7 @@ export default function ArticlesView() {
             type="button"
             onClick={() => setOpen(true)}
             class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium
-                   rounded-lg bg-accent text-accent-txt hover:opacity-90
+                   rounded-lg bg-accent text-accent-fg hover:opacity-90
                    transition-opacity"
           >
             <BiRegularEdit class="w-4 h-4" />

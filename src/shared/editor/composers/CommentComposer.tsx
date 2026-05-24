@@ -167,7 +167,7 @@ export default function CommentComposer(props: Props) {
           type="button"
           onClick={() => store.submit()}
           disabled={store.submitting() || !store.body().trim()}
-          class="px-3 py-1 text-xs font-medium rounded-lg bg-accent text-accent-txt
+          class="px-3 py-1 text-xs font-medium rounded-lg bg-accent text-accent-fg
                  hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
         >
           {store.submitting() ? "Sending\u2026" : "Reply"}

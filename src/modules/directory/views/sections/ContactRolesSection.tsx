@@ -229,7 +229,7 @@ export default function ContactRolesSection() {
                   onClick={() => setActiveRole(pill.name)}
                   class={`px-3 py-1 rounded-full text-sm transition-colors flex items-center gap-1.5 ${
                     selected() === pill.name
-                      ? "bg-accent text-accent-txt"
+                      ? "bg-accent text-accent-fg"
                       : "bg-overlay text-muted hover:bg-surface"
                   }`}
                 >

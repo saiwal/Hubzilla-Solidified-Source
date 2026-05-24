@@ -71,7 +71,7 @@ const CreateForm: Component = () => {
       <button
         onClick={submit}
         disabled={busy() || !name().trim()}
-        class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-accent text-accent-txt
+        class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-accent text-accent-fg
                text-sm font-medium disabled:opacity-50 hover:opacity-90 transition-opacity shrink-0"
       >
         <MdFillAdd size={16} />

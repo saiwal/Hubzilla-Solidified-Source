@@ -114,7 +114,7 @@ const role = useViewerRole();
         <button
           onClick={flushNewPosts}
           class="w-full mb-3 py-2 text-sm font-medium rounded-xl
-                 bg-accent text-white border border-accent hover:opacity-90 transition-opacity"
+                 bg-accent text-accent-fg border border-accent hover:opacity-90 transition-opacity"
         >
           ↑ {newPosts().length} new {newPosts().length === 1 ? "post" : "posts"}
         </button>

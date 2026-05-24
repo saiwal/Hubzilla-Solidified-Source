@@ -121,7 +121,7 @@ function PopularPostRow(props: {
             class="shrink-0 w-5 h-5 rounded-full flex items-center justify-center
                    text-[10px] font-bold mt-0.5 transition-colors"
             classList={{
-              "bg-accent text-base": props.rank === 1,
+              "bg-accent text-accent-fg": props.rank === 1,
               "bg-elevated text-muted": props.rank !== 1,
             }}
           >

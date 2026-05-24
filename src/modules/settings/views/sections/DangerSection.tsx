@@ -58,7 +58,7 @@ export default function DangerSection() {
                 value={confirm()}
                 onInput={(e) => setConfirm(e.currentTarget.value)}
                 placeholder={data()!.nick}
-                class="w-full max-w-xs px-3 py-2 rounded-lg border border-red-300 bg-white
+                class="w-full max-w-xs px-3 py-2 rounded-lg border border-red-300 bg-surface
                        text-txt text-sm outline-none focus:border-red-500 transition-colors"
               />
             </div>

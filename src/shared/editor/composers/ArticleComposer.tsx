@@ -408,7 +408,7 @@ export default function ArticleComposer(props: Props) {
             !store.body().trim() ||
             !store.title().trim()
           }
-          class="ml-auto px-5 py-1.5 text-sm font-medium rounded-lg bg-accent text-accent-txt
+          class="ml-auto px-5 py-1.5 text-sm font-medium rounded-lg bg-accent text-accent-fg
                  hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
         >
           {store.submitting()

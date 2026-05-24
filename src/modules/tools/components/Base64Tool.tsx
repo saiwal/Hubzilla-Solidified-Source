@@ -55,7 +55,7 @@ export function Base64Tool() {
             onClick={() => setMode(m)}
             class={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors capitalize ${
               mode() === m
-                ? "bg-accent text-accent-txt"
+                ? "bg-accent text-accent-fg"
                 : "text-muted hover:text-txt"
             }`}
           >
