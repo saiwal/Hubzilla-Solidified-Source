@@ -91,7 +91,7 @@ export default function ConnectionEditorModal(props: Props) {
             </Show>
             <div class="flex-1 min-w-0">
               <div class="font-semibold text-sm text-txt truncate">{props.authorName}</div>
-              <div class="text-xs text-subtle truncate">{props.connection.address}</div>
+              <div class="text-xs text-muted truncate">{props.connection.address}</div>
             </div>
             <button
               onClick={props.onClose}
@@ -138,7 +138,7 @@ export default function ConnectionEditorModal(props: Props) {
                 onInput={(e) => setCloseness(Number(e.currentTarget.value))}
                 class="w-full accent-accent"
               />
-              <div class="flex justify-between text-[10px] text-subtle mt-1">
+              <div class="flex justify-between text-[10px] text-muted mt-1">
                 <span>Distant</span>
                 <span>Close</span>
               </div>
@@ -147,8 +147,8 @@ export default function ConnectionEditorModal(props: Props) {
             {/* Meta */}
             <div class="flex flex-wrap gap-x-4 gap-y-1">
               <Show when={connectedOn()}>
-                <div class="text-xs text-subtle">
-                  Connected <span class="text-muted">{connectedOn()}</span>
+                <div class="text-xs text-muted">
+                  Connected <span class="text-txt">{connectedOn()}</span>
                 </div>
               </Show>
               <Show when={props.connection.pending}>

@@ -138,4 +138,29 @@ export async function handleComment(body: string, profileUid: number) {
   });
 }
 
+export function addComment(comment: PhotoComment) {
+  setDetail(prev => prev ? { ...prev, comments: [...prev.comments, comment] } : prev);
+}
+
+export async function handleCommentReaction(mid: string, verb: 'like' | 'dislike') {
+  const d = detail();
+  if (!d) return;
+  const idx = d.comments.findIndex(c => c.mid === mid);
+  if (idx === -1 || !d.comments[idx].iid) return;
+  const c = d.comments[idx];
+  const isLike = verb === 'like';
+  const isUndo = isLike ? (c.viewer_liked ?? false) : (c.viewer_disliked ?? false);
+  const updated: PhotoComment = isLike
+    ? { ...c, viewer_liked: !isUndo, like_count: (c.like_count ?? 0) + (isUndo ? -1 : 1) }
+    : { ...c, viewer_disliked: !isUndo, dislike_count: (c.dislike_count ?? 0) + (isUndo ? -1 : 1) };
+  const newComments = [...d.comments];
+  newComments[idx] = updated;
+  setDetail({ ...d, comments: newComments });
+  try {
+    await togglePhotoReaction(c.iid, verb);
+  } catch {
+    setDetail(d);
+  }
+}
+
 export { photos, albums, recentPhotos, albumName, detail, loading, albumsLoading, nick };

@@ -155,7 +155,7 @@ function PopularPostRow(props: {
               <span class="text-xs text-muted truncate">{p.authorName}</span>
               <span class="text-xs text-subtle shrink-0">·</span>
               <span
-                class="text-xs text-subtle shrink-0"
+                class="text-xs text-muted shrink-0"
                 title={new Date(p.created + "Z").toLocaleString(props.locale)}
               >
                 {formatPostDate(p.created, props.locale)}

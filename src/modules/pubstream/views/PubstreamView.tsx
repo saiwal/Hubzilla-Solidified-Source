@@ -181,7 +181,7 @@ export default function PubstreamView() {
         </Show>
 
         <Show when={!loading() && !hasMore() && threads().length > 0}>
-          <p class="text-center text-xs text-subtle mt-6 mb-2">
+          <p class="text-center text-xs text-muted mt-6 mb-2">
             You've reached the end of the public stream.
           </p>
         </Show>

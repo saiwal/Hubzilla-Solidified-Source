@@ -1,7 +1,7 @@
 import { createSignal, createResource, For, Show } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
-import { fetchAdminAccounts, adminAccountAction } from "../../api/api";
-import type { AdminAccount } from "../../api/types";
+import { fetchAdminAccounts, adminAccountAction } from "../../api";
+import type { AdminAccount } from "../../types";
 
 export default function AccountsSection() {
   const [page, setPage] = createSignal(0);

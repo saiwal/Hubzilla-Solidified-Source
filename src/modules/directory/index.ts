@@ -47,5 +47,4 @@ registerModule({
   },
   slots: {},
   permissions: [],
-  absorbedApps: ["Connections", "Contact Roles", "Privacy Groups"],
 });

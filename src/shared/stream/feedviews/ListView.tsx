@@ -157,7 +157,7 @@ function ListRow(props: {
                   class="w-4 h-4 rounded-full object-cover shrink-0"
                 />
               </Show>
-              <span class="text-[11px] text-subtle font-medium truncate">
+              <span class="text-[11px] text-muted font-medium truncate">
                 {p.authorName}
               </span>
               <span class="text-[11px] text-muted/50">·</span>

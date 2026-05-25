@@ -118,7 +118,7 @@ export default function AuthorPopover(props: Props) {
               <div class="min-w-0 flex-1">
                 <div class="font-semibold text-sm text-txt truncate">{props.name}</div>
                 <Show when={props.address}>
-                  <div class="text-xs text-subtle truncate mt-0.5">{props.address}</div>
+                  <div class="text-xs text-muted truncate mt-0.5">{props.address}</div>
                 </Show>
               </div>
             </div>
@@ -163,7 +163,7 @@ export default function AuthorPopover(props: Props) {
                   {/* Just connected (optimistic, no conn object yet) */}
                   <Show when={cs().tag === "just_connected"}>
                     <button disabled class="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5
-                                           border border-rim rounded-lg text-xs text-subtle cursor-default">
+                                           border border-rim rounded-lg text-xs text-muted cursor-default">
                       <span>✓ Connected</span>
                     </button>
                   </Show>

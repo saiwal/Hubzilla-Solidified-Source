@@ -1,6 +1,6 @@
 import { createResource, For, Show } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
-import { fetchAdminAddons } from "../../api/api";
+import { fetchAdminAddons } from "../../api";
 
 export default function AddonsSection() {
   const [addons] = createResource(fetchAdminAddons);

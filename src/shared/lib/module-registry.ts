@@ -78,15 +78,6 @@ export function resolveModuleSlot(slot: keyof SlotsDef, moduleId: string): SlotL
   return (loaders as SlotLoader[]).filter((l) => !(l as any).__global);
 }
 
-/** All Hubzilla app names absorbed by registered modules — filtered from API-driven nav */
-export function getAbsorbedApps(): Set<string> {
-  const names = new Set<string>();
-  for (const mod of modules.values()) {
-    for (const name of mod.absorbedApps ?? []) names.add(name);
-  }
-  return names;
-}
-
 // Keep for any existing call sites
 export function resolveSlot(slot: keyof SlotsDef, moduleId?: string) {
   if (moduleId) return modules.get(moduleId)?.slots?.[slot] ?? null;

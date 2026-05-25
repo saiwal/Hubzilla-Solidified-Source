@@ -341,7 +341,7 @@ function InboxRow(props: {
               </For>
             </div>
 
-            <span class="text-[11px] text-subtle font-medium truncate max-w-[160px]">
+            <span class="text-[11px] text-muted font-medium truncate max-w-[160px]">
               {participants().slice(0, 2).join(", ")}
             </span>
             <Show when={participants().length > 2}>
@@ -414,7 +414,7 @@ function InboxRow(props: {
 
         {/* inline thread */}
         <Show when={expanded() && commentsLoading()}>
-          <div class="px-3 py-2 text-xs text-subtle animate-pulse border-t border-rim">
+          <div class="px-3 py-2 text-xs text-muted animate-pulse border-t border-rim">
             Loading replies…
           </div>
         </Show>

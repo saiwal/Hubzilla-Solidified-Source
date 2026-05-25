@@ -1,6 +1,8 @@
 import { A } from "@solidjs/router";
 import type { Component, JSX } from "solid-js";
 import { Show } from "solid-js";
+import { biToNavIcon } from "@/shared/lib/nav-api";
+export { biToNavIcon };
 import {
   MdFillHome,
   MdFillGrid_view,
@@ -34,42 +36,6 @@ import {
   MdFillHardware,
 } from "solid-icons/md";
 
-// Bootstrap Icon name → our ICON_MAP key
-const BI_TO_ICON: Record<string, string> = {
-  newspaper: "articles",
-  "calendar-date": "calendar",
-  "calendar-event": "calendar",
-  cart: "cart",
-  "chat-text": "chat",
-  "chat-dots": "chat",
-  "person-circle": "hq",
-  "grid-3x3": "network",
-  "layout-text-sidebar": "webpages",
-  "pencil-square": "wiki",
-  bookmark: "bookmark",
-  "person-vcard": "person",
-  house: "home",
-  people: "connections",
-  "person-lock": "settings",
-  "diagram-3": "directory",
-  folder: "cloud",
-  "question-lg": "help",
-  "question-circle": "help",
-  "person-plus": "register",
-  sticky: "notes",
-  "columns-gap": "pdl",
-  image: "photos",
-  "pencil-fill": "edit",
-  "file-lock": "groups",
-  globe: "pubstream",
-  "person-lines-fill": "connections",
-  rss: "network",
-  search: "grid",
-};
-
-export function biToNavIcon(biName: string): string {
-  return BI_TO_ICON[biName] ?? "";
-}
 
 const ICON_MAP: Record<string, (size: number) => JSX.Element> = {
   home: (s) => <MdFillHome size={s} />,

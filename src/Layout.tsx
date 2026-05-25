@@ -1,4 +1,4 @@
-import { type ParentComponent, createSignal, Show, createMemo } from "solid-js";
+import { type ParentComponent, createSignal, Show, createMemo, createEffect } from "solid-js";
 import { For } from "solid-js";
 import { A, useLocation } from "@solidjs/router";
 import NavItem, { getNavIcon } from "./shared/views/NavItem";
@@ -18,7 +18,7 @@ import { useOnlineStatus } from "./shared/lib/useOnlineStatus";
 import NavUtilities from "./shared/views/NavUtilities";
 import { notifCount } from "@/shared/lib/notificationCount";
 import { createMediaQuery } from "@solid-primitives/media";
-import { useNavActions, useNavViewer } from "./shared/store/nav-store";
+import { useNavActions, useNavViewer, setNavNick } from "./shared/store/nav-store";
 import { motion } from "solid-motionone";
 void motion;
 
@@ -57,6 +57,7 @@ const Layout: ParentComponent = (props) => {
   const [actionsOpen, setActionsOpen] = createSignal(false);
 
   const subjectNick = useSubjectNick();
+  createEffect(() => setNavNick(subjectNick()));
   useChannelTheme(subjectNick);
   const actionItems = useNavActionItems();
   const location = useLocation();

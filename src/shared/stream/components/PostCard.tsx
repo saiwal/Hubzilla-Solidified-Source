@@ -222,12 +222,12 @@ export default function PostCard(props: {
             {props.post.authorName}
           </a>
           <Show when={props.post.verb && props.post.verb !== "Create"}>
-            <span class="text-xs text-subtle italic shrink-0">
+            <span class="text-xs text-muted italic shrink-0">
               {props.post.verb?.toLowerCase()}
             </span>
           </Show>
           <span
-            class="text-xs text-subtle shrink-0 ml-1"
+            class="text-xs text-muted shrink-0 ml-1"
             title={new Date(props.post.created + "Z").toLocaleString(locale())}
           >
             {formatPostDate(props.post.created, locale())}
@@ -385,7 +385,7 @@ export default function PostCard(props: {
           />
         </Show>
         <Show when={commentsLoading()}>
-          <div class="mt-2 ml-2 text-xs text-subtle animate-pulse">Loading comments…</div>
+          <div class="mt-2 ml-2 text-xs text-muted animate-pulse">Loading comments…</div>
         </Show>
         <CommentThread
           comments={visibleComments()}
@@ -443,7 +443,7 @@ export default function PostCard(props: {
               {formatPostDate(props.post.created, locale())}
             </span>
             <Show when={props.post.verb && props.post.verb !== "Create"}>
-              <span class="text-xs text-subtle italic">
+              <span class="text-xs text-muted italic">
                 {props.post.verb?.toLowerCase()}
               </span>
             </Show>
@@ -650,7 +650,7 @@ export default function PostCard(props: {
         />
       </Show>
       <Show when={commentsLoading()}>
-        <div class="mt-3 text-sm text-subtle animate-pulse">Loading comments…</div>
+        <div class="mt-3 text-sm text-muted animate-pulse">Loading comments…</div>
       </Show>
       <CommentThread
         comments={visibleComments()}

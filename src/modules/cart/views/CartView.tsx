@@ -211,7 +211,7 @@ function CartContents(props: { onBrowse: () => void }) {
             <span>Estimated Total</span>
             <span>{cartSubtotal()}</span>
           </div>
-          <p class="text-xs text-subtle mt-1">
+          <p class="text-xs text-muted mt-1">
             Taxes and final total calculated at checkout.
           </p>
         </div>

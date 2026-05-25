@@ -1,6 +1,6 @@
 import { createResource, For, Show } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
-import { fetchAdminQueueworker } from "../../api/api";
+import { fetchAdminQueueworker } from "../../api";
 
 export default function QueueworkerSection() {
   const [jobs, { refetch }] = createResource(fetchAdminQueueworker);

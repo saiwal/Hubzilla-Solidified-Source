@@ -406,7 +406,7 @@ function StreamSection(props: {
             <Show
               when={notifications().length > 0}
               fallback={
-                <p class="text-[11px] text-subtle text-center py-3">
+                <p class="text-[11px] text-muted text-center py-3">
                   Nothing new
                 </p>
               }
@@ -731,7 +731,7 @@ export default function NotificationsAside() {
         </div>
 
         <Show when={!auth.loading && !auth()?.isLoggedIn}>
-          <p class="text-xs text-subtle text-center py-4">
+          <p class="text-xs text-muted text-center py-4">
             Sign in to see notifications
           </p>
         </Show>
@@ -805,7 +805,7 @@ export default function NotificationsAside() {
         >
           <div class="text-center py-2">
             <p class="text-2xl mb-1">✓</p>
-            <p class="text-xs text-subtle">All caught up</p>
+            <p class="text-xs text-muted">All caught up</p>
           </div>
         </Show>
       </div>

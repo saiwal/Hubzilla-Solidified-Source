@@ -2,8 +2,7 @@
 
 export interface NavViewer {
   is_local: boolean;
-  is_owner: boolean;
-is_remote: boolean;
+  is_remote: boolean;
   is_admin: boolean;
   nick: string;
   name: string;
@@ -92,6 +91,42 @@ export function settingsUrl(raw: string): string {
 export function biIconName(photo: string): string {
   if (photo.startsWith("icon:")) return photo.slice(5);
   return "";
+}
+
+const BI_TO_ICON: Record<string, string> = {
+  newspaper: "articles",
+  "calendar-date": "calendar",
+  "calendar-event": "calendar",
+  cart: "cart",
+  "chat-text": "chat",
+  "chat-dots": "chat",
+  "person-circle": "hq",
+  "grid-3x3": "network",
+  "layout-text-sidebar": "webpages",
+  "pencil-square": "wiki",
+  bookmark: "bookmark",
+  "person-vcard": "person",
+  house: "home",
+  people: "connections",
+  "person-lock": "settings",
+  "diagram-3": "directory",
+  folder: "cloud",
+  "question-lg": "help",
+  "question-circle": "help",
+  "person-plus": "register",
+  sticky: "notes",
+  "columns-gap": "pdl",
+  image: "photos",
+  "pencil-fill": "edit",
+  "file-lock": "groups",
+  globe: "pubstream",
+  "person-lines-fill": "connections",
+  rss: "network",
+  search: "grid",
+};
+
+export function biToNavIcon(biName: string): string {
+  return BI_TO_ICON[biName] ?? "";
 }
 
 /**

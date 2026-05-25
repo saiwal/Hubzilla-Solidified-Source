@@ -1,7 +1,7 @@
 import { createResource, createSignal, createMemo, For, Show } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
-import { fetchAdminLogs } from "../../api/api";
-import type { LogEntry, LogLevel } from "../../api/types";
+import { fetchAdminLogs } from "../../api";
+import type { LogEntry, LogLevel } from "../../types";
 
 // ── Level metadata ────────────────────────────────────────────────────────────
 

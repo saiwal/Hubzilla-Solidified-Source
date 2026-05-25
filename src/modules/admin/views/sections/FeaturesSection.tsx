@@ -1,7 +1,7 @@
 import { createResource, createSignal, For, Show } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
-import { fetchAdminFeatures, saveAdminFeatures } from "../../api/api";
-import type { FeatureItem } from "../../api/types";
+import { fetchAdminFeatures, saveAdminFeatures } from "../../api";
+import type { FeatureItem } from "../../types";
 
 export default function FeaturesSection() {
   const [features, { refetch }] = createResource(fetchAdminFeatures);

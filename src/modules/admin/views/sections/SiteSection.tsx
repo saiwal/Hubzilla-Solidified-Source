@@ -1,8 +1,8 @@
 import { Show } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
-import { fetchAdminSite, saveAdminSite } from "../../api/api";
+import { fetchAdminSite, saveAdminSite } from "../../api";
 import { useSectionForm } from "@/modules/settings/store/useSectionForm";
-import type { AdminSite } from "../../api/types";
+import type { AdminSite } from "../../types";
 
 const REGISTER_POLICIES = [
   { value: 0, label: "No (closed)" },

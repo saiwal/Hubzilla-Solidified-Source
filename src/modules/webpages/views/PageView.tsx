@@ -55,7 +55,7 @@ export default function PageView() {
           ← Webpages
         </A>
         <span>/</span>
-        <span class="font-mono text-subtle">{pagelink()}</span>
+        <span class="font-mono text-muted">{pagelink()}</span>
       </div>
 
       {/* Loading skeleton */}

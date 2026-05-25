@@ -132,7 +132,7 @@ function PerfStatsPanelInner() {
           Server performance
         </span>
         <Show when={latest() && !error()}>
-          <span class="flex items-center gap-1.5 text-xs text-subtle">
+          <span class="flex items-center gap-1.5 text-xs text-muted">
             <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
             {age() < 3 ? "live" : `${age()}s ago`}
           </span>
@@ -175,12 +175,12 @@ function PerfStatsPanelInner() {
               <For each={graphs}>
                 {(g) => (
                   <div class="bg-elevated rounded-lg px-3 pt-2.5 pb-2 min-w-0 border border-rim">
-                    <p class="text-[11px] text-subtle truncate mb-0.5">{g.label}</p>
+                    <p class="text-[11px] text-muted truncate mb-0.5">{g.label}</p>
                     <p class="text-xl font-medium text-txt tabular-nums leading-tight">{g.value}</p>
                     <div class="mt-1.5 h-8">
                       <Show
                         when={g.data.length > 1}
-                        fallback={<p class="text-[11px] text-subtle leading-8">collecting…</p>}
+                        fallback={<p class="text-[11px] text-muted leading-8">collecting…</p>}
                       >
                         <Sparkline data={g.data} color={g.color} />
                       </Show>

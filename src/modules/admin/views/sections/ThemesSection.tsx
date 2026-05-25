@@ -1,6 +1,6 @@
 import { createResource, For, Show } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
-import { fetchAdminThemes } from "../../api/api";
+import { fetchAdminThemes } from "../../api";
 
 export default function ThemesSection() {
   const [result] = createResource(fetchAdminThemes);

@@ -8,7 +8,7 @@ registerModule({
   id: "cal",
   routes: [
     // /cal            → redirect or empty (no nick yet)
-    { path: "/cal", component: () => import("./views/CalView") },
+    { path: "/cdav/calendar", component: () => import("./views/CalView") },
     // /cal/:nick      → channel calendar
     { path: "/cal/:nick", component: () => import("./views/CalView") },
   ],

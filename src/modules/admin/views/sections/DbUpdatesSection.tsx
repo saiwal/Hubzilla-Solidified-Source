@@ -1,6 +1,6 @@
 import { createResource, For, Show } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
-import { fetchAdminDbUpdates } from "../../api/api";
+import { fetchAdminDbUpdates } from "../../api";
 
 export default function DbUpdatesSection() {
   const [updates] = createResource(fetchAdminDbUpdates);

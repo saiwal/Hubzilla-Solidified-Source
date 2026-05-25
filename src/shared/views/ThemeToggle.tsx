@@ -38,7 +38,7 @@ const ThemeToggle = () => {
           >
             <div class="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted border-b border-rim flex justify-between">
               <span>Themes</span>
-              <span class="text-subtle normal-case">
+              <span class="text-muted normal-case">
                 {THEMES.find((t) => t.id === theme())?.label ?? theme()}
               </span>
             </div>

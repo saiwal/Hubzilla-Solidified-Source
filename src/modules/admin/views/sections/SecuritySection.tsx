@@ -1,8 +1,8 @@
 import { Show } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
-import { fetchAdminSecurity, saveAdminSecurity } from "../../api/api";
+import { fetchAdminSecurity, saveAdminSecurity } from "../../api";
 import { useSectionForm } from "@/modules/settings/store/useSectionForm";
-import type { AdminSecurity } from "../../api/types";
+import type { AdminSecurity } from "../../types";
 
 export default function SecuritySection() {
   const { data, saving, saveError, saveOk, handleSubmit } = useSectionForm<AdminSecurity>({

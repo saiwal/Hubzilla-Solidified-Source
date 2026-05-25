@@ -1,15 +1,22 @@
 // shared/lib/useNav.ts
 
 import { createMemo } from "solid-js";
-import { useNavData, useChannelTabs } from "../store/nav-store";
+import {
+  useNavData,
+  useChannelNav,
+  usePinnedApps,
+  useFeaturedApps,
+  useInstalledApps,
+} from "../store/nav-store";
+
 import { isAdmin, useAuth } from "../store/auth-store";
-import { getAbsorbedApps } from "../lib/module-registry";
 import type { NavItemDef } from "../types/module.types";
-import type { NavActions, NavApp, NavChannelTab } from "../lib/nav-api";
+import type { NavActions, NavChannelTab, NavApp } from "../lib/nav-api";
+import { biToNavIcon } from "../lib/nav-api";
+import { getRoutes } from "./module-registry";
 import { useI18n } from "@/i18n";
 import { useViewerRole } from "../store/site-config";
 import type { ViewerRole } from "../store/site-config";
-import { biToNavIcon } from "../views/NavItem";
 
 type ActionMeta = {
   label: string;
@@ -38,67 +45,108 @@ function urlToPath(url: string): string {
   }
 }
 
+function toSpaHref(url: string): string {
+  if (!url) return url;
+  try {
+    const u = new URL(url);
+    if (u.origin === window.location.origin) return u.pathname + u.search;
+  } catch {
+    // relative or malformed — use as-is
+  }
+  return url;
+}
+
 function tabToNavItem(tab: NavChannelTab): NavItemDef {
+  const href = toSpaHref(tab.url);
   return {
     label: tab.label,
     icon: tab.icon,
-    href: tab.url,
-    path: urlToPath(tab.url),
+    href,
+    path: urlToPath(href),
   };
 }
 
 function appToNavItem(app: NavApp): NavItemDef {
-  const icon = biToNavIcon(app.bi_icon) || app.name.toLowerCase();
+  const href = toSpaHref(app.url);
   return {
     label: app.label,
-    icon,
-    href: app.url,
-    path: urlToPath(app.url),
+    icon: biToNavIcon(app.bi_icon),
+    href,
+    path: urlToPath(href),
   };
 }
 
-function filterAbsorbed(apps: NavApp[]): NavApp[] {
-  const absorbed = getAbsorbedApps();
-  return absorbed.size === 0 ? apps : apps.filter((a) => !absorbed.has(a.name));
+// Build a set of first-segment path roots from registered SPA routes
+// e.g. "/photos/:nick" → "photos", "/page/:nick/*path" → "page"
+function buildSpaRoots(): Set<string> {
+  return new Set(
+    getRoutes()().map((r) => r.path.split("/").filter(Boolean)[0] ?? ""),
+  );
 }
 
-function systemApps(featured: NavApp[]): NavItemDef[] {
-  return filterAbsorbed(featured).filter((a) => a.requires === "").map(appToNavItem);
+function isSpaApp(app: NavApp, spaRoots: Set<string>): boolean {
+  const href = toSpaHref(app.url);
+  if (!href.startsWith("/")) return false;
+  const root = href.split("/").filter(Boolean)[0] ?? "";
+  return spaRoots.has(root);
+}
+
+function dedupByHref(items: NavItemDef[]): NavItemDef[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const key = typeof item.href === "function" ? item.href() : item.href;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 // ── useNav ────────────────────────────────────────────────────────────────────
 export function useNav(subjectNick: () => string): () => NavItemDef[] {
   const auth = useAuth();
-  const tabs = useChannelTabs(subjectNick);
-  const navData = useNavData();
+  const channelNav = useChannelNav(subjectNick);
   const viewerRole = useViewerRole();
+  const pinnedApps = usePinnedApps();
+  const featuredApps = useFeaturedApps();
+  const installedApps = useInstalledApps();
 
   return createMemo((): NavItemDef[] => {
-    if (navData.loading) return [];
-    const data = navData();
-    if (!data) return [];
-
     const role = viewerRole();
-    const isOwnChannel = !!subjectNick() && auth()?.nick === subjectNick();
+    const nick = subjectNick();
+    const isOwnChannel = !!nick && auth()?.nick === nick;
+    const spaRoots = buildSpaRoots();
 
-    // Visiting someone else's channel → channel tabs + public system apps
-    if (subjectNick() && !isOwnChannel) {
-      const channelTabs = tabs.loading ? [] : (tabs() ?? []).map(tabToNavItem);
-      return [...channelTabs, ...systemApps(data.featured)];
+    // Visiting someone else's channel (any role) → channel tabs + global pinned apps
+    // "global pinned" = personal pinned for logged-in users; Directory/Help/Network for anonymous
+    if (nick && !isOwnChannel) {
+      if (channelNav.loading) return [];
+      const tabs = (channelNav()?.channel_tabs ?? []).map(tabToNavItem);
+      const sysApps = pinnedApps()
+        .filter((a) => isSpaApp(a, spaRoots))
+        .map(appToNavItem);
+      return dedupByHref([...tabs, ...sysApps]);
     }
 
-    // Logged-in user → pinned first, then featured (deduped, absorbed apps removed)
-    if (role !== "anonymous") {
-      const seen = new Set(data.pinned.map((a) => a.name));
-      const combined = filterAbsorbed([
-        ...data.pinned,
-        ...data.featured.filter((a) => !seen.has(a.name)),
-      ]);
-      return combined.map(appToNavItem);
+    // Anonymous not on a channel → curated public pinned apps (Directory, Help, Network)
+    if (role === "anonymous") {
+      return pinnedApps()
+        .filter((a) => isSpaApp(a, spaRoots))
+        .map(appToNavItem);
     }
 
-    // Anonymous → public system apps only
-    return systemApps(data.featured);
+    // Logged-in user on own pages → pinned + featured filtered by installed apps
+    const installed = installedApps();
+    const pinned = pinnedApps().filter((a) => isSpaApp(a, spaRoots));
+    const pinnedUrls = new Set(pinned.map((a) => toSpaHref(a.url)));
+    const extraFeatured = featuredApps()
+      .filter(
+        (a) =>
+          isSpaApp(a, spaRoots) &&
+          !pinnedUrls.has(toSpaHref(a.url)) &&
+          (installed.size === 0 || installed.has(a.name)),
+      )
+      .map(appToNavItem);
+    return dedupByHref([...pinned.map(appToNavItem), ...extraFeatured]);
   });
 }
 
@@ -121,7 +169,6 @@ export function useNavActionItems(): () => NavItemDef[] {
   const navData = useNavData();
   const { t } = useI18n();
   const viewerRole = useViewerRole();
-  // const auth = useAuth();
   return createMemo((): NavItemDef[] => {
     const actions = navData()?.actions as NavActions | undefined;
     if (!actions) return [];
@@ -165,13 +212,20 @@ export function useNavActionItems(): () => NavItemDef[] {
         context: "anonymous",
       },
     };
+    // These actions have SPA routes — use direct paths to avoid a hard reload.
+    const SPA_PATHS: Partial<Record<ActionKey, string>> = {
+      admin: "/admin",
+      settings: "/settings",
+      manage: "/manage",
+    };
+
     return ACTION_ORDER.filter((key) => {
       if (key === "admin") return isAdmin();
       if (!actions[key]) return false;
       return matchesRole(ACTION_META[key].context, role);
     }).map((key): NavItemDef => {
       const meta = ACTION_META[key];
-      const href = key === "admin" ? "/admin/" : (actions[key] as string);
+      const href = SPA_PATHS[key] ?? (actions[key] as string);
       return {
         label: meta.label,
         icon: meta.icon,

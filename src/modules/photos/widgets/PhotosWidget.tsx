@@ -86,7 +86,7 @@ export default function PhotosWidget() {
                     <p class="text-sm font-medium text-txt truncate group-hover:text-accent transition-colors">
                       {album.album}
                     </p>
-                    <p class="text-xs text-subtle">{album.total} photos</p>
+                    <p class="text-xs text-muted">{album.total} photos</p>
                   </div>
                 </A>
               )}

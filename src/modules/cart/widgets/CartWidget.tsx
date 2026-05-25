@@ -21,19 +21,19 @@ export default function CartWidget() {
           <Show
             when={cartItems().length > 0}
             fallback={
-              <p class="text-xs text-subtle">No items yet.</p>
+              <p class="text-xs text-muted">No items yet.</p>
             }
           >
             <For each={cartItems().slice(0, 3)}>
               {(item) => (
                 <div class="flex items-center justify-between text-xs gap-2">
                   <span class="truncate text-muted">{item.desc}</span>
-                  <span class="shrink-0 text-subtle">×{item.orderQty}</span>
+                  <span class="shrink-0 text-muted">×{item.orderQty}</span>
                 </div>
               )}
             </For>
             <Show when={cartItems().length > 3}>
-              <p class="text-xs text-subtle">
+              <p class="text-xs text-muted">
                 +{cartItems().length - 3} more
               </p>
             </Show>

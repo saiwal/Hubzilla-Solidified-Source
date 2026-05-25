@@ -107,7 +107,7 @@ function PrivatePicker(props: {
         {/* Groups */}
         <Show when={filteredGroups().length > 0}>
           <div class="px-3 py-1.5 bg-elevated">
-            <p class="text-[10px] font-medium text-subtle uppercase tracking-wider">Privacy Groups</p>
+            <p class="text-[10px] font-medium text-muted uppercase tracking-wider">Privacy Groups</p>
           </div>
           <For each={filteredGroups()}>
             {(g) => {
@@ -141,7 +141,7 @@ function PrivatePicker(props: {
         {/* Connections */}
         <Show when={filteredConns().length > 0}>
           <div class="px-3 py-1.5 bg-elevated">
-            <p class="text-[10px] font-medium text-subtle uppercase tracking-wider">Connections</p>
+            <p class="text-[10px] font-medium text-muted uppercase tracking-wider">Connections</p>
           </div>
           <For each={filteredConns()}>
             {(c) => {
@@ -175,7 +175,7 @@ function PrivatePicker(props: {
                     <img src={c.avatar} alt={c.name} class="w-5 h-5 rounded-full object-cover shrink-0" />
                   </Show>
                   <span class="text-xs text-txt truncate">{c.name}</span>
-                  <span class="text-[10px] text-subtle truncate ml-auto">{c.addr}</span>
+                  <span class="text-[10px] text-muted truncate ml-auto">{c.addr}</span>
                 </button>
               );
             }}
@@ -355,7 +355,7 @@ export default function ChatRoomsView() {
                 onClick={() => setVisibility("private")}
               />
             </div>
-            <p class="text-[11px] text-subtle">
+            <p class="text-[11px] text-muted">
               {visibility() === "public" && "Anyone with chat permission can join."}
               {visibility() === "connections" && "Only your approved connections can join."}
               {visibility() === "private" && "Only the people or groups you select below can join."}
@@ -434,7 +434,7 @@ export default function ChatRoomsView() {
           <MdFillChat class="text-3xl text-muted mx-auto" />
           <p class="text-sm text-muted">No chatrooms yet.</p>
           <Show when={isOwner()}>
-            <p class="text-xs text-subtle">Create one above to get started.</p>
+            <p class="text-xs text-muted">Create one above to get started.</p>
           </Show>
         </div>
       </Show>
@@ -460,7 +460,7 @@ export default function ChatRoomsView() {
                         {room.in_room} online
                       </span>
                       <Show when={room.last_msg}>
-                        <span class="flex items-center gap-1 text-xs text-subtle">
+                        <span class="flex items-center gap-1 text-xs text-muted">
                           <MdFillSchedule class="text-sm" />
                           {formatPostDate(room.last_msg!)}
                         </span>

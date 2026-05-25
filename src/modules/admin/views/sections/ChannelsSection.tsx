@@ -1,6 +1,6 @@
 import { createSignal, createResource, For, Show } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
-import { fetchAdminChannels } from "../../api/api";
+import { fetchAdminChannels } from "../../api";
 
 export default function ChannelsSection() {
   const [page, setPage] = createSignal(0);

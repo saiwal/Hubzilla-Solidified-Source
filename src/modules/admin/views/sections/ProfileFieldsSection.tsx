@@ -1,6 +1,6 @@
 import { createResource, For, Show } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
-import { fetchAdminProfileFields } from "../../api/api";
+import { fetchAdminProfileFields } from "../../api";
 
 export default function ProfileFieldsSection() {
   const [fields] = createResource(fetchAdminProfileFields);

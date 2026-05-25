@@ -35,7 +35,7 @@ registerModule({
     label: () => useI18n().t("nav.admin"),
     icon: "admin",
     path: "/admin",
-    href: "/admin/",
+    href: "/admin",
     context: ["admin"],
 		hidden: true,
   },

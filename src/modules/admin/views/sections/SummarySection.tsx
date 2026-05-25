@@ -1,6 +1,6 @@
 import { createResource, For, Show } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
-import { fetchAdminSummary } from "../../api/api";
+import { fetchAdminSummary } from "../../api";
 
 export default function SummarySection() {
   const [data] = createResource(fetchAdminSummary);

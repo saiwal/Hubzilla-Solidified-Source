@@ -203,7 +203,7 @@ export default function ChatRoomView() {
 											>
 												<Show when={msg.isFirst}>
 													<p
-														class="text-[11px] text-subtle px-1"
+														class="text-[11px] text-muted px-1"
 														classList={{ "text-right": isSelf() }}
 													>
 														{msg.author_name}
@@ -222,7 +222,7 @@ export default function ChatRoomView() {
 												</div>
 												<Show when={msg.isLast}>
 													<p
-														class="text-[10px] text-subtle px-1"
+														class="text-[10px] text-muted px-1"
 														title={new Date(msg.created.replace(" ", "T") + "Z").toLocaleString()}
 													>
 														{formatPostDate(msg.created)}

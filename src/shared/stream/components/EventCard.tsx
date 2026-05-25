@@ -85,7 +85,7 @@ export default function EventCard(props: {
         </div>
         <Show when={props.event.finish}>
           <div class="flex items-center gap-2 text-muted pl-6">
-            <span class="text-subtle text-xs">until</span>
+            <span class="text-muted text-xs">until</span>
             <span>{finishDate()}</span>
           </div>
         </Show>
@@ -123,7 +123,7 @@ export default function EventCard(props: {
 
       {/* Read-only counts */}
       <Show when={!canRsvp() && (attendCount() > 0 || declineCount() > 0 || maybeCount() > 0)}>
-        <div class="flex items-center gap-3 text-xs text-subtle">
+        <div class="flex items-center gap-3 text-xs text-muted">
           <Show when={attendCount() > 0}>
             <span class="text-green-600 dark:text-green-400">{attendCount()} attending</span>
           </Show>

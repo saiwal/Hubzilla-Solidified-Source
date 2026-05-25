@@ -33,8 +33,6 @@ export interface ModuleDef {
   navItem: NavItemDef;
   slots?: SlotsDef;
   permissions?: string[];
-  /** Hubzilla app names this module handles internally — suppressed from the nav API list */
-  absorbedApps?: string[];
 }
 
 export interface RouteDef {

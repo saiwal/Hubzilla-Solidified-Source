@@ -117,7 +117,7 @@ const DelegateCard: Component<{ delegate: ManagedDelegate }> = (props) => {
           {props.delegate.address}
         </p>
       </div>
-      <span class="text-xs text-subtle shrink-0">delegate →</span>
+      <span class="text-xs text-muted shrink-0">delegate →</span>
     </a>
   );
 };

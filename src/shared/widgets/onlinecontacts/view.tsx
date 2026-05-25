@@ -28,10 +28,10 @@ export default function OnlineContactsWidget() {
         Recently active
       </p>
       <Show when={contacts.loading}>
-        <p class="text-xs text-subtle text-center py-2">Loading...</p>
+        <p class="text-xs text-muted text-center py-2">Loading...</p>
       </Show>
       <Show when={!contacts.loading && (contacts()?.length ?? 0) === 0}>
-        <p class="text-xs text-subtle text-center py-2">No recent contacts</p>
+        <p class="text-xs text-muted text-center py-2">No recent contacts</p>
       </Show>
       <For each={contacts()}>
         {(c) => (
