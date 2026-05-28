@@ -20,6 +20,14 @@ export const THEMES = [
   { id: "solarized-dark", label: "Solarized Dark" },
   { id: "tokyo-night", label: "Tokyo Night" },
   { id: "matrix", label: "Matrix" },
+  { id: "custom", label: "Custom" },
 ] as const;
 
 export type ThemeId = (typeof THEMES)[number]["id"];
+
+export interface CustomThemeColors {
+  base: string;
+  txt: string;
+  accent: string;
+  isDark: boolean;
+}

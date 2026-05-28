@@ -86,6 +86,7 @@ export function mapActivityToPost(activity: any): Post {
     repeatCount: activity.announce_count ?? 0,
     commentCount: activity.comment_count ?? 0,
     eventData,
+    attachments: Array.isArray(activity.attach) ? activity.attach : [],
     categories: activity.categories ?? [],
     tags: activity.tags ?? [],
     children: [],

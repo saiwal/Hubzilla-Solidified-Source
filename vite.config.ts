@@ -41,6 +41,21 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      "/cloud": {
+        target: "https://hz-ddev.ddev.site",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/photo": {
+        target: "https://hz-ddev.ddev.site",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/attach": {
+        target: "https://hz-ddev.ddev.site",
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
   base: ASSET_WEB_PATH + "/",

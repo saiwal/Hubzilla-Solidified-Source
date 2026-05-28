@@ -50,6 +50,7 @@ interface RawItem {
   viewer_following?: boolean;
   item_starred?: boolean;
   item_origin?: number;
+  attach?: { href: string; length: string; type: string; title: string; revision: string }[];
 }
 
 function rawToPost(r: RawItem): Post {
@@ -87,6 +88,7 @@ function rawToPost(r: RawItem): Post {
     viewerFollowing: r.viewer_following ?? false,
     viewerStarred: (r.flags ?? []).includes('starred'),
     item_origin: r.item_origin ?? 0,
+    attachments: Array.isArray(r.attach) ? r.attach : [],
   };
 }
 

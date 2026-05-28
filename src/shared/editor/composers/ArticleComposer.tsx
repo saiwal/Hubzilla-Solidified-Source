@@ -11,6 +11,9 @@ import {
   getCaretRect,
 } from "../mention/useMention";
 import MentionPopup from "../mention/MentionPopup";
+import AttachmentBar from "../attachments/AttachmentBar";
+import { createAttachmentStore } from "../attachments/useAttachments";
+import { bbcodeToInsert } from "../attachments/insertHelpers";
 
 interface Props {
   profileUid: number;
@@ -31,6 +34,14 @@ export default function ArticleComposer(props: Props) {
   const caps = CAPABILITIES.article;
   const [wordCount, setWordCount] = createSignal(0);
   const isEditing = () => !!props.initial?.mid;
+
+  // ── Scope (shared by both stores for matching IDB keys) ─────────────────────
+  const scope = props.initial?.mid
+    ? `article:edit:${props.initial.mid}`
+    : "article:new";
+
+  // ── Attachment store ─────────────────────────────────────────────────────────
+  const attach = createAttachmentStore(props.nick, scope);
 
   // ── ACL state ────────────────────────────────────────────────────────────────
   const [aclMode, setAclMode] = createSignal<AclMode>("connections");
@@ -66,10 +77,16 @@ export default function ArticleComposer(props: Props) {
   const getTA = () =>
     editorWrapRef?.querySelector<HTMLTextAreaElement>("textarea") ?? null;
 
-  // ── Scope + store ────────────────────────────────────────────────────────────
-  const scope = props.initial?.mid
-    ? `article:edit:${props.initial.mid}`
-    : "article:new";
+  // ── Composer store ────────────────────────────────────────────────────────────
+  // Append [attachment]hash,0[/attachment] BBCode for non-image files.
+  // Item.php scans the body for these tags and builds native Hubzilla attachments.
+  function withFileAttachments(body: string): string {
+    const tags = attach.attachments()
+      .filter((a) => a.status === "ready" && (a.hash || a.resourceId))
+      .map((a) => `[attachment]${a.hash ?? a.resourceId},0[/attachment]`)
+      .join("\n");
+    return tags ? `${body}\n${tags}` : body;
+  }
 
   const store = createComposerStore(async (body, meta) => {
     if (isEditing()) {
@@ -116,7 +133,7 @@ export default function ArticleComposer(props: Props) {
         {
           method: "POST",
           body: JSON.stringify({
-            body,
+            body: withFileAttachments(body),
             title:    meta.title    ?? "",
             summary:  meta.summary  ?? "",
             slug:     meta.slug     ?? "",
@@ -149,7 +166,7 @@ export default function ArticleComposer(props: Props) {
       fd.append("summary",     meta.summary  ?? "");
       fd.append("category",    meta.category ?? "");
       fd.append("pagetitle",   meta.slug     ?? "");
-      fd.append("body",        body);
+      fd.append("body",        withFileAttachments(body));
       if (csrf) fd.append("form_security_token", csrf);
 
       // ACL
@@ -191,6 +208,7 @@ export default function ArticleComposer(props: Props) {
       if (!res.ok) throw new Error("Save failed");
     }
 
+    attach.clear();
     props.onSaved?.();
   }, scope);
 
@@ -345,6 +363,14 @@ export default function ArticleComposer(props: Props) {
           placeholder="Start writing…"
           minHeight="400px"
         />
+        <AttachmentBar
+          store={attach}
+          nick={props.nick}
+          accept="both"
+          onInsert={(bbcode) => {
+            store.setBody(store.body() + "\n" + bbcodeToInsert(bbcode, store.mimetype()));
+          }}
+        />
       </div>
 
       {/* Mention popup */}
@@ -379,7 +405,7 @@ export default function ArticleComposer(props: Props) {
         <div class="flex gap-2">
           <button
             type="button"
-            onClick={() => { store.reset(); clearEntries(); setAclMode("connections"); }}
+            onClick={() => { store.reset(); attach.clear(); clearEntries(); setAclMode("connections"); }}
             class="px-3 py-1.5 text-sm rounded-lg border border-rim text-muted
                    hover:bg-elevated transition-colors"
           >
@@ -405,6 +431,7 @@ export default function ArticleComposer(props: Props) {
           onClick={() => store.submit()}
           disabled={
             store.submitting() ||
+            attach.uploading() ||
             !store.body().trim() ||
             !store.title().trim()
           }

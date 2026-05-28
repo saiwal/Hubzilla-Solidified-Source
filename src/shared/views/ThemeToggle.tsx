@@ -10,11 +10,14 @@ const ThemeToggle = () => {
   const { open, toggle, floatStyle, setTriggerRef, setPanelRef } =
     useDropdown({ placement: "top-start" });
 
-  const sortedThemes = createMemo(() =>
-    [...THEMES].sort((a, b) =>
-      a.label.localeCompare(b.label, undefined, { sensitivity: "base" })
-    )
+  const presetThemes = createMemo(() =>
+    [...THEMES]
+      .filter((t) => t.id !== "custom")
+      .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }))
   );
+
+  const isCustom = () => theme() === "custom";
+  const currentLabel = () => THEMES.find((t) => t.id === theme())?.label ?? theme();
 
   return (
     <>
@@ -38,13 +41,11 @@ const ThemeToggle = () => {
           >
             <div class="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted border-b border-rim flex justify-between">
               <span>Themes</span>
-              <span class="text-muted normal-case">
-                {THEMES.find((t) => t.id === theme())?.label ?? theme()}
-              </span>
+              <span class="text-muted normal-case">{currentLabel()}</span>
             </div>
 
-            <div class="p-2 grid grid-cols-2 gap-2 max-h-80 overflow-y-auto">
-              <For each={sortedThemes()}>
+            <div class="p-2 grid grid-cols-2 gap-2 max-h-72 overflow-y-auto">
+              <For each={presetThemes()}>
                 {(t) => {
                   const active = () => theme() === t.id;
                   return (
@@ -74,6 +75,36 @@ const ThemeToggle = () => {
                   );
                 }}
               </For>
+            </div>
+
+            {/* Custom theme entry */}
+            <div class="px-2 pb-2 border-t border-rim pt-2">
+              <button
+                onClick={() => switchTheme("custom")}
+                class={`w-full rounded-lg border p-2 text-left transition-all
+                        ${isCustom() ? "border-accent bg-elevated" : "border-rim hover:bg-elevated"}`}
+              >
+                <div data-theme="custom" class="rounded-md border border-rim p-2 mb-1">
+                  <div class="flex gap-1 mb-1">
+                    <div class="w-3 h-3 rounded bg-base border border-rim" />
+                    <div class="w-3 h-3 rounded bg-surface" />
+                    <div class="w-3 h-3 rounded bg-elevated" />
+                    <div class="w-3 h-3 rounded bg-accent" />
+                  </div>
+                  <div class="h-1.5 w-full rounded bg-muted/40" />
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-xs text-txt">Custom</span>
+                  <div class="flex items-center gap-1.5">
+                    <Show when={isCustom()}>
+                      <svg class="w-3.5 h-3.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </Show>
+                    <span class="text-xs text-muted">Settings → Display</span>
+                  </div>
+                </div>
+              </button>
             </div>
           </Motion.div>
         </Show>

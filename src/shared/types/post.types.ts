@@ -1,3 +1,11 @@
+export interface StreamAttachment {
+  href: string;
+  length: string;
+  type: string;
+  title: string;
+  revision: string;
+}
+
 export interface EventData {
   summary: string;
   start: string;
@@ -47,6 +55,7 @@ export interface Post {
   declineCount?: number;
   maybeCount?: number;
   eventData?: EventData;
+  attachments?: StreamAttachment[];
   item_origin?: number; // 1 = authored by this channel (viewer is the author)
   dislikeCount: number;
   repeatCount: number;

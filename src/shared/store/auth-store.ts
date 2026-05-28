@@ -73,7 +73,7 @@ async function fetchAuthState(): Promise<AuthState> {
     const validThemes = new Set(THEMES.map((t) => t.id));
     const serverTheme = data.spa.color_scheme ?? "";
     if (validThemes.has(serverTheme)) {
-      initTheme(serverTheme as ThemeId);
+      initTheme(serverTheme as ThemeId, data.spa.custom_theme_colors ?? undefined);
     }
   }
 

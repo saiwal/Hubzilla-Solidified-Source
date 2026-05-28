@@ -33,6 +33,10 @@ import {
 } from "../mention/useMention";
 import MentionPopup from "../mention/MentionPopup";
 import { helpable } from "@/shared/lib/helpable";
+import AttachmentBar from "../attachments/AttachmentBar";
+import { createAttachmentStore } from "../attachments/useAttachments";
+import { currentNick } from "@/shared/store/auth-store";
+import { bbcodeToInsert } from "../attachments/insertHelpers";
 void helpable;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -56,6 +60,14 @@ export interface ComposerProps {
 const PostComposer: Component<ComposerProps> = (props) => {
   const caps = CAPABILITIES.post;
 
+  // ── Scope (shared by both stores for matching IDB keys) ───────────────────
+  const scope = props.parentId
+    ? `post:reply:${props.parentId}`
+    : "post:new";
+
+  // ── Attachment store ───────────────────────────────────────────────────────
+  const attach = createAttachmentStore(currentNick(), scope);
+
   // ── Local ACL state (not in store — ACL is post-specific) ─────────────────
   const [aclMode, setAclMode] = createSignal<AclMode>(
     props.initialAclMode ?? "connections",
@@ -70,14 +82,21 @@ const PostComposer: Component<ComposerProps> = (props) => {
   const [fullscreen, setFullscreen] = createSignal(false);
 
   // ── Composer store ─────────────────────────────────────────────────────────
-  const scope = props.parentId
-    ? `post:reply:${props.parentId}`
-    : "post:new";
 
   const store = createComposerStore(
     async (body, meta) => {
+      // ── Append [attachment] BBCode tags for all attached files/photos ────────
+      // Item.php strips these tags from the body and stores them in item.attach.
+      // Photos use resource_id (= hash in the attach table) as the identifier.
+      // inline via [img] when the user clicks Insert; files always auto-append.
+      const fileTags = attach.attachments()
+        .filter((a) => a.status === "ready" && (a.hash || a.resourceId))
+        .map((a) => `[attachment]${a.hash ?? a.resourceId},0[/attachment]`)
+        .join("\n");
+      const augmentedBody = fileTags ? `${body}\n${fileTags}` : body;
+
       const fd = new FormData();
-      fd.append("body", body);
+      fd.append("body", augmentedBody);
       fd.append("mimetype", meta.mimetype ?? "text/bbcode");
       fd.append("obj_type", "Note");
       fd.append("profile_uid", String(props.profileUid));
@@ -140,6 +159,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
       }
 
       props.onPosted?.(json.id ?? 0);
+      attach.clear();
       props.onClose();
     },
     scope,
@@ -176,6 +196,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
   // ── Reset ──────────────────────────────────────────────────────────────────
   function resetAll() {
     store.reset();
+    attach.clear();
     setAclMode("connections");
     setAllowEntries(() => new Set<string>());
     setDenyEntries(() => new Set<string>());
@@ -370,6 +391,14 @@ const PostComposer: Component<ComposerProps> = (props) => {
                 placeholder={props.parentId ? "Write a reply…" : "What's on your mind?"}
                 minHeight="200px"
               />
+              <AttachmentBar
+                store={attach}
+                nick={currentNick()}
+                accept="both"
+                onInsert={(bbcode) => {
+                  store.setBody(store.body() + "\n" + bbcodeToInsert(bbcode, store.mimetype()));
+                }}
+              />
             </div>
 
             {/* ── Footer ── */}
@@ -433,7 +462,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
                 </Show>
                 <button
                   type="button"
-                  disabled={store.submitting()}
+                  disabled={store.submitting() || attach.uploading()}
                   onClick={() => void store.submit()}
                   class="px-5 py-1.5 rounded-lg text-sm font-semibold bg-accent text-accent-fg hover:opacity-90 active:opacity-80 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
                 >

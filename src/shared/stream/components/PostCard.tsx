@@ -33,6 +33,7 @@ import { useAuth } from "@/shared/store/auth-store";
 import { apiFollowPost, apiUnfollowPost } from "@/shared/lib/item-api";
 import EventCard from "./EventCard";
 import { parseEventData } from "@/shared/lib/activity.mapper";
+import AttachmentList from "./AttachmentList";
 
 export type { StreamHandlers as PostActions };
 
@@ -259,6 +260,10 @@ export default function PostCard(props: {
           />
         </Show>
 
+        <Show when={(props.post.attachments?.length ?? 0) > 0}>
+          <AttachmentList attachments={props.post.attachments!} compact />
+        </Show>
+
         {/* Compact action bar */}
         <div class="mt-2 flex items-center gap-0.5 flex-wrap">
           <CompactActionBtn
@@ -483,6 +488,10 @@ export default function PostCard(props: {
                  prose-img:rounded-lg prose-img:my-2 break-words text-muted"
           innerHTML={props.post.body}
         />
+      </Show>
+
+      <Show when={(props.post.attachments?.length ?? 0) > 0}>
+        <AttachmentList attachments={props.post.attachments!} />
       </Show>
 
       {/* Action bar */}

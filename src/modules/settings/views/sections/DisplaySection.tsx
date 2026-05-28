@@ -5,13 +5,14 @@ import { useSectionForm } from "../../store/useSectionForm";
 import { applyTypography, type FontSize, type FontFamily } from "@/shared/lib/typography";
 import { useThreadMode, setThreadMode } from "@/shared/store/thread-mode";
 import { useBgUrl, useBgFit, setBgUrl, setBgFit, type BgFit } from "@/shared/lib/background";
-import { initTheme } from "@/shared/lib/useTheme";
+import { initTheme, useTheme } from "@/shared/lib/useTheme";
 import { THEMES, type ThemeId } from "@/shared/types/theme.types";
 
 export default function DisplaySection() {
   const threadMode = useThreadMode();
   const bgUrl = useBgUrl();
   const bgFit = useBgFit();
+  const { customColors, updateCustomColors } = useTheme();
 
   const [previewSize, setPreviewSize] = createSignal<FontSize>("medium");
   const [previewFamily, setPreviewFamily] = createSignal<FontFamily>("system");
@@ -42,7 +43,7 @@ export default function DisplaySection() {
     setBgFit(d.bg_fit ?? "cover");
     if (d.color_scheme) {
       setPreviewScheme(d.color_scheme as ThemeId);
-      initTheme(d.color_scheme as ThemeId);
+      initTheme(d.color_scheme as ThemeId, d.custom_theme_colors);
     }
   });
 
@@ -93,6 +94,55 @@ export default function DisplaySection() {
               </For>
             </select>
           </Field>
+
+          {/* Custom theme color editor */}
+          <Show when={previewScheme() === "custom"}>
+            <div class="rounded-xl border border-rim bg-elevated p-4 space-y-4">
+              <p class="text-sm font-medium text-txt">Custom theme colors</p>
+              <p class="text-xs text-muted -mt-2">
+                Changes apply immediately and are saved to your account.
+              </p>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <ColorSwatch
+                  label="Background"
+                  hint="Main page background"
+                  value={customColors().base}
+                  onChange={(v) => updateCustomColors({ ...customColors(), base: v })}
+                />
+                <ColorSwatch
+                  label="Text"
+                  hint="Primary text color"
+                  value={customColors().txt}
+                  onChange={(v) => updateCustomColors({ ...customColors(), txt: v })}
+                />
+                <ColorSwatch
+                  label="Accent"
+                  hint="Buttons, links, highlights"
+                  value={customColors().accent}
+                  onChange={(v) => updateCustomColors({ ...customColors(), accent: v })}
+                />
+              </div>
+
+              <label class="flex items-center gap-2 cursor-pointer w-fit">
+                <input
+                  type="checkbox"
+                  checked={customColors().isDark}
+                  onChange={(e) =>
+                    updateCustomColors({ ...customColors(), isDark: e.currentTarget.checked })
+                  }
+                  class="accent-accent cursor-pointer"
+                />
+                <span class="text-sm text-txt">Dark mode</span>
+              </label>
+
+              <div class="pt-1 border-t border-rim">
+                <p class="text-xs text-muted">
+                  Surface, border, and muted colors are automatically derived from your background and text choices.
+                </p>
+              </div>
+            </div>
+          </Show>
 
           {/* Items per page */}
           <Field
@@ -296,6 +346,48 @@ function Field(props: {
       <Show when={props.hint}>
         <p class="text-xs text-muted">{props.hint}</p>
       </Show>
+    </div>
+  );
+}
+
+function ColorSwatch(props: {
+  label: string;
+  hint: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div class="space-y-1">
+      <label class="block text-xs font-medium text-txt">{props.label}</label>
+      <div class="flex items-center gap-2">
+        <input
+          type="color"
+          value={props.value}
+          onInput={(e) => props.onChange(e.currentTarget.value)}
+          class="w-9 h-9 rounded-lg border border-rim bg-surface cursor-pointer p-0.5"
+        />
+        <input
+          type="text"
+          value={props.value}
+          onBlur={(e) => {
+            const v = e.currentTarget.value.trim();
+            if (/^#[0-9a-fA-F]{6}$/.test(v)) props.onChange(v);
+            else e.currentTarget.value = props.value;
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              const v = e.currentTarget.value.trim();
+              if (/^#[0-9a-fA-F]{6}$/.test(v)) props.onChange(v);
+              else e.currentTarget.value = props.value;
+            }
+          }}
+          maxLength={7}
+          class="flex-1 px-2 py-1.5 rounded-lg border border-rim bg-surface text-txt text-xs
+                 font-mono hover:border-rim-strong focus:outline-none focus:border-rim-strong
+                 transition-colors"
+        />
+      </div>
+      <p class="text-xs text-muted">{props.hint}</p>
     </div>
   );
 }

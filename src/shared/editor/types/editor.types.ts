@@ -2,6 +2,7 @@ export type EditorTab = "wysiwyg" | "source" | "preview";
 export type MimeType = "text/bbcode" | "text/html" | "text/markdown";
 
 export type ToolbarLevel = "full" | "minimal" | "comment";
+export type AttachmentsMode = "none" | "files" | "photos" | "both";
 
 export type EditorCapabilities = {
   toolbar: ToolbarLevel;
@@ -10,7 +11,7 @@ export type EditorCapabilities = {
   summary: boolean;
   slug: boolean;
   category: boolean;
-  attachments: boolean;
+  attachments: AttachmentsMode;
   aclPicker: boolean;
   submitOnCtrlEnter: boolean;
 };
@@ -32,7 +33,7 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
     summary: false,
     slug: false,
     category: true,
-    attachments: false,
+    attachments: "both",
     aclPicker: true,
     submitOnCtrlEnter: true,
   },
@@ -44,7 +45,7 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
     summary: false,
     slug: false,
     category: false,
-    attachments: false,
+    attachments: "none",
     aclPicker: false,
     submitOnCtrlEnter: true,
   },
@@ -56,7 +57,7 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
     summary: true,
     slug: true,
     category: true,
-    attachments: false,
+    attachments: "both",
     aclPicker: true,
     submitOnCtrlEnter: false,
   },
@@ -68,7 +69,7 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
     summary: false,
     slug: true,
     category: false,
-    attachments: false,
+    attachments: "files",
     aclPicker: false,
     submitOnCtrlEnter: false,
   },

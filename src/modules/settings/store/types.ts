@@ -3,6 +3,7 @@ export interface DisplaySettings {
   theme: string;
   themes: string[];
   color_scheme: string;
+  custom_theme_colors?: string;
   update_interval: number;   // seconds (PHP divides ms by 1000)
   itemspage: number;
   start_menu: number;        // 0 | 1

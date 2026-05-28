@@ -1,0 +1,191 @@
+import { createSignal, For, Show } from "solid-js";
+import type { StreamAttachment } from "@/shared/types/post.types";
+
+function formatBytes(raw: string): string {
+  const n = parseInt(raw, 10);
+  if (!n || isNaN(n)) return "";
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+// item.attach href is "/attach/hash" (served as download, not inline).
+// Photos are also in the photo table as resource_id = hash, served inline at
+// /photo/{hash}-2.{ext}. Try that URL for display; fall back to a file chip.
+function photoDisplayUrl(href: string, type: string): string {
+  const hash = href.split("/attach/").pop() ?? href.split("/").pop() ?? "";
+  const ext = type === "image/png" ? "png"
+    : type === "image/gif" ? "gif"
+    : type === "image/webp" ? "webp"
+    : type === "image/avif" ? "avif"
+    : "jpg";
+  return `/photo/${hash}-2.${ext}`;
+}
+
+export default function AttachmentList(props: { attachments: StreamAttachment[]; compact?: boolean }) {
+  const [open, setOpen] = createSignal(false);
+
+  const images = () => props.attachments.filter((a) => a.type.startsWith("image/"));
+  const files  = () => props.attachments.filter((a) => !a.type.startsWith("image/"));
+
+  const label = () => {
+    const img = images().length;
+    const fil = files().length;
+    if (img > 0 && fil > 0) return `${img} image${img !== 1 ? "s" : ""}, ${fil} file${fil !== 1 ? "s" : ""}`;
+    if (img > 0) return `${img} image${img !== 1 ? "s" : ""}`;
+    return `${fil} file${fil !== 1 ? "s" : ""}`;
+  };
+
+  return (
+    <div class="mt-2">
+      {/* Toggle button */}
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-rim bg-elevated
+               text-xs text-muted hover:text-txt hover:bg-overlay transition-colors"
+      >
+        <PaperclipIcon />
+        <span>{label()}</span>
+        <ChevronIcon open={open()} />
+      </button>
+
+      {/* Dropdown content */}
+      <Show when={open()}>
+        <div class="mt-2 flex flex-col gap-2">
+          <Show when={images().length > 0}>
+            <div
+              class={
+                "grid gap-2 " +
+                (images().length === 1 ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-3")
+              }
+            >
+              <For each={images()}>
+                {(img) => <ImageChip img={img} compact={props.compact} />}
+              </For>
+            </div>
+          </Show>
+
+          <Show when={files().length > 0}>
+            <div class="flex flex-wrap gap-2">
+              <For each={files()}>
+                {(file) => (
+                  <a
+                    href={file.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg border border-rim bg-elevated
+                           hover:bg-overlay text-txt transition-colors max-w-xs"
+                  >
+                    <FileIcon type={file.type} />
+                    <div class="min-w-0">
+                      <div class="truncate text-xs font-medium">
+                        {decodeURIComponent(file.title) || "File"}
+                      </div>
+                      <Show when={file.length && file.length !== "0"}>
+                        <div class="text-[10px] text-muted">{formatBytes(file.length)}</div>
+                      </Show>
+                    </div>
+                  </a>
+                )}
+              </For>
+            </div>
+          </Show>
+        </div>
+      </Show>
+    </div>
+  );
+}
+
+function ImageChip(props: { img: StreamAttachment; compact?: boolean }) {
+  const [failed, setFailed] = createSignal(false);
+  const displayUrl = photoDisplayUrl(props.img.href, props.img.type);
+  const filename = () => decodeURIComponent(props.img.title) || "Image";
+
+  return (
+    <Show
+      when={!failed()}
+      fallback={
+        <a
+          href={props.img.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="flex items-center gap-2 px-3 py-2 rounded-lg border border-rim bg-elevated
+                 hover:bg-overlay text-txt transition-colors"
+        >
+          <FileIcon type={props.img.type} />
+          <div class="min-w-0">
+            <div class="truncate text-xs font-medium">{filename()}</div>
+            <Show when={props.img.length && props.img.length !== "0"}>
+              <div class="text-[10px] text-muted">{formatBytes(props.img.length)}</div>
+            </Show>
+          </div>
+        </a>
+      }
+    >
+      <a href={props.img.href} target="_blank" rel="noopener noreferrer">
+        <img
+          src={displayUrl}
+          alt={filename()}
+          onError={() => setFailed(true)}
+          class={
+            "w-full rounded-lg object-cover hover:opacity-90 transition-opacity " +
+            (props.compact ? "max-h-40" : "max-h-72")
+          }
+          loading="lazy"
+        />
+      </a>
+    </Show>
+  );
+}
+
+function PaperclipIcon() {
+  return (
+    <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+      />
+    </svg>
+  );
+}
+
+function ChevronIcon(props: { open: boolean }) {
+  return (
+    <svg
+      class={`w-3 h-3 shrink-0 transition-transform ${props.open ? "rotate-180" : ""}`}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+    </svg>
+  );
+}
+
+function FileIcon(props: { type: string }) {
+  const color = () => {
+    const t = props.type;
+    if (t === "application/pdf") return "text-red-400";
+    if (t.includes("word") || t.includes("document")) return "text-blue-400";
+    if (t.includes("sheet") || t.includes("excel") || t.includes("csv")) return "text-green-400";
+    if (t.includes("zip") || t.includes("tar") || t.includes("compressed")) return "text-yellow-400";
+    if (t.startsWith("audio/")) return "text-purple-400";
+    if (t.startsWith("video/")) return "text-pink-400";
+    if (t.startsWith("image/")) return "text-blue-300";
+    return "text-muted";
+  };
+
+  return (
+    <svg class={`w-5 h-5 shrink-0 ${color()}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+      />
+    </svg>
+  );
+}
