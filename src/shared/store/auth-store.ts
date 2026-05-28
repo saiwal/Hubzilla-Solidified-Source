@@ -45,7 +45,7 @@ async function fetchAuthState(): Promise<AuthState> {
   const isLocal = uid > 0 && nick !== "";
 
   if (data.spa) {
-    const validSizes   = new Set(["small", "medium", "large"]);
+    const validSizes   = new Set(["small", "medium", "large", "xl"]);
     const validFits    = new Set(["tile", "cover"]);
     const validFamilies = new Set([
       "system","serif","monospace","nunito","playfair","comfortaa",

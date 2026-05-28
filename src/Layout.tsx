@@ -43,7 +43,7 @@ function MobileTab(props: {
       activeClass="!text-txt"
     >
       <span class="flex items-center">{getNavIcon(props.icon, 22)}</span>
-      <span class="text-[10px] font-medium leading-none truncate max-w-[52px]">
+      <span class="text-[0.625rem] font-medium leading-none truncate max-w-[52px]">
         {label()}
       </span>
     </A>
@@ -285,7 +285,7 @@ const Layout: ParentComponent = (props) => {
 
             {/* ── Nav tiles ── */}
             <Show when={navItems().slice(bottomLimit()).length > 0}>
-              <p class="px-4 pb-2 text-[10px] font-semibold uppercase tracking-widest text-muted">
+              <p class="px-4 pb-2 text-[0.625rem] font-semibold uppercase tracking-widest text-muted">
                 Navigation
               </p>
               <div class="grid grid-cols-4 gap-1.5 px-2.5 pb-4">
@@ -300,7 +300,7 @@ const Layout: ParentComponent = (props) => {
                       onClick={closeAll}
                       class="flex flex-col items-center gap-1.5 py-2.5 px-1
                              rounded-xl bg-elevated border border-rim
-                             text-txt text-[10px] font-medium leading-tight text-center
+                             text-txt text-[0.625rem] font-medium leading-tight text-center
                              hover:brightness-95 transition-all"
                     >
                       <span class="text-muted">
@@ -338,7 +338,7 @@ const Layout: ParentComponent = (props) => {
                       onClick={closeAll}
                       class="flex flex-col items-center gap-1.5 py-2.5 px-1
                              rounded-xl bg-elevated border border-rim
-                             text-txt text-[10px] font-medium leading-tight text-center
+                             text-txt text-[0.625rem] font-medium leading-tight text-center
                              hover:brightness-95 transition-all"
                     >
                       <span class="text-muted">
@@ -388,7 +388,7 @@ const Layout: ParentComponent = (props) => {
                   setRightOpen(false);
                 }}
                 class={`flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl
-                        text-[10px] font-medium transition-colors min-w-0
+                        text-[0.625rem] font-medium transition-colors min-w-0
                         ${
                           moreOpen()
                             ? "text-txt bg-elevated"
@@ -406,7 +406,7 @@ const Layout: ParentComponent = (props) => {
                 setMoreOpen(false);
               }}
               class={`flex-none px-2 flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl
-                      text-[10px] font-medium transition-colors
+                      text-[0.625rem] font-medium transition-colors
                       ${
                         rightOpen()
                           ? "text-txt bg-elevated"
