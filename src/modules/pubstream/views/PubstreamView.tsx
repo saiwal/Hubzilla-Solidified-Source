@@ -132,7 +132,7 @@ export default function PubstreamView() {
         </div>
       }
     >
-      <div class="px-4 py-4">
+      <div class="">
         {/* Header */}
         <div class="flex items-center gap-2 mb-4">
           <MdFillWhatshot size={18} class="text-accent shrink-0" />
