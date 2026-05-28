@@ -119,6 +119,11 @@ function ListRow(props: {
             onClick={() => props.onOpenModal()}
             class="flex-1 min-w-0 px-3 pt-2.5 pb-1.5 cursor-pointer space-y-0.5"
           >
+            <Show when={p.flags.includes("unseen")}>
+              <span class="inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-accent text-accent-fg leading-none">
+                New
+              </span>
+            </Show>
             {/* title */}
             <Show
               when={p.title}
@@ -167,6 +172,17 @@ function ListRow(props: {
               >
                 {formatPostDate(p.created, locale())}
               </span>
+              <Show when={p.verb === "Announce" && p.via}>
+                <span class="text-[11px] text-muted/50">·</span>
+                <svg class="w-2.5 h-2.5 text-muted shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span class="text-[11px] text-muted">via</span>
+                <a href={p.via!.url} class="text-[11px] text-muted hover:underline font-medium truncate">
+                  {p.via!.name}
+                </a>
+              </Show>
             </div>
           </div>
 

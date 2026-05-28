@@ -30,6 +30,7 @@ export interface Post {
   authorAvatar: string;
   authorUrl: string;
   authorAddress?: string;
+  via?: { name: string; address: string; url: string; avatar: string };
   created: string;
   commented?: string;
   edited?: string;

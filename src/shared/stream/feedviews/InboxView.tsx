@@ -242,6 +242,7 @@ function InboxRow(props: {
   const score = () => (p.likeCount ?? 0) - (p.dislikeCount ?? 0);
   const preview = () => stripHtml(p.body).slice(0, 160);
   const isUnread = () => !p.viewerLiked && replyCount() === 0;
+  const isUnseen = () => p.flags.includes("unseen");
 
   return (
     <div
@@ -288,20 +289,27 @@ function InboxRow(props: {
           onKeyDown={(e) => e.key === "Enter" && toggleExpand()}
         >
           {/* title */}
-          <Show
-            when={p.title}
-            fallback={
-              <p class="text-sm font-semibold text-txt leading-snug line-clamp-1">
-                {preview()}
-              </p>
-            }
-          >
-            <p
-              class="text-sm font-semibold leading-snug line-clamp-1"
-              classList={{ "text-accent": isUnread(), "text-txt": !isUnread() }}
-              innerHTML={DOMPurify.sanitize(p.title!)}
-            />
-          </Show>
+          <div class="flex items-center gap-1.5">
+            <Show when={isUnseen()}>
+              <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-accent text-accent-fg leading-none shrink-0">
+                New
+              </span>
+            </Show>
+            <Show
+              when={p.title}
+              fallback={
+                <p class="text-sm font-semibold text-txt leading-snug line-clamp-1">
+                  {preview()}
+                </p>
+              }
+            >
+              <p
+                class="text-sm font-semibold leading-snug line-clamp-1"
+                classList={{ "text-accent": isUnread(), "text-txt": !isUnread() }}
+                innerHTML={DOMPurify.sanitize(p.title!)}
+              />
+            </Show>
+          </div>
 
           {/* preview */}
           <Show when={p.title && preview()}>
@@ -356,6 +364,18 @@ function InboxRow(props: {
             >
               {formatPostDate(p.created, locale())}
             </span>
+
+            <Show when={p.verb === "Announce" && p.via}>
+              <span class="text-[11px] text-muted/50">·</span>
+              <svg class="w-2.5 h-2.5 text-muted shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span class="text-[11px] text-muted">via</span>
+              <a href={p.via!.url} class="text-[11px] text-muted hover:underline font-medium truncate max-w-[120px]">
+                {p.via!.name}
+              </a>
+            </Show>
 
             <svg
               class="w-3 h-3 text-muted/50 ml-auto transition-transform duration-200"

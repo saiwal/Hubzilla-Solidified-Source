@@ -77,6 +77,9 @@ export default function PostCard(props: {
 
   // Detect event posts: prefer pre-parsed eventData from mapper, fall back to
   // parsing the body directly (handles cases where obj_type wasn't "Event").
+  const isUnseen = () => props.post.flags.includes("unseen");
+  const isRepeat = () => props.post.verb === "Announce";
+
   const eventData = () =>
     props.post.eventData ??
     (props.post.body.includes("[event-summary]") ? parseEventData(props.post.body) : undefined);
@@ -193,6 +196,9 @@ export default function PostCard(props: {
       <div ref={cardRef} class="rounded-tl-lg rounded-bl-lg pl-3 py-2.5 mb-1 border border-rim">
         {/* Single-line author header */}
         <div class="flex items-center gap-2 min-w-0">
+          <Show when={isUnseen()}>
+            <span class="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
+          </Show>
           <AuthorPopover
             name={props.post.authorName}
             avatar={props.post.authorAvatar}
@@ -216,13 +222,19 @@ export default function PostCard(props: {
               />
             </Show>
           </AuthorPopover>
-          <a
-            href={props.post.authorUrl}
-            class="font-medium text-sm text-txt hover:underline truncate"
-          >
+          <a href={props.post.authorUrl} class="font-medium text-sm text-txt hover:underline truncate">
             {props.post.authorName}
           </a>
-          <Show when={props.post.verb && props.post.verb !== "Create"}>
+          <Show when={isRepeat() && props.post.via}>
+            <div class="flex items-center gap-1 shrink-0">
+              <MdFillShare size={11} class="text-muted" />
+              <span class="text-xs text-muted">via</span>
+              <a href={props.post.via!.url} class="text-xs text-muted hover:underline font-medium">
+                {props.post.via!.name}
+              </a>
+            </div>
+          </Show>
+          <Show when={props.post.verb && props.post.verb !== "Create" && !isRepeat()}>
             <span class="text-xs text-muted italic shrink-0">
               {props.post.verb?.toLowerCase()}
             </span>
@@ -405,7 +417,7 @@ export default function PostCard(props: {
   return (
     <div
       ref={cardRef}
-      class="bg-surface border border-rim rounded-2xl p-5 mb-4 shadow-sm hover:shadow-md transition-shadow duration-200"
+      class="relative bg-surface border border-rim rounded-2xl p-5 mb-4 shadow-sm hover:shadow-md transition-shadow duration-200"
     >
       {/* Header */}
       <div class="flex items-start gap-3">
@@ -434,20 +446,31 @@ export default function PostCard(props: {
           </Show>
         </AuthorPopover>
         <div class="flex flex-col">
-          <a
-            href={props.post.authorUrl}
-            class="font-semibold text-txt hover:underline"
-          >
+          <a href={props.post.authorUrl} class="font-semibold text-txt hover:underline">
             {props.post.authorName}
           </a>
-          <div class="flex items-baseline gap-1.5">
+          <div class="flex items-center gap-1.5">
+            <Show when={isUnseen()}>
+              <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-accent text-accent-fg leading-none">
+                New
+              </span>
+            </Show>
             <span
               class="text-sm text-muted"
               title={new Date(props.post.created + "Z").toLocaleString(locale())}
             >
               {formatPostDate(props.post.created, locale())}
             </span>
-            <Show when={props.post.verb && props.post.verb !== "Create"}>
+            <Show when={isRepeat() && props.post.via}>
+              <div class="flex items-center gap-1">
+                <MdFillShare size={12} class="text-muted shrink-0" />
+                <span class="text-xs text-muted">via</span>
+                <a href={props.post.via!.url} class="text-xs text-muted hover:underline font-medium">
+                  {props.post.via!.name}
+                </a>
+              </div>
+            </Show>
+            <Show when={props.post.verb && props.post.verb !== "Create" && !isRepeat()}>
               <span class="text-xs text-muted italic">
                 {props.post.verb?.toLowerCase()}
               </span>
