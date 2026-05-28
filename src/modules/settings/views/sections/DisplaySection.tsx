@@ -103,7 +103,7 @@ export default function DisplaySection() {
                 Changes apply immediately and are saved to your account.
               </p>
 
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <ColorSwatch
                   label="Background"
                   hint="Main page background"
@@ -357,14 +357,14 @@ function ColorSwatch(props: {
   onChange: (v: string) => void;
 }) {
   return (
-    <div class="space-y-1">
+    <div class="space-y-2">
       <label class="block text-xs font-medium text-txt">{props.label}</label>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-3">
         <input
           type="color"
           value={props.value}
           onInput={(e) => props.onChange(e.currentTarget.value)}
-          class="w-9 h-9 rounded-lg border border-rim bg-surface cursor-pointer p-0.5"
+          class="w-9 h-9 shrink-0 aspect-square rounded-lg border border-rim bg-surface cursor-pointer p-0.5"
         />
         <input
           type="text"
@@ -382,7 +382,7 @@ function ColorSwatch(props: {
             }
           }}
           maxLength={7}
-          class="flex-1 px-2 py-1.5 rounded-lg border border-rim bg-surface text-txt text-xs
+          class="w-24 px-2 py-1.5 rounded-lg border border-rim bg-surface text-txt text-xs
                  font-mono hover:border-rim-strong focus:outline-none focus:border-rim-strong
                  transition-colors"
         />
