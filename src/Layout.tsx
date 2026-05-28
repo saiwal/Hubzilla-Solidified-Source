@@ -43,7 +43,7 @@ function MobileTab(props: {
       activeClass="!text-txt"
     >
       <span aria-hidden="true" class="flex items-center">{getNavIcon(props.icon, 22)}</span>
-      <span class="text-[0.5625rem] font-medium leading-none truncate max-w-[52px]">
+      <span class="text-[0.625rem] font-medium leading-none truncate max-w-[52px]">
         {label()}
       </span>
     </A>
@@ -351,7 +351,7 @@ const Layout: ParentComponent = (props) => {
                       onClick={closeAll}
                       class="flex flex-col items-center gap-1.5 py-2.5 px-1
                              rounded-xl bg-elevated border border-rim
-                             text-txt text-[0.625rem] font-medium leading-tight text-center
+                             text-txt text-xs font-medium leading-tight text-center
                              hover:brightness-95 transition-all"
                     >
                       <span aria-hidden="true" class="text-muted">
@@ -389,7 +389,7 @@ const Layout: ParentComponent = (props) => {
                       onClick={closeAll}
                       class="flex flex-col items-center gap-1.5 py-2.5 px-1
                              rounded-xl bg-elevated border border-rim
-                             text-txt text-[0.625rem] font-medium leading-tight text-center
+                             text-txt text-xs font-medium leading-tight text-center
                              hover:brightness-95 transition-all"
                     >
                       <span aria-hidden="true" class="text-muted">
@@ -443,7 +443,7 @@ const Layout: ParentComponent = (props) => {
                 aria-expanded={moreOpen()}
                 aria-controls="more-drawer"
                 class={`flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl
-                        text-[0.5625rem] font-medium transition-colors min-w-0
+                        text-[0.625rem] font-medium transition-colors min-w-0
                         ${
                           moreOpen()
                             ? "text-txt bg-elevated"
@@ -465,7 +465,7 @@ const Layout: ParentComponent = (props) => {
               aria-controls="right-sidebar"
               aria-label={rightOpen() ? "Close panel" : "Open panel"}
               class={`flex-none px-2 flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl
-                      text-[0.5625rem] font-medium transition-colors
+                      text-[0.625rem] font-medium transition-colors
                       ${
                         rightOpen()
                           ? "text-txt bg-elevated"
