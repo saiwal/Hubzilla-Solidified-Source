@@ -1,11 +1,12 @@
 // src/shared/stream/feedviews/ListView.tsx
-import { For, Show, createSignal, lazy } from "solid-js";
+import { For, Show, createSignal, lazy, onMount, onCleanup } from "solid-js";
 import type { ThreadNode } from "@/shared/lib/thread";
 import { countAllComments } from "@/shared/lib/thread";
 import type { StreamHandlers } from "../types";
 import formatPostDate from "@/shared/lib/date";
 import { useI18n } from "@/i18n";
 import DOMPurify from "dompurify";
+import { markItemSeen } from "@/shared/lib/markSeen";
 
 const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
 
@@ -104,10 +105,26 @@ function ListRow(props: {
       ? countAllComments(p.children)
       : (p.commentCount ?? 0);
   const { locale } = useI18n();
+  let rowRef!: HTMLDivElement;
+
+  onMount(() => {
+    if (!p.uuid || !p.flags.includes("unseen")) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          observer.disconnect();
+          markItemSeen(p.uuid);
+        }
+      },
+      { threshold: 0.5 },
+    );
+    observer.observe(rowRef);
+    onCleanup(() => observer.disconnect());
+  });
 
   return (
     <>
-      <div class="group flex items-stretch border-b border-rim last:border-0 hover:bg-overlay transition-colors">
+      <div ref={rowRef} class="group flex items-stretch border-b border-rim last:border-0 hover:bg-overlay transition-colors">
         {/* vote gutter */}
         <VoteGutter post={p} handlers={props.handlers} />
 
@@ -172,7 +189,7 @@ function ListRow(props: {
               >
                 {formatPostDate(p.created, locale())}
               </span>
-              <Show when={p.verb === "Announce" && p.via}>
+              <Show when={p.via}>
                 <span class="text-[11px] text-muted/50">·</span>
                 <svg class="w-2.5 h-2.5 text-muted shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

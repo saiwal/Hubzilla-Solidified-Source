@@ -1,4 +1,5 @@
 import PostDetailModal from '@/shared/views/PostDetailModal';
+import { markItemSeen } from '@/shared/lib/markSeen';
 import {
   createSignal,
   createEffect,
@@ -49,7 +50,6 @@ function initials(name: string): string {
     .join("");
 }
 
-// Deterministic pastel hue from a string
 function avatarHue(name: string): number {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffffff;
@@ -61,6 +61,7 @@ async function fetchMessages(params: {
   type: MessageType;
   author: string;
   file: string;
+  signal?: AbortSignal;
 }): Promise<HqResponse> {
   const body = new URLSearchParams({
     offset: String(params.offset),
@@ -76,6 +77,7 @@ async function fetchMessages(params: {
       Accept: "application/json",
     },
     body: body.toString(),
+    signal: params.signal,
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
@@ -140,13 +142,22 @@ const Avatar: Component<{ src?: string; name: string; size?: string }> = (props)
 const MessageItem: Component<{ entry: MessageEntry }> = (props) => {
   const e = props.entry;
   const [showModal, setShowModal] = createSignal(false);
-  const isUnseen = () => e.unseen_count > 0;
+  const [locallyRead, setLocallyRead] = createSignal(false);
+  const isUnseen = () => !locallyRead() && e.unseen_count > 0;
+
+  function handleClick() {
+    setShowModal(true);
+    if (e.unseen_count > 0 && !locallyRead()) {
+      setLocallyRead(true);
+      markItemSeen(e.b64mid);
+    }
+  }
 
   return (
     <>
       <button
         type="button"
-        onClick={() => setShowModal(true)}
+        onClick={handleClick}
         class={`
           w-full text-left px-4 py-3 flex items-start gap-3
           transition-all duration-150 relative
@@ -155,7 +166,6 @@ const MessageItem: Component<{ entry: MessageEntry }> = (props) => {
           ${isUnseen() ? "bg-accent-muted" : ""}
         `}
       >
-        {/* Unseen indicator stripe */}
         <Show when={isUnseen()}>
           <span class="absolute left-0 top-3 bottom-3 w-0.5 rounded-r-full bg-accent" />
         </Show>
@@ -191,20 +201,15 @@ const MessageItem: Component<{ entry: MessageEntry }> = (props) => {
 
         <Show when={isUnseen()}>
           <span
-            class={`shrink-0 self-center min-w-[1.25rem] h-5 rounded-full text-[10px] font-bold
+            class="shrink-0 self-center min-w-[1.25rem] h-5 rounded-full text-[10px] font-bold
               flex items-center justify-center px-1.5 tabular-nums
-              ${
-                e.unseen_class === "danger"
-                  ? "bg-accent-muted text-accent"
-                  : "bg-accent-muted text-accent"
-              }`}
+              bg-accent-muted text-accent"
           >
             {e.unseen_count}
           </span>
         </Show>
       </button>
 
-      {/* Divider — only between items (rendered outside button for valid HTML) */}
       <div class="mx-4 h-px bg-rim" />
 
       <Show when={showModal()}>
@@ -231,6 +236,7 @@ const SkeletonRow: Component = () => (
 
 export default function HqMessagesWidget() {
   const [activeTab, setActiveTab] = createSignal<MessageType>("");
+  const [refreshKey, setRefreshKey] = createSignal(0);
   const [entries, setEntries] = createSignal<MessageEntry[]>([]);
   const [offset, setOffset] = createSignal(0);
   const [loading, setLoading] = createSignal(false);
@@ -239,16 +245,30 @@ export default function HqMessagesWidget() {
   const [authorFilter, setAuthorFilter] = createSignal("");
 
   let scrollRef: HTMLDivElement | undefined;
-  let fetchActive = false;
+  let resetController: AbortController | null = null;
+  let loadMoreActive = false;
 
   async function loadPage(reset = false) {
-    if (fetchActive) return;
-    const currentOffset = reset ? 0 : offset();
-    if (currentOffset === -1) return;
+    if (!reset && loadMoreActive) return;
 
-    fetchActive = true;
+    let signal: AbortSignal | undefined;
+
+    if (reset) {
+      // Cancel any in-flight reset request and start fresh
+      resetController?.abort();
+      const ctrl = new AbortController();
+      resetController = ctrl;
+      signal = ctrl.signal;
+      loadMoreActive = false;
+      setEmpty(false);
+    } else {
+      const cur = offset();
+      if (cur === -1) return;
+      loadMoreActive = true;
+    }
+
+    const currentOffset = reset ? 0 : offset();
     setLoading(true);
-    if (reset) setEmpty(false);
 
     try {
       const data = await fetchMessages({
@@ -256,6 +276,7 @@ export default function HqMessagesWidget() {
         type: activeTab(),
         author: authorFilter(),
         file: "",
+        signal,
       });
 
       if (reset) {
@@ -268,16 +289,21 @@ export default function HqMessagesWidget() {
       setEmpty(reset && data.entries.length === 0);
       setError(null);
     } catch (e) {
+      if ((e as Error)?.name === "AbortError") return;
       setError(e instanceof Error ? e.message : "Failed to load");
     } finally {
-      setLoading(false);
-      fetchActive = false;
+      // Only update loading state if this request wasn't superseded
+      if (!signal?.aborted) {
+        setLoading(false);
+        if (!reset) loadMoreActive = false;
+      }
     }
   }
 
   createEffect(() => {
     activeTab();
     authorFilter();
+    refreshKey();
     setOffset(0);
     loadPage(true);
   });
@@ -295,7 +321,19 @@ export default function HqMessagesWidget() {
     clearTimeout(filterTimer);
     filterTimer = setTimeout(() => setAuthorFilter(val), 300);
   }
-  onCleanup(() => clearTimeout(filterTimer));
+  onCleanup(() => {
+    clearTimeout(filterTimer);
+    resetController?.abort();
+  });
+
+  function handleTabClick(type: MessageType) {
+    if (activeTab() === type) {
+      // Re-clicking the active tab forces a refresh
+      setRefreshKey((k) => k + 1);
+    } else {
+      setActiveTab(type);
+    }
+  }
 
   return (
     <div
@@ -356,12 +394,12 @@ export default function HqMessagesWidget() {
                         : "text-muted hover:bg-overlay hover:text-txt"
                     }
                   `}
-                  onClick={() => setActiveTab(tab.type)}
+                  onClick={() => handleTabClick(tab.type)}
                 >
                   <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={tab.path} />
                   </svg>
-                  {tab.label}
+                  <span class="hidden sm:inline">{tab.label}</span>
                 </button>
               );
             }}
@@ -398,7 +436,6 @@ export default function HqMessagesWidget() {
           </div>
         </Show>
 
-        {/* Initial skeleton */}
         <Show when={loading() && entries().length === 0}>
           <For each={Array(5)}>{() => <SkeletonRow />}</For>
         </Show>
@@ -407,7 +444,6 @@ export default function HqMessagesWidget() {
           {(entry) => <MessageItem entry={entry} />}
         </For>
 
-        {/* Tail spinner (load-more) */}
         <Show when={loading() && entries().length > 0}>
           <div class="flex items-center justify-center gap-2 py-4 text-xs text-muted">
             <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">

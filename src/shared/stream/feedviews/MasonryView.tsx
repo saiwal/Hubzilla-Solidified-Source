@@ -16,6 +16,7 @@ import { useI18n } from "@/i18n";
 import DOMPurify from "dompurify";
 import EventCard from "@/shared/stream/components/EventCard";
 import { parseEventData } from "@/shared/lib/activity.mapper";
+import { markItemSeen } from "@/shared/lib/markSeen";
 function useColumnCount(): () => number {
   const getCount = () => {
     const w = window.innerWidth;
@@ -47,6 +48,7 @@ function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers; onOpen
       ? countAllComments(p.children)
       : (p.commentCount ?? 0);
   const [expanded, setExpanded] = createSignal(false);
+  let cardRef!: HTMLDivElement;
   let bodyRef!: HTMLDivElement;
   const [overflows, setOverflows] = createSignal(false);
   const { locale, t } = useI18n();
@@ -70,14 +72,34 @@ function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers; onOpen
     imgs?.forEach((img) => {
       if (!img.complete) img.addEventListener("load", checkOverflow, { once: true });
     });
+
+    if (p.uuid && p.flags.includes("unseen")) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting) {
+            observer.disconnect();
+            markItemSeen(p.uuid);
+          }
+        },
+        { threshold: 0.5 },
+      );
+      observer.observe(cardRef);
+      onCleanup(() => observer.disconnect());
+    }
   });
 
   return (
     <>
       <div
+        ref={cardRef}
         onClick={() => props.onOpenModal()}
-        class="mb-3 bg-surface border border-rim rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+        class="relative mb-3 bg-surface border border-rim rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
       >
+        <Show when={p.flags.includes("unseen")}>
+          <span class="absolute top-2.5 right-2.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-accent text-accent-fg leading-none z-10">
+            New
+          </span>
+        </Show>
         {/* Author */}
         <div class="flex items-center gap-2 mb-3">
           <Show
@@ -95,14 +117,21 @@ function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers; onOpen
             />
           </Show>
           <div class="min-w-0">
-            <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-1.5 flex-wrap">
               <p class="text-xs font-semibold text-txt truncate">
                 {p.authorName}
               </p>
-              <Show when={p.flags.includes("unseen")}>
-                <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-accent text-accent-fg leading-none shrink-0">
-                  New
-                </span>
+              <Show when={p.via}>
+                <div class="flex items-center gap-1 shrink-0">
+                  <svg class="w-2.5 h-2.5 text-muted shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span class="text-xs text-muted">via</span>
+                  <a href={p.via!.url} class="text-xs text-muted hover:underline font-medium truncate">
+                    {p.via!.name}
+                  </a>
+                </div>
               </Show>
             </div>
             <p
@@ -111,18 +140,6 @@ function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers; onOpen
             >
               {formatPostDate(p.created, locale())}
             </p>
-            <Show when={p.verb === "Announce" && p.via}>
-              <div class="flex items-center gap-1 mt-0.5">
-                <svg class="w-2.5 h-2.5 text-muted shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                <span class="text-xs text-muted">via</span>
-                <a href={p.via!.url} class="text-xs text-muted hover:underline font-medium truncate">
-                  {p.via!.name}
-                </a>
-              </div>
-            </Show>
           </div>
         </div>
 

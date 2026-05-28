@@ -225,7 +225,7 @@ export default function PostCard(props: {
           <a href={props.post.authorUrl} class="font-medium text-sm text-txt hover:underline truncate">
             {props.post.authorName}
           </a>
-          <Show when={isRepeat() && props.post.via}>
+          <Show when={props.post.via}>
             <div class="flex items-center gap-1 shrink-0">
               <MdFillShare size={11} class="text-muted" />
               <span class="text-xs text-muted">via</span>
@@ -446,22 +446,11 @@ export default function PostCard(props: {
           </Show>
         </AuthorPopover>
         <div class="flex flex-col">
-          <a href={props.post.authorUrl} class="font-semibold text-txt hover:underline">
-            {props.post.authorName}
-          </a>
-          <div class="flex items-center gap-1.5">
-            <Show when={isUnseen()}>
-              <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-accent text-accent-fg leading-none">
-                New
-              </span>
-            </Show>
-            <span
-              class="text-sm text-muted"
-              title={new Date(props.post.created + "Z").toLocaleString(locale())}
-            >
-              {formatPostDate(props.post.created, locale())}
-            </span>
-            <Show when={isRepeat() && props.post.via}>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <a href={props.post.authorUrl} class="font-semibold text-txt hover:underline">
+              {props.post.authorName}
+            </a>
+            <Show when={props.post.via}>
               <div class="flex items-center gap-1">
                 <MdFillShare size={12} class="text-muted shrink-0" />
                 <span class="text-xs text-muted">via</span>
@@ -470,6 +459,14 @@ export default function PostCard(props: {
                 </a>
               </div>
             </Show>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span
+              class="text-sm text-muted"
+              title={new Date(props.post.created + "Z").toLocaleString(locale())}
+            >
+              {formatPostDate(props.post.created, locale())}
+            </span>
             <Show when={props.post.verb && props.post.verb !== "Create" && !isRepeat()}>
               <span class="text-xs text-muted italic">
                 {props.post.verb?.toLowerCase()}
@@ -478,13 +475,20 @@ export default function PostCard(props: {
           </div>
         </div>
 
-        <a
-          href={props.post.permalink}
-          class="ml-auto text-sm text-muted hover:text-txt transition-colors"
-          title="source"
-        >
-          <BiRegularLinkExternal size={17} />
-        </a>
+        <div class="ml-auto flex items-center gap-2 shrink-0">
+          <Show when={isUnseen()}>
+            <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-accent text-accent-fg leading-none">
+              New
+            </span>
+          </Show>
+          <a
+            href={props.post.permalink}
+            class="text-sm text-muted hover:text-txt transition-colors"
+            title="source"
+          >
+            <BiRegularLinkExternal size={17} />
+          </a>
+        </div>
       </div>
 
       {/* Title */}

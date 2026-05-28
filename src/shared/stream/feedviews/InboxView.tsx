@@ -1,5 +1,5 @@
 // src/shared/stream/feedviews/InboxView.tsx
-import { For, Show, createSignal } from "solid-js";
+import { For, Show, createSignal, onMount, onCleanup } from "solid-js";
 import type { ThreadNode } from "@/shared/lib/thread";
 import { flattenThread } from "@/shared/lib/thread";
 import { useThreadMode } from "@/shared/store/thread-mode";
@@ -10,6 +10,7 @@ import { useI18n } from "@/i18n";
 import CommentComposer from "@/shared/editor/composers/CommentComposer";
 import { useAuth } from "@/shared/store/auth-store";
 import DOMPurify from "dompurify";
+import { markItemSeen } from "@/shared/lib/markSeen";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -216,6 +217,22 @@ function InboxRow(props: {
   const [commentsLoaded, setCommentsLoaded] = createSignal(p.children.length > 0);
   const [commentsLoading, setCommentsLoading] = createSignal(false);
   const { locale } = useI18n();
+  let rowRef!: HTMLDivElement;
+
+  onMount(() => {
+    if (!p.uuid || !p.flags.includes("unseen")) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          observer.disconnect();
+          markItemSeen(p.uuid);
+        }
+      },
+      { threshold: 0.5 },
+    );
+    observer.observe(rowRef);
+    onCleanup(() => observer.disconnect());
+  });
 
   const replyCount = () =>
     p.children.length > 0
@@ -246,6 +263,7 @@ function InboxRow(props: {
 
   return (
     <div
+      ref={rowRef}
       class="group border-b border-rim last:border-0 flex items-stretch hover:bg-overlay transition-colors"
       classList={{ "bg-accent-muted/10": expanded() }}
     >
@@ -365,7 +383,7 @@ function InboxRow(props: {
               {formatPostDate(p.created, locale())}
             </span>
 
-            <Show when={p.verb === "Announce" && p.via}>
+            <Show when={p.via}>
               <span class="text-[11px] text-muted/50">·</span>
               <svg class="w-2.5 h-2.5 text-muted shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
