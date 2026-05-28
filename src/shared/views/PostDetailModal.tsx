@@ -1,5 +1,5 @@
 // src/shared/views/PostDetailModal.tsx
-import { type Component, createResource, Show } from "solid-js";
+import { type Component, createResource, Show, onMount } from "solid-js";
 import { Portal } from "solid-js/web";
 import PostCard from "../stream/components/PostCard";
 import type { StreamHandlers } from "../stream/types";
@@ -112,6 +112,9 @@ interface PostDetailModalProps {
 const PostDetailModal: Component<PostDetailModalProps> = (props) => {
   const [node, { refetch }] = createResource(() => props.uuid, fetchDisplay);
 
+  let dialogRef!: HTMLDivElement;
+  onMount(() => dialogRef?.focus());
+
   // Wrap handlers to trigger a refetch after each mutation so counts update
   const wrappedHandlers: StreamHandlers | undefined = props.handlers
     ? {
@@ -157,12 +160,17 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
         }}
       >
         <div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="post-modal-title"
+          tabindex="-1"
           class="relative w-full max-w-full lg:max-w-[50%] max-h-[90svh] flex flex-col
-                 bg-base rounded-2xl shadow-2xl overflow-hidden"
+                 bg-base rounded-2xl shadow-2xl overflow-hidden focus:outline-none"
         >
           {/* Header */}
           <div class="flex items-center justify-between px-5 py-3 shrink-0 border-b border-rim bg-surface">
-            <h2 class="text-sm font-semibold text-muted">
+            <h2 id="post-modal-title" class="text-sm font-semibold text-muted">
               Post
             </h2>
             <button

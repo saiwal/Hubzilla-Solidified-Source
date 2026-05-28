@@ -1,4 +1,4 @@
-import { type ParentComponent, createSignal, Show, createMemo, createEffect } from "solid-js";
+import { type ParentComponent, createSignal, Show, createMemo, createEffect, on } from "solid-js";
 import { For } from "solid-js";
 import { A, useLocation } from "@solidjs/router";
 import NavItem, { getNavIcon } from "./shared/views/NavItem";
@@ -42,8 +42,8 @@ function MobileTab(props: {
              transition-colors min-w-0"
       activeClass="!text-txt"
     >
-      <span class="flex items-center">{getNavIcon(props.icon, 22)}</span>
-      <span class="text-[0.625rem] font-medium leading-none truncate max-w-[52px]">
+      <span aria-hidden="true" class="flex items-center">{getNavIcon(props.icon, 22)}</span>
+      <span class="text-[0.5625rem] font-medium leading-none truncate max-w-[52px]">
         {label()}
       </span>
     </A>
@@ -67,9 +67,31 @@ const Layout: ParentComponent = (props) => {
   const navViewer = useNavViewer();
   const navActions = useNavActions();
 
+  const isXl = createMediaQuery("(min-width: 1280px)");
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   let mainRef!: HTMLElement;
+  let morePanelRef!: HTMLDivElement;
+  let moreButtonRef!: HTMLButtonElement;
+  let panelButtonRef!: HTMLButtonElement;
+  let rightCloseRef!: HTMLButtonElement;
   const [showScrollTop, setShowScrollTop] = createSignal(false);
   const onMainScroll = () => setShowScrollTop(mainRef.scrollTop > 300);
+
+  createEffect(() => {
+    if (moreOpen()) requestAnimationFrame(() => {
+      morePanelRef?.querySelector<HTMLElement>("a, button")?.focus();
+    });
+  });
+  createEffect(() => {
+    if (rightOpen() && !isXl()) requestAnimationFrame(() => rightCloseRef?.focus());
+  });
+  createEffect(on(rightOpen, (isOpen, prevOpen) => {
+    if (prevOpen && !isOpen) panelButtonRef?.focus();
+  }, { defer: true }));
+  createEffect(on(moreOpen, (isOpen, prevOpen) => {
+    if (prevOpen && !isOpen) moreButtonRef?.focus();
+  }, { defer: true }));
 
   const activeModuleId = createMemo(() => {
     const segment = location.pathname.split("/").filter(Boolean)[0];
@@ -92,6 +114,14 @@ const Layout: ParentComponent = (props) => {
 
   return (
     <div class="fixed inset-0 bg-base text-txt hz-app-root">
+      <a
+        href="#main-content"
+        class="sr-only focus:not-sr-only focus:absolute focus:z-[200] focus:top-2 focus:left-2
+               focus:px-4 focus:py-2 focus:rounded-lg focus:bg-base focus:text-txt
+               focus:border focus:border-rim focus:shadow-lg focus:outline-none"
+      >
+        Skip to content
+      </a>
       <HelpOverlay />
 
       <div class="flex h-full flex-col">
@@ -102,6 +132,7 @@ const Layout: ParentComponent = (props) => {
                    bg-amber-500 text-amber-950 text-sm font-medium py-1.5 select-none"
           >
             <svg
+              aria-hidden="true"
               class="w-4 h-4 shrink-0"
               fill="currentColor"
               viewBox="0 0 20 20"
@@ -125,6 +156,7 @@ const Layout: ParentComponent = (props) => {
               DESKTOP LEFT SIDEBAR
           ═══════════════════════════════════════════════════════ */}
           <aside
+            aria-label="Navigation"
             class="hidden lg:flex flex-col w-56 shrink-0 relative z-20
                    bg-surface border-r border-rim py-3 px-2"
           >
@@ -143,7 +175,7 @@ const Layout: ParentComponent = (props) => {
             </div>
 
             {/* Primary nav */}
-            <nav class="flex-1 flex flex-col gap-0.5 overflow-y-auto">
+            <nav aria-label="Primary" class="flex-1 flex flex-col gap-0.5 overflow-y-auto">
               <For each={navItems()}>
                 {(item) => (
                   <NavItem
@@ -162,7 +194,7 @@ const Layout: ParentComponent = (props) => {
                 use:motion={{
                   initial: { opacity: 0, y: 8 },
                   animate: { opacity: 1, y: 0 },
-                  transition: { duration: 0.18, easing: "ease-out" },
+                  transition: { duration: reducedMotion ? 0 : 0.18, easing: "ease-out" },
                 }}
                 class="flex flex-col gap-0.5"
               >
@@ -196,10 +228,18 @@ const Layout: ParentComponent = (props) => {
               MAIN CONTENT
           ═══════════════════════════════════════════════════════ */}
           <main
+            id="main-content"
             ref={mainRef}
             onScroll={onMainScroll}
             class="flex-1 overflow-y-auto p-4 lg:p-6 pb-24 lg:pb-6 relative"
           >
+            <span
+              class="sr-only"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {notifCount() > 0 ? `${notifCount()} notification${notifCount() === 1 ? "" : "s"}` : ""}
+            </span>
             <Show when={isOwner()}>
               <Slot name="mainTop" moduleId={activeModuleId()} />
             </Show>
@@ -213,7 +253,7 @@ const Layout: ParentComponent = (props) => {
                        w-10 h-10 rounded-full flex items-center justify-center
                        bg-elevated border border-rim
                        shadow hover:shadow-md transition-all"
-                title="Scroll to top"
+                aria-label="Scroll to top"
               >
                 <svg
                   class="w-4 h-4"
@@ -236,6 +276,9 @@ const Layout: ParentComponent = (props) => {
               RIGHT SIDEBAR
           ═══════════════════════════════════════════════════════ */}
           <aside
+            id="right-sidebar"
+            aria-label="Sidebar panel"
+            aria-hidden={!isXl() && !rightOpen()}
             class={`
               fixed inset-y-0 right-0 z-40 w-72 shrink-0 p-4 overflow-y-auto space-y-4
               bg-surface border-l border-rim
@@ -249,7 +292,9 @@ const Layout: ParentComponent = (props) => {
                 Panel
               </span>
               <button
+                ref={rightCloseRef}
                 onClick={() => setRightOpen(false)}
+                aria-label="Close sidebar"
                 class="p-1 rounded-lg hover:bg-elevated transition"
               >
                 <MdFillClose size={18} />
@@ -263,6 +308,7 @@ const Layout: ParentComponent = (props) => {
           {/* Backdrop */}
           <Show when={rightOpen() || moreOpen()}>
             <div
+              aria-hidden="true"
               class="fixed inset-0 z-30 bg-black/25 lg:hidden"
               onClick={closeAll}
             />
@@ -272,6 +318,11 @@ const Layout: ParentComponent = (props) => {
               MOBILE — "More" bottom sheet drawer
           ═══════════════════════════════════════════════════════ */}
           <div
+            id="more-drawer"
+            ref={morePanelRef}
+            role="navigation"
+            aria-label="More"
+            aria-hidden={!moreOpen()}
             class={`
               fixed left-0 right-0 z-40 lg:hidden
               bg-surface border-t border-rim
@@ -303,7 +354,7 @@ const Layout: ParentComponent = (props) => {
                              text-txt text-[0.625rem] font-medium leading-tight text-center
                              hover:brightness-95 transition-all"
                     >
-                      <span class="text-muted">
+                      <span aria-hidden="true" class="text-muted">
                         {getNavIcon(item.icon, 20)}
                       </span>
                       <span class="truncate w-full text-center">
@@ -323,7 +374,7 @@ const Layout: ParentComponent = (props) => {
                 use:motion={{
                   initial: { opacity: 0, y: 14 },
                   animate: { opacity: 1, y: 0 },
-                  transition: { duration: 0.2, easing: [0.25, 0.46, 0.45, 0.94] },
+                  transition: { duration: reducedMotion ? 0 : 0.2, easing: [0.25, 0.46, 0.45, 0.94] },
                 }}
                 class="grid grid-cols-4 gap-1.5 px-2.5 pb-4"
               >
@@ -341,7 +392,7 @@ const Layout: ParentComponent = (props) => {
                              text-txt text-[0.625rem] font-medium leading-tight text-center
                              hover:brightness-95 transition-all"
                     >
-                      <span class="text-muted">
+                      <span aria-hidden="true" class="text-muted">
                         {getNavIcon(item.icon, 20)}
                       </span>
                       <span class="truncate w-full text-center">
@@ -367,6 +418,7 @@ const Layout: ParentComponent = (props) => {
               MOBILE — Bottom Tab Bar
           ═══════════════════════════════════════════════════════ */}
           <nav
+            aria-label="Main navigation"
             class="fixed bottom-0 left-0 right-0 z-50 h-16 lg:hidden
                    bg-surface border-t border-rim
                    flex items-center px-2 gap-1"
@@ -383,12 +435,15 @@ const Layout: ParentComponent = (props) => {
 
             {/* <Show when={moreItems().length > 0}> */}
               <button
+                ref={moreButtonRef}
                 onClick={() => {
                   setMoreOpen((o) => !o);
                   setRightOpen(false);
                 }}
+                aria-expanded={moreOpen()}
+                aria-controls="more-drawer"
                 class={`flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl
-                        text-[0.625rem] font-medium transition-colors min-w-0
+                        text-[0.5625rem] font-medium transition-colors min-w-0
                         ${
                           moreOpen()
                             ? "text-txt bg-elevated"
@@ -401,12 +456,16 @@ const Layout: ParentComponent = (props) => {
             {/* </Show> */}
 
             <button
+              ref={panelButtonRef}
               onClick={() => {
                 setRightOpen((o) => !o);
                 setMoreOpen(false);
               }}
+              aria-expanded={rightOpen()}
+              aria-controls="right-sidebar"
+              aria-label={rightOpen() ? "Close panel" : "Open panel"}
               class={`flex-none px-2 flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl
-                      text-[0.625rem] font-medium transition-colors
+                      text-[0.5625rem] font-medium transition-colors
                       ${
                         rightOpen()
                           ? "text-txt bg-elevated"
@@ -437,6 +496,9 @@ const Layout: ParentComponent = (props) => {
           {/* Right sidebar FAB (lg only — not xl) */}
           <button
             onClick={() => setRightOpen((o) => !o)}
+            aria-expanded={rightOpen()}
+            aria-controls="right-sidebar"
+            aria-label={rightOpen() ? "Close panel" : "Open panel"}
             class="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full shadow-lg
                    bg-elevated border border-rim
                    hidden lg:flex xl:hidden items-center justify-center

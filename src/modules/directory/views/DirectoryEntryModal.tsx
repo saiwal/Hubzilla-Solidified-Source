@@ -1,5 +1,5 @@
 // modules/directory/views/DirectoryEntryModal.tsx
-import { Show, For, type Component } from "solid-js";
+import { Show, For, type Component, createEffect, on } from "solid-js";
 import { Portal } from "solid-js/web";
 import type { DirectoryEntry } from "../people/api";
 
@@ -15,6 +15,11 @@ const DirectoryEntryModal: Component<Props> = (props) => {
     if (ev.target === ev.currentTarget) props.onClose();
   };
 
+  let closeButtonRef: HTMLButtonElement | undefined;
+  createEffect(on(() => !!e(), (visible) => {
+    if (visible) requestAnimationFrame(() => closeButtonRef?.focus());
+  }, { defer: true }));
+
   return (
     <Show when={e()}>
       <Portal>
@@ -22,7 +27,13 @@ const DirectoryEntryModal: Component<Props> = (props) => {
           class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
           onClick={handleBackdrop}
         >
-          <div class="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-2xl bg-surface shadow-2xl overflow-hidden">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={e()!.name}
+            tabindex="-1"
+            class="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-2xl bg-surface shadow-2xl overflow-hidden focus:outline-none"
+          >
 
             {/* ── Header ── */}
             <div class="flex items-start gap-4 p-5 border-b border-rim">
@@ -49,6 +60,7 @@ const DirectoryEntryModal: Component<Props> = (props) => {
                     </p>
                   </div>
                   <button
+                    ref={(el) => (closeButtonRef = el)}
                     onClick={props.onClose}
                     class="shrink-0 p-1.5 rounded-lg text-muted hover:text-txt hover:bg-overlay transition-colors"
                     aria-label="Close"
@@ -63,7 +75,7 @@ const DirectoryEntryModal: Component<Props> = (props) => {
                 <div class="flex flex-wrap gap-1.5 mt-2">
                   <Show when={e()!.public_forum}>
                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-accent-muted text-accent border border-accent/30">
-                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <svg aria-hidden="true" class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
                         <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/>
                       </svg>
@@ -203,7 +215,7 @@ const ICONS: Record<IconKey, string> = {
 
 const DetailRow: Component<{ icon: IconKey; children: any }> = (props) => (
   <div class="flex items-start gap-2.5 text-sm text-txt">
-    <svg class="w-4 h-4 shrink-0 mt-0.5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg aria-hidden="true" class="w-4 h-4 shrink-0 mt-0.5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={ICONS[props.icon]}/>
     </svg>
     <span class="leading-snug">{props.children}</span>

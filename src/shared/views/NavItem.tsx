@@ -1,4 +1,4 @@
-import { A } from "@solidjs/router";
+import { A, useLocation } from "@solidjs/router";
 import type { Component, JSX } from "solid-js";
 import { Show } from "solid-js";
 import { biToNavIcon } from "@/shared/lib/nav-api";
@@ -108,9 +108,17 @@ const NavItem: Component<Props> = (props) => {
   // domain serves its own theme rather than the SPA intercepting the route.
   const isAbsolute = () => /^https?:\/\//.test(href());
 
+  const location = useLocation();
+  const isCurrentPage = () => {
+    if (isAbsolute()) return false;
+    const h = href();
+    if (h === "/") return location.pathname === "/";
+    return location.pathname.startsWith(h.split("/:")[0].split("?")[0]);
+  };
+
   const content = () => (
     <>
-      <span class="shrink-0 w-5 h-5 flex items-center justify-center">
+      <span aria-hidden="true" class="shrink-0 w-5 h-5 flex items-center justify-center">
         {getNavIcon(props.icon, 20)}
       </span>
       <span class="truncate leading-none label">{label()}</span>
@@ -121,7 +129,7 @@ const NavItem: Component<Props> = (props) => {
     <Show
       when={isAbsolute()}
       fallback={
-        <A href={href()} end={href() === "/"} class={itemClass} activeClass={activeClass}>
+        <A href={href()} end={href() === "/"} class={itemClass} activeClass={activeClass} aria-current={isCurrentPage() ? "page" : undefined}>
           {content()}
         </A>
       }
@@ -129,6 +137,7 @@ const NavItem: Component<Props> = (props) => {
       <a
         href={href()}
         class={itemClass}
+        aria-current={isCurrentPage() ? "page" : undefined}
         onClick={(e) => {
           e.preventDefault();
           window.location.replace(href());
