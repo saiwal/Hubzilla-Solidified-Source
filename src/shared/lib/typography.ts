@@ -1,4 +1,4 @@
-export type FontSize = "small" | "medium" | "large";
+export type FontSize = "small" | "medium" | "large" | "xl";
 export type FontFamily =
   | "system"
   | "serif"
@@ -16,6 +16,7 @@ const FONT_SIZES: Record<FontSize, string> = {
   small: "14px",
   medium: "16px",
   large: "18px",
+  xl: "21px",
 };
 
 const FONT_FAMILIES: Record<FontFamily, string> = {

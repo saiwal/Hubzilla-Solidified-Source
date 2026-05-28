@@ -7,7 +7,7 @@ export interface DisplaySettings {
   update_interval: number;   // seconds (PHP divides ms by 1000)
   itemspage: number;
   start_menu: number;        // 0 | 1
-  font_size: "small" | "medium" | "large";
+  font_size: "small" | "medium" | "large" | "xl";
   font_family: "system" | "serif" | "monospace" | "nunito" | "playfair" | "comfortaa" | "space-mono" | "pacifico" | "righteous" | "comic" | "opendyslexic";
   bg_url: string;
   bg_fit: "tile" | "cover";

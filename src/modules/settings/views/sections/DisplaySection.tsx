@@ -181,21 +181,26 @@ export default function DisplaySection() {
           {/* Typography */}
           <Field label="Font size">
             <div class="flex gap-3">
-              <For each={["small", "medium", "large"] as const}>
+              <For each={[
+                { value: "small", label: "Small" },
+                { value: "medium", label: "Medium" },
+                { value: "large", label: "Large" },
+                { value: "xl", label: "Extra large" },
+              ] as const}>
                 {(size) => (
                   <label class="flex items-center gap-1.5 cursor-pointer">
                     <input
                       type="radio"
                       name="font_size"
-                      value={size}
-                      checked={previewSize() === size}
+                      value={size.value}
+                      checked={previewSize() === size.value}
                       onChange={() => {
-                        setPreviewSize(size);
-                        applyTypography(size, previewFamily());
+                        setPreviewSize(size.value);
+                        applyTypography(size.value, previewFamily());
                       }}
                       class="accent-accent cursor-pointer"
                     />
-                    <span class="text-sm text-txt capitalize">{size}</span>
+                    <span class="text-sm text-txt">{size.label}</span>
                   </label>
                 )}
               </For>
