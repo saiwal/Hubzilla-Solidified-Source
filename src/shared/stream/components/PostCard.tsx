@@ -51,6 +51,14 @@ function hasNestedComments(nodes: ThreadNode[]): boolean {
   return nodes.some(n => n.children.length > 0);
 }
 
+function subtreeContainsUuid(nodes: ThreadNode[], uuid: string): boolean {
+  for (const node of nodes) {
+    if (node.uuid === uuid) return true;
+    if (subtreeContainsUuid(node.children, uuid)) return true;
+  }
+  return false;
+}
+
 // Persists across remounts caused by setNodeChildren updating the post reference.
 const openedByMid = new Set<string>();
 
@@ -59,10 +67,16 @@ export default function PostCard(props: {
   handlers: StreamHandlers;
   onSeen?: (uuid: string) => void;
   compact?: boolean;
+  highlighted?: boolean;
+  highlightUuid?: string;
 }) {
   const threadMode = useThreadMode();
   const [replyOpen, setReplyOpen] = createSignal(false);
-  const [showComments, setShowComments] = createSignal(openedByMid.has(props.post.mid));
+  const [showComments, setShowComments] = createSignal(
+    openedByMid.has(props.post.mid) ||
+    (!props.compact && !!props.highlightUuid) ||
+    (!!props.compact && !!props.highlightUuid && subtreeContainsUuid(props.post.children, props.highlightUuid))
+  );
   const [threaded, setThreaded] = createSignal(threadMode());
   const [commentsLoaded, setCommentsLoaded] = createSignal(props.post.children.length > 0);
   const [commentsLoading, setCommentsLoading] = createSignal(false);
@@ -127,6 +141,12 @@ export default function PostCard(props: {
   }
 
   onMount(() => {
+    if (props.highlighted && props.compact) {
+      requestAnimationFrame(() => {
+        cardRef?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    }
+
     const uuid = props.post.uuid;
     if (!uuid) return;
     const observer = new IntersectionObserver(
@@ -193,7 +213,11 @@ export default function PostCard(props: {
   // ── Compact (comment) layout ──────────────────────────────────────────────
   if (props.compact) {
     return (
-      <div ref={cardRef} class="rounded-tl-lg rounded-bl-lg pl-3 py-2.5 mb-1 border border-rim">
+      <div
+        ref={cardRef}
+        class={`rounded-tl-lg rounded-bl-lg pl-3 py-2.5 mb-1 border transition-colors duration-500
+               ${props.highlighted ? "border-accent bg-accent/5 ring-1 ring-accent/30" : "border-rim"}`}
+      >
         {/* Single-line author header */}
         <div class="flex items-center gap-2 min-w-0">
           <Show when={isUnseen()}>
@@ -408,6 +432,7 @@ export default function PostCard(props: {
           comments={visibleComments()}
           show={showComments() && !commentsLoading()}
           handlers={props.handlers}
+          highlightUuid={props.highlightUuid}
         />
       </div>
     );
@@ -692,6 +717,7 @@ export default function PostCard(props: {
         comments={visibleComments()}
         show={showComments() && !commentsLoading()}
         handlers={props.handlers}
+        highlightUuid={props.highlightUuid}
       />
     </div>
   );

@@ -8,6 +8,7 @@ export default function CommentThread(props: {
   show: boolean;
   handlers: StreamHandlers;
   threaded?: boolean;
+  highlightUuid?: string;
 }) {
   return (
     <div
@@ -25,7 +26,8 @@ export default function CommentThread(props: {
                 post={comment}
                 handlers={props.handlers}
                 compact
-                // ❌ removed threaded
+                highlighted={!!props.highlightUuid && comment.uuid === props.highlightUuid}
+                highlightUuid={props.highlightUuid}
               />
             )}
           </For>

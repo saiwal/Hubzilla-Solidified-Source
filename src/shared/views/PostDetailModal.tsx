@@ -1,105 +1,21 @@
 // src/shared/views/PostDetailModal.tsx
-import { type Component, createResource, Show, onMount } from "solid-js";
+import { type Component, createMemo, createResource, createSignal, Show, onMount } from "solid-js";
 import { Portal } from "solid-js/web";
 import PostCard from "../stream/components/PostCard";
 import type { StreamHandlers } from "../stream/types";
-import { bbcodeToHtml } from "../lib/bbcode";
-import { sanitizeHtml } from "../lib/sanitize";
 import type { ThreadNode } from "../lib/thread";
 import { buildThreadTree } from "../lib/thread";
 import type { Post } from "../types/post.types";
+import { mapActivityToPost } from "../lib/activity.mapper";
 import { BiRegularX } from "solid-icons/bi";
-
-interface DisplayResponse {
-  post: RawItem;
-  comments: RawItem[];
-}
-
-interface RawItem {
-  uuid: string;
-  mid: string;
-  parent_mid: string;
-  thr_parent: string;
-  message_top: string;
-  created: string;
-  edited?: string;
-  commented?: string;
-  title: string;
-  body: string;
-  verb?: string;
-  obj_type?: string;
-  like_count: number;
-  dislike_count: number;
-  announce_count: number;
-  comment_count: number;
-  item_private: number;
-  item_thread_top: number;
-  iid: number;
-  profile_uid: number;
-  flags: string[];
-  author: {
-    name: string;
-    address: string;
-    url: string;
-    photo: { src: string; mimetype: string };
-  };
-  permalink: string;
-  viewer_liked: boolean;
-  viewer_disliked: boolean;
-  viewer_repeated: boolean;
-  viewer_following?: boolean;
-  item_starred?: boolean;
-  item_origin?: number;
-  attach?: { href: string; length: string; type: string; title: string; revision: string }[];
-}
-
-function rawToPost(r: RawItem): Post {
-  return {
-    uuid: r.uuid,
-    id: r.uuid,
-    iid: r.iid,
-    profileUid: r.profile_uid,
-    mid: r.mid,
-    parent_mid: r.parent_mid,
-    thr_parent: r.thr_parent,
-    top_mid: r.message_top,
-    parent: r.parent_mid,
-    body: sanitizeHtml(bbcodeToHtml(r.body)),
-    title: r.title,
-    authorName: r.author.name,
-    authorAvatar: r.author.photo.src,
-    authorUrl: r.author.url,
-    authorAddress: r.author.address,
-    created: r.created,
-    commented: r.commented,
-    edited: r.edited,
-    verb: r.verb,
-    obj_type: r.obj_type,
-    item_thread_top: r.item_thread_top,
-    flags: r.flags,
-    permalink: r.permalink,
-    children: [],
-    likeCount: r.like_count,
-    dislikeCount: r.dislike_count,
-    repeatCount: r.announce_count,
-    viewerLiked: r.viewer_liked,
-    viewerDisliked: r.viewer_disliked,
-    viewerRepeated: r.viewer_repeated,
-    viewerFollowing: r.viewer_following ?? false,
-    viewerStarred: (r.flags ?? []).includes('starred'),
-    item_origin: r.item_origin ?? 0,
-    attachments: Array.isArray(r.attach) ? r.attach : [],
-  };
-}
 
 async function fetchDisplay(uuid: string): Promise<ThreadNode> {
   const res = await fetch(`/api/display/${uuid}`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json = await res.json();
-  // unwrap envelope if present
-  const data: DisplayResponse = json.data ?? json;
-  if ((data as any).error) throw new Error((data as any).error);
-  const all: Post[] = [data.post, ...data.comments].map(rawToPost);
+  const data = json.data ?? json;
+  if (data.error) throw new Error(data.error);
+  const all: Post[] = [data.post, ...data.comments].map(mapActivityToPost);
   const tree = buildThreadTree(all);
   return tree[0];
 }
@@ -111,9 +27,39 @@ interface PostDetailModalProps {
 
 const PostDetailModal: Component<PostDetailModalProps> = (props) => {
   const [node, { refetch }] = createResource(() => props.uuid, fetchDisplay);
+  const [nestedUuid, setNestedUuid] = createSignal<string | null>(null);
 
   let dialogRef!: HTMLDivElement;
   onMount(() => dialogRef?.focus());
+
+  // If the UUID we were given belongs to a comment (not the root post), highlight it
+  const highlightUuid = createMemo(() => {
+    const n = node();
+    if (!n) return undefined;
+    return props.uuid !== n.uuid ? props.uuid : undefined;
+  });
+
+  function handleBodyClick(e: MouseEvent) {
+    const anchor = (e.target as HTMLElement).closest("a");
+    if (!anchor) return;
+    const href = anchor.getAttribute("href");
+    if (!href) return;
+    try {
+      let path: string;
+      if (href.startsWith("http")) {
+        const url = new URL(href);
+        if (url.hostname !== window.location.hostname) return;
+        path = url.pathname;
+      } else {
+        path = href;
+      }
+      const m = path.match(/\/display\/([^/?#]+)/);
+      if (m) {
+        e.preventDefault();
+        setNestedUuid(m[1]);
+      }
+    } catch { /* ignore */ }
+  }
 
   // Wrap handlers to trigger a refetch after each mutation so counts update
   const wrappedHandlers: StreamHandlers | undefined = props.handlers
@@ -153,6 +99,13 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
 
   return (
     <Portal>
+      <Show when={nestedUuid()}>
+        <PostDetailModal
+          uuid={nestedUuid()!}
+          onClose={() => setNestedUuid(null)}
+          handlers={props.handlers}
+        />
+      </Show>
       <div
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay/80 backdrop-blur-sm"
         onClick={(e) => {
@@ -184,7 +137,11 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
           </div>
 
           {/* Scrollable body */}
-          <div class="flex-1 overflow-y-auto p-4" style={{ "-webkit-overflow-scrolling": "touch" }} onClick={(e) => e.stopPropagation()}>
+          <div
+            class="flex-1 overflow-y-auto p-4"
+            style={{ "-webkit-overflow-scrolling": "touch" }}
+            onClick={(e) => { e.stopPropagation(); handleBodyClick(e); }}
+          >
             <Show when={node.loading && !node()}>
               <div class="space-y-4 animate-pulse">
                 <div class="bg-surface rounded-2xl p-5">
@@ -216,6 +173,7 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
               {(n) => (
                 <PostCard
                   post={n()}
+                  highlightUuid={highlightUuid()}
                   handlers={
                     wrappedHandlers ?? {
                       onLike: () => {},
