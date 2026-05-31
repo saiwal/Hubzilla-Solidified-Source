@@ -702,7 +702,7 @@ export function bbcode(text: string, options: BbcodeOptions = {}): string {
   let shareLoop = 0;
   while (text.includes("[/share]") && shareLoop < 10) {
     text = text.replace(
-      /\[share(.*?)\]([\s\S]*?)\[\/share\]/gi,
+      /\[share([\s\S]*?)\]([\s\S]*?)\[\/share\]/gi,
       (_m, attrs, content) => bbShareAttributes(attrs, content, options)
     );
     shareLoop++;

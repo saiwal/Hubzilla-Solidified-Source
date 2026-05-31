@@ -167,17 +167,24 @@ export function createStreamStore<P extends StreamParams>(
     field: "likeCount" | "dislikeCount" | "repeatCount",
     apiFn: () => Promise<void>,
   ) {
+    const viewerFieldMap = {
+      like: "viewerLiked",
+      dislike: "viewerDisliked",
+      announce: "viewerRepeated",
+    } as const;
+    const viewerField = viewerFieldMap[verbKey];
+
     const key = `${mid}:${verbKey}`;
     const isUndo = activated.has(key);
     isUndo ? activated.delete(key) : activated.add(key);
     const delta = isUndo ? -1 : 1;
     setPosts((prev) =>
-      updateNode(prev, mid, (n) => ({ ...n, [field]: n[field] + delta })),
+      updateNode(prev, mid, (n) => ({ ...n, [field]: n[field] + delta, [viewerField]: !n[viewerField] })),
     );
     apiFn().catch(() => {
       isUndo ? activated.add(key) : activated.delete(key);
       setPosts((prev) =>
-        updateNode(prev, mid, (n) => ({ ...n, [field]: n[field] - delta })),
+        updateNode(prev, mid, (n) => ({ ...n, [field]: n[field] - delta, [viewerField]: !n[viewerField] })),
       );
     });
   }

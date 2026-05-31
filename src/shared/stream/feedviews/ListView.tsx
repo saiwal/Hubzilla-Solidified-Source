@@ -37,7 +37,7 @@ function VoteGutter(props: {
         class="flex items-center justify-center w-6 h-5 rounded transition-colors"
         classList={{
           "text-accent": p.viewerLiked,
-          "text-muted hover:text-accent": !p.viewerLiked,
+          "text-subtle hover:text-accent": !p.viewerLiked,
         }}
       >
         <svg
@@ -71,7 +71,7 @@ function VoteGutter(props: {
         class="flex items-center justify-center w-6 h-5 rounded transition-colors"
         classList={{
           "text-accent": p.viewerDisliked,
-          "text-muted hover:text-muted/60": !p.viewerDisliked,
+          "text-subtle hover:text-subtle/60": !p.viewerDisliked,
         }}
       >
         <svg

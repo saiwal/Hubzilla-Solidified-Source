@@ -104,12 +104,12 @@ export function createActionHandlers(store: StreamStore) {
 
     handleStar(mid: string) {
       const node = findNode(store.posts(), mid);
-      if (!node) return;
+      if (!node?.iid) return;
       const newStarred = !(node.viewerStarred ?? false);
       store.setPosts((prev) =>
         updateNode(prev, mid, (n) => ({ ...n, viewerStarred: newStarred })),
       );
-      apiToggleStar(node.uuid).catch(() => {
+      apiToggleStar(node.iid).catch(() => {
         store.setPosts((prev) =>
           updateNode(prev, mid, (n) => ({ ...n, viewerStarred: !newStarred })),
         );

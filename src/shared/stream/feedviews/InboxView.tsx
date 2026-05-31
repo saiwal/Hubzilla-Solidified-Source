@@ -44,8 +44,8 @@ function VoteButton(props: {
       class="flex items-center justify-center w-6 h-5 rounded transition-colors"
       classList={{
         "text-accent": props.active,
-        "text-muted hover:text-accent": !props.active && props.direction === "up",
-        "text-muted hover:text-muted/60": !props.active && props.direction === "down",
+        "text-subtle hover:text-accent": !props.active && props.direction === "up",
+        "text-subtle hover:text-subtle/60": !props.active && props.direction === "down",
       }}
     >
       <svg
@@ -111,7 +111,7 @@ function MessageRow(props: {
           class="mt-1 flex items-center gap-1 text-[10px] transition-colors"
           classList={{
             "text-accent": props.msg.viewerLiked,
-            "text-muted hover:text-accent": !props.msg.viewerLiked,
+            "text-subtle hover:text-accent": !props.msg.viewerLiked,
           }}
         >
           <svg class="w-3 h-3" fill={props.msg.viewerLiked ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
@@ -159,7 +159,7 @@ function InlineThread(props: {
       class="border-t border-rim bg-base"
       onClick={(e) => e.stopPropagation()}
     >
-      <div class="max-h-72 overflow-y-auto divide-y divide-rim">
+      <div class="max-h-[60vh] overflow-y-auto divide-y divide-rim">
         <Show
           when={threadMode()}
           fallback={

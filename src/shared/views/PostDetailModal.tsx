@@ -19,6 +19,35 @@ async function fetchDisplay(uuid: string): Promise<ThreadNode> {
   const tree = buildThreadTree(all);
   return tree[0];
 }
+
+type ReactionOverride = {
+  viewerLiked?: boolean;
+  viewerDisliked?: boolean;
+  viewerRepeated?: boolean;
+  viewerStarred?: boolean;
+  likeCount?: number;
+  dislikeCount?: number;
+  repeatCount?: number;
+};
+
+function findInTree(n: ThreadNode | undefined, mid: string): ThreadNode | undefined {
+  if (!n) return undefined;
+  if (n.mid === mid) return n;
+  for (const child of n.children) {
+    const found = findInTree(child, mid);
+    if (found) return found;
+  }
+  return undefined;
+}
+
+function applyOverrides(n: ThreadNode, overrides: Record<string, ReactionOverride>): ThreadNode {
+  const o = overrides[n.mid];
+  return {
+    ...(o ? { ...n, ...o } : n),
+    children: n.children.map(c => applyOverrides(c, overrides)),
+  };
+}
+
 interface PostDetailModalProps {
   uuid: string;
   onClose: () => void;
@@ -28,16 +57,42 @@ interface PostDetailModalProps {
 const PostDetailModal: Component<PostDetailModalProps> = (props) => {
   const [node, { refetch }] = createResource(() => props.uuid, fetchDisplay);
   const [nestedUuid, setNestedUuid] = createSignal<string | null>(null);
+  const [localReactions, setLocalReactions] = createSignal<Record<string, ReactionOverride>>({});
 
   let dialogRef!: HTMLDivElement;
   onMount(() => dialogRef?.focus());
 
-  // If the UUID we were given belongs to a comment (not the root post), highlight it
   const highlightUuid = createMemo(() => {
     const n = node();
     if (!n) return undefined;
     return props.uuid !== n.uuid ? props.uuid : undefined;
   });
+
+  const displayNode = createMemo((): ThreadNode | undefined => {
+    const n = node();
+    return n ? applyOverrides(n, localReactions()) : undefined;
+  });
+
+  function toggleReaction(
+    mid: string,
+    viewerField: keyof Pick<ReactionOverride, "viewerLiked" | "viewerDisliked" | "viewerRepeated">,
+    countField: keyof Pick<ReactionOverride, "likeCount" | "dislikeCount" | "repeatCount">,
+  ) {
+    setLocalReactions(prev => {
+      const o = prev[mid] ?? {};
+      const treeNode = findInTree(node(), mid);
+      const currentActive = o[viewerField] ?? treeNode?.[viewerField] ?? false;
+      const currentCount = o[countField] ?? treeNode?.[countField] ?? 0;
+      return {
+        ...prev,
+        [mid]: {
+          ...o,
+          [viewerField]: !currentActive,
+          [countField]: currentActive ? currentCount - 1 : currentCount + 1,
+        },
+      };
+    });
+  }
 
   function handleBodyClick(e: MouseEvent) {
     const anchor = (e.target as HTMLElement).closest("a");
@@ -61,34 +116,43 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
     } catch { /* ignore */ }
   }
 
-  // Wrap handlers to trigger a refetch after each mutation so counts update
   const wrappedHandlers: StreamHandlers | undefined = props.handlers
     ? {
         onLike: (mid: string) => {
           props.handlers!.onLike(mid);
-          refetch();
+          toggleReaction(mid, "viewerLiked", "likeCount");
         },
         onDislike: (mid: string) => {
           props.handlers!.onDislike(mid);
-          refetch();
+          toggleReaction(mid, "viewerDisliked", "dislikeCount");
         },
         onRepeat: (mid: string) => {
+          const o = localReactions()[mid];
+          const treeNode = findInTree(node(), mid);
+          const alreadyRepeated = o?.viewerRepeated ?? treeNode?.viewerRepeated ?? false;
+          if (alreadyRepeated) return;
           props.handlers!.onRepeat(mid);
-          refetch();
+          setLocalReactions(prev => {
+            const existing = prev[mid] ?? {};
+            const currentCount = existing.repeatCount ?? treeNode?.repeatCount ?? 0;
+            return { ...prev, [mid]: { ...existing, viewerRepeated: true, repeatCount: currentCount + 1 } };
+          });
         },
-        onComment: (
-          parentMid: string,
-          body: string,
-          authorName: string,
-          authorAvatar: string,
-        ) => {
+        onComment: (parentMid, body, authorName, authorAvatar) => {
           props.handlers!.onComment(parentMid, body, authorName, authorAvatar);
           refetch();
         },
-        onLoadComments: (mid: string, uuid: string) =>
-          props.handlers!.onLoadComments(mid, uuid),
+        onLoadComments: (mid, uuid) => props.handlers!.onLoadComments(mid, uuid),
         onStar: props.handlers!.onStar
-          ? (mid: string) => props.handlers!.onStar!(mid)
+          ? (mid: string) => {
+              props.handlers!.onStar!(mid);
+              setLocalReactions(prev => {
+                const o = prev[mid] ?? {};
+                const treeNode = findInTree(node(), mid);
+                const current = o.viewerStarred ?? treeNode?.viewerStarred ?? false;
+                return { ...prev, [mid]: { ...o, viewerStarred: !current } };
+              });
+            }
           : undefined,
         onDelete: props.handlers!.onDelete
           ? async (mid: string) => { await props.handlers!.onDelete!(mid); props.onClose(); }
@@ -169,7 +233,7 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
               </div>
             </Show>
 
-            <Show when={node()}>
+            <Show when={displayNode()}>
               {(n) => (
                 <PostCard
                   post={n()}

@@ -70,8 +70,11 @@ export const apiToggleDislike = (uuid: string) =>
 export const apiToggleRepeat  = (uuid: string) =>
   post<ReactionResult>(`${BASE}/${encodeId(uuid)}/repeat`);
 
-export const apiToggleStar    = (uuid: string) =>
-  post<{ success: boolean; starred: boolean }>(`${BASE}/${encodeId(uuid)}/star`);
+export const apiToggleStar = (iid: number): Promise<void> =>
+  fetch(`/starred/${iid}`, {
+    credentials: 'include',
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+  }).then(() => undefined);
 
 export const apiRsvpAttend  = (uuid: string) =>
   post<RsvpResult>(`${BASE}/${encodeId(uuid)}/accept`);

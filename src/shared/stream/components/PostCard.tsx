@@ -1,5 +1,6 @@
 // src/shared/stream/components/PostCard.tsx
-import { createSignal, onMount, onCleanup, Show } from "solid-js";
+import { createSignal, createEffect, onMount, onCleanup, Show, For } from "solid-js";
+import { Portal } from "solid-js/web";
 import { useThreadMode } from "@/shared/store/thread-mode";
 import AuthorPopover from "./AuthorPopover";
 import type { ThreadNode } from "@/shared/lib/thread";
@@ -16,6 +17,9 @@ import {
   MdFillShare,
   MdFillFormat_list_bulleted,
   MdFillAccount_tree,
+  MdFillThumb_down,
+  MdFillThumb_up,
+  MdOutlineShare,
   MdOutlineThumb_down,
   MdOutlineThumb_up,
   MdFillStar,
@@ -24,10 +28,12 @@ import {
   MdOutlineRefresh,
   MdFillNotifications,
   MdOutlineNotifications_none,
+  MdOutlineCode,
 } from "solid-icons/md";
 import { useI18n } from "@/i18n";
-import { BiRegularLinkExternal } from "solid-icons/bi";
+import { BiRegularLinkExternal, BiSolidShareAlt } from "solid-icons/bi";
 import CommentComposer from "@/shared/editor/composers/CommentComposer";
+import ReshareComposer from "@/shared/editor/composers/ReshareComposer";
 import DOMPurify from "dompurify";
 import { useAuth } from "@/shared/store/auth-store";
 import { apiFollowPost, apiUnfollowPost } from "@/shared/lib/item-api";
@@ -69,9 +75,11 @@ export default function PostCard(props: {
   compact?: boolean;
   highlighted?: boolean;
   highlightUuid?: string;
+  postAuthorAddress?: string;
 }) {
   const threadMode = useThreadMode();
   const [replyOpen, setReplyOpen] = createSignal(false);
+  const [reshareOpen, setReshareOpen] = createSignal(false);
   const [showComments, setShowComments] = createSignal(
     openedByMid.has(props.post.mid) ||
     (!props.compact && !!props.highlightUuid) ||
@@ -84,6 +92,20 @@ export default function PostCard(props: {
   const [refreshing, setRefreshing] = createSignal(false);
   const [following, setFollowing] = createSignal(props.post.viewerFollowing ?? false);
   const [followPending, setFollowPending] = createSignal(false);
+  const [repeatDropdownOpen, setRepeatDropdownOpen] = createSignal(false);
+  const [dropdownAnchor, setDropdownAnchor] = createSignal<{ top: number; left: number } | null>(null);
+  const [showStats, setShowStats] = createSignal(false);
+  const [statsLoading, setStatsLoading] = createSignal(false);
+  const [statsData, setStatsData] = createSignal<{
+    likes: StatActor[];
+    dislikes: StatActor[];
+    repeats: StatActor[];
+  } | null>(null);
+  const [showSource, setShowSource] = createSignal(false);
+  const [sourceLoading, setSourceLoading] = createSignal(false);
+  const [sourceData, setSourceData] = createSignal<unknown>(null);
+  let repeatDropdownRef!: HTMLDivElement;
+  let repeatDropdownPortalRef!: HTMLDivElement;
   let deleteTimer: ReturnType<typeof setTimeout> | null = null;
   const { locale } = useI18n();
   const auth = useAuth();
@@ -109,6 +131,11 @@ export default function PostCard(props: {
 
   // Follow: available to local users when the post has a local iid
   const canFollow = () => auth()?.isLocal === true && !!props.post.iid;
+
+  // Reshare: only local users can reshare posts that have a local iid
+  const canReshare = () => auth()?.isLocal === true && !!props.post.iid;
+
+  const canViewSource = () => auth()?.isLocal === true && !!props.post.iid;
 
   // Delete: viewer must be a local user and the post's author address must
   // match their own channel address (nick@hostname)
@@ -167,6 +194,26 @@ export default function PostCard(props: {
     if (deleteTimer) clearTimeout(deleteTimer);
   });
 
+  createEffect(() => {
+    if (!repeatDropdownOpen()) return;
+    const handler = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (!repeatDropdownRef?.contains(t) && !repeatDropdownPortalRef?.contains(t))
+        setRepeatDropdownOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    onCleanup(() => document.removeEventListener("mousedown", handler));
+  });
+
+  function openRepeatDropdown(e: MouseEvent) {
+    e.stopPropagation();
+    if (!repeatDropdownOpen()) {
+      const rect = repeatDropdownRef.getBoundingClientRect();
+      setDropdownAnchor({ top: rect.bottom + 4, left: rect.left });
+    }
+    setRepeatDropdownOpen(v => !v);
+  }
+
   function onLike() { props.handlers.onLike(props.post.mid); }
   function onDislike() { props.handlers.onDislike(props.post.mid); }
   function onRepeat() { props.handlers.onRepeat(props.post.mid); }
@@ -193,6 +240,55 @@ export default function PostCard(props: {
       setFollowing(!next);
     } finally {
       setFollowPending(false);
+    }
+  }
+
+  async function toggleStats() {
+    if (showStats()) { setShowStats(false); return; }
+    setShowStats(true);
+    if (statsData()) return;
+    setStatsLoading(true);
+    try {
+      const mid = encodeURIComponent(props.post.mid);
+      const parent = props.post.iid;
+      const base = `/request?mid=${mid}${parent != null ? `&parent=${parent}` : ""}`;
+      const [likesRes, dislikesRes, repeatsRes] = await Promise.all([
+        fetch(`${base}&verb=like`, { credentials: "include" }),
+        fetch(`${base}&verb=dislike`, { credentials: "include" }),
+        fetch(`${base}&verb=announce`, { credentials: "include" }),
+      ]);
+      const parse = async (res: Response): Promise<StatActor[]> => {
+        if (!res.ok) return [];
+        const data = await res.json();
+        const arr = Array.isArray(data) ? data : (data?.result ?? []);
+        return arr.map((a: any) => ({
+          name: a.name ?? "Unknown",
+          avatar: a.photo ?? undefined,
+          url: a.url ?? undefined,
+        }));
+      };
+      const [likes, dislikes, repeats] = await Promise.all([
+        parse(likesRes), parse(dislikesRes), parse(repeatsRes),
+      ]);
+      setStatsData({ likes, dislikes, repeats });
+    } finally {
+      setStatsLoading(false);
+    }
+  }
+
+  async function toggleSource() {
+    if (showSource()) { setShowSource(false); return; }
+    setShowSource(true);
+    if (sourceData()) return;
+    setSourceLoading(true);
+    try {
+      const res = await fetch(`/api/item-source/${props.post.iid}`, { credentials: "include" });
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      setSourceData(await res.json());
+    } catch (e) {
+      setSourceData({ error: String(e) });
+    } finally {
+      setSourceLoading(false);
     }
   }
 
@@ -246,6 +342,9 @@ export default function PostCard(props: {
               />
             </Show>
           </AuthorPopover>
+          <Show when={props.postAuthorAddress && props.post.authorAddress === props.postAuthorAddress}>
+            <span class="shrink-0 px-1 py-px rounded text-[10px] font-bold leading-none bg-accent text-accent-fg" title="Original poster">OP</span>
+          </Show>
           <a href={props.post.authorUrl} class="font-medium text-sm text-txt hover:underline truncate">
             {props.post.authorName}
           </a>
@@ -303,26 +402,53 @@ export default function PostCard(props: {
         {/* Compact action bar */}
         <div class="mt-2 flex items-center gap-0.5 flex-wrap">
           <CompactActionBtn
-            icon={<MdOutlineThumb_up size={14} />}
+            icon={props.post.viewerLiked ? <MdFillThumb_up size={14} /> : <MdOutlineThumb_up size={14} />}
             count={props.post.likeCount}
             label="Like"
             onClick={onLike}
             active={props.post.viewerLiked}
           />
           <CompactActionBtn
-            icon={<MdOutlineThumb_down size={14} />}
+            icon={props.post.viewerDisliked ? <MdFillThumb_down size={14} /> : <MdOutlineThumb_down size={14} />}
             count={props.post.dislikeCount}
             label="Dislike"
             onClick={onDislike}
             active={props.post.viewerDisliked}
           />
-          <CompactActionBtn
-            icon={<MdFillShare size={14} />}
-            count={props.post.repeatCount}
-            label="Repeat"
-            onClick={onRepeat}
-            active={props.post.viewerRepeated}
-          />
+          <Show
+            when={canReshare()}
+            fallback={
+              <CompactActionBtn
+                icon={props.post.viewerRepeated ? <MdFillShare size={14} /> : <MdOutlineShare size={14} />}
+                count={props.post.repeatCount}
+                label="Repeat"
+                onClick={onRepeat}
+                active={props.post.viewerRepeated}
+              />
+            }
+          >
+            <div ref={repeatDropdownRef} class="relative flex items-center">
+              <button
+                onClick={onRepeat}
+                title="Repeat"
+                class={`flex items-center gap-1 pl-2 pr-1 py-1 rounded-l-md text-xs
+                       transition-colors select-none hover:bg-overlay
+                       ${props.post.viewerRepeated ? "text-accent" : "text-subtle"}`}
+              >
+                {props.post.viewerRepeated ? <MdFillShare size={14} /> : <MdOutlineShare size={14} />}
+                <span>{props.post.repeatCount}</span>
+              </button>
+              <button
+                onClick={openRepeatDropdown}
+                title="More sharing options"
+                class={`flex items-center px-0.5 py-1 rounded-r-md text-xs border-l border-rim/50
+                       transition-colors select-none hover:bg-overlay
+                       ${repeatDropdownOpen() ? "text-accent" : "text-subtle hover:text-txt"}`}
+              >
+                <MdFillKeyboard_arrow_down size={12} />
+              </button>
+            </div>
+          </Show>
 
           <Show when={canStar()}>
             <button
@@ -350,6 +476,36 @@ export default function PostCard(props: {
               <Show when={following()} fallback={<MdOutlineNotifications_none size={14} />}>
                 <MdFillNotifications size={14} />
               </Show>
+            </button>
+          </Show>
+
+          <Show
+            when={
+              props.post.likeCount > 0 ||
+              props.post.dislikeCount > 0 ||
+              props.post.repeatCount > 0
+            }
+          >
+            <button
+              onClick={toggleStats}
+              class={`flex items-center gap-1 px-2 py-1 rounded-md text-xs
+                     transition-colors hover:bg-overlay
+                     ${showStats() ? "text-accent" : "text-subtle hover:text-txt"}`}
+              title="Post Statistics"
+            >
+              <MdFillBar_chart size={14} />
+            </button>
+          </Show>
+
+          <Show when={canViewSource()}>
+            <button
+              onClick={toggleSource}
+              class={`flex items-center gap-1 px-2 py-1 rounded-md text-xs
+                     transition-colors hover:bg-overlay
+                     ${showSource() ? "text-accent" : "text-subtle hover:text-txt"}`}
+              title="View source"
+            >
+              <MdOutlineCode size={14} />
             </button>
           </Show>
 
@@ -425,6 +581,19 @@ export default function PostCard(props: {
             }}
           />
         </Show>
+        <Show when={reshareOpen() && props.post.uuid}>
+          <ReshareComposer
+            postUuid={props.post.uuid}
+            onSubmitted={() => setReshareOpen(false)}
+            onCancel={() => setReshareOpen(false)}
+          />
+        </Show>
+        <Show when={showStats()}>
+          <PostStats loading={statsLoading()} data={statsData()} />
+        </Show>
+        <Show when={showSource()}>
+          <PostSource loading={sourceLoading()} data={sourceData()} />
+        </Show>
         <Show when={commentsLoading()}>
           <div class="mt-2 ml-2 text-xs text-muted animate-pulse">Loading comments…</div>
         </Show>
@@ -433,6 +602,7 @@ export default function PostCard(props: {
           show={showComments() && !commentsLoading()}
           handlers={props.handlers}
           highlightUuid={props.highlightUuid}
+          postAuthorAddress={props.postAuthorAddress ?? props.post.authorAddress}
         />
       </div>
     );
@@ -549,7 +719,7 @@ export default function PostCard(props: {
       {/* Action bar */}
       <div class="mt-4 pt-3 border-t border-rim flex items-center gap-1 flex-wrap">
         <ActionBtn
-          icon={<MdOutlineThumb_up size={17} />}
+          icon={props.post.viewerLiked ? <MdFillThumb_up size={17} /> : <MdOutlineThumb_up size={17} />}
           count={props.post.likeCount}
           label="Like"
           onClick={onLike}
@@ -557,21 +727,48 @@ export default function PostCard(props: {
           activeClass="text-accent"
         />
         <ActionBtn
-          icon={<MdOutlineThumb_down size={17} />}
+          icon={props.post.viewerDisliked ? <MdFillThumb_down size={17} /> : <MdOutlineThumb_down size={17} />}
           count={props.post.dislikeCount}
           label="Dislike"
           onClick={onDislike}
           active={props.post.viewerDisliked}
           activeClass="text-accent"
         />
-        <ActionBtn
-          icon={<MdFillShare size={17} />}
-          count={props.post.repeatCount}
-          label="Repeat"
-          onClick={onRepeat}
-          active={props.post.viewerRepeated}
-          activeClass="text-accent"
-        />
+        <Show
+          when={canReshare()}
+          fallback={
+            <ActionBtn
+              icon={props.post.viewerRepeated ? <MdFillShare size={17} /> : <MdOutlineShare size={17} />}
+              count={props.post.repeatCount}
+              label="Repeat"
+              onClick={onRepeat}
+              active={props.post.viewerRepeated}
+              activeClass="text-accent"
+            />
+          }
+        >
+          <div ref={repeatDropdownRef} class="relative flex items-center">
+            <button
+              onClick={onRepeat}
+              title="Repeat"
+              class={`flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-l-lg text-sm font-medium
+                     transition-colors select-none hover:bg-overlay
+                     ${props.post.viewerRepeated ? "text-accent" : "text-muted"}`}
+            >
+              {props.post.viewerRepeated ? <MdFillShare size={17} /> : <MdOutlineShare size={17} />}
+              <span>{props.post.repeatCount}</span>
+            </button>
+            <button
+              onClick={openRepeatDropdown}
+              title="More sharing options"
+              class={`flex items-center px-1.5 py-1.5 rounded-r-lg text-sm font-medium border-l border-rim/50
+                     transition-colors select-none hover:bg-overlay
+                     ${repeatDropdownOpen() ? "text-accent" : "text-muted hover:text-txt"}`}
+            >
+              <MdFillKeyboard_arrow_down size={14} />
+            </button>
+          </div>
+        </Show>
 
         <Show when={canStar()}>
           <button
@@ -610,11 +807,25 @@ export default function PostCard(props: {
           }
         >
           <button
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
-                   text-muted hover:bg-overlay hover:text-txt transition-colors"
+            onClick={toggleStats}
+            class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                   transition-colors hover:bg-overlay
+                   ${showStats() ? "text-accent" : "text-muted hover:text-txt"}`}
             title="Post Statistics"
           >
             <MdFillBar_chart size={17} />
+          </button>
+        </Show>
+
+        <Show when={canViewSource()}>
+          <button
+            onClick={toggleSource}
+            class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                   transition-colors hover:bg-overlay
+                   ${showSource() ? "text-accent" : "text-muted hover:text-txt"}`}
+            title="View source"
+          >
+            <MdOutlineCode size={17} />
           </button>
         </Show>
 
@@ -695,6 +906,31 @@ export default function PostCard(props: {
         </Show>
       </div>
 
+      <Portal>
+        <Show when={repeatDropdownOpen() && dropdownAnchor()}>
+          <div
+            ref={repeatDropdownPortalRef}
+            class="fixed z-[9999] min-w-[11rem] bg-surface border border-rim rounded-lg shadow-lg py-1"
+            style={{ top: `${dropdownAnchor()!.top}px`, left: `${dropdownAnchor()!.left}px` }}
+          >
+            <button
+              onClick={() => { setRepeatDropdownOpen(false); setReshareOpen(true); }}
+              class="w-full flex items-center gap-2 px-3 py-2 text-sm text-txt hover:bg-overlay transition-colors text-left"
+            >
+              <BiSolidShareAlt size={15} />
+              <span>Reshare with comment</span>
+            </button>
+          </div>
+        </Show>
+      </Portal>
+
+      <Show when={showStats()}>
+        <PostStats loading={statsLoading()} data={statsData()} />
+      </Show>
+      <Show when={showSource()}>
+        <PostSource loading={sourceLoading()} data={sourceData()} />
+      </Show>
+
       <Show when={replyOpen() && props.post.iid && props.post.profileUid}>
         <CommentComposer
           parentMid={props.post.mid}
@@ -710,6 +946,13 @@ export default function PostCard(props: {
           }}
         />
       </Show>
+      <Show when={reshareOpen() && props.post.uuid}>
+        <ReshareComposer
+          postUuid={props.post.uuid}
+          onSubmitted={() => setReshareOpen(false)}
+          onCancel={() => setReshareOpen(false)}
+        />
+      </Show>
       <Show when={commentsLoading()}>
         <div class="mt-3 text-sm text-muted animate-pulse">Loading comments…</div>
       </Show>
@@ -718,7 +961,142 @@ export default function PostCard(props: {
         show={showComments() && !commentsLoading()}
         handlers={props.handlers}
         highlightUuid={props.highlightUuid}
+        postAuthorAddress={props.post.authorAddress}
       />
+    </div>
+  );
+}
+
+interface StatActor {
+  name: string;
+  avatar?: string;
+  url?: string;
+}
+
+function StatActorChip(props: { actor: StatActor }) {
+  return (
+    <a
+      href={props.actor.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-overlay hover:bg-rim transition-colors text-xs text-txt"
+      title={props.actor.name}
+    >
+      <Show
+        when={props.actor.avatar}
+        fallback={
+          <div class="w-5 h-5 rounded-full bg-gradient-to-br from-accent to-accent-txt shrink-0 flex items-center justify-center text-accent-fg text-[9px] font-bold">
+            {props.actor.name?.[0]?.toUpperCase() ?? "?"}
+          </div>
+        }
+      >
+        <img src={props.actor.avatar} class="w-5 h-5 rounded-full object-cover shrink-0" />
+      </Show>
+      <span class="max-w-[8rem] truncate">{props.actor.name}</span>
+    </a>
+  );
+}
+
+function PostStats(props: {
+  loading: boolean;
+  data: { likes: StatActor[]; dislikes: StatActor[]; repeats: StatActor[] } | null;
+}) {
+  const tabs = () => {
+    const d = props.data;
+    if (!d) return [];
+    return [
+      { key: "likes" as const, label: "Likes", count: d.likes.length },
+      { key: "dislikes" as const, label: "Dislikes", count: d.dislikes.length },
+      { key: "repeats" as const, label: "Repeats", count: d.repeats.length },
+    ].filter(t => t.count > 0);
+  };
+
+  const [tab, setTab] = createSignal<"likes" | "dislikes" | "repeats">("likes");
+
+  createEffect(() => {
+    const first = tabs()[0]?.key;
+    if (first) setTab(first);
+  });
+
+  const actors = () => {
+    const d = props.data;
+    if (!d) return [];
+    return d[tab()] ?? [];
+  };
+
+  return (
+    <div class="mt-3 pt-3 border-t border-rim text-sm">
+      <Show when={props.loading}>
+        <div class="text-xs text-muted animate-pulse">Loading…</div>
+      </Show>
+      <Show when={!props.loading && props.data}>
+        <Show
+          when={tabs().length > 0}
+          fallback={<div class="text-xs text-muted">No activity details available.</div>}
+        >
+          <div class="flex border-b border-rim mb-3">
+            <For each={tabs()}>
+              {(t) => (
+                <button
+                  onClick={() => setTab(t.key)}
+                  class={`px-4 py-2 text-xs font-semibold transition-colors border-b-2 -mb-px
+                    ${tab() === t.key
+                      ? "border-accent text-txt"
+                      : "border-transparent text-muted hover:text-txt hover:border-rim"}`}
+                >
+                  {t.label}
+                  <span class={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold
+                    ${tab() === t.key ? "bg-accent text-accent-fg" : "bg-overlay text-muted"}`}>
+                    {t.count}
+                  </span>
+                </button>
+              )}
+            </For>
+          </div>
+          <div class="flex flex-wrap gap-1.5">
+            <For each={actors()}>{(a) => <StatActorChip actor={a} />}</For>
+          </div>
+        </Show>
+      </Show>
+    </div>
+  );
+}
+
+interface ItemSourceResponse {
+  id: number;
+  mid: string;
+  uuid: string;
+  plink: string;
+  llink: string;
+  cached: boolean;
+  source: unknown;
+  error?: string;
+}
+
+function PostSource(props: { loading: boolean; data: unknown }) {
+  const typed = () => props.data as ItemSourceResponse | null;
+  return (
+    <div class="mt-3 pt-3 border-t border-rim text-xs">
+      <Show when={props.loading}>
+        <div class="text-muted animate-pulse">Loading source…</div>
+      </Show>
+      <Show when={!props.loading && typed()?.error}>
+        <div class="text-red-500">{typed()!.error}</div>
+      </Show>
+      <Show when={!props.loading && typed() && !typed()?.error}>
+        <div class="flex flex-wrap gap-x-4 gap-y-0.5 mb-2 text-muted font-mono">
+          <span>id: <span class="text-txt">{typed()!.id}</span></span>
+          <span>uuid: <span class="text-txt">{typed()!.uuid}</span></span>
+          <span>{typed()!.cached ? "cached" : "generated"}</span>
+          <a href={typed()!.plink} target="_blank" rel="noopener noreferrer"
+             class="text-accent hover:underline">plink</a>
+          <a href={typed()!.llink} target="_blank" rel="noopener noreferrer"
+             class="text-accent hover:underline">llink</a>
+        </div>
+        <pre class="bg-overlay rounded-lg p-3 overflow-x-auto max-h-96 text-txt font-mono whitespace-pre-wrap break-all leading-relaxed">
+          {JSON.stringify(typed()!.source, null, 2)}
+        </pre>
+      </Show>
     </div>
   );
 }
