@@ -13,7 +13,8 @@ export default defineConfig({
   plugins: [
     solid(),
     viteStaticCopy({
-      targets: [{ src: "src/docs", dest: "../" }],
+      targets: [{ src: "src/docs", dest: "../" },
+      { src: "src/Api", dest: "../" }],
     }),
   ],
   build: {
