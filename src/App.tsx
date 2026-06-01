@@ -3,6 +3,7 @@ import { Router, Route, useNavigate } from "@solidjs/router";
 import Layout from "./Layout";
 import { getRoutes } from "./router";
 import { I18nProvider } from "./i18n";
+import NotFound from "@/shared/views/NotFound";
 
 import.meta.glob("./modules/*/index.ts", { eager: true });
 
@@ -21,6 +22,7 @@ export default function App() {
         <For each={getRoutes()()}>
           {(route) => <Route path={route.path} component={lazy(route.component)} />}
         </For>
+        <Route path="*404" component={NotFound} />
       </Route>
     </Router>
   </I18nProvider>

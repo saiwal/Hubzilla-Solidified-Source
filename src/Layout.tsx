@@ -149,7 +149,11 @@ const Layout: ParentComponent = (props) => {
           </div>
         </Show>
 
-        <RemoteAuthBanner role={viewerRole()} subjectNick={subjectNick()} />
+        <RemoteAuthBanner
+          role={viewerRole()}
+          subjectNick={subjectNick()}
+          homeUrl={navActions().navhome}
+        />
 
         <div class="flex flex-1 min-h-0">
           {/* ═══════════════════════════════════════════════════════

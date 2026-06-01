@@ -16,20 +16,23 @@ const [wikisLoading, setWikisLoading] = createSignal(false);
 const [isOwner, setIsOwner]           = createSignal(false);
 const [canCreate, setCanCreate]       = createSignal(false);
 const [wikisNick, setWikisNick]       = createSignal("");
+const [wikisError, setWikisError]     = createSignal<string>("");
 
-export { wikis, wikisLoading, isOwner, canCreate };
+export { wikis, wikisLoading, isOwner, canCreate, wikisError };
 
 export async function loadWikis(nick: string): Promise<void> {
   if (wikisNick() === nick && wikis().length > 0) return;
   setWikisNick(nick);
   setWikisLoading(true);
+  setWikisError("");
   try {
     const res = await fetchWikis(nick);
     setWikis(res.wikis);
     setIsOwner(res.is_owner);
     setCanCreate(res.can_create);
-  } catch (e) {
-    console.error("loadWikis:", e);
+  } catch (e: any) {
+    const msg: string = e?.message ?? "";
+    setWikisError(msg.includes("403") ? "permission" : "error");
     setWikis([]);
   } finally {
     setWikisLoading(false);
@@ -41,6 +44,7 @@ export function resetWikis(): void {
   setWikis([]);
   setIsOwner(false);
   setCanCreate(false);
+  setWikisError("");
 }
 
 // ── Page list ─────────────────────────────────────────────────────────────────

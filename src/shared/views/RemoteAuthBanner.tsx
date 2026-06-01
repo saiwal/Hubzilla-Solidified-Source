@@ -5,6 +5,7 @@ import type { ViewerRole } from "../store/site-config.ts";
 interface Props {
   role: ViewerRole;
   subjectNick: string;
+  homeUrl?: string;
 }
 
 const RemoteAuthBanner: Component<Props> = (props) => {
@@ -28,12 +29,25 @@ const RemoteAuthBanner: Component<Props> = (props) => {
       >
         {/* Remote authenticated */}
         <Show when={props.role === "remote"}>
-          <span class="i-bi-person-check-fill opacity-70" />
-          <span>
-            You're viewing <strong>{props.subjectNick}</strong>'s channel as a
-            remote identity.
+          <span class="opacity-70">🌐</span>
+          <span class="flex-1">
+            <Show
+              when={props.subjectNick}
+              fallback={<>You're browsing this site as a remote visitor.</>}
+            >
+              You're viewing <strong>{props.subjectNick}</strong>'s channel as a remote visitor.
+            </Show>
           </span>
-          {/* No login link needed — they're already authed via OWA */}
+          <Show when={props.homeUrl}>
+            <a
+              href={props.homeUrl}
+              class="shrink-0 px-3 py-1 rounded-full text-xs font-medium
+                     bg-amber-200 dark:bg-amber-700 hover:bg-amber-300
+                     dark:hover:bg-amber-600 transition-colors"
+            >
+              ← Go to your home
+            </a>
+          </Show>
         </Show>
 
         {/* Anonymous */}
@@ -41,7 +55,7 @@ const RemoteAuthBanner: Component<Props> = (props) => {
           <span class="opacity-70">👁</span>
           <span class="flex-1">
             You're browsing{" "}
-            <Show when={props.subjectNick} fallback={<>this channel</>}>
+            <Show when={props.subjectNick} fallback={<>this site</>}>
               <strong>{props.subjectNick}</strong>'s channel{" "}
             </Show>
             as a guest.

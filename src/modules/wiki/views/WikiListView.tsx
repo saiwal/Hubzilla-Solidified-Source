@@ -1,7 +1,7 @@
 // src/modules/wiki/views/WikiListView.tsx
 import { createEffect, Show, For } from "solid-js";
 import { useParams, A } from "@solidjs/router";
-import { wikis, wikisLoading, canCreate, loadWikis, resetWikis } from "../store";
+import { wikis, wikisLoading, canCreate, wikisError, loadWikis, resetWikis } from "../store";
 import { createWiki } from "../api";
 import { createSignal } from "solid-js";
 
@@ -118,13 +118,18 @@ export default function WikiListView() {
         </div>
       </Show>
 
+      {/* Permission denied */}
+      <Show when={!wikisLoading() && wikisError() === "permission"}>
+        <p class="text-muted text-sm text-center py-8">You don't have permission to view these wikis.</p>
+      </Show>
+
       {/* Empty */}
-      <Show when={!wikisLoading() && wikis().length === 0}>
+      <Show when={!wikisLoading() && !wikisError() && wikis().length === 0}>
         <p class="text-muted text-sm text-center py-8">No wikis yet.</p>
       </Show>
 
       {/* List */}
-      <Show when={!wikisLoading() && wikis().length > 0}>
+      <Show when={!wikisLoading() && !wikisError() && wikis().length > 0}>
         <ul class="space-y-2">
           <For each={wikis()}>
             {(wiki) => (

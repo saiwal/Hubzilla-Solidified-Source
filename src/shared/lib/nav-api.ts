@@ -4,12 +4,30 @@ export interface NavViewer {
   is_local: boolean;
   is_remote: boolean;
   is_admin: boolean;
+  /** True when the local user owns the subject channel (or no channel context) */
+  is_owner: boolean;
   nick: string;
   name: string;
+  /** Federated address — @user@domain */
+  addr: string;
   avatar: string;
+  avatar_s: string;
+  avatar_l: string;
+  avatar_mime: string;
+  forum: boolean;
   url: string;
   uid: number;
-	baseurl: string;
+  baseurl: string;
+  location: string;
+  theme: string;
+  timezone: string;
+  startpage: string;
+}
+
+export interface NavChannel {
+  id: number;
+  nick: string;
+  name: string;
 }
 
 export interface NavActions {
@@ -56,10 +74,18 @@ export interface NavChannelTab {
 export interface NavApiResponse {
   viewer: NavViewer;
   actions: NavActions;
-  /** User-ordered pinned apps — these become the primary sidebar nav */
+  /** Site banner / name */
+  banner: string;
+  /** Current channel reddress or @hostname — empty for the owner */
+  sitelocation: string;
+  /** All channels on this account — empty for visitors / delegate sessions */
+  channels: NavChannel[];
+  /** User-ordered pinned apps (nav_pinned_app) — primary sidebar nav */
   pinned: NavApp[];
-  /** All featured/system apps — these go in the app drawer */
+  /** User's featured app selection (nav_featured_app) — empty for non-local users */
   featured: NavApp[];
+  /** Full built-in system app list (syslist / get_system_apps) — available to all users */
+  system_apps: NavApp[];
   channel_tabs: NavChannelTab[];
   has_public_stream: boolean;
   /** All installed app names for the local user — empty for visitors/anon */
@@ -165,16 +191,21 @@ export async function fetchNavApi(channelNick?: string): Promise<NavApiResponse>
   const raw = json.data ?? json;
 
   // Normalise app arrays
-  const pinned: NavApp[]   = (raw.pinned   ?? []).map(normaliseApp);
-  const featured: NavApp[] = (raw.featured ?? []).map(normaliseApp);
+  const pinned: NavApp[]       = (raw.pinned       ?? []).map(normaliseApp);
+  const featured: NavApp[]     = (raw.featured     ?? []).map(normaliseApp);
+  const system_apps: NavApp[]  = (raw.system_apps  ?? []).map(normaliseApp);
 
   return {
-    viewer:         raw.viewer,
-    actions:        raw.actions ?? {},
+    viewer:           raw.viewer,
+    actions:          raw.actions ?? {},
+    banner:           raw.banner ?? "",
+    sitelocation:     raw.sitelocation ?? "",
+    channels:         raw.channels ?? [],
     pinned,
     featured,
-    channel_tabs:   raw.channel_tabs ?? [],
+    system_apps,
+    channel_tabs:     raw.channel_tabs ?? [],
     has_public_stream: raw.has_public_stream ?? false,
-    installed_apps: raw.installed_apps ?? [],
+    installed_apps:   raw.installed_apps ?? [],
   };
 }

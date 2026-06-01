@@ -49,6 +49,10 @@ export function useFeaturedApps(): () => NavApp[] {
   return () => navData()?.featured ?? [];
 }
 
+export function useSystemApps(): () => NavApp[] {
+  return () => navData()?.system_apps ?? [];
+}
+
 // ── Derived: channel tabs ─────────────────────────────────────────────────────
 //
 // Channel tabs are included in navData when channel_nick is set.

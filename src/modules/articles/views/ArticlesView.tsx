@@ -1,6 +1,6 @@
 // src/modules/articles/views/ArticlesView.tsx
 import { createEffect, createSignal, onMount, onCleanup, Show, For, Index } from "solid-js";
-import { useParams, useNavigate } from "@solidjs/router";
+import { useParams, useNavigate, useSearchParams } from "@solidjs/router";
 import { Portal } from "solid-js/web";
 import { useAuth } from "@/shared/store/auth-store";
 import { useViewerRole } from "@/shared/store/site-config";
@@ -178,6 +178,7 @@ export default function ArticlesView() {
   const params = useParams<{ nick: string }>();
   const navigate = useNavigate();
   const [open, setOpen] = createSignal(false);
+  const [searchParams] = useSearchParams();
   let initialized = false;
 
   createEffect(() => {
@@ -186,6 +187,7 @@ export default function ArticlesView() {
     initialized = true;
     resetPosts();
     loadArticles(params.nick);
+    if (searchParams.new === "1" && role() === "owner") setOpen(true);
   });
 
   const goToArticle = (uuid: string) => {

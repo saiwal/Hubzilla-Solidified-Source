@@ -18,6 +18,7 @@ import {
   Show,
   type Component,
 } from "solid-js";
+import { DraftsList } from "../components/DraftsList";
 import { Portal } from "solid-js/web";
 import { createComposerStore } from "../store/createComposerStore";
 import RichEditor from "../core/RichEditor";
@@ -80,6 +81,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
   );
   const [expiry, setExpiry] = createSignal("");
   const [fullscreen, setFullscreen] = createSignal(false);
+  const [draftsOpen, setDraftsOpen] = createSignal(false);
 
   // ── Composer store ─────────────────────────────────────────────────────────
 
@@ -378,6 +380,16 @@ const PostComposer: Component<ComposerProps> = (props) => {
               </div>
             </Show>
 
+            {/* ── Drafts panel ── */}
+            <Show when={draftsOpen()}>
+              <DraftsList
+                drafts={store.savedDrafts()}
+                onLoad={(d) => { store.loadSavedDraft(d); setDraftsOpen(false); }}
+                onDelete={(id) => void store.deleteSavedDraft(id)}
+                onClose={() => setDraftsOpen(false)}
+              />
+            </Show>
+
             {/* ── Editor area (flex-1) ── */}
             <div ref={editorWrapRef} class="flex-1 overflow-hidden min-h-0 flex flex-col">
               <RichEditor
@@ -443,12 +455,38 @@ const PostComposer: Component<ComposerProps> = (props) => {
                 />
               </div>
 
-              {/* Character count + reset + submit */}
+              {/* Character count + draft controls + reset + submit */}
               <div class="flex items-center gap-3 ml-auto shrink-0">
                 <span class="font-mono text-xs tabular-nums text-muted">
                   {store.body().length}
                 </span>
+                <Show when={store.savedDrafts().length > 0}>
+                  <button
+                    type="button"
+                    title="Saved drafts"
+                    onClick={() => setDraftsOpen((o) => !o)}
+                    class={
+                      "px-2 py-1 rounded-md text-xs transition-colors " +
+                      (draftsOpen()
+                        ? "bg-elevated text-txt"
+                        : "text-muted hover:text-txt hover:bg-elevated")
+                    }
+                  >
+                    Drafts ({store.savedDrafts().length})
+                  </button>
+                </Show>
                 <Show when={store.body().trim()}>
+                  <button
+                    type="button"
+                    title="Save as draft"
+                    onClick={() => void store.saveAsDraft()}
+                    class="p-1.5 rounded-md text-muted hover:text-txt hover:bg-elevated transition-colors"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V5z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 3v5H9V3m0 14h6" />
+                    </svg>
+                  </button>
                   <button
                     type="button"
                     title="Clear composer"

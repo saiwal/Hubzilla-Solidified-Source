@@ -2,7 +2,6 @@
 import { createMemo } from "solid-js";
 import { useLocation } from "@solidjs/router";
 import { useAuth } from "./auth-store";
-import { useNavViewer } from "./nav-store";
 
 export type ViewerRole = "owner" | "local" | "remote" | "anonymous" | "admin";
 
@@ -49,13 +48,12 @@ export function useSubjectNick(): () => string {
 export function useViewerRole(): () => ViewerRole {
   const auth = useAuth();
   const subjectNick = useSubjectNick();
-  const navViewer = useNavViewer();
   return createMemo((): ViewerRole => {
     const a = auth();
-    const viewer = navViewer();
 
-    if (viewer?.is_remote) return "remote";
-
+    // auth() is a singleton resource fetched once at boot — no stale-data risk.
+    // We intentionally do NOT read navData here; navData is async and can be
+    // stale mid-navigation, causing the role to flip back to "owner" briefly.
     if (!a || !a.isLoggedIn) return "anonymous";
     if (!a.isLocal) return "remote";
 

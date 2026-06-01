@@ -6,10 +6,11 @@ import {
   useChannelNav,
   usePinnedApps,
   useFeaturedApps,
+  useSystemApps,
   useInstalledApps,
 } from "../store/nav-store";
 
-import { isAdmin, useAuth } from "../store/auth-store";
+import { isAdmin } from "../store/auth-store";
 import type { NavItemDef } from "../types/module.types";
 import type { NavActions, NavChannelTab, NavApp } from "../lib/nav-api";
 import { biToNavIcon } from "../lib/nav-api";
@@ -103,50 +104,63 @@ function dedupByHref(items: NavItemDef[]): NavItemDef[] {
 
 // ── useNav ────────────────────────────────────────────────────────────────────
 export function useNav(subjectNick: () => string): () => NavItemDef[] {
-  const auth = useAuth();
   const channelNav = useChannelNav(subjectNick);
-  const viewerRole = useViewerRole();
   const pinnedApps = usePinnedApps();
   const featuredApps = useFeaturedApps();
+  const systemApps = useSystemApps();
   const installedApps = useInstalledApps();
+  const viewerRole = useViewerRole();
+  const { t } = useI18n();
 
   return createMemo((): NavItemDef[] => {
     const role = viewerRole();
     const nick = subjectNick();
-    const isOwnChannel = !!nick && auth()?.nick === nick;
     const spaRoots = buildSpaRoots();
 
-    // Visiting someone else's channel (any role) → channel tabs + global pinned apps
-    // "global pinned" = personal pinned for logged-in users; Directory/Help/Network for anonymous
-    if (nick && !isOwnChannel) {
+    // Logged-in local user visiting someone else's channel → channel tabs only.
+    // System apps are excluded because they carry the viewer's own nick in
+    // their URLs and are visually indistinguishable from personal pinned apps.
+    if (nick && role === "local") {
+      if (channelNav.loading) return [];
+      return (channelNav()?.channel_tabs ?? []).map(tabToNavItem);
+    }
+
+    // Anonymous or remote visitor on a channel → channel tabs + system apps.
+    if (nick && (role === "anonymous" || role === "remote")) {
       if (channelNav.loading) return [];
       const tabs = (channelNav()?.channel_tabs ?? []).map(tabToNavItem);
-      const sysApps = pinnedApps()
+      const sysApps = systemApps()
         .filter((a) => isSpaApp(a, spaRoots))
         .map(appToNavItem);
       return dedupByHref([...tabs, ...sysApps]);
     }
 
-    // Anonymous not on a channel → curated public pinned apps (Directory, Help, Network)
-    if (role === "anonymous") {
-      return pinnedApps()
-        .filter((a) => isSpaApp(a, spaRoots))
+    // Owner in their own context → pinned + installed featured + admin
+    if (role === "owner") {
+      const installed = installedApps();
+      const pinned = pinnedApps().filter((a) => isSpaApp(a, spaRoots));
+      const pinnedUrls = new Set(pinned.map((a) => toSpaHref(a.url)));
+      const extra = featuredApps()
+        .filter(
+          (a) =>
+            isSpaApp(a, spaRoots) &&
+            !pinnedUrls.has(toSpaHref(a.url)) &&
+            (installed.size === 0 || installed.has(a.name)),
+        )
         .map(appToNavItem);
+
+      const items: NavItemDef[] = [...pinned.map(appToNavItem), ...extra];
+
+      if (isAdmin())
+        items.push({ label: t("nav.admin"), icon: "admin", href: "/admin", path: "/admin" });
+
+      return dedupByHref(items);
     }
 
-    // Logged-in user on own pages → pinned + featured filtered by installed apps
-    const installed = installedApps();
-    const pinned = pinnedApps().filter((a) => isSpaApp(a, spaRoots));
-    const pinnedUrls = new Set(pinned.map((a) => toSpaHref(a.url)));
-    const extraFeatured = featuredApps()
-      .filter(
-        (a) =>
-          isSpaApp(a, spaRoots) &&
-          !pinnedUrls.has(toSpaHref(a.url)) &&
-          (installed.size === 0 || installed.has(a.name)),
-      )
+    // Visitor (anon/remote) not on a channel → system apps only
+    return systemApps()
+      .filter((a) => isSpaApp(a, spaRoots))
       .map(appToNavItem);
-    return dedupByHref([...pinned.map(appToNavItem), ...extraFeatured]);
   });
 }
 

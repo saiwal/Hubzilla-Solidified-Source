@@ -1,4 +1,5 @@
 import { createSignal, Show, onCleanup } from "solid-js";
+import { DraftsList } from "../components/DraftsList";
 import { createComposerStore } from "../store/createComposerStore";
 import RichEditor from "../core/RichEditor";
 import { CAPABILITIES } from "../types/editor.types";
@@ -33,6 +34,7 @@ interface Props {
 export default function ArticleComposer(props: Props) {
   const caps = CAPABILITIES.article;
   const [wordCount, setWordCount] = createSignal(0);
+  const [draftsOpen, setDraftsOpen] = createSignal(false);
   const isEditing = () => !!props.initial?.mid;
 
   // ── Scope (shared by both stores for matching IDB keys) ─────────────────────
@@ -399,10 +401,20 @@ export default function ArticleComposer(props: Props) {
         </p>
       </Show>
 
+      {/* Drafts panel */}
+      <Show when={draftsOpen()}>
+        <DraftsList
+          drafts={store.savedDrafts()}
+          onLoad={(d) => { store.loadSavedDraft(d); setDraftsOpen(false); }}
+          onDelete={(id) => void store.deleteSavedDraft(id)}
+          onClose={() => setDraftsOpen(false)}
+        />
+      </Show>
+
       {/* Actions */}
       <div class="flex flex-wrap items-center gap-3 border-t border-rim pt-4">
-        {/* Left: discard */}
-        <div class="flex gap-2">
+        {/* Left: discard + draft controls */}
+        <div class="flex gap-2 items-center">
           <button
             type="button"
             onClick={() => { store.reset(); attach.clear(); clearEntries(); setAclMode("connections"); }}
@@ -411,6 +423,33 @@ export default function ArticleComposer(props: Props) {
           >
             {isEditing() ? "Cancel" : "Discard"}
           </button>
+          <Show when={store.body().trim()}>
+            <button
+              type="button"
+              title="Save as draft"
+              onClick={() => void store.saveAsDraft()}
+              class="p-1.5 rounded-lg border border-rim text-muted hover:text-txt hover:bg-elevated transition-colors"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V5z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 3v5H9V3m0 14h6" />
+              </svg>
+            </button>
+          </Show>
+          <Show when={store.savedDrafts().length > 0}>
+            <button
+              type="button"
+              onClick={() => setDraftsOpen((o) => !o)}
+              class={
+                "px-2.5 py-1.5 rounded-lg border text-xs transition-colors " +
+                (draftsOpen()
+                  ? "border-rim bg-elevated text-txt"
+                  : "border-rim text-muted hover:text-txt hover:bg-elevated")
+              }
+            >
+              Drafts ({store.savedDrafts().length})
+            </button>
+          </Show>
         </div>
 
         {/* Centre: ACL picker */}

@@ -1,4 +1,5 @@
 // src/modules/cal/api.ts
+import { getCsrfToken } from "@/shared/lib/csrf";
 
 export interface CalEvent {
   id: number;
@@ -46,6 +47,37 @@ export async function fetchEvents(
   if (!res.ok) throw new Error(`Calendar fetch failed: ${res.status}`);
   const json = await res.json();
   return (json.data ?? []) as CalEvent[];
+}
+
+export interface CreateEventInput {
+  title: string;
+  description?: string;
+  location?: string;
+  start: string;
+  end?: string;
+  allDay?: boolean;
+  nofinish?: boolean;
+}
+
+export async function createEvent(
+  input: CreateEventInput,
+): Promise<{ id: number; uri: string }> {
+  const token = await getCsrfToken();
+  const res = await fetch("/api/cal", {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRF-Token": token,
+    },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as { error?: { message?: string } };
+    throw new Error(err?.error?.message ?? `HTTP ${res.status}`);
+  }
+  const json = await res.json();
+  return json.data as { id: number; uri: string };
 }
 
 /**
