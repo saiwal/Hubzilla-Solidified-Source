@@ -27,4 +27,5 @@ registerModule({
     right: () => import('./widgets/PhotosWidget'),
   },
   permissions: [],
+  appName: "Photos",
 });

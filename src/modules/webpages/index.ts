@@ -17,9 +17,8 @@ registerModule({
     context: 'all',
   },
   slots: {
-    right: [
-    ],
+    right: [],
   },
-
   permissions: [],
+  appName: "Webpages",
 });

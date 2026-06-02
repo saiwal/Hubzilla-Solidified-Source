@@ -22,4 +22,5 @@ registerModule({
   },
   slots: {},
   permissions: [],
+  appName: "Calendar",
 });

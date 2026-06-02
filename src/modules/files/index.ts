@@ -17,7 +17,7 @@ registerModule({
     href: () => `/cloud/${usePageNick()()}`,
 		context: "all",
   },
-  slots: {
-  },
+  slots: {},
   permissions: [],
+  appName: "Files",
 });

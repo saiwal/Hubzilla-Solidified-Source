@@ -40,4 +40,5 @@ registerModule({
     right: [popularLoader, categoryLoader, tagLoader],
   },
   permissions: [],
+  appName: "Articles",
 });

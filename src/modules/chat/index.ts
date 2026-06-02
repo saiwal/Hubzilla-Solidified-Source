@@ -28,4 +28,5 @@ registerModule({
   },
   slots: {},
   permissions: [],
+  appName: "Chatrooms",
 });

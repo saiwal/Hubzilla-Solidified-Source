@@ -18,4 +18,5 @@ registerModule({
 		href: "/pubstream",
 		context: "all",
   },
+  appName: "Public Stream",
 });

@@ -31,4 +31,5 @@ registerModule({
   },
   slots: {},
   permissions: [],
+  appName: "Wiki",
 });

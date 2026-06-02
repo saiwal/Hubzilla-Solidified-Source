@@ -5,7 +5,9 @@ import {
   resolveGlobalSlots,
   getLazy,
   getGlobalVersion,
+  isModuleActive,
 } from "@/shared/lib/module-registry";
+import { useInstalledApps } from "@/shared/store/nav-store";
 import type { SlotsDef } from "../types/module.types";
 
 interface SlotProps {
@@ -15,6 +17,7 @@ interface SlotProps {
 
 const Slot: Component<SlotProps> = (props) => {
   const location = useLocation();
+  const installedApps = useInstalledApps();
 
   const activeModuleId = () => {
     if (props.moduleId) return props.moduleId;
@@ -28,10 +31,11 @@ const Slot: Component<SlotProps> = (props) => {
     return resolveGlobalSlots(props.name).map(getLazy);
   });
 
-  // Module-local widgets — reactive, change when activeModuleId changes
-  const localWidgets = createMemo(() =>
-    resolveModuleSlot(props.name, activeModuleId()).map(getLazy)
-  );
+  // Module-local widgets — only rendered when the module's app is installed
+  const localWidgets = createMemo(() => {
+    if (!isModuleActive(activeModuleId(), installedApps())) return [];
+    return resolveModuleSlot(props.name, activeModuleId()).map(getLazy);
+  });
 
   return (
     <>

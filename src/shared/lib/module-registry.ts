@@ -46,7 +46,8 @@ export function registerModule(def: ModuleDef) {
   }
 
   setNavItems((prev) => [...prev, def.navItem]);
-  setRoutes((prev) => [...prev, ...def.routes]);
+  const taggedRoutes = def.routes.map((r) => ({ ...r, moduleId: def.id }));
+  setRoutes((prev) => [...prev, ...taggedRoutes]);
 }
 
 export function getNavItems() {
@@ -76,6 +77,16 @@ export function resolveModuleSlot(slot: keyof SlotsDef, moduleId: string): SlotL
   if (!entry) return [];
   const loaders = Array.isArray(entry) ? entry : [entry];
   return (loaders as SlotLoader[]).filter((l) => !(l as any).__global);
+}
+
+// Returns false when the module has an appName that isn't in the installed set.
+// Empty set is treated as "not yet loaded" — all modules pass through.
+export function isModuleActive(moduleId: string, installedApps: Set<string>): boolean {
+  const mod = modules.get(moduleId);
+  if (!mod) return false;
+  if (!mod.appName) return true;
+  if (installedApps.size === 0) return true;
+  return installedApps.has(mod.appName);
 }
 
 // Keep for any existing call sites
