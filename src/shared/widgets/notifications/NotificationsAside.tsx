@@ -231,6 +231,7 @@ function NotifRow(props: {
       e.preventDefault();
       props.onOpenModal(u);
     }
+    if (props.n.b64mid) props.onDismiss(props.n.b64mid);
   };
 
   const handleDismiss = (e: MouseEvent) => {
