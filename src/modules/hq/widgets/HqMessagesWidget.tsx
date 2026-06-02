@@ -87,6 +87,12 @@ function timeAgo(dateStr: string): string {
   return `${Math.floor(diff / 86400)}d`;
 }
 
+function decodeHtmlEntities(str: string): string {
+  const ta = document.createElement("textarea");
+  ta.innerHTML = str;
+  return ta.value;
+}
+
 function initials(name: string): string {
   return name
     .split(" ")
@@ -259,7 +265,7 @@ const MessageItem: Component<{ entry: MessageEntry; activeTab: MessageType }> = 
           </div>
 
           <p class="text-[13px] text-muted line-clamp-2 leading-relaxed">
-            {e.summary}
+            {decodeHtmlEntities(e.summary)}
           </p>
 
           <Show when={e.info}>
