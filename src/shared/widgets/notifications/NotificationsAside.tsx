@@ -60,6 +60,9 @@ type SseResponse = Record<
 const PROBE_MS = 5_000;
 const RETRY_DELAY_MS = 15_000;
 const STATIC_FETCHABLE = new Set(["network", "dm", "home", "pubs"]);
+const MARKREAD_SUPPORTED = new Set([
+  "network", "dm", "home", "notify", "all_events", "pubs", "forums",
+]);
 const DISPLAY_ORDER = [
   "network",
   "dm",
@@ -107,12 +110,12 @@ async function fetchForumRows(forumKeys: string[]): Promise<HzNotification[]> {
   const results = await Promise.all(forumKeys.map(fetchBucketRows));
   return results.flat();
 }
-async function markAllSeenAndRefetch(key: string): Promise<SseResponse> {
+async function markAllSeen(key: string): Promise<void> {
   const res = await fetch(`/notifications?markRead=${key}`, {
     credentials: "include",
   });
   if (!res.ok) throw new Error("Failed to mark read");
-  return res.json(); // fix: was missing ()
+  // PHP killme() sends empty body — nothing to parse
 }
 async function markSeenAndRefetch(
   b64mids: string[],
@@ -356,7 +359,7 @@ function StreamSection(props: {
           </Show>
         </span>
         <span class="flex items-center gap-1.5">
-          <Show when={open() && dismissibleMids().length > 0}>
+          <Show when={open() && (dismissibleMids().length > 0 || (MARKREAD_SUPPORTED.has(props.id) && props.bucket.count > 0))}>
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -663,13 +666,46 @@ export default function NotificationsAside() {
     }
   };
 
-  const markAllRead = () => {
-    const mids: string[] = [];
-    for (const b of Object.values(buckets()))
-      b.notifications.forEach((n) => {
-        if (n.b64mid) mids.push(n.b64mid);
-      });
-    if (mids.length) markSeen(mids);
+  const markAllRead = async () => {
+    const currentBuckets = buckets();
+    const promises: Promise<unknown>[] = [];
+
+    // Use server-side markRead for all supported item/event/notify buckets
+    for (const key of ["network", "dm", "home", "notify", "all_events", "pubs"] as const) {
+      if ((currentBuckets[key]?.count ?? 0) > 0) promises.push(markAllSeen(key));
+    }
+    // Forums require one call per forum_{id}
+    if ((currentBuckets["forums"]?.count ?? 0) > 0) {
+      forumKeys().forEach((fk) => promises.push(markAllSeen(fk)));
+    }
+    // Files have no markRead endpoint — use b64mids from loaded notifications
+    const fileMids = (currentBuckets["files"]?.notifications ?? [])
+      .map((n) => n.b64mid)
+      .filter((m): m is string => !!m);
+    if (fileMids.length) {
+      promises.push(
+        fetch("/sse_bs", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ sse_rmids: fileMids.join(","), nquery: "" }),
+        }),
+      );
+    }
+
+    // Optimistic clear
+    setBuckets((prev) => {
+      const next = { ...prev };
+      for (const key of DISPLAY_ORDER) next[key] = { count: 0, notifications: [] };
+      return next;
+    });
+
+    try {
+      await Promise.all(promises);
+      await doFetchCounts();
+    } catch {
+      /* silent */
+    }
   };
 
   const activeBuckets = createMemo(() =>
@@ -766,30 +802,20 @@ export default function NotificationsAside() {
                   forumKeys={key === "forums" ? forumKeys() : undefined}
                   onDismiss={(mid) => markSeen([mid])}
                   onClearAll={async (key) => {
-                    // Optimistically clear local state
-                    const mids =
-                      buckets()
-                        [key]?.notifications.map((n) => n.b64mid)
-                        .filter((m): m is string => !!m) ?? [];
-                    if (mids.length) {
-                      // const midSet = new Set(mids);
-                      setBuckets((prev) => {
-                        const next = { ...prev };
-                        next[key] = { count: 0, notifications: [] };
-                        return next;
-                      });
-                    }
-                    // Hit the by-key endpoint, then refresh
-                    try {
-                      await markAllSeenAndRefetch(key);
-                      await doFetchCounts();
-                    } catch {
-                      /* silent */
-                    }
                     setBuckets((prev) => ({
                       ...prev,
                       [key]: { count: 0, notifications: [] },
                     }));
+                    try {
+                      if (key === "forums") {
+                        await Promise.all(forumKeys().map((fk) => markAllSeen(fk)));
+                      } else {
+                        await markAllSeen(key);
+                      }
+                      await doFetchCounts();
+                    } catch {
+                      /* silent */
+                    }
                   }}
                   onOpenModal={(uuid) => setModalUuid(uuid)}
                 />
