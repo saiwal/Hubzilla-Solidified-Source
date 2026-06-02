@@ -9,6 +9,7 @@ import {
   createSignal,
   createResource,
   createEffect,
+  lazy,
   For,
   Show,
 } from "solid-js";
@@ -16,6 +17,8 @@ import { motion } from "solid-motionone";
 import { useFloating } from "@/shared/lib/useFloating";
 void motion;
 import { useSearchParams } from "@solidjs/router";
+import { apiFetch } from "@/shared/lib/fetch";
+const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
 import { loadNetwork, loading, resetPosts, viewMode, changeView } from "../store";
 import {
   MdFillFilter_list,
@@ -79,6 +82,8 @@ const ICON_BTN =
 const ICON_BTN_ACTIVE =
   "p-1.5 rounded-lg border border-accent bg-accent-muted text-accent " +
   "transition-colors shrink-0 flex items-center justify-center";
+
+const isUrl = (val: string) => val.startsWith("https://");
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -167,11 +172,37 @@ export default function StreamFilters() {
     setTimeout(apply, 0);
   }
 
+  const [importing, setImporting] = createSignal(false);
+  const [importError, setImportError] = createSignal("");
+  const [importedUuid, setImportedUuid] = createSignal<string | null>(null);
+
+  async function handleUrlImport(url: string) {
+    setImporting(true);
+    setImportError("");
+    try {
+      const res = await apiFetch(`/api/search/import?url=${encodeURIComponent(url)}`);
+      const body = await res.json();
+      if (!res.ok) {
+        setImportError(body?.error?.message ?? "Could not fetch post");
+        return;
+      }
+      setImportedUuid(body.data.uuid);
+    } catch {
+      setImportError("Network error — could not fetch post");
+    } finally {
+      setImporting(false);
+    }
+  }
+
   let searchTimer: ReturnType<typeof setTimeout>;
   function onSearchInput(val: string) {
     sp({ search: val || undefined });
     clearTimeout(searchTimer);
-    searchTimer = setTimeout(apply, 400);
+    // Don't trigger stream search for URLs — wait for Enter
+    if (!isUrl(val)) {
+      searchTimer = setTimeout(apply, 400);
+    }
+    if (!val) setImportError("");
   }
 
   function clearAll() {
@@ -440,20 +471,46 @@ export default function StreamFilters() {
             </button>
           }
         >
-          <div class="relative shrink-0">
-            <span class="absolute left-2 top-1/2 -translate-y-1/2 text-muted pointer-events-none">
-              <MdFillSearch size={13} />
-            </span>
-            <input
-              ref={searchInputRef}
-              type="search"
-              placeholder="Search…"
-              value={search()}
-              onInput={(e) => onSearchInput(e.currentTarget.value)}
-              onBlur={onSearchBlur}
-              class={`${INPUT_CLS} w-28 sm:w-32 pl-6 pr-2`}
-            />
-          </div>
+          <Show
+            when={!importing()}
+            fallback={
+              <span class="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-lg
+                           border border-accent bg-accent-muted text-accent shrink-0">
+                <MdFillRefresh size={13} class="animate-spin shrink-0" />
+                Fetching post…
+              </span>
+            }
+          >
+            <div class="relative shrink-0">
+              <span class="absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none"
+                classList={{ "text-green-500": isUrl(search()), "text-muted": !isUrl(search()) }}>
+                <MdFillSearch size={13} />
+              </span>
+              <input
+                ref={searchInputRef}
+                type="search"
+                placeholder="Search or paste URL…"
+                value={search()}
+                onInput={(e) => onSearchInput(e.currentTarget.value)}
+                onBlur={onSearchBlur}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && isUrl(search())) {
+                    e.preventDefault();
+                    handleUrlImport(search());
+                  }
+                }}
+                classList={{
+                  "border-green-500 focus:ring-green-500": isUrl(search()),
+                }}
+                class={`${INPUT_CLS} w-36 sm:w-48 pl-6 pr-2`}
+              />
+            </div>
+          </Show>
+        </Show>
+        <Show when={importError()}>
+          <span class="text-xs text-red-500 shrink-0 max-w-[180px] truncate" title={importError()}>
+            {importError()}
+          </span>
         </Show>
 
         {/* Advanced toggle */}
@@ -530,6 +587,19 @@ export default function StreamFilters() {
               onBlur={apply} class={`${INPUT_CLS} w-20`} />
           </label>
         </div>
+      </Show>
+
+      <Show when={importedUuid()}>
+        {(uuid) => (
+          <PostDetailModal
+            uuid={uuid()}
+            onClose={() => {
+              setImportedUuid(null);
+              sp({ search: undefined });
+              setSearchOpen(false);
+            }}
+          />
+        )}
       </Show>
     </div>
   );

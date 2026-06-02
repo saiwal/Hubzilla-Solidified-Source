@@ -1,5 +1,5 @@
 // src/shared/stream/components/PostCard.tsx
-import { createSignal, createEffect, onMount, onCleanup, Show, For } from "solid-js";
+import { createSignal, createEffect, onMount, onCleanup, lazy, Show, For } from "solid-js";
 import { Portal } from "solid-js/web";
 import { useThreadMode } from "@/shared/store/thread-mode";
 import AuthorPopover from "./AuthorPopover";
@@ -40,6 +40,8 @@ import { apiFollowPost, apiUnfollowPost } from "@/shared/lib/item-api";
 import EventCard from "./EventCard";
 import { parseEventData } from "@/shared/lib/activity.mapper";
 import AttachmentList from "./AttachmentList";
+import { apiFetch } from "@/shared/lib/fetch";
+const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
 
 export type { StreamHandlers as PostActions };
 
@@ -104,6 +106,8 @@ export default function PostCard(props: {
   const [showSource, setShowSource] = createSignal(false);
   const [sourceLoading, setSourceLoading] = createSignal(false);
   const [sourceData, setSourceData] = createSignal<unknown>(null);
+  const [rssImporting, setRssImporting] = createSignal(false);
+  const [rssImportedUuid, setRssImportedUuid] = createSignal<string | null>(null);
   let repeatDropdownRef!: HTMLDivElement;
   let repeatDropdownPortalRef!: HTMLDivElement;
   let deleteTimer: ReturnType<typeof setTimeout> | null = null;
@@ -212,6 +216,22 @@ export default function PostCard(props: {
       setDropdownAnchor({ top: rect.bottom + 4, left: rect.left });
     }
     setRepeatDropdownOpen(v => !v);
+  }
+
+  const isRss = () => props.post.authorNetwork === "rss" && !!props.post.permalink;
+
+  async function handleRssImport() {
+    if (rssImporting()) return;
+    setRssImporting(true);
+    try {
+      const res = await apiFetch(`/api/search/import?url=${encodeURIComponent(props.post.permalink)}`);
+      const body = await res.json();
+      if (res.ok && body?.data?.uuid) {
+        setRssImportedUuid(body.data.uuid);
+      }
+    } finally {
+      setRssImporting(false);
+    }
   }
 
   function onLike() { props.handlers.onLike(props.post.mid); }
@@ -506,6 +526,19 @@ export default function PostCard(props: {
               title="View source"
             >
               <MdOutlineCode size={14} />
+            </button>
+          </Show>
+
+          <Show when={isRss()}>
+            <button
+              onClick={handleRssImport}
+              disabled={rssImporting()}
+              title="Import post"
+              class="flex items-center gap-1 px-2 py-1 rounded-md text-xs
+                     text-subtle hover:bg-overlay hover:text-accent transition-colors
+                     disabled:opacity-50"
+            >
+              <MdOutlineRefresh size={14} classList={{ "animate-spin": rssImporting() }} />
             </button>
           </Show>
 
@@ -829,6 +862,20 @@ export default function PostCard(props: {
           </button>
         </Show>
 
+        <Show when={isRss()}>
+          <button
+            onClick={handleRssImport}
+            disabled={rssImporting()}
+            title="Import post"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                   text-muted hover:bg-overlay hover:text-accent transition-colors
+                   disabled:opacity-50"
+          >
+            <MdOutlineRefresh size={17} classList={{ "animate-spin": rssImporting() }} />
+            <span>Import</span>
+          </button>
+        </Show>
+
         <Show when={totalComments() > 0}>
           <button
             onClick={toggleComments}
@@ -963,6 +1010,15 @@ export default function PostCard(props: {
         highlightUuid={props.highlightUuid}
         postAuthorAddress={props.post.authorAddress}
       />
+
+      <Show when={rssImportedUuid()}>
+        {(uuid) => (
+          <PostDetailModal
+            uuid={uuid()}
+            onClose={() => setRssImportedUuid(null)}
+          />
+        )}
+      </Show>
     </div>
   );
 }

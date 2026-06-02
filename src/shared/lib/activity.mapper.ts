@@ -61,6 +61,7 @@ export function mapActivityToPost(activity: any): Post {
     authorAvatar: activity.author?.photo?.src ?? "",
     authorUrl: activity.author?.url ?? "",
     authorAddress: activity.author?.address ?? "",
+    authorNetwork: activity.author?.network ?? "",
     via: activity.owner ? {
       name: activity.owner.name ?? "",
       address: activity.owner.address ?? "",
