@@ -13,7 +13,6 @@ export default function DirectorySection() {
   const [search, setSearch] = createSignal("");
   const [order, setOrder] = createSignal<Order>("date");
   const [globalDir, setGlobalDir] = createSignal<0 | 1>(1);
-  const [suggest, setSuggest] = createSignal(false);
   const [selected, setSelected] = createSignal<DirectoryEntry | null>(null);
 
   let initialized = false;
@@ -28,17 +27,15 @@ export default function DirectorySection() {
   createEffect(() => {
     const o = order();
     const g = globalDir();
-    const s = suggest();
     if (!effectRan) { effectRan = true; return; }
     resetDirectory();
-    loadDirectory({ order: o, global: g, suggest: s ? 1 : 0 });
+    loadDirectory({ order: o, global: g });
   });
 
   function handleSearch(e: Event) {
     e.preventDefault();
     resetDirectory();
-    loadDirectory({ search: search(), order: order(), global: globalDir(), suggest: 0 });
-    setSuggest(false);
+    loadDirectory({ search: search(), order: order(), global: globalDir() });
   }
 
   return (
@@ -77,27 +74,30 @@ export default function DirectorySection() {
             <option value="ralpha">Z → A</option>
           </select>
 
-          <button
-            onClick={() => setGlobalDir((g) => (g === 1 ? 0 : 1))}
-            class={`px-3 py-1.5 rounded-lg border text-sm transition-colors ${
-              globalDir() === 1
-                ? "border-accent bg-accent-muted text-accent"
-                : "border-rim text-muted hover:bg-overlay"
-            }`}
-          >
-            {globalDir() === 1 ? "🌐 Global" : "🏠 Local"}
-          </button>
+          <div class="flex rounded-lg border border-rim overflow-hidden text-sm">
+            <button
+              onClick={() => setGlobalDir(1)}
+              class={`px-3 py-1.5 transition-colors ${
+                globalDir() === 1
+                  ? "bg-accent-muted text-accent"
+                  : "bg-surface text-muted hover:bg-overlay"
+              }`}
+            >
+              🌐 Global
+            </button>
+            <div class="w-px bg-rim" />
+            <button
+              onClick={() => setGlobalDir(0)}
+              class={`px-3 py-1.5 transition-colors ${
+                globalDir() === 0
+                  ? "bg-accent-muted text-accent"
+                  : "bg-surface text-muted hover:bg-overlay"
+              }`}
+            >
+              🏠 Local
+            </button>
+          </div>
 
-          <button
-            onClick={() => setSuggest((s) => !s)}
-            class={`px-3 py-1.5 rounded-lg border text-sm transition-colors ${
-              suggest()
-                ? "border-accent bg-accent-muted text-accent"
-                : "border-rim text-muted hover:bg-overlay"
-            }`}
-          >
-            {suggest() ? "✓ Suggestions" : "Suggest"}
-          </button>
         </div>
       </div>
 

@@ -17,6 +17,7 @@ export const CONNECTIONS_ITEMS: SubPageItem[] = [
     label: "People & Groups",
     context: "all",
   },
+  { path: "suggest", label: "Suggestions", context: ["local", "owner"], requiresApp: "Suggest Channels" },
   { path: "hubs", label: "Hubs", context: "all" },
 ];
 
