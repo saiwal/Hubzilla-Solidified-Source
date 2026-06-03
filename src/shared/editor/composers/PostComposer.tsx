@@ -38,6 +38,7 @@ import AttachmentBar from "../attachments/AttachmentBar";
 import { createAttachmentStore } from "../attachments/useAttachments";
 import { currentNick } from "@/shared/store/auth-store";
 import { bbcodeToInsert } from "../attachments/insertHelpers";
+import type { FileAcl } from "@/modules/files/api";
 void helpable;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -82,6 +83,32 @@ const PostComposer: Component<ComposerProps> = (props) => {
   const [expiry, setExpiry] = createSignal("");
   const [fullscreen, setFullscreen] = createSignal(false);
   const [draftsOpen, setDraftsOpen] = createSignal(false);
+
+  // ── Sync ACL to attachment store ───────────────────────────────────────────
+  createEffect(() => {
+    const mode = aclMode();
+    if (mode === "connections") {
+      attach.setAcl(null); // leave files at channel defaults
+      return;
+    }
+    const acl: FileAcl = { allow_cid: [], allow_gid: [], deny_cid: [], deny_gid: [] };
+    if (mode === "custom") {
+      for (const key of allowEntries()) {
+        const [type, ...rest] = key.split(":");
+        const xid = rest.join(":");
+        if (type === "c") acl.allow_cid.push(xid);
+        if (type === "g") acl.allow_gid.push(xid);
+      }
+      for (const key of denyEntries()) {
+        const [type, ...rest] = key.split(":");
+        const xid = rest.join(":");
+        if (type === "c") acl.deny_cid.push(xid);
+        if (type === "g") acl.deny_gid.push(xid);
+      }
+    }
+    // mode === "public": all arrays stay empty (public)
+    attach.setAcl(acl);
+  });
 
   // ── Composer store ─────────────────────────────────────────────────────────
 

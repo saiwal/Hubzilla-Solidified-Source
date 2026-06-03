@@ -549,7 +549,7 @@ function bbChecklist(content: string): string {
 
 function xssFilterLinks(html: string): string {
   return html.replace(
-    /(<[^>]*?\b(?:src|href)\s*=\s*(['"])\s*)(?!https?:|geo:|mailto:|tel:|#)[^'"]*?\2/giu,
+    /(<[^>]*?\b(?:src|href)\s*=\s*(['"])\s*)(?!https?:|geo:|mailto:|tel:|#|\/)[^'"]*?\2/giu,
     "$1$2$2"
   );
 }

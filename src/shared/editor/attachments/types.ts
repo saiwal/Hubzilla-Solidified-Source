@@ -1,4 +1,4 @@
-import type { FileMeta } from "@/modules/files/api";
+import type { FileMeta, FileAcl } from "@/modules/files/api";
 import type { Photo } from "@/modules/photos/api/api";
 
 export type AttachmentSource = "upload" | "cloud-file" | "photo";
@@ -29,5 +29,9 @@ export interface AttachmentStore {
   remove: (id: string) => void;
   setAltText: (id: string, text: string) => void;
   insertBBCode: (id: string) => string;
+  /** Apply post ACL to all attachments (now and future uploads). null = use channel defaults. */
+  setAcl: (acl: FileAcl | null) => void;
   clear: () => void;
 }
+
+export type { FileAcl };

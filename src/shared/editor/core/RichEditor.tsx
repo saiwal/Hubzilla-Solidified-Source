@@ -80,8 +80,10 @@ export default function RichEditor(props: Props) {
     }
   };
 
-  const showTabs = () => props.capabilities.toolbar !== "comment";
-  const showPreviewTab = () => showTabs() && props.capabilities.preview;
+  const isComment = () => props.capabilities.toolbar === "comment";
+  const showTabs = () => !isComment() || props.capabilities.preview;
+  const showSourceTab = () => !isComment();
+  const showPreviewTab = () => props.capabilities.preview;
 
   return (
     <div class="rich-editor rounded-lg border border-rim overflow-hidden bg-surface">
@@ -94,12 +96,14 @@ export default function RichEditor(props: Props) {
           >
             Write
           </TabBtn>
-          <TabBtn
-            active={props.tab === "source"}
-            onClick={() => props.onTabChange("source")}
-          >
-            Source
-          </TabBtn>
+          <Show when={showSourceTab()}>
+            <TabBtn
+              active={props.tab === "source"}
+              onClick={() => props.onTabChange("source")}
+            >
+              Source
+            </TabBtn>
+          </Show>
           <Show when={showPreviewTab()}>
             <TabBtn
               active={props.tab === "preview"}

@@ -2,7 +2,7 @@ import { Show, onCleanup, createEffect } from "solid-js";
 import { createComposerStore } from "../store/createComposerStore";
 import RichEditor from "../core/RichEditor";
 import { CAPABILITIES } from "../types/editor.types";
-import { useAuth } from "@/shared/store/auth-store";
+import { useAuth, currentNick } from "@/shared/store/auth-store";
 import {
   useMention,
   getWysiwygMentionQuery,
@@ -10,6 +10,9 @@ import {
   getCaretRect,
 } from "@/shared/editor/mention/useMention";
 import MentionPopup from "@/shared/editor/mention/MentionPopup";
+import AttachmentBar from "../attachments/AttachmentBar";
+import { createAttachmentStore } from "../attachments/useAttachments";
+import { bbcodeToInsert } from "../attachments/insertHelpers";
 
 interface Props {
   parentMid?: string;
@@ -22,33 +25,40 @@ export default function CommentComposer(props: Props) {
   const auth = useAuth();
   const caps = CAPABILITIES.comment;
 
+  const scope = `comment:${props.parentMid ?? "new"}`;
+  const attach = createAttachmentStore(currentNick(), scope);
+
   const store = createComposerStore(
     async (body) => {
       const csrf =
         document.querySelector<HTMLMetaElement>('meta[name="api-token"]')
           ?.content ?? "";
 
-      const params = new URLSearchParams({
-        body,
-        mimetype: "text/bbcode",
-        type: "wall-comment",
-        ...(props.parentIid ? { parent: String(props.parentIid) } : {}),
-        profile_uid: String(props.profileUid),
-      });
+      const fileTags = attach.attachments()
+        .filter((a) => a.status === "ready" && (a.hash || a.resourceId))
+        .map((a) => `[attachment]${a.hash ?? a.resourceId},0[/attachment]`)
+        .join("\n");
+      const augmentedBody = fileTags ? `${body}\n${fileTags}` : body;
+
+      const fd = new FormData();
+      fd.append("body", augmentedBody);
+      fd.append("mimetype", "text/bbcode");
+      fd.append("type", "wall-comment");
+      if (props.parentIid) fd.append("parent", String(props.parentIid));
+      fd.append("profile_uid", String(props.profileUid));
 
       const res = await fetch("/item", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "X-CSRF-Token": csrf,
-        },
-        body: params.toString(),
+        headers: { "X-CSRF-Token": csrf },
+        credentials: "include",
+        body: fd,
       });
 
       if (!res.ok) throw new Error("Comment failed");
+      attach.clear();
       props.onSubmitted?.(body);
     },
-    `comment:${props.parentMid ?? "new"}`,
+    scope,
   );
 
   // ── Mention autocomplete ──────────────────────────────────────────────────
@@ -146,6 +156,14 @@ export default function CommentComposer(props: Props) {
             placeholder="Write a reply… (Ctrl+Enter to send)"
             minHeight="60px"
           />
+          <AttachmentBar
+            store={attach}
+            nick={currentNick()}
+            accept="both"
+            onInsert={(bbcode) => {
+              store.setBody(store.body() + "\n" + bbcodeToInsert(bbcode, "text/bbcode"));
+            }}
+          />
         </div>
       </div>
 
@@ -166,7 +184,7 @@ export default function CommentComposer(props: Props) {
         <button
           type="button"
           onClick={() => store.submit()}
-          disabled={store.submitting() || !store.body().trim()}
+          disabled={store.submitting() || attach.uploading() || !store.body().trim()}
           class="px-3 py-1 text-xs font-medium rounded-lg bg-accent text-accent-fg
                  hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
         >

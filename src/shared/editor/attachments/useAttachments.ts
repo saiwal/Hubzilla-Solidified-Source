@@ -1,7 +1,7 @@
 import { createSignal, createMemo, createEffect } from "solid-js";
 import { createStore } from "solid-js/store";
-import { uploadFile, davDirPath, listFolder } from "@/modules/files/api";
-import type { FileMeta } from "@/modules/files/api";
+import { uploadFile, davDirPath, listFolder, updatePermissions } from "@/modules/files/api";
+import type { FileMeta, FileAcl } from "@/modules/files/api";
 import type { Photo } from "@/modules/photos/api/api";
 import type { Attachment, AttachmentStore } from "./types";
 import { storageGet, storageSet, storageDel } from "@/shared/lib/storage";
@@ -77,6 +77,13 @@ export function createAttachmentStore(nick: string, scope: string): AttachmentSt
 
   const [state, setState] = createStore<{ items: Attachment[] }>({ items: [] });
 
+  let currentAcl: FileAcl | null = null;
+
+  function applyAcl(hash: string) {
+    if (!currentAcl) return;
+    void updatePermissions(nick, hash, currentAcl).catch(() => {});
+  }
+
   // Guard: don't wipe the IDB key before the async load resolves
   const [draftLoaded, setDraftLoaded] = createSignal(false);
 
@@ -134,6 +141,7 @@ export function createAttachmentStore(nick: string, scope: string): AttachmentSt
               ? `/cloud/${nick}/${encodeURIComponent(match.filename)}`
               : undefined,
           });
+          if (match?.hash) applyAcl(match.hash);
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : "Upload failed";
           update(item.id, { status: "error", error: msg });
@@ -158,6 +166,9 @@ export function createAttachmentStore(nick: string, scope: string): AttachmentSt
         .join("/")}`,
     }));
     setState("items", (prev) => [...prev, ...dedup(prev, newItems)]);
+    for (const item of newItems) {
+      if (item.hash) applyAcl(item.hash);
+    }
   }
 
   function addPhotos(photos: Photo[]) {
@@ -173,6 +184,9 @@ export function createAttachmentStore(nick: string, scope: string): AttachmentSt
       resourceId: p.resource_id,
     }));
     setState("items", (prev) => [...prev, ...dedup(prev, newItems)]);
+    for (const item of newItems) {
+      if (item.resourceId) applyAcl(item.resourceId);
+    }
   }
 
   function remove(id: string) {
@@ -199,6 +213,15 @@ export function createAttachmentStore(nick: string, scope: string): AttachmentSt
     return `[attachment]${item.insertUrl}[/attachment]`;
   }
 
+  function setAcl(acl: FileAcl | null) {
+    currentAcl = acl;
+    if (!acl) return;
+    for (const att of state.items) {
+      const hash = att.hash ?? att.resourceId;
+      if (att.status === "ready" && hash) applyAcl(hash);
+    }
+  }
+
   function clear() {
     state.items.forEach((a) => {
       if (a.source === "upload" && a.thumbUrl?.startsWith("blob:")) {
@@ -209,7 +232,7 @@ export function createAttachmentStore(nick: string, scope: string): AttachmentSt
     void storageDel(DRAFT_KEY);
   }
 
-  return { attachments, uploading, addUploads, addCloudFiles, addPhotos, remove, setAltText, insertBBCode, clear };
+  return { attachments, uploading, addUploads, addCloudFiles, addPhotos, remove, setAltText, insertBBCode, setAcl, clear };
 }
 
 // Prevent adding the same hash or resourceId twice

@@ -40,7 +40,7 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
   // Inline comment box under a PostCard
   comment: {
     toolbar: "comment",
-    preview: false,
+    preview: true,
     title: false,
     summary: false,
     slug: false,
