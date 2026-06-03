@@ -55,7 +55,7 @@ export default function SubPageLayout(props: Props) {
       {/* ── Left nav ─────────────────────────────────────── */}
       <aside
         class={[
-          "shrink-0 flex flex-col border-rim bg-surface",
+          "shrink-0 flex flex-col border-rim",
           "w-full md:w-56 lg:w-60",
           "border-b md:border-b-0 md:border-r",
           atBase() ? "flex" : "hidden md:flex",
@@ -121,11 +121,11 @@ function SubPageNav(props: {
             <A
               href={`${props.base}/${item.path}`}
               class={[
-                "flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm",
+                "flex items-center gap-3 mx-2 px-3 py-2 rounded-full text-sm",
                 "transition-colors select-none",
                 active()
                   ? "bg-elevated text-txt font-medium"
-                  : "text-muted hover:bg-elevated hover:text-txt",
+                  : "text-muted hover:bg-elevated/60 hover:text-txt",
               ].join(" ")}
             >
               {item.icon && (
