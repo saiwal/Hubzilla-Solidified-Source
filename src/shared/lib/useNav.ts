@@ -17,6 +17,7 @@ import { biToNavIcon } from "../lib/nav-api";
 import { getRoutes } from "./module-registry";
 import { useI18n } from "@/i18n";
 import { useViewerRole } from "../store/site-config";
+import { applyNavOrder } from "../store/nav-order";
 import type { ViewerRole } from "../store/site-config";
 
 type ActionMeta = {
@@ -138,18 +139,15 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
     // Owner in their own context → pinned + installed featured + admin
     if (role === "owner") {
       const installed = installedApps();
-      const pinned = pinnedApps().filter((a) => isSpaApp(a, spaRoots));
-      const pinnedUrls = new Set(pinned.map((a) => toSpaHref(a.url)));
-      const extra = featuredApps()
-        .filter(
-          (a) =>
-            isSpaApp(a, spaRoots) &&
-            !pinnedUrls.has(toSpaHref(a.url)) &&
-            (installed.size === 0 || installed.has(a.name)),
-        )
-        .map(appToNavItem);
-
-      const items: NavItemDef[] = [...pinned.map(appToNavItem), ...extra];
+      const filteredPinned = pinnedApps().filter((a) => isSpaApp(a, spaRoots));
+      const pinnedUrls = new Set(filteredPinned.map((a) => toSpaHref(a.url)));
+      const filteredFeatured = featuredApps().filter(
+        (a) =>
+          isSpaApp(a, spaRoots) &&
+          !pinnedUrls.has(toSpaHref(a.url)) &&
+          (installed.size === 0 || installed.has(a.name)),
+      );
+      const items = applyNavOrder([...filteredPinned, ...filteredFeatured]).map(appToNavItem);
 
       if (isAdmin())
         items.push({ label: t("nav.admin"), icon: "admin", href: "/admin", path: "/admin" });

@@ -1,4 +1,4 @@
-import { Show, For, createSignal, createMemo } from "solid-js";
+import { Show, For, createSignal, createMemo, createEffect } from "solid-js";
 import { createResource } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { apiFetch } from "@/shared/lib/fetch";
@@ -8,7 +8,10 @@ import {
   MdOutlinePush_pin,
   MdFillStar,
   MdOutlineStar,
+  MdFillArrow_upward,
+  MdFillArrow_downward,
 } from "solid-icons/md";
+import { navOrder, setNavOrder } from "@/shared/store/nav-order";
 
 interface AppEntry {
   name: string;
@@ -20,13 +23,22 @@ interface AppEntry {
   requires: string;
 }
 
-type AppAction = "install" | "uninstall" | "pin" | "feature";
+interface IntegrationsData {
+  apps: AppEntry[];
+  navOrder: string[];
+}
 
-async function fetchIntegrations(): Promise<AppEntry[]> {
+type AppAction = "install" | "uninstall" | "pin" | "feature";
+type FilterTab = "all" | "installed" | "available" | "order";
+
+async function fetchIntegrations(): Promise<IntegrationsData> {
   const res = await apiFetch("/api/settings/integrations");
   if (!res.ok) throw new Error(`Failed to load apps: ${res.status}`);
   const { data } = await res.json();
-  return data.apps as AppEntry[];
+  return {
+    apps: data.apps as AppEntry[],
+    navOrder: (data.nav_order as string[]) ?? [],
+  };
 }
 
 async function appAction(name: string, action: AppAction): Promise<void> {
@@ -68,14 +80,22 @@ function AppIcon(props: { app: AppEntry }) {
 }
 
 export default function IntegrationsSection() {
-  const [apps, { refetch }] = createResource(fetchIntegrations);
-  const [busy, setBusy] = createSignal<string | null>(null); // "name:action"
+  const [data, { refetch }] = createResource(fetchIntegrations);
+  const [busy, setBusy] = createSignal<string | null>(null);
   const [error, setError] = createSignal<string | null>(null);
   const [search, setSearch] = createSignal("");
-  const [filter, setFilter] = createSignal<"all" | "installed" | "available">("all");
+  const [filter, setFilter] = createSignal<FilterTab>("all");
+
+  // Sync server-stored nav order into the local signal on load
+  createEffect(() => {
+    const d = data();
+    if (d) setNavOrder(d.navOrder);
+  });
+
+  const apps = () => data()?.apps ?? [];
 
   const filtered = createMemo(() => {
-    const list = apps() ?? [];
+    const list = apps();
     const q = search().toLowerCase();
     return list.filter((app) => {
       if (filter() === "installed" && !app.installed) return false;
@@ -86,6 +106,44 @@ export default function IntegrationsSection() {
     });
   });
 
+  // All nav-visible apps (pinned or featured) merged with the stored display order
+  const orderedNavApps = createMemo((): AppEntry[] => {
+    const list = apps();
+    const seen = new Set<string>();
+    const navApps = list.filter((a) => {
+      if (!(a.pinned || a.featured) || seen.has(a.name)) return false;
+      seen.add(a.name);
+      return true;
+    });
+    const order = navOrder();
+    if (order.length === 0) return navApps;
+
+    const byName = new Map(navApps.map((a) => [a.name, a]));
+    const result: AppEntry[] = [];
+    for (const name of order) {
+      const app = byName.get(name);
+      if (app) result.push(app);
+    }
+    const inOrder = new Set(order);
+    for (const app of navApps) {
+      if (!inOrder.has(app.name)) result.push(app);
+    }
+    return result;
+  });
+
+  const moveApp = (name: string, dir: -1 | 1) => {
+    const order = orderedNavApps().map((a) => a.name);
+    const i = order.indexOf(name);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= order.length) return;
+    [order[i], order[j]] = [order[j], order[i]];
+    setNavOrder(order);
+    apiFetch("/api/settings/integrations", {
+      method: "POST",
+      body: JSON.stringify({ action: "reorder", order }),
+    }).catch(() => {});
+  };
+
   const isBusy = (name: string, action?: AppAction) =>
     action ? busy() === `${name}:${action}` : busy()?.startsWith(`${name}:`);
 
@@ -94,6 +152,20 @@ export default function IntegrationsSection() {
     setError(null);
     try {
       await appAction(app.name, action);
+      if (action === "pin" || action === "feature") {
+        const current = navOrder();
+        const isActivating = action === "pin" ? !app.pinned : !app.featured;
+        const stillInNavOtherWay = action === "pin" ? app.featured : app.pinned;
+        if (isActivating) {
+          if (!current.includes(app.name)) setNavOrder([...current, app.name]);
+        } else if (!stillInNavOtherWay) {
+          setNavOrder(current.filter((n) => n !== app.name));
+        }
+        apiFetch("/api/settings/integrations", {
+          method: "POST",
+          body: JSON.stringify({ action: "reorder", order: navOrder() }),
+        }).catch(() => {});
+      }
       await refetch();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
@@ -101,6 +173,13 @@ export default function IntegrationsSection() {
       setBusy(null);
     }
   };
+
+  const TABS: { value: FilterTab; label: string }[] = [
+    { value: "all", label: "All" },
+    { value: "installed", label: "Installed" },
+    { value: "available", label: "Available" },
+    { value: "order", label: "Nav Order" },
+  ];
 
   return (
     <SubPageContent
@@ -114,120 +193,172 @@ export default function IntegrationsSection() {
       </Show>
 
       <div class="flex gap-2 flex-wrap">
-        <input
-          type="search"
-          placeholder="Search apps…"
-          value={search()}
-          onInput={(e) => setSearch(e.currentTarget.value)}
-          class="flex-1 min-w-0 px-3 py-1.5 text-sm rounded-lg bg-surface border border-rim
-                 text-txt hover:border-rim-strong focus:outline-none focus:border-accent
-                 placeholder:text-muted"
-        />
         <div class="flex rounded-lg border border-rim overflow-hidden text-xs font-medium">
-          <For each={["all", "installed", "available"] as const}>
+          <For each={TABS}>
             {(tab) => (
               <button
                 type="button"
-                onClick={() => setFilter(tab)}
-                class={`px-3 py-1.5 capitalize transition-colors
-                  ${filter() === tab
+                onClick={() => setFilter(tab.value)}
+                class={`px-3 py-1.5 transition-colors
+                  ${filter() === tab.value
                     ? "bg-elevated text-txt"
                     : "text-muted hover:bg-elevated hover:text-txt"
                   }`}
               >
-                {tab}
+                {tab.label}
               </button>
             )}
           </For>
         </div>
+        <Show when={filter() !== "order"}>
+          <input
+            type="search"
+            placeholder="Search apps…"
+            value={search()}
+            onInput={(e) => setSearch(e.currentTarget.value)}
+            class="flex-1 min-w-0 px-3 py-1.5 text-sm rounded-lg bg-surface border border-rim
+                   text-txt hover:border-rim-strong focus:outline-none focus:border-accent
+                   placeholder:text-muted"
+          />
+        </Show>
       </div>
 
-      <Show when={!apps.loading} fallback={<Skeleton />}>
+      {/* Nav Order tab */}
+      <Show when={filter() === "order"}>
         <Show
-          when={filtered().length > 0}
+          when={orderedNavApps().length > 0}
           fallback={
-            <p class="text-sm text-muted text-center py-8">No apps match your search.</p>
+            <p class="text-sm text-muted text-center py-8">
+              No apps pinned to nav yet. Pin apps using the other tabs.
+            </p>
           }
         >
-          <div class="divide-y divide-rim">
-            <For each={filtered()}>
-              {(app) => (
-                <div class="flex items-center gap-3 py-3">
+          <div class="divide-y divide-rim border border-rim rounded-lg overflow-hidden">
+            <For each={orderedNavApps()}>
+              {(app, index) => (
+                <div class="flex items-center gap-3 px-3 py-2.5 bg-surface">
                   <AppIcon app={app} />
-
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-txt leading-snug">{app.name}</p>
-                    <Show when={app.description}>
-                      <p class="text-xs text-muted truncate">{app.description}</p>
-                    </Show>
+                  <span class="flex-1 text-sm font-medium text-txt truncate">{app.name}</span>
+                  <div class="flex gap-0.5 shrink-0">
+                    <button
+                      type="button"
+                      title="Move up"
+                      disabled={index() === 0}
+                      onClick={() => moveApp(app.name, -1)}
+                      class="w-7 h-7 flex items-center justify-center rounded-lg text-muted
+                             hover:bg-elevated hover:text-txt disabled:opacity-30
+                             disabled:cursor-not-allowed transition-colors"
+                    >
+                      <MdFillArrow_upward size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      title="Move down"
+                      disabled={index() === orderedNavApps().length - 1}
+                      onClick={() => moveApp(app.name, 1)}
+                      class="w-7 h-7 flex items-center justify-center rounded-lg text-muted
+                             hover:bg-elevated hover:text-txt disabled:opacity-30
+                             disabled:cursor-not-allowed transition-colors"
+                    >
+                      <MdFillArrow_downward size={16} />
+                    </button>
                   </div>
-
-                  {/* Pin / Feature toggles — only when installed */}
-                  <Show when={app.installed}>
-                    <div class="flex items-center gap-1 shrink-0">
-                      <button
-                        type="button"
-                        title={app.pinned ? "Unpin from nav" : "Pin to nav"}
-                        disabled={!!isBusy(app.name)}
-                        onClick={() => run(app, "pin")}
-                        class={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors
-                          disabled:opacity-40 disabled:cursor-not-allowed
-                          ${app.pinned
-                            ? "text-accent bg-accent/10 hover:bg-accent/20"
-                            : "text-muted hover:bg-elevated hover:text-txt"
-                          }`}
-                      >
-                        <Show
-                          when={app.pinned}
-                          fallback={<MdOutlinePush_pin size={16} />}
-                        >
-                          <MdFillPush_pin size={16} />
-                        </Show>
-                      </button>
-
-                      <button
-                        type="button"
-                        title={app.featured ? "Remove from app tray" : "Add to app tray"}
-                        disabled={!!isBusy(app.name)}
-                        onClick={() => run(app, "feature")}
-                        class={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors
-                          disabled:opacity-40 disabled:cursor-not-allowed
-                          ${app.featured
-                            ? "text-amber-500 bg-amber-500/10 hover:bg-amber-500/20"
-                            : "text-muted hover:bg-elevated hover:text-txt"
-                          }`}
-                      >
-                        <Show
-                          when={app.featured}
-                          fallback={<MdOutlineStar size={16} />}
-                        >
-                          <MdFillStar size={16} />
-                        </Show>
-                      </button>
-                    </div>
-                  </Show>
-
-                  <button
-                    type="button"
-                    disabled={!!isBusy(app.name)}
-                    onClick={() => run(app, app.installed ? "uninstall" : "install")}
-                    class={`shrink-0 px-3 py-1.5 text-xs font-medium rounded-lg transition-opacity
-                      disabled:opacity-40 disabled:cursor-not-allowed
-                      ${app.installed
-                        ? "border border-rim text-muted hover:bg-elevated"
-                        : "bg-accent text-accent-fg hover:opacity-90"
-                      }`}
-                  >
-                    {isBusy(app.name, app.installed ? "uninstall" : "install")
-                      ? "…"
-                      : app.installed
-                        ? "Remove"
-                        : "Install"}
-                  </button>
                 </div>
               )}
             </For>
           </div>
+        </Show>
+      </Show>
+
+      {/* App list tabs */}
+      <Show when={filter() !== "order"}>
+        <Show when={!data.loading} fallback={<Skeleton />}>
+          <Show
+            when={filtered().length > 0}
+            fallback={
+              <p class="text-sm text-muted text-center py-8">No apps match your search.</p>
+            }
+          >
+            <div class="divide-y divide-rim">
+              <For each={filtered()}>
+                {(app) => (
+                  <div class="flex items-center gap-3 py-3">
+                    <AppIcon app={app} />
+
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-txt leading-snug">{app.name}</p>
+                      <Show when={app.description}>
+                        <p class="text-xs text-muted truncate">{app.description}</p>
+                      </Show>
+                    </div>
+
+                    {/* Pin / Feature toggles — only when installed */}
+                    <Show when={app.installed}>
+                      <div class="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          title={app.pinned ? "Unpin from nav" : "Pin to nav"}
+                          disabled={!!isBusy(app.name)}
+                          onClick={() => run(app, "pin")}
+                          class={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors
+                            disabled:opacity-40 disabled:cursor-not-allowed
+                            ${app.pinned
+                              ? "text-accent bg-accent/10 hover:bg-accent/20"
+                              : "text-muted hover:bg-elevated hover:text-txt"
+                            }`}
+                        >
+                          <Show
+                            when={app.pinned}
+                            fallback={<MdOutlinePush_pin size={16} />}
+                          >
+                            <MdFillPush_pin size={16} />
+                          </Show>
+                        </button>
+
+                        <button
+                          type="button"
+                          title={app.featured ? "Remove from app tray" : "Add to app tray"}
+                          disabled={!!isBusy(app.name)}
+                          onClick={() => run(app, "feature")}
+                          class={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors
+                            disabled:opacity-40 disabled:cursor-not-allowed
+                            ${app.featured
+                              ? "text-amber-500 bg-amber-500/10 hover:bg-amber-500/20"
+                              : "text-muted hover:bg-elevated hover:text-txt"
+                            }`}
+                        >
+                          <Show
+                            when={app.featured}
+                            fallback={<MdOutlineStar size={16} />}
+                          >
+                            <MdFillStar size={16} />
+                          </Show>
+                        </button>
+                      </div>
+                    </Show>
+
+                    <button
+                      type="button"
+                      disabled={!!isBusy(app.name)}
+                      onClick={() => run(app, app.installed ? "uninstall" : "install")}
+                      class={`shrink-0 px-3 py-1.5 text-xs font-medium rounded-lg transition-opacity
+                        disabled:opacity-40 disabled:cursor-not-allowed
+                        ${app.installed
+                          ? "border border-rim text-muted hover:bg-elevated"
+                          : "bg-accent text-accent-fg hover:opacity-90"
+                        }`}
+                    >
+                      {isBusy(app.name, app.installed ? "uninstall" : "install")
+                        ? "…"
+                        : app.installed
+                          ? "Remove"
+                          : "Install"}
+                    </button>
+                  </div>
+                )}
+              </For>
+            </div>
+          </Show>
         </Show>
       </Show>
     </SubPageContent>
