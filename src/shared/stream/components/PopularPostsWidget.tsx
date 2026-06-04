@@ -14,12 +14,15 @@
 
 import {
   type Component,
+  createEffect,
+  on,
   createResource,
   createSignal,
   For,
   Show,
 } from "solid-js";
 import { useI18n } from "@/i18n";
+import { toast } from "@/shared/store/toast";
 import formatPostDate from "@/shared/lib/date";
 import DOMPurify from "dompurify";
 import PostDetailModal from "@/shared/views/PostDetailModal";
@@ -231,6 +234,8 @@ const PopularPostsWidget: Component<PopularPostsWidgetProps> = (props) => {
     (p) => (p ? fetchPopular(p) : Promise.resolve([])),
   );
 
+  createEffect(on(() => remote.error, (err) => { if (err) toast.error(err.message ?? t("widgets.load_error")); }));
+
   const posts = (): PopularPost[] =>
     (props.data ?? remote() ?? []).slice(0, limit());
 
@@ -248,15 +253,8 @@ const PopularPostsWidget: Component<PopularPostsWidgetProps> = (props) => {
         <PopularSkeleton count={limit()} />
       </Show>
 
-      {/* Error */}
-      <Show when={remote.error && !remote.loading}>
-        <p class="px-4 py-3 text-xs text-red-500">
-          {t("widgets.load_error")}: {remote.error?.message}
-        </p>
-      </Show>
-
       {/* Content */}
-      <Show when={!remote.loading && !remote.error}>
+      <Show when={!remote.loading}>
         <Show
           when={posts().length > 0}
           fallback={

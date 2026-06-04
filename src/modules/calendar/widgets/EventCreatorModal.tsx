@@ -1,4 +1,5 @@
 import { createSignal, Show, onMount, onCleanup } from "solid-js";
+import { toast } from "@/shared/store/toast";
 import { createEvent } from "../api";
 
 interface Props {
@@ -22,7 +23,6 @@ export default function EventCreatorModal(props: Props) {
   const [location, setLocation] = createSignal("");
   const [description, setDescription] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
-  const [error, setError] = createSignal("");
 
   let titleRef!: HTMLInputElement;
   onMount(() => titleRef?.focus());
@@ -35,10 +35,9 @@ export default function EventCreatorModal(props: Props) {
 
   async function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
-    if (!title().trim()) { setError("Title is required"); return; }
+    if (!title().trim()) { toast.error("Title is required"); return; }
 
     setSubmitting(true);
-    setError("");
 
     try {
       const startIso = allDay()
@@ -64,7 +63,7 @@ export default function EventCreatorModal(props: Props) {
       props.onCreated?.();
       props.onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create event");
+      toast.error(err instanceof Error ? err.message : "Failed to create event");
     } finally {
       setSubmitting(false);
     }
@@ -210,11 +209,6 @@ export default function EventCreatorModal(props: Props) {
               class={`${inputClass} resize-none`}
             />
           </div>
-
-          {/* Error */}
-          <Show when={error()}>
-            <p class="text-xs text-red-500">{error()}</p>
-          </Show>
 
           {/* Actions */}
           <div class="flex justify-end gap-2 pt-1">

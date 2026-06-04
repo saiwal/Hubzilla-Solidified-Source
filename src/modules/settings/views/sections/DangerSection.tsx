@@ -1,5 +1,6 @@
 import { Show, createSignal } from "solid-js";
 import { createResource } from "solid-js";
+import { toast } from "@/shared/store/toast";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { apiFetch } from "@/shared/lib/fetch";
 
@@ -14,12 +15,10 @@ export default function DangerSection() {
 
   const [confirm, setConfirm] = createSignal("");
   const [busy, setBusy] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
 
   const removeChannel = async () => {
     if (confirm() !== data()?.nick) return;
     setBusy(true);
-    setError(null);
     try {
       const res = await apiFetch("/api/settings/danger", {
         method: "POST",
@@ -29,7 +28,7 @@ export default function DangerSection() {
       const json = await res.json();
       window.location.href = json.data?.redirect ?? "/";
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed");
+      toast.error(e instanceof Error ? e.message : "Failed");
       setBusy(false);
     }
   };
@@ -62,10 +61,6 @@ export default function DangerSection() {
                        text-txt text-sm outline-none focus:border-red-500 transition-colors"
               />
             </div>
-
-            <Show when={error()}>
-              <p class="text-xs text-red-600">{error()}</p>
-            </Show>
 
             <button
               type="button"

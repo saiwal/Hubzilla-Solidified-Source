@@ -5,7 +5,6 @@ import {
   posts,
   loading,
   hasMore,
-  error,
   disabled,
   meta,
   loadPubstream,
@@ -146,13 +145,6 @@ export default function PubstreamView() {
 
         {/* Tag filter */}
         <TagBar tag={tag()} onTag={setTag} />
-
-        {/* Error */}
-        <Show when={error()}>
-          <div class="mb-4 bg-surface border border-rim rounded-xl p-4 text-sm text-red-500">
-            {error()}
-          </div>
-        </Show>
 
         {/* Initial skeleton */}
         <Show

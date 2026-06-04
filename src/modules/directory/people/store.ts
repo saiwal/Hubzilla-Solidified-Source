@@ -2,6 +2,7 @@
 
 import { createSignal } from "solid-js";
 import { fetchDirectory } from "./api";
+import { toast } from "@/shared/store/toast";
 import type { DirectoryEntry, DirectoryParams } from "./api";
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -31,7 +32,9 @@ export async function loadDirectory(params: DirectoryParams = {}) {
     currentStart = data.entries.length;
     setHasMore(data.entries.length >= data.meta.limit);
   } catch (err) {
-    setError(err instanceof Error ? err.message : "Unknown error");
+    const msg = err instanceof Error ? err.message : "Unknown error";
+    setError(msg);
+    toast.error(msg);
     setEntries([]);
   } finally {
     setLoading(false);

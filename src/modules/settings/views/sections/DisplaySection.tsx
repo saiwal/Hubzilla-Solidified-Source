@@ -22,7 +22,7 @@ export default function DisplaySection() {
     const val = (e.currentTarget as HTMLInputElement).value.trim();
     setBgUrl(val);
   }
-  const { data, saving, saveError, saveOk, handleSubmit } = useSectionForm({
+  const { data, saving, handleSubmit } = useSectionForm({
     fetcher: fetchDisplaySettings,
     saver: saveDisplaySettings,
     numericFields: [
@@ -323,12 +323,6 @@ export default function DisplaySection() {
               {saving() ? "Saving…" : "Save changes"}
             </button>
 
-            <Show when={saveOk()}>
-              <span class="text-sm text-green-600">Saved ✓</span>
-            </Show>
-            <Show when={saveError()}>
-              <span class="text-sm text-red-500">{saveError()}</span>
-            </Show>
           </div>
 
         </form>

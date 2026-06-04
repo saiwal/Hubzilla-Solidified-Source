@@ -18,7 +18,7 @@ const ACCESS_POLICIES = [
 ];
 
 export default function SiteSection() {
-  const { data, saving, saveError, saveOk, handleSubmit } = useSectionForm<AdminSite>({
+  const { data, saving, handleSubmit } = useSectionForm<AdminSite>({
     fetcher: fetchAdminSite,
     saver: saveAdminSite,
     numericFields: ["register_policy", "access_policy", "max_daily_registrations", "abandon_days", "maximagesize"],
@@ -104,14 +104,6 @@ export default function SiteSection() {
             <Toggle name="open_pubstream" label="Open public stream" checked={d().open_pubstream} />
             <Toggle name="disable_discover_tab" label="Disable discover tab" checked={d().disable_discover_tab} />
 
-            <div class="flex items-center gap-3 pt-1">
-              <Show when={saveOk()}>
-                <span class="text-sm text-green-600">Saved ✓</span>
-              </Show>
-              <Show when={saveError()}>
-                <span class="text-sm text-red-500">{saveError()}</span>
-              </Show>
-            </div>
           </form>
         )}
       </Show>

@@ -6,6 +6,7 @@ import {
   Show,
   type Component,
 } from "solid-js";
+import { toast } from "@/shared/store/toast";
 import { useParams } from "@solidjs/router";
 import { MdFillFolder, MdFillDelete, MdFillAdd, MdFillLock, MdFillLock_open } from "solid-icons/md";
 import { useAuth } from "@/shared/store/auth-store";
@@ -551,7 +552,7 @@ export default function FilesView() {
       await deleteItem(nick(), item.display_path);
       refetch();
     } catch (e) {
-      alert(`Delete failed: ${(e as Error).message}`);
+      toast.error(`Delete failed: ${(e as Error).message}`);
     } finally {
       setDeleting(null);
     }
@@ -568,7 +569,7 @@ export default function FilesView() {
       setShowNewFolder(false);
       refetch();
     } catch (err) {
-      alert(`Could not create folder: ${(err as Error).message}`);
+      toast.error(`Could not create folder: ${(err as Error).message}`);
     } finally {
       setFolderBusy(false);
     }

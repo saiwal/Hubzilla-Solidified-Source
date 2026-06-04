@@ -1,4 +1,5 @@
 import { createResource, createSignal, For, Show } from "solid-js";
+import { toast } from "@/shared/store/toast";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchAdminFeatures, saveAdminFeatures } from "../../api";
 import type { FeatureItem } from "../../types";
@@ -6,8 +7,6 @@ import type { FeatureItem } from "../../types";
 export default function FeaturesSection() {
   const [features, { refetch }] = createResource(fetchAdminFeatures);
   const [saving, setSaving] = createSignal(false);
-  const [saveOk, setSaveOk] = createSignal(false);
-  const [saveError, setSaveError] = createSignal<string | null>(null);
 
   async function handleSubmit(e: Event) {
     e.preventDefault();
@@ -22,15 +21,12 @@ export default function FeaturesSection() {
     );
 
     setSaving(true);
-    setSaveError(null);
-    setSaveOk(false);
     try {
       await saveAdminFeatures(payload);
-      setSaveOk(true);
-      setTimeout(() => setSaveOk(false), 3000);
+      toast.success("Saved");
       refetch();
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : "Save failed");
+      toast.error(err instanceof Error ? err.message : "Save failed");
     } finally {
       setSaving(false);
     }
@@ -68,14 +64,6 @@ export default function FeaturesSection() {
               )}
             </For>
 
-            <div class="flex items-center gap-3 pt-1">
-              <Show when={saveOk()}>
-                <span class="text-sm text-green-600">Saved ✓</span>
-              </Show>
-              <Show when={saveError()}>
-                <span class="text-sm text-red-500">{saveError()}</span>
-              </Show>
-            </div>
           </form>
         )}
       </Show>

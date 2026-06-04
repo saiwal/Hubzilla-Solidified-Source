@@ -5,7 +5,7 @@ import { useSectionForm } from "@/modules/settings/store/useSectionForm";
 import type { AdminSecurity } from "../../types";
 
 export default function SecuritySection() {
-  const { data, saving, saveError, saveOk, handleSubmit } = useSectionForm<AdminSecurity>({
+  const { data, saving, handleSubmit } = useSectionForm<AdminSecurity>({
     fetcher: fetchAdminSecurity,
     saver: saveAdminSecurity,
     checkboxFields: [
@@ -84,14 +84,6 @@ export default function SecuritySection() {
               <textarea name="trusted_directory_servers" rows={2} class={inputCls}>{d().trusted_directory_servers}</textarea>
             </Field>
 
-            <div class="flex items-center gap-3 pt-1">
-              <Show when={saveOk()}>
-                <span class="text-sm text-green-600">Saved ✓</span>
-              </Show>
-              <Show when={saveError()}>
-                <span class="text-sm text-red-500">{saveError()}</span>
-              </Show>
-            </div>
           </form>
         )}
       </Show>

@@ -1,7 +1,7 @@
 import { createEffect, Show, For, createSignal } from 'solid-js';
 import { useParams } from '@solidjs/router';
 import { useAuth } from '@/shared/store/auth-store';
-import { pages, loading, error, loadWebpages, removePage } from '../store';
+import { pages, loading, loadWebpages, removePage } from '../store';
 import type { WebPage } from '../api';
 
 export default function WebpagesView() {
@@ -35,12 +35,6 @@ export default function WebpagesView() {
           + New Page
         </a>
       </div>
-
-      <Show when={error()}>
-        <div class="p-3 rounded-lg bg-red-100 text-red-700 text-sm border border-red-200">
-          {error()}
-        </div>
-      </Show>
 
       <Show when={!loading()} fallback={<WebpagesPlaceholder />}>
         <Show

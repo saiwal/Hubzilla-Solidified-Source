@@ -394,12 +394,6 @@ export default function ArticleComposer(props: Props) {
         />
       </Show>
 
-      {/* Error */}
-      <Show when={store.error()}>
-        <p class="text-sm text-red-500 bg-red-50/10 px-3 py-2 rounded-lg">
-          {store.error()}
-        </p>
-      </Show>
 
       {/* Drafts panel */}
       <Show when={draftsOpen()}>

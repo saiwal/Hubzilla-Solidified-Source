@@ -1,6 +1,6 @@
 import { createEffect, createSignal, Show, For, onMount } from "solid-js";
 import {
-  entries, loading, loadingMore, hasMore, total, error,
+  entries, loading, loadingMore, hasMore, total,
   loadDirectory, loadMoreDirectory, resetDirectory,
 } from "../../people/store";
 import DirectoryCard from "../DirectoryCard";
@@ -104,13 +104,6 @@ export default function DirectorySection() {
       {/* ── Count ── */}
       <Show when={!loading() && total() > 0}>
         <p class="text-sm text-muted">{total().toLocaleString()} channels found</p>
-      </Show>
-
-      {/* ── Error ── */}
-      <Show when={error()}>
-        <div class="rounded-lg bg-accent-muted border border-accent p-4 text-sm text-accent">
-          {error()}
-        </div>
       </Show>
 
       {/* ── Skeleton ── */}

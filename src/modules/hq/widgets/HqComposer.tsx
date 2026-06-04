@@ -1,4 +1,5 @@
 import { createSignal, createEffect, onCleanup, Show, For } from "solid-js";
+import { toast } from "@/shared/store/toast";
 import { useAuth } from "@/shared/store/auth-store";
 import { motion } from "solid-motionone";
 import PostComposer from "@/shared/editor/composers/PostComposer";
@@ -39,7 +40,6 @@ function HqComposer() {
   const [allowKeys, setAllowKeys] = createSignal<Set<string>>(new Set<string>());
   const [denyKeys, setDenyKeys] = createSignal<Set<string>>(new Set<string>());
   const [submitting, setSubmitting] = createSignal(false);
-  const [error, setError] = createSignal("");
   const [fullOpen, setFullOpen] = createSignal(false);
 
   // Load draft on mount
@@ -120,7 +120,6 @@ function HqComposer() {
   async function handleSubmit() {
     if (!body().trim()) return;
     setSubmitting(true);
-    setError("");
 
     const fd = new FormData();
     fd.append("body", body());
@@ -145,7 +144,7 @@ function HqComposer() {
       fd.append("public_policy", "contacts");
     } else {
       if (allowKeys().size === 0) {
-        setError("Select at least one connection to allow.");
+        toast.error("Select at least one connection to allow.");
         setSubmitting(false);
         return;
       }
@@ -167,11 +166,11 @@ function HqComposer() {
       const res = await fetch("/item", { method: "POST", credentials: "include", body: fd });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json().catch(() => ({})) as { success?: number; cancel?: number };
-      if (json.cancel) { setError("Cancelled by server."); return; }
-      if (!json.success) { setError("Server reported failure."); return; }
+      if (json.cancel) { toast.error("Cancelled by server."); return; }
+      if (!json.success) { toast.error("Server reported failure."); return; }
       resetComposer();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Submission failed.");
+      toast.error(e instanceof Error ? e.message : "Submission failed.");
     } finally {
       setSubmitting(false);
     }
@@ -182,7 +181,6 @@ function HqComposer() {
     setAllowKeys(new Set<string>());
     setDenyKeys(new Set<string>());
     setAclMode("connections");
-    setError("");
     if (taRef) taRef.style.height = "auto";
     storageDel(DRAFT_KEY);
   }
@@ -290,11 +288,6 @@ function HqComposer() {
           {submitting() ? "Posting…" : "Post"}
         </button>
       </div>
-
-      {/* Error */}
-      <Show when={error()}>
-        <p class="mt-1.5 text-xs text-red-500">{error()}</p>
-      </Show>
 
       {/* Mention popup */}
       <Show when={mention.open() && mention.rect() !== null}>

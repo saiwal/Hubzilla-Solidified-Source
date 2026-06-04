@@ -1,7 +1,7 @@
 // settings/store/FormHelpers.tsx
 import { Show } from "solid-js";
 
-export function SaveBar(props: { saving: boolean; saveOk: boolean; saveError: string | null }) {
+export function SaveBar(props: { saving: boolean }) {
   return (
     <div class="flex items-center gap-3 pt-2 border-t border-rim">
       <button
@@ -12,12 +12,6 @@ export function SaveBar(props: { saving: boolean; saveOk: boolean; saveError: st
       >
         {props.saving ? "Saving…" : "Save changes"}
       </button>
-      <Show when={props.saveOk}>
-        <span class="text-sm text-green-600">Saved ✓</span>
-      </Show>
-      <Show when={props.saveError}>
-        <span class="text-sm text-red-500">{props.saveError}</span>
-      </Show>
     </div>
   );
 }

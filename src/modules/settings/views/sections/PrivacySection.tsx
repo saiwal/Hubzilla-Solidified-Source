@@ -56,7 +56,7 @@ function Skeleton() {
   );
 }
 export default function PrivacySection() {
-  const { data, saving, saveError, saveOk, handleSubmit } = useSectionForm({
+  const { data, saving, handleSubmit } = useSectionForm({
     fetcher: fetchPrivacy,
     saver: savePrivacy,
     numericFields: [...TOGGLE_FIELDS],
@@ -113,7 +113,7 @@ export default function PrivacySection() {
             <Toggle name="ocap_enabled"                 label="Enable object capabilities (ocap)"       hint="Experimental capability-based access control."           checked={!!data()!.ocap_enabled} />
           </Section>
 
-          <SaveBar saving={saving()} saveOk={saveOk()} saveError={saveError()} />
+          <SaveBar saving={saving()} />
         </form>
       </Show>
     </SubPageContent>

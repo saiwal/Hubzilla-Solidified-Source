@@ -1,5 +1,6 @@
 // modules/directory/groups/store.ts
 import { createSignal } from "solid-js";
+import { toast } from "@/shared/store/toast";
 import type { PrivacyGroup, GroupDetail } from "./api";
 import {
   fetchGroups,
@@ -20,6 +21,12 @@ const [error, setError] = createSignal<string | null>(null);
 
 export { groups, activeGroup, loading, detailLoading, error };
 
+function fail(e: unknown): void {
+  const msg = (e as Error).message ?? String(e);
+  setError(msg);
+  toast.error(msg);
+}
+
 // ── Actions ───────────────────────────────────────────────────────────────────
 
 export async function loadGroups(force = false): Promise<void> {
@@ -29,7 +36,7 @@ export async function loadGroups(force = false): Promise<void> {
   try {
     setGroups(await fetchGroups());
   } catch (e) {
-    setError((e as Error).message);
+    fail(e);
   } finally {
     setLoading(false);
   }
@@ -43,7 +50,7 @@ export async function loadGroup(id: number): Promise<void> {
   try {
     setActiveGroup(await fetchGroup(id));
   } catch (e) {
-    setError((e as Error).message);
+    fail(e);
   } finally {
     setDetailLoading(false);
   }
@@ -56,7 +63,7 @@ export async function createGroup(name: string, visible: boolean): Promise<Priva
     setGroups((prev) => [...prev, group]);
     return group;
   } catch (e) {
-    setError((e as Error).message);
+    fail(e);
     return null;
   }
 }
@@ -78,7 +85,7 @@ export async function updateGroup(
       setActiveGroup((prev) => (prev ? { ...prev, group: updated } : null));
     }
   } catch (e) {
-    setError((e as Error).message);
+    fail(e);
   }
 }
 
@@ -90,7 +97,7 @@ export async function toggleMember(groupId: number, xchan_hash: string): Promise
       setActiveGroup((prev) => (prev ? { ...prev, members: result.members } : null));
     }
   } catch (e) {
-    setError((e as Error).message);
+    fail(e);
   }
 }
 
@@ -101,6 +108,6 @@ export async function deleteGroup(id: number): Promise<void> {
     setGroups((prev) => prev.filter((g) => g.id !== id));
     if (activeGroup()?.group.id === id) setActiveGroup(null);
   } catch (e) {
-    setError((e as Error).message);
+    fail(e);
   }
 }

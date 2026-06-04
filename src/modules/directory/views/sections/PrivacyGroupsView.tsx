@@ -24,7 +24,6 @@ import SubPageContent from "@/shared/views/SubPageContent";
 import {
   groups,
   loading,
-  error,
   loadGroups,
   createGroup,
   deleteGroup,
@@ -169,10 +168,6 @@ const PrivacyGroupsView: Component = () => {
       description="Group your connections to control who sees each post."
       action={<CreateForm />}
     >
-      <Show when={error()}>
-        <p class="text-red-500 text-sm">{error()}</p>
-      </Show>
-
       <Show
         when={!loading()}
         fallback={

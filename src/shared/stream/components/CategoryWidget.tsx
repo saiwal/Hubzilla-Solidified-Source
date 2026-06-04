@@ -3,8 +3,9 @@
 // API: GET /api/stream-widgets/categories?channel_nick=<nick>&type=<articles|posts>
 // Response: { data: { categories: { name: string; slug: string; count: number }[] } }
 
-import { type Component, createResource, For, Show } from "solid-js";
+import { type Component, createEffect, on, createResource, For, Show } from "solid-js";
 import { useI18n } from "@/i18n";
+import { toast } from "@/shared/store/toast";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -86,6 +87,8 @@ const CategoryWidget: Component<CategoryWidgetProps> = (props) => {
     (p) => (p ? fetchCategories(p) : Promise.resolve([])),
   );
 
+  createEffect(on(() => remote.error, (err) => { if (err) toast.error(err.message ?? t("widgets.load_error")); }));
+
   const categories = (): CategoryItem[] => props.data ?? remote() ?? [];
   const total = () => categories().reduce((s, c) => s + c.count, 0);
 
@@ -101,15 +104,8 @@ const CategoryWidget: Component<CategoryWidgetProps> = (props) => {
         <CategorySkeleton />
       </Show>
 
-      {/* Error */}
-      <Show when={remote.error && !remote.loading}>
-        <p class="px-4 py-3 text-xs text-red-500">
-          {t("widgets.load_error")}: {remote.error?.message}
-        </p>
-      </Show>
-
       {/* Content */}
-      <Show when={!remote.loading && !remote.error}>
+      <Show when={!remote.loading}>
         <Show
           when={categories().length > 0}
           fallback={

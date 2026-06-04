@@ -1,6 +1,7 @@
 // modules/manage/store.ts
 
 import { createResource, createSignal } from "solid-js";
+import { toast } from "@/shared/store/toast";
 import {
   fetchManageApi,
   switchChannel as apiSwitch,
@@ -45,10 +46,9 @@ export async function doSwitchChannel(
     setActionState({ status: "idle" });
     return result.redirect_to;
   } catch (e) {
-    setActionState({
-      status: "error",
-      message: e instanceof Error ? e.message : "Switch failed",
-    });
+    const msg = e instanceof Error ? e.message : "Switch failed";
+    toast.error(msg);
+    setActionState({ status: "error", message: msg });
     return null;
   }
 }
@@ -62,10 +62,9 @@ export async function doSetDefault(channelId: number): Promise<boolean> {
     setManageVersion((v) => v + 1);
     return true;
   } catch (e) {
-    setActionState({
-      status: "error",
-      message: e instanceof Error ? e.message : "Set default failed",
-    });
+    const msg = e instanceof Error ? e.message : "Set default failed";
+    toast.error(msg);
+    setActionState({ status: "error", message: msg });
     return false;
   }
 }

@@ -20,7 +20,6 @@ import SubPageContent from "@/shared/views/SubPageContent";
 import {
   activeGroup,
   detailLoading,
-  error,
   loadGroup,
   updateGroup,
   toggleMember,
@@ -161,10 +160,6 @@ const PrivacyGroupDetailView: Component<Props> = (props) => {
         </div>
       }
     >
-      <Show when={error()}>
-        <p class="text-red-500 text-sm px-4 pt-4">{error()}</p>
-      </Show>
-
       <Show when={activeGroup()} keyed>
         {(detail) => (
           <>

@@ -6,7 +6,7 @@ import {
   MdFillRemove_shopping_cart,
 } from 'solid-icons/md';
 import {
-  catalog, loading, error, cartItems, cartCount, cartSubtotal, nick,
+  catalog, loading, cartItems, cartCount, cartSubtotal, nick,
   loadCatalog, addItem, removeItem,
 } from '../store';
 
@@ -44,15 +44,11 @@ export default function CartView() {
         <CatalogSkeleton />
       </Show>
 
-      <Show when={!loading() && error()}>
-        <p class="text-sm text-red-500 py-6 text-center">{error()}</p>
-      </Show>
-
-      <Show when={!loading() && !error() && tab() === 'catalog'}>
+      <Show when={!loading() && tab() === 'catalog'}>
         <CatalogGrid />
       </Show>
 
-      <Show when={!loading() && !error() && tab() === 'cart'}>
+      <Show when={!loading() && tab() === 'cart'}>
         <CartContents onBrowse={() => setTab('catalog')} />
       </Show>
     </div>

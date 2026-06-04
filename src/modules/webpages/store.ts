@@ -1,5 +1,6 @@
 import { createSignal } from 'solid-js';
 import { fetchWebpages, deleteWebPage, type WebPage } from './api';
+import { toast } from "@/shared/store/toast";
 
 // Module-level singletons — survive navigation by design.
 // loadWebpages() guards against redundant fetches when store is already populated
@@ -23,6 +24,7 @@ export async function loadWebpages(nick: string, force = false) {
     setPages(await fetchWebpages(nick));
   } catch (e: any) {
     setError(e.message);
+    toast.error(e.message);
   } finally {
     setLoading(false);
   }
@@ -37,5 +39,6 @@ export async function removePage(iid: number) {
   } catch (e: any) {
     setPages(prev); // rollback on failure
     setError(e.message);
+    toast.error(e.message);
   }
 }

@@ -3,6 +3,7 @@ import {
   createResource, createSignal, createEffect, onCleanup, onMount,
   Show, For
 } from "solid-js";
+import { toast } from "@/shared/store/toast";
 import { useParams, A, useNavigate } from "@solidjs/router";
 import { Portal } from "solid-js/web";
 import { fetchArticle, deleteArticle } from "../api";
@@ -157,7 +158,6 @@ function EditModal(props: {
 
 function DeleteConfirm(props: { mid: string; onDeleted: () => void; onCancel: () => void }) {
   const [deleting, setDeleting] = createSignal(false);
-  const [error, setError] = createSignal("");
 
   const confirm = async () => {
     setDeleting(true);
@@ -165,7 +165,7 @@ function DeleteConfirm(props: { mid: string; onDeleted: () => void; onCancel: ()
       await deleteArticle(props.mid);
       props.onDeleted();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Delete failed");
+      toast.error(e instanceof Error ? e.message : "Delete failed");
       setDeleting(false);
     }
   };
@@ -175,9 +175,6 @@ function DeleteConfirm(props: { mid: string; onDeleted: () => void; onCancel: ()
       <p class="text-sm text-txt flex-1">
         Delete this article? This cannot be undone.
       </p>
-      <Show when={error()}>
-        <p class="text-xs text-red-500">{error()}</p>
-      </Show>
       <button
         type="button"
         onClick={props.onCancel}

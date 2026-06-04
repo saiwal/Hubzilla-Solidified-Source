@@ -2,6 +2,7 @@
 import {
   createEffect, createSignal, Show, For, onCleanup,
 } from "solid-js";
+import { toast } from "@/shared/store/toast";
 import { useParams, A, useNavigate } from "@solidjs/router";
 import DOMPurify from "dompurify";
 import {
@@ -17,7 +18,6 @@ export default function WikiPageView() {
   const [saving, setSaving]         = createSignal(false);
   const [deleting, setDeleting]     = createSignal(false);
   const [commitMsg, setCommitMsg]   = createSignal("");
-  const [saveError, setSaveError]   = createSignal("");
   const [confirmDel, setConfirmDel] = createSignal(false);
 
   // Track which wiki was last loaded so we only refetch the page list on wiki change.
@@ -43,7 +43,6 @@ export default function WikiPageView() {
 
   async function handleSave() {
     setSaving(true);
-    setSaveError("");
     try {
       await savePage(
         params.nick,
@@ -55,7 +54,7 @@ export default function WikiPageView() {
       toggleEditMode();
       loadPage(params.nick, params.wikiName, params.pageName);
     } catch (e: any) {
-      setSaveError(e.message ?? "Error saving");
+      toast.error(e.message ?? "Error saving");
     } finally {
       setSaving(false);
     }
@@ -67,7 +66,7 @@ export default function WikiPageView() {
       await deletePage(params.nick, params.wikiName, params.pageName);
       navigate(`/wiki/${params.nick}/${params.wikiName}/Home`, { replace: true });
     } catch (e: any) {
-      setSaveError(e.message ?? "Error deleting");
+      toast.error(e.message ?? "Error deleting");
       setDeleting(false);
     }
   }
@@ -200,9 +199,6 @@ export default function WikiPageView() {
                 value={commitMsg()}
                 onInput={(e) => setCommitMsg(e.currentTarget.value)}
               />
-              <Show when={saveError()}>
-                <p class="text-sm text-red-400">{saveError()}</p>
-              </Show>
             </div>
           </Show>
 
@@ -225,9 +221,6 @@ export default function WikiPageView() {
               <p class="text-txt text-sm">
                 Delete <strong>{params.pageName}</strong>? This cannot be undone.
               </p>
-              <Show when={saveError()}>
-                <p class="text-sm text-red-400">{saveError()}</p>
-              </Show>
               <div class="flex gap-2 justify-end">
                 <button
                   type="button"

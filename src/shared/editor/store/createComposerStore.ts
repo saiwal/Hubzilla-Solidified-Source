@@ -1,4 +1,5 @@
 import { createSignal, createEffect } from "solid-js";
+import { toast } from "@/shared/store/toast";
 import { storageGet, storageSet, storageDel } from "@/shared/lib/storage";
 import type { MimeType, ComposerMeta } from "../types/editor.types";
 
@@ -96,7 +97,9 @@ export function createComposerStore(
       setCategory("");
       storageDel(DRAFT_KEY);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Submit failed");
+      const msg = err instanceof Error ? err.message : "Submit failed";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }

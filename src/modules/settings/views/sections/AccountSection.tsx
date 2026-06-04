@@ -4,7 +4,7 @@ import { fetchAccountSettings } from "../../api/api";
 import { useSectionForm } from "../../store/useSectionForm";
 
 export default function AccountSection() {
-  const { data, saving, saveError, saveOk, handleSubmit } = useSectionForm({
+  const { data, saving, handleSubmit } = useSectionForm({
     fetcher: fetchAccountSettings,
     saver: async () => {}, // account email change not yet wired in PHP
   });
@@ -33,12 +33,6 @@ export default function AccountSection() {
             >
               {saving() ? "Saving…" : "Save changes"}
             </button>
-            <Show when={saveOk()}>
-              <span class="text-sm text-green-600">Saved ✓</span>
-            </Show>
-            <Show when={saveError()}>
-              <span class="text-sm text-red-500">{saveError()}</span>
-            </Show>
           </div>
         </form>
       </Show>

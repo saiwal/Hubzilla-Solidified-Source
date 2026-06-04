@@ -536,12 +536,6 @@ const PostComposer: Component<ComposerProps> = (props) => {
               </div>
             </footer>
 
-            {/* ── Error bar ── */}
-            <Show when={store.error()}>
-              <div class="px-4 py-2 text-sm text-red-500 bg-red-500/10 border-t border-red-500/30 shrink-0">
-                {store.error()}
-              </div>
-            </Show>
           </div>
         </div>
 

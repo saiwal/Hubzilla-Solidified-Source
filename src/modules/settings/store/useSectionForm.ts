@@ -1,4 +1,5 @@
 import { createSignal, createResource } from "solid-js";
+import { toast } from "@/shared/store/toast";
 
 /**
  * Generic hook for a settings section form.
@@ -32,8 +33,6 @@ export function useSectionForm<T extends object>(options: {
 
   const [data, { refetch }] = createResource<T>(fetcher);
   const [saving, setSaving] = createSignal(false);
-  const [saveError, setSaveError] = createSignal<string | null>(null);
-  const [saveOk, setSaveOk] = createSignal(false);
 
   async function handleSubmit(e: Event) {
     e.preventDefault();
@@ -54,8 +53,6 @@ export function useSectionForm<T extends object>(options: {
     ) as Partial<T>;
 
     setSaving(true);
-    setSaveError(null);
-    setSaveOk(false);
 
     try {
       if (reloadOn?.(data(), payload)) {
@@ -64,15 +61,14 @@ export function useSectionForm<T extends object>(options: {
         return;
       }
       await saver(payload);
-      setSaveOk(true);
-      setTimeout(() => setSaveOk(false), 3000);
+      toast.success("Saved");
       refetch();
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : "Save failed");
+      toast.error(err instanceof Error ? err.message : "Save failed");
     } finally {
       setSaving(false);
     }
   }
 
-  return { data, saving, saveError, saveOk, handleSubmit };
+  return { data, saving, handleSubmit };
 }

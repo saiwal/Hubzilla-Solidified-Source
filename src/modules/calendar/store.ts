@@ -6,6 +6,7 @@
 
 import { createSignal } from "solid-js";
 import { fetchEvents } from "./api";
+import { toast } from "@/shared/store/toast";
 import type { CalEvent, CalRange } from "./api";
 
 // ── nick ──────────────────────────────────────────────────────────────────────
@@ -69,7 +70,9 @@ export async function loadCalendar(
     const data = await fetchEvents(nickname, newRange);
     setEvents(data);
   } catch (e) {
-    setError(e instanceof Error ? e.message : "Failed to load calendar");
+    const msg = e instanceof Error ? e.message : "Failed to load calendar";
+    setError(msg);
+    toast.error(msg);
   } finally {
     setLoading(false);
   }

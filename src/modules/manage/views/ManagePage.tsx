@@ -143,11 +143,6 @@ const ManagePage: Component = () => {
 
   const isPending = () => actionState().status === "pending";
 
-  const errorMsg = () => {
-    const s = actionState();
-    return s.status === "error" ? s.message : null;
-  };
-
   const channelToConfirm = () => {
     const id = confirmSwitch();
     if (id === null) return null;
@@ -189,13 +184,6 @@ const ManagePage: Component = () => {
           + New channel
         </a>
       </div>
-
-      {/* Error banner */}
-      <Show when={errorMsg()}>
-        <div class="p-3 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-sm">
-          {errorMsg()}
-        </div>
-      </Show>
 
       {/* Loading skeletons */}
       <Show when={data.loading}>

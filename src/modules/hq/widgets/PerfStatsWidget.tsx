@@ -1,5 +1,6 @@
 import { isAdmin } from "@/shared/store/auth-store";
-import { createSignal, onCleanup, onMount, For, Show } from "solid-js";
+import { createSignal, createEffect, on, onCleanup, onMount, For, Show } from "solid-js";
+import { toast } from "@/shared/store/toast";
 
 interface PerfStats {
   loadavg: [number, number, number];
@@ -75,6 +76,9 @@ function PerfStatsPanelInner() {
     }
   }
 
+  // Only toast on the first error, not every polling cycle
+  createEffect(on(error, (err, prev) => { if (err && !prev) toast.error(`Performance stats: ${err}`); }));
+
   onMount(() => {
     fetchStats();
     const poll = setInterval(fetchStats, POLL_INTERVAL);
@@ -131,23 +135,16 @@ function PerfStatsPanelInner() {
         <span class="text-xs font-medium uppercase tracking-wider text-muted">
           Server performance
         </span>
-        <Show when={latest() && !error()}>
+        <Show when={latest()}>
           <span class="flex items-center gap-1.5 text-xs text-muted">
-            <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-            {age() < 3 ? "live" : `${age()}s ago`}
+            <span class={`w-1.5 h-1.5 rounded-full ${error() ? "bg-red-400" : "bg-green-400 animate-pulse"}`} />
+            {error() ? "error" : age() < 3 ? "live" : `${age()}s ago`}
           </span>
         </Show>
       </div>
 
-      {/* Error */}
-      <Show when={error()}>
-        <p class="text-sm text-center py-4" style={{ color: "var(--color-text-danger)" }}>
-          ⚠ {error()}
-        </p>
-      </Show>
-
       {/* Skeleton */}
-      <Show when={!latest() && !error()}>
+      <Show when={!latest()}>
         <div class="grid gap-2" style={{ "grid-template-columns": "repeat(auto-fit, minmax(120px, 1fr))" }}>
           <For each={[1,2,3,4,5,6]}>{() =>
             <div class="h-20 rounded-lg animate-pulse bg-elevated" />

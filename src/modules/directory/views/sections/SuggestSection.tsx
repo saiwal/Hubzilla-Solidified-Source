@@ -1,6 +1,6 @@
 import { createSignal, Show, For, onMount } from "solid-js";
 import {
-  entries, loading, loadingMore, hasMore, total, error,
+  entries, loading, loadingMore, hasMore, total,
   loadDirectory, loadMoreDirectory, resetDirectory,
 } from "../../people/store";
 import DirectoryCard from "../DirectoryCard";
@@ -19,12 +19,6 @@ export default function SuggestSection() {
     <div class="px-4 md:px-6 py-6 space-y-4">
       <Show when={!loading() && total() > 0}>
         <p class="text-sm text-muted">{total().toLocaleString()} suggestions</p>
-      </Show>
-
-      <Show when={error()}>
-        <div class="rounded-lg bg-accent-muted border border-accent p-4 text-sm text-accent">
-          {error()}
-        </div>
       </Show>
 
       <Show when={loading()}>

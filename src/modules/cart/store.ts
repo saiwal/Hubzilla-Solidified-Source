@@ -1,5 +1,6 @@
 import { createSignal, createMemo } from 'solid-js';
 import type { CatalogItem } from './api';
+import { toast } from "@/shared/store/toast";
 import { fetchCatalog, addItem as apiAdd, removeItem as apiRemove } from './api';
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -35,7 +36,9 @@ export async function loadCatalog(nickname: string) {
     const items = await fetchCatalog(nickname);
     setCatalog(items);
   } catch (err) {
-    setError('Failed to load catalog. Make sure the cart addon is enabled for this channel.');
+    const msg = 'Failed to load catalog. Make sure the cart addon is enabled for this channel.';
+    setError(msg);
+    toast.error(msg);
     console.error('[cart] loadCatalog failed', err);
   } finally {
     setLoading(false);

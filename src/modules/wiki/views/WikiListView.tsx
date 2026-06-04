@@ -4,6 +4,7 @@ import { useParams, A } from "@solidjs/router";
 import { wikis, wikisLoading, canCreate, wikisError, loadWikis, resetWikis } from "../store";
 import { createWiki } from "../api";
 import { createSignal } from "solid-js";
+import { toast } from "@/shared/store/toast";
 
 export default function WikiListView() {
   const params = useParams<{ nick: string }>();
@@ -11,7 +12,6 @@ export default function WikiListView() {
   const [newName, setNewName]   = createSignal("");
   const [newMime, setNewMime]   = createSignal<"text/markdown" | "text/bbcode" | "text/plain">("text/markdown");
   const [busy, setBusy]         = createSignal(false);
-  const [error, setError]       = createSignal("");
 
   createEffect(() => {
     const nick = params.nick;
@@ -22,7 +22,6 @@ export default function WikiListView() {
     e.preventDefault();
     if (!newName().trim()) return;
     setBusy(true);
-    setError("");
     try {
       const res = await createWiki(params.nick, {
         name: newName().trim(),
@@ -35,7 +34,7 @@ export default function WikiListView() {
         loadWikis(params.nick);
       }
     } catch (err: any) {
-      setError(err.message ?? "Error creating wiki");
+      toast.error(err.message ?? "Error creating wiki");
     } finally {
       setBusy(false);
     }
@@ -93,9 +92,6 @@ export default function WikiListView() {
               </For>
             </select>
           </div>
-          <Show when={error()}>
-            <p class="text-sm text-red-400">{error()}</p>
-          </Show>
           <button
             type="submit"
             disabled={busy()}

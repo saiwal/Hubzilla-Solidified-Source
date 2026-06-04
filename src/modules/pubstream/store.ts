@@ -1,5 +1,6 @@
 // src/modules/pubstream/store.ts
 import { createSignal, batch } from "solid-js";
+import { toast } from "@/shared/store/toast";
 import { fetchPubstream, type PubstreamMeta } from "./api";
 import type { Post } from "@/shared/types/post.types";
 import { buildThreadTree } from "@/shared/lib/thread";
@@ -66,10 +67,9 @@ export async function loadPubstream(tag?: string, net?: string): Promise<void> {
       setLoading(false);
     });
   } catch (e) {
-    batch(() => {
-      setError(e instanceof Error ? e.message : "Failed to load public stream");
-      setLoading(false);
-    });
+    const msg = e instanceof Error ? e.message : "Failed to load public stream";
+    toast.error(msg);
+    batch(() => { setError(msg); setLoading(false); });
   }
 }
 
@@ -92,10 +92,9 @@ export async function loadMore(tag?: string, net?: string): Promise<void> {
       setLoading(false);
     });
   } catch (e) {
-    batch(() => {
-      setError(e instanceof Error ? e.message : "Failed to load more");
-      setLoading(false);
-    });
+    const msg = e instanceof Error ? e.message : "Failed to load more";
+    toast.error(msg);
+    batch(() => { setError(msg); setLoading(false); });
   }
 }
 

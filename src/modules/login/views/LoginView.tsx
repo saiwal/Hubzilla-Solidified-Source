@@ -1,24 +1,23 @@
-import { createSignal, onMount, Show } from "solid-js";
+import { createSignal, onMount } from "solid-js";
 import { fetchLoginToken, submitLogin } from "../api/api";
+import { toast } from "@/shared/store/toast";
 
 export default function LoginView() {
   const [token, setToken] = createSignal("");
   const [username, setUsername] = createSignal("");
   const [password, setPassword] = createSignal("");
-  const [error, setError] = createSignal("");
   const [loading, setLoading] = createSignal(false);
 
   onMount(async () => {
     try {
       setToken(await fetchLoginToken());
     } catch {
-      setError("Failed to load login form. Please refresh the page.");
+      toast.error("Failed to load login form. Please refresh the page.");
     }
   });
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
 
     try {
@@ -26,13 +25,13 @@ export default function LoginView() {
       // Full reload so auth state re-initialises from scratch
       window.location.href = "/hq";
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      toast.error(err instanceof Error ? err.message : "Login failed");
       setLoading(false);
       // Refresh the token for the next attempt
       try {
         setToken(await fetchLoginToken());
       } catch {
-        // ignore — the user will see the error and can refresh
+        // ignore
       }
     }
   };
@@ -54,17 +53,6 @@ export default function LoginView() {
         </div>
 
         <form onSubmit={handleSubmit} class="space-y-4" noValidate={false}>
-          <Show when={error()}>
-            <div
-              class="p-3 rounded-lg border text-sm
-                     bg-red-50 border-red-200 text-red-700
-                     dark:bg-red-900/20 dark:border-red-800 dark:text-red-300"
-              role="alert"
-            >
-              {error()}
-            </div>
-          </Show>
-
           <div class="space-y-1">
             <label class="text-sm font-medium text-txt" for="login-username">
               Email or username

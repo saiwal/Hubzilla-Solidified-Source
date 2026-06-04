@@ -1,4 +1,5 @@
 import { Show, For, createSignal, createMemo, createEffect } from "solid-js";
+import { toast } from "@/shared/store/toast";
 import { createResource } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { apiFetch } from "@/shared/lib/fetch";
@@ -82,7 +83,6 @@ function AppIcon(props: { app: AppEntry }) {
 export default function IntegrationsSection() {
   const [data, { refetch }] = createResource(fetchIntegrations);
   const [busy, setBusy] = createSignal<string | null>(null);
-  const [error, setError] = createSignal<string | null>(null);
   const [search, setSearch] = createSignal("");
   const [filter, setFilter] = createSignal<FilterTab>("all");
 
@@ -149,7 +149,6 @@ export default function IntegrationsSection() {
 
   const run = async (app: AppEntry, action: AppAction) => {
     setBusy(`${app.name}:${action}`);
-    setError(null);
     try {
       await appAction(app.name, action);
       if (action === "pin" || action === "feature") {
@@ -168,7 +167,7 @@ export default function IntegrationsSection() {
       }
       await refetch();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Unknown error");
+      toast.error(e instanceof Error ? e.message : "Unknown error");
     } finally {
       setBusy(null);
     }
@@ -186,12 +185,6 @@ export default function IntegrationsSection() {
       title="Integrations"
       description="Install apps and pin them to your nav or app tray."
     >
-      <Show when={error()}>
-        <div class="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-500">
-          {error()}
-        </div>
-      </Show>
-
       <div class="flex gap-2 flex-wrap">
         <div class="flex rounded-lg border border-rim overflow-hidden text-xs font-medium">
           <For each={TABS}>

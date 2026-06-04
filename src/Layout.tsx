@@ -20,6 +20,7 @@ import { notifCount } from "@/shared/lib/notificationCount";
 import { createMediaQuery } from "@solid-primitives/media";
 import { useNavActions, useNavViewer, setNavNick } from "./shared/store/nav-store";
 import { motion } from "solid-motionone";
+import ToastContainer from "@/shared/views/ToastContainer";
 void motion;
 
 // ── Mobile bottom tab ─────────────────────────────────────────────────────────
@@ -123,6 +124,7 @@ const Layout: ParentComponent = (props) => {
         Skip to content
       </a>
       <HelpOverlay />
+      <ToastContainer />
 
       <div class="flex h-full flex-col">
         {/* ── Offline banner ── */}

@@ -1,4 +1,5 @@
 import { createSignal, For, Show, onMount } from "solid-js";
+import { toast } from "@/shared/store/toast";
 import { currentNick } from "@/shared/store/auth-store";
 import { fetchEvents, type CalEvent } from "@/modules/calendar/api";
 import EventCreatorModal from "@/modules/calendar/widgets/EventCreatorModal";
@@ -54,7 +55,9 @@ export default function UpcomingEventsWidget() {
       const data = await fetchEvents(nick, next30DaysRange());
       setEvents(data.slice(0, 8));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load events");
+      const msg = e instanceof Error ? e.message : "Failed to load events";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -95,8 +98,7 @@ export default function UpcomingEventsWidget() {
           </Show>
 
           <Show when={!loading() && error()}>
-            <div class="px-4 py-6 text-center flex flex-col items-center gap-1">
-              <p class="text-xs text-red-400">{error()}</p>
+            <div class="px-4 py-4 text-center">
               <button onClick={load} class="text-xs text-accent hover:underline">Retry</button>
             </div>
           </Show>

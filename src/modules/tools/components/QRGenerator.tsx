@@ -1,4 +1,5 @@
-import { createSignal, createEffect } from "solid-js";
+import { createSignal, createEffect, on } from "solid-js";
+import { toast } from "@/shared/store/toast";
 import QRCode from "qrcode";
 
 export function QRGenerator() {
@@ -24,6 +25,8 @@ export function QRGenerator() {
       setDataUrl(null);
     }
   });
+
+  createEffect(on(error, (err, prev) => { if (err && !prev) toast.error(err); }));
 
   const download = () => {
     if (!dataUrl()) return;
@@ -58,8 +61,6 @@ export function QRGenerator() {
           onInput={(e) => setSize(Number(e.currentTarget.value))}
         />
       </div>
-
-      {error() && <p class="text-sm text-red-500">{error()}</p>}
 
       {dataUrl() && (
         <div class="flex flex-col items-center gap-4">

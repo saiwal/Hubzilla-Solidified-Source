@@ -5,12 +5,15 @@
 
 import {
   type Component,
+  createEffect,
+  on,
   createResource,
   createSignal,
   For,
   Show,
 } from "solid-js";
 import { useI18n } from "@/i18n";
+import { toast } from "@/shared/store/toast";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -93,6 +96,8 @@ const TagWidget: Component<TagWidgetProps> = (props) => {
     (p) => (p ? fetchTags(p) : Promise.resolve([])),
   );
 
+  createEffect(on(() => remote.error, (err) => { if (err) toast.error(err.message ?? t("widgets.load_error")); }));
+
   const tags = (): TagItem[] => props.data ?? remote() ?? [];
   const maxCount = () => Math.max(...tags().map((t) => t.count), 1);
   const visibleTags = () => (expanded() ? tags() : tags().slice(0, max()));
@@ -110,15 +115,8 @@ const TagWidget: Component<TagWidgetProps> = (props) => {
         <TagSkeleton />
       </Show>
 
-      {/* Error */}
-      <Show when={remote.error && !remote.loading}>
-        <p class="px-4 py-3 text-xs text-red-500">
-          {t("widgets.load_error")}: {remote.error?.message}
-        </p>
-      </Show>
-
       {/* Content */}
-      <Show when={!remote.loading && !remote.error}>
+      <Show when={!remote.loading}>
         <Show
           when={tags().length > 0}
           fallback={

@@ -26,7 +26,6 @@ import {
 import {
   events,
   loading,
-  error,
   loadCalendar,
   monthRange,
   selectedEvent,
@@ -176,10 +175,6 @@ export default function CalView() {
             </button>
           </div>
         </div>
-
-        <Show when={error()}>
-          <p class="text-sm text-red-500">{error()}</p>
-        </Show>
 
         {/* Weekday labels */}
         <div class="grid grid-cols-7 gap-px text-center">

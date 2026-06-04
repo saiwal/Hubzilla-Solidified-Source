@@ -167,9 +167,6 @@ export default function CommentComposer(props: Props) {
         </div>
       </div>
 
-      <Show when={store.error()}>
-        <p class="text-xs text-red-500 pl-9">{store.error()}</p>
-      </Show>
 
       <div class="flex justify-end gap-2 pl-9">
         <Show when={store.body().trim()}>

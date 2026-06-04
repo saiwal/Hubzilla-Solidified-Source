@@ -34,7 +34,7 @@ async function saveProfile(payload: Partial<ProfileData>): Promise<void> {
 }
 
 export default function ProfileSection() {
-  const { data, saving, saveError, saveOk, handleSubmit } = useSectionForm({
+  const { data, saving, handleSubmit } = useSectionForm({
     fetcher: fetchProfile,
     saver: saveProfile,
     numericFields: ["hide_friends"],
@@ -97,7 +97,7 @@ export default function ProfileSection() {
             <span class="text-sm text-txt">Hide my connections list from others</span>
           </label>
 
-          <SaveBar saving={saving()} saveOk={saveOk()} saveError={saveError()} />
+          <SaveBar saving={saving()} />
         </form>
       </Show>
     </SubPageContent>
