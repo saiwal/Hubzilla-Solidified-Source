@@ -38,6 +38,7 @@ import {
   MdFillNotifications,
 } from "solid-icons/md";
 import { helpable } from "@/shared/lib/helpable";
+import { toast } from "@/shared/store/toast";
 import type { ViewMode } from "@/shared/stream/types";
 import {
   fetchConnections,
@@ -173,22 +174,20 @@ export default function StreamFilters() {
   }
 
   const [importing, setImporting] = createSignal(false);
-  const [importError, setImportError] = createSignal("");
   const [importedUuid, setImportedUuid] = createSignal<string | null>(null);
 
   async function handleUrlImport(url: string) {
     setImporting(true);
-    setImportError("");
     try {
       const res = await apiFetch(`/api/search/import?url=${encodeURIComponent(url)}`);
       const body = await res.json();
       if (!res.ok) {
-        setImportError(body?.error?.message ?? "Could not fetch post");
+        toast.error(body?.error?.message ?? "Could not fetch post");
         return;
       }
       setImportedUuid(body.data.uuid);
     } catch {
-      setImportError("Network error — could not fetch post");
+      toast.error("Network error — could not fetch post");
     } finally {
       setImporting(false);
     }
@@ -202,7 +201,6 @@ export default function StreamFilters() {
     if (!isUrl(val)) {
       searchTimer = setTimeout(apply, 400);
     }
-    if (!val) setImportError("");
   }
 
   function clearAll() {
@@ -506,11 +504,6 @@ export default function StreamFilters() {
               />
             </div>
           </Show>
-        </Show>
-        <Show when={importError()}>
-          <span class="text-xs text-red-500 shrink-0 max-w-[180px] truncate" title={importError()}>
-            {importError()}
-          </span>
         </Show>
 
         {/* Advanced toggle */}

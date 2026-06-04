@@ -4,6 +4,7 @@ import { buildThreadTree } from "@/shared/lib/thread";
 import type { ThreadNode } from "@/shared/lib/thread";
 import type { Post } from "@/shared/types/post.types";
 import { updateInterval } from "@/shared/store/auth-store";
+import { toast } from "@/shared/store/toast";
 
 export interface StreamResult {
   items: Post[];
@@ -129,6 +130,7 @@ export function createStreamStore<P extends StreamParams>(
       startPolling();
     } catch (err) {
       console.error(err);
+      toast.error("Failed to load posts. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -154,6 +156,7 @@ export function createStreamStore<P extends StreamParams>(
       registerActivated(activated, result.items);
     } catch (err) {
       console.error(err);
+      toast.error("Failed to load more posts. Check your connection and try again.");
     } finally {
       setLoadingMore(false);
     }
