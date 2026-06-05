@@ -1,6 +1,7 @@
 import { A } from "@solidjs/router";
 import { createEffect, createMemo, createSignal, Show, For } from "solid-js";
 import { useParams, useNavigate, useLocation } from "@solidjs/router";
+import { useI18n } from "@/i18n";
 import { useAuth } from "@/shared/store/auth-store";
 import {
   photos, albumName, detail, loading,
@@ -62,6 +63,7 @@ export default function Photos() {
 function PhotoGrid() {
   const navigate = useNavigate();
   const params   = useParams<{ nick?: string }>();
+  const { t } = useI18n();
 
   return (
     <>
@@ -71,7 +73,7 @@ function PhotoGrid() {
             onClick={() => navigate(`/photos/${params.nick ?? ''}`)}
             class="text-sm text-muted hover:text-txt flex items-center gap-1 transition-colors"
           >
-            <MdFillChevron_left size={16} /> All photos
+            <MdFillChevron_left size={16} /> {t("photos.all_photos")}
           </button>
           <span class="text-subtle">/</span>
           <span class="text-sm font-medium text-txt">
@@ -82,7 +84,7 @@ function PhotoGrid() {
 
       <Show when={photos().length === 0}>
         <p class="text-sm text-muted py-8 text-center">
-          No photos yet.
+          {t("photos.no_photos")}
         </p>
       </Show>
 
@@ -161,6 +163,7 @@ function ImageView() {
   const navigate  = useNavigate();
   const params    = useParams<{ nick?: string }>();
   const auth      = useAuth();
+  const { t }     = useI18n();
   const d         = detail;
   const [showTopReply, setShowTopReply] = createSignal(false);
   const [showComments, setShowComments] = createSignal(true);
@@ -209,7 +212,7 @@ function ImageView() {
           onClick={() => navigate(`/photos/${params.nick ?? ''}`)}
           class="text-sm text-muted hover:text-txt flex items-center gap-1 transition-colors"
         >
-          <MdFillChevron_left size={16} /> Back
+          <MdFillChevron_left size={16} /> {t("photos.back")}
         </button>
         <Show when={d()?.album}>
           <span class="text-subtle">/</span>
@@ -279,7 +282,7 @@ function ImageView() {
                      font-medium transition-colors hover:bg-surface
                      ${showTopReply() ? 'text-accent' : 'text-muted'}`}
             >
-              <MdFillChat size={17} /> Comment
+              <MdFillChat size={17} /> {t("photos.comment")}
             </button>
           </Show>
         </div>
@@ -322,14 +325,14 @@ function ImageView() {
             <Show when={hasNested()}>
               <button
                 onClick={() => setThreaded(v => !v)}
-                title={threaded() ? 'Switch to flat view' : 'Switch to threaded view'}
+                title={threaded() ? t("photos.switch_flat") : t("photos.switch_threaded")}
                 class="ml-2 flex items-center gap-1 px-2 py-1 rounded-md text-xs
                        text-muted hover:text-txt hover:bg-surface transition-colors"
               >
                 <Show when={threaded()} fallback={<MdFillAccount_tree size={14} />}>
                   <MdFillFormat_list_bulleted size={14} />
                 </Show>
-                <span>{threaded() ? 'Flat' : 'Threaded'}</span>
+                <span>{threaded() ? t("photos.flat") : t("photos.threaded")}</span>
               </button>
             </Show>
           </div>

@@ -1,4 +1,5 @@
 import { createSignal, For, createMemo } from "solid-js";
+import { useI18n } from "@/i18n";
 
 type Category = {
   label: string;
@@ -78,6 +79,7 @@ const fmt = (n: number) => {
 };
 
 export function UnitConverter() {
+  const { t } = useI18n();
   const [category, setCategory] = createSignal<string>("length");
   const [fromIdx, setFromIdx] = createSignal(0);
   const [toIdx, setToIdx] = createSignal(1);
@@ -123,7 +125,7 @@ export function UnitConverter() {
 
       {/* From */}
       <div class="flex flex-col gap-2">
-        <label class="text-sm text-muted">From</label>
+        <label class="text-sm text-muted">{t("tools.unit_from")}</label>
         <select class={selectCls} value={fromIdx()} onInput={(e) => setFromIdx(Number(e.currentTarget.value))}>
           <For each={units()}>
             {(u, i) => <option value={i()}>{u.label}</option>}
@@ -142,14 +144,14 @@ export function UnitConverter() {
       <button
         onClick={swap}
         class="self-center border border-rim text-muted hover:bg-elevated hover:text-txt rounded-full w-9 h-9 flex items-center justify-center text-lg transition-colors"
-        title="Swap units"
+        title={t("tools.unit_swap")}
       >
         ⇅
       </button>
 
       {/* To */}
       <div class="flex flex-col gap-2">
-        <label class="text-sm text-muted">To</label>
+        <label class="text-sm text-muted">{t("tools.unit_to")}</label>
         <select class={selectCls} value={toIdx()} onInput={(e) => setToIdx(Number(e.currentTarget.value))}>
           <For each={units()}>
             {(u, i) => <option value={i()}>{u.label}</option>}

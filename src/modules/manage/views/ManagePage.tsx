@@ -7,6 +7,7 @@ import {
 } from "../store";
 import type { ManagedChannel, ManagedDelegate } from "../api";
 import { buildDelegateSwitchUrl } from "../api";
+import { useI18n } from "@/i18n";
 
 // ── ChannelCard ───────────────────────────────────────────────────────────────
 
@@ -16,6 +17,7 @@ const ChannelCard: Component<{
   onSetDefault: (id: number) => void;
   disabled: boolean;
 }> = (props) => {
+  const { t } = useI18n();
   const borderClass = () =>
     props.channel.is_current
       ? "border-blue-500 dark:border-blue-400"
@@ -45,17 +47,17 @@ const ChannelCard: Component<{
           </span>
           <Show when={props.channel.is_current}>
             <span class="text-xs px-1.5 py-0.5 rounded bg-accent-muted text-accent-txt">
-              current
+              {t("manage.current_badge")}
             </span>
           </Show>
           <Show when={props.channel.is_default}>
             <span class="text-xs px-1.5 py-0.5 rounded bg-surface text-muted">
-              default
+              {t("manage.default_badge")}
             </span>
           </Show>
           <Show when={props.channel.intros > 0}>
             <span class="text-xs px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300">
-              {props.channel.intros} new
+              {props.channel.intros} {t("manage.new_badge")}
             </span>
           </Show>
         </div>
@@ -70,7 +72,7 @@ const ChannelCard: Component<{
           <button
             onClick={() => props.onSetDefault(props.channel.channel_id)}
             disabled={props.disabled}
-            title="Make default"
+            title={t("manage.make_default")}
             class="p-1.5 rounded text-subtle hover:text-txt
                    hover:bg-elevated disabled:opacity-40
                    transition-colors text-xs"
@@ -86,7 +88,7 @@ const ChannelCard: Component<{
                    bg-accent hover:opacity-90 text-accent-fg
                    disabled:opacity-40 transition-opacity"
           >
-            Switch
+            {t("manage.switch")}
           </button>
         </Show>
       </div>
@@ -97,6 +99,7 @@ const ChannelCard: Component<{
 // ── DelegateCard ──────────────────────────────────────────────────────────────
 
 const DelegateCard: Component<{ delegate: ManagedDelegate }> = (props) => {
+  const { t } = useI18n();
   // Computed here rather than stored in API response
   const switchUrl = () => buildDelegateSwitchUrl(props.delegate.url, props.delegate.address);
 
@@ -117,7 +120,7 @@ const DelegateCard: Component<{ delegate: ManagedDelegate }> = (props) => {
           {props.delegate.address}
         </p>
       </div>
-      <span class="text-xs text-muted shrink-0">delegate →</span>
+      <span class="text-xs text-muted shrink-0">{t("manage.delegate_arrow")}</span>
     </a>
   );
 };
@@ -137,6 +140,7 @@ const ChannelSkeleton: Component = () => (
 // ── ManagePage ────────────────────────────────────────────────────────────────
 
 const ManagePage: Component = () => {
+  const { t } = useI18n();
   const data = useManageData();
   const actionState = useActionState();
   const [confirmSwitch, setConfirmSwitch] = createSignal<number | null>(null);
@@ -152,7 +156,7 @@ const ManagePage: Component = () => {
   const usageMessage = () => {
     const d = data();
     if (!d || d.limit === null) return null;
-    return `${d.total_channels} of ${d.limit} channels used`;
+    return `${d.total_channels} ${t("manage.channels_of")} ${d.limit} ${t("manage.channels_used")}`;
   };
 
   const handleSwitch = (channelId: number) => setConfirmSwitch(channelId);
@@ -175,13 +179,13 @@ const ManagePage: Component = () => {
 
       {/* Header */}
       <div class="flex items-center justify-between">
-        <h1 class="text-xl font-bold">Channels</h1>
-			<a     
+        <h1 class="text-xl font-bold">{t("manage.channels")}</h1>
+			<a
           href={data()?.create_url ?? "/new_channel"}
           class="px-3 py-1.5 text-sm rounded-md font-medium
                  bg-accent text-accent-fg hover:opacity-90 transition-opacity"
         >
-          + New channel
+          {t("manage.new_channel")}
         </a>
       </div>
 
@@ -218,7 +222,7 @@ const ManagePage: Component = () => {
         <Show when={(data()?.delegates.length ?? 0) > 0}>
           <div class="space-y-2">
             <h2 class="text-sm font-semibold text-muted uppercase tracking-wide">
-              Delegated channels
+              {t("manage.delegated")}
             </h2>
             <For each={data()!.delegates}>
               {(delegate) => <DelegateCard delegate={delegate} />}
@@ -231,10 +235,10 @@ const ManagePage: Component = () => {
       <Show when={confirmSwitch() !== null}>
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div class="bg-surface rounded-xl shadow-xl p-6 max-w-sm w-full mx-4 space-y-4">
-            <h2 class="font-semibold text-lg">Switch channel?</h2>
+            <h2 class="font-semibold text-lg">{t("manage.switch_confirm_title")}</h2>
             <p class="text-sm text-muted">
-              You'll be switched to{" "}
-              <strong>{channelToConfirm()?.channel_name}</strong>. The page will reload.
+              {t("manage.switch_confirm_body")}{" "}
+              <strong>{channelToConfirm()?.channel_name}</strong>. {t("manage.page_reload")}
             </p>
             <div class="flex gap-2 justify-end">
               <button
@@ -242,7 +246,7 @@ const ManagePage: Component = () => {
                 class="px-3 py-1.5 text-sm rounded-md border border-rim hover:bg-elevated
                        transition-colors"
               >
-                Cancel
+                {t("manage.cancel")}
               </button>
               <button
                 onClick={confirmSwitchAction}
@@ -251,7 +255,7 @@ const ManagePage: Component = () => {
                        bg-accent hover:opacity-90 text-accent-fg
                        disabled:opacity-40 transition-opacity"
               >
-                Switch
+                {t("manage.switch")}
               </button>
             </div>
           </div>

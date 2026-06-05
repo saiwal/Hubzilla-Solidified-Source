@@ -7,6 +7,7 @@ import AclPicker, { entryKey, type AclMode, type AclEntry } from "@/shared/edito
 import { storageGet, storageSet, storageDel } from "@/shared/lib/storage";
 import { useMention, getTextareaMentionQuery } from "@/shared/editor/mention/useMention";
 import MentionPopup from "@/shared/editor/mention/MentionPopup";
+import { useI18n } from "@/i18n";
 void motion;
 
 const DRAFT_KEY = "hz_hq_draft";
@@ -34,6 +35,7 @@ export default function HqComposerSlot() {
 }
 
 function HqComposer() {
+  const { t } = useI18n();
   const auth = useAuth();
   const [body, setBody] = createSignal("");
   const [aclMode, setAclMode] = createSignal<AclMode>("connections");
@@ -186,14 +188,14 @@ function HqComposer() {
   }
 
   const toolbar = [
-    { title: "Bold",     label: "B",  cls: "font-bold", action: () => wrapBb("[b]", "[/b]") },
-    { title: "Italic",   label: "I",  cls: "italic",    action: () => wrapBb("[i]", "[/i]") },
-    { title: "Link",     label: "🔗", cls: "",          action: () => {
+    { title: () => t("editor.hq_bold"),    label: "B",  cls: "font-bold", action: () => wrapBb("[b]", "[/b]") },
+    { title: () => t("editor.hq_italic"),  label: "I",  cls: "italic",    action: () => wrapBb("[i]", "[/i]") },
+    { title: () => t("editor.hq_link"),    label: "🔗", cls: "",          action: () => {
       const url = window.prompt("URL:", "https://");
       if (url) wrapBb(`[url=${url}]`, "[/url]", "Link text");
     }},
-    { title: "Mention",  label: "@",  cls: "",          action: () => wrapBb("@", "") },
-    { title: "Hashtag",  label: "#",  cls: "",          action: () => wrapBb("#", "", "tag") },
+    { title: () => t("editor.hq_mention"), label: "@",  cls: "",          action: () => wrapBb("@", "") },
+    { title: () => t("editor.hq_hashtag"), label: "#",  cls: "",          action: () => wrapBb("#", "", "tag") },
   ];
 
   return (
@@ -209,7 +211,7 @@ function HqComposer() {
         </Show>
         <textarea
           ref={taRef!}
-          placeholder="What's on your mind?"
+          placeholder={t("editor.write_placeholder")}
           value={body()}
           onInput={(e) => { setBody(e.currentTarget.value); autoResize(); }}
           rows={4}
@@ -224,7 +226,7 @@ function HqComposer() {
           {(btn) => (
             <button
               type="button"
-              title={btn.title}
+              title={btn.title()}
               onMouseDown={(e) => { e.preventDefault(); btn.action(); }}
               class={`w-7 h-7 flex items-center justify-center rounded text-xs text-muted
                       hover:bg-elevated hover:text-txt transition-colors ${btn.cls}`}
@@ -238,7 +240,7 @@ function HqComposer() {
         <Show when={body().trim()}>
           <button
             type="button"
-            title="Clear composer"
+            title={t("editor.clear_composer")}
             onClick={resetComposer}
             class="ml-auto w-7 h-7 flex items-center justify-center rounded text-muted
                    hover:bg-elevated hover:text-red-500 transition-colors"
@@ -253,7 +255,7 @@ function HqComposer() {
         {/* Open full composer */}
         <button
           type="button"
-          title="Open full composer"
+          title={t("editor.open_full_composer")}
           onClick={() => setFullOpen(true)}
           class="w-7 h-7 flex items-center justify-center rounded text-muted
                  hover:bg-elevated hover:text-txt transition-colors"
@@ -285,7 +287,7 @@ function HqComposer() {
           class="ml-auto px-4 py-1 rounded-lg text-xs font-semibold bg-accent text-accent-fg
                  hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
         >
-          {submitting() ? "Posting…" : "Post"}
+          {submitting() ? t("editor.posting") : t("editor.post_btn")}
         </button>
       </div>
 

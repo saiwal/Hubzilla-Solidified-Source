@@ -2,12 +2,13 @@ import { type JSX, Show, createMemo } from "solid-js";
 import { useLocation, useNavigate, A } from "@solidjs/router";
 import { useViewerRole } from "@/shared/store/site-config";
 import { useInstalledApps } from "@/shared/store/nav-store";
+import { useI18n } from "@/i18n";
 
 export type SubPageContext = "owner" | "local" | "remote" | "anonymous" | "all";
 
 export interface SubPageItem {
   path: string;
-  label: string;
+  label: string | (() => string);
   icon?: JSX.Element;
   dividerAfter?: boolean;
   /** Who can see this nav item. Omit or use "all" for everyone. */
@@ -33,6 +34,7 @@ function isVisible(item: SubPageItem, role: string, installed: Set<string>): boo
 }
 
 export default function SubPageLayout(props: Props) {
+  const { t } = useI18n();
   const location = useLocation();
   const navigate = useNavigate();
   const role = useViewerRole();
@@ -82,17 +84,17 @@ export default function SubPageLayout(props: Props) {
               type="button"
               onClick={() => navigate(props.base)}
               class="flex items-center gap-1.5 text-sm text-muted hover:text-txt transition-colors"
-              aria-label="Back"
+              aria-label={t("layout.back")}
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
                 fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="15 18 9 12 15 6" />
               </svg>
-              Back
+              {t("layout.back")}
             </button>
             <span class="text-sm font-medium text-txt ml-1">
-              {activeItem()?.label ?? ""}
+              {(() => { const l = activeItem()?.label; return l ? (typeof l === "function" ? l() : l) : ""; })()}
             </span>
           </div>
         </Show>
@@ -112,8 +114,9 @@ function SubPageNav(props: {
   items: SubPageItem[];
   activeKey: string;
 }) {
+  const { t } = useI18n();
   return (
-    <nav class="py-2 overflow-y-auto flex-1" aria-label="Section navigation">
+    <nav class="py-2 overflow-y-auto flex-1" aria-label={t("layout.section_navigation")}>
       {props.items.map((item) => {
         const active = () => item.path === props.activeKey;
         return (
@@ -133,7 +136,7 @@ function SubPageNav(props: {
                   {item.icon}
                 </span>
               )}
-              <span class="flex-1 min-w-0 truncate">{item.label}</span>
+              <span class="flex-1 min-w-0 truncate">{typeof item.label === "function" ? item.label() : item.label}</span>
               <svg xmlns="http://www.w3.org/2000/svg"
                 class="w-3.5 h-3.5 text-muted opacity-40 md:hidden shrink-0"
                 viewBox="0 0 24 24" fill="none" stroke="currentColor"

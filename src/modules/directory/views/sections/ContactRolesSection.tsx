@@ -8,6 +8,7 @@ import {
 import { A } from "@solidjs/router";
 import { fetchConnections } from "../../connections/api";
 import type { Connection } from "../../connections/api";
+import { useI18n } from "@/i18n";
 
 // ── API ───────────────────────────────────────────────────────────────────────
 
@@ -62,6 +63,7 @@ function RoleCard(props: {
   onRoleChanged: (newRole: string) => void;
 }) {
   const [busy, setBusy] = createSignal(false);
+  const { t } = useI18n();
   const networkLabel = () => NETWORK_LABELS[props.conn.network] ?? props.conn.network;
 
   async function handleRoleChange(e: Event) {
@@ -99,7 +101,7 @@ function RoleCard(props: {
           </span>
           <Show when={props.conn.is_forum}>
             <span class="shrink-0 text-xs px-1.5 py-0.5 rounded font-medium bg-accent-muted text-accent">
-              Forum
+              {t("directory.forum")}
             </span>
           </Show>
         </div>

@@ -3,15 +3,17 @@ import { MdFillAll_inbox, MdFillApps, MdFillFormat_list_bulleted, MdFillShort_te
 import { changeView, viewMode } from '../store';
 import type { ViewMode } from '../store';
 import { For, type Component } from 'solid-js';
+import { useI18n } from "@/i18n";
 type IconType = Component<{ size?: number; class?: string }>;
-const views: { id: ViewMode; label: string; icon: IconType  }[]  = [
-  { id: 'feed',    label: 'Feed', icon: MdFillShort_text },
-  { id: 'masonry', label: 'Grid', icon: MdFillApps},
-  { id: 'list',    label: 'List', icon: MdFillFormat_list_bulleted},
-  { id: 'inbox',   label: 'Inbox', icon: MdFillAll_inbox},
-] as const;
+const views: { id: ViewMode; key: string; icon: IconType }[] = [
+  { id: 'feed',    key: 'feed',  icon: MdFillShort_text },
+  { id: 'masonry', key: 'grid',  icon: MdFillApps},
+  { id: 'list',    key: 'list',  icon: MdFillFormat_list_bulleted},
+  { id: 'inbox',   key: 'inbox', icon: MdFillAll_inbox},
+];
 
 export default function ViewSwitcher() {
+  const { t } = useI18n();
   return (
     <div class="flex gap-1 mb-4">
       <For each={views}>
@@ -21,7 +23,7 @@ export default function ViewSwitcher() {
               ${viewMode() === v.id
                 ? 'bg-elevated font-medium'
                 : 'hover:bg-surface text-muted'}`}
-						title={v.label}
+            title={t(`network.${v.key}` as any)}
             onClick={() => changeView(v.id)}
           >
           <v.icon size={18} />

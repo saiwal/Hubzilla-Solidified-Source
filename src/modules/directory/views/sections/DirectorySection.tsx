@@ -6,10 +6,12 @@ import {
 import DirectoryCard from "../DirectoryCard";
 import DirectoryEntryModal from "../DirectoryEntryModal";
 import type { DirectoryParams, DirectoryEntry } from "../../people/api";
+import { useI18n } from "@/i18n";
 
 type Order = DirectoryParams["order"];
 
 export default function DirectorySection() {
+  const { t } = useI18n();
   const [search, setSearch] = createSignal("");
   const [order, setOrder] = createSignal<Order>("date");
   const [globalDir, setGlobalDir] = createSignal<0 | 1>(1);
@@ -57,7 +59,7 @@ export default function DirectorySection() {
             type="submit"
             class="px-4 py-1.5 rounded-lg bg-accent text-accent-fg text-sm hover:opacity-80 transition-opacity"
           >
-            Search
+            {t("directory.search")}
           </button>
         </form>
 
@@ -68,10 +70,10 @@ export default function DirectorySection() {
             class="px-3 py-1.5 rounded-lg border border-rim bg-surface text-txt text-sm
                    focus:outline-none hover:border-rim-strong transition-colors"
           >
-            <option value="date">Newest first</option>
-            <option value="rdate">Oldest first</option>
-            <option value="alphabetic">A → Z</option>
-            <option value="ralpha">Z → A</option>
+            <option value="date">{t("directory.sort_newest")}</option>
+            <option value="rdate">{t("directory.sort_oldest")}</option>
+            <option value="alphabetic">{t("directory.sort_az")}</option>
+            <option value="ralpha">{t("directory.sort_za")}</option>
           </select>
 
           <div class="flex rounded-lg border border-rim overflow-hidden text-sm">
@@ -83,7 +85,7 @@ export default function DirectorySection() {
                   : "bg-surface text-muted hover:bg-overlay"
               }`}
             >
-              🌐 Global
+              {t("directory.global_dir")}
             </button>
             <div class="w-px bg-rim" />
             <button
@@ -94,7 +96,7 @@ export default function DirectorySection() {
                   : "bg-surface text-muted hover:bg-overlay"
               }`}
             >
-              🏠 Local
+              {t("directory.local_dir")}
             </button>
           </div>
 
@@ -103,7 +105,7 @@ export default function DirectorySection() {
 
       {/* ── Count ── */}
       <Show when={!loading() && total() > 0}>
-        <p class="text-sm text-muted">{total().toLocaleString()} channels found</p>
+        <p class="text-sm text-muted">{total().toLocaleString()} {t("directory.channels_found")}</p>
       </Show>
 
       {/* ── Skeleton ── */}
@@ -117,7 +119,7 @@ export default function DirectorySection() {
       <Show when={!loading()}>
         <Show
           when={entries().length > 0}
-          fallback={<p class="py-12 text-center text-muted">No channels found.</p>}
+          fallback={<p class="py-12 text-center text-muted">{t("directory.no_channels")}</p>}
         >
           <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <For each={entries()}>
@@ -133,7 +135,7 @@ export default function DirectorySection() {
               class="px-4 py-2 text-sm font-medium rounded-lg border border-rim
                      bg-surface text-muted hover:bg-overlay transition-colors"
             >
-              Load more
+              {t("directory.load_more")}
             </button>
           </div>
         </Show>
@@ -145,7 +147,7 @@ export default function DirectorySection() {
         </Show>
 
         <Show when={!hasMore() && entries().length > 0}>
-          <p class="py-4 text-center text-sm text-muted">End of results</p>
+          <p class="py-4 text-center text-sm text-muted">{t("directory.end_of_results")}</p>
         </Show>
       </Show>
 

@@ -1,10 +1,30 @@
 import type { RawDictionary } from "../namespaces/types";
-import { nav }     from "./nav";
-import { layout }  from "./layout";
-import { ui }      from "./ui";
-import { widgets } from "./widgets";
-import { tools }   from "./tools";
-// ← import new namespace file here
+import { nav }        from "./nav";
+import { layout }     from "./layout";
+import { ui }         from "./ui";
+import { widgets }    from "./widgets";
+import { tools }      from "./tools";
+import { post }       from "./post";
+import { help }       from "./help";
+import { connection } from "./connection";
+import { auth }       from "./auth";
+import { editor }     from "./editor";
+import { settings }   from "./settings";
+import { network }    from "./network";
+import { directory }  from "./directory";
+import { hq }         from "./hq";
+import { channel }    from "./channel";
+import { photos }     from "./photos";
+import { articles }   from "./articles";
+import { calendar }   from "./calendar";
+import { chat }       from "./chat";
+import { files_mod }  from "./files_mod";
+import { wiki }       from "./wiki";
+import { webpages }   from "./webpages";
+import { manage }     from "./manage";
+import { pubstream }  from "./pubstream";
+import { admin }      from "./admin";
+import { cart }       from "./cart";
 
 export const dict: RawDictionary = {
   nav,
@@ -12,5 +32,25 @@ export const dict: RawDictionary = {
   ui,
   widgets,
   tools,
-  // ← and spread it here
+  post,
+  help,
+  connection,
+  auth,
+  editor,
+  settings,
+  network,
+  directory,
+  hq,
+  channel,
+  photos,
+  articles,
+  calendar,
+  chat,
+  files_mod,
+  wiki,
+  webpages,
+  manage,
+  pubstream,
+  admin,
+  cart,
 };

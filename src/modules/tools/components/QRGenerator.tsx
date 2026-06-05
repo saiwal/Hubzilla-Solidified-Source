@@ -1,8 +1,10 @@
 import { createSignal, createEffect, on } from "solid-js";
 import { toast } from "@/shared/store/toast";
 import QRCode from "qrcode";
+import { useI18n } from "@/i18n";
 
 export function QRGenerator() {
+  const { t } = useI18n();
   const [text, setText] = createSignal("https://hz-ddev.ddev.site");
   const [size, setSize] = createSignal(240);
   const [dataUrl, setDataUrl] = createSignal<string | null>(null);
@@ -39,19 +41,19 @@ export function QRGenerator() {
   return (
     <div class="flex flex-col gap-5 items-center max-w-sm w-full mx-auto">
       <div class="w-full flex flex-col gap-2">
-        <label class="text-sm text-muted">Text or URL</label>
+        <label class="text-sm text-muted">{t("tools.qr_text_label")}</label>
         <textarea
           class="bg-surface border border-rim text-txt hover:border-rim-strong focus:outline-none rounded-xl px-4 py-3 resize-none text-sm w-full"
           rows={3}
           value={text()}
           onInput={(e) => setText(e.currentTarget.value)}
-          placeholder="Enter text or a URL…"
+          placeholder={t("tools.qr_placeholder")}
         />
       </div>
 
       <div class="w-full flex flex-col gap-2">
         <div class="flex justify-between text-sm">
-          <span class="text-muted">Size</span>
+          <span class="text-muted">{t("tools.qr_size")}</span>
           <span class="text-txt font-mono">{size()}px</span>
         </div>
         <input
@@ -76,7 +78,7 @@ export function QRGenerator() {
             onClick={download}
             class="border border-rim text-muted hover:bg-elevated hover:text-txt rounded-xl px-5 py-2 text-sm transition-colors"
           >
-            Download PNG
+            {t("tools.qr_download")}
           </button>
         </div>
       )}

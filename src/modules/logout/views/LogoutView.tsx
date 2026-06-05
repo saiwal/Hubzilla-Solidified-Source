@@ -1,7 +1,9 @@
 import { onMount } from "solid-js";
 import { getCsrfToken } from "@/shared/lib/csrf";
+import { useI18n } from "@/i18n";
 
 export default function LogoutView() {
+  const { t } = useI18n();
   onMount(async () => {
     try {
       const csrf = await getCsrfToken();
@@ -22,7 +24,7 @@ export default function LogoutView() {
 
   return (
     <div class="min-h-[60vh] flex items-center justify-center">
-      <p class="text-sm text-muted">Signing out…</p>
+      <p class="text-sm text-muted">{t("auth.signing_out")}</p>
     </div>
   );
 }

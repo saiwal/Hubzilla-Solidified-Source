@@ -3,8 +3,10 @@ import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchAdminSecurity, saveAdminSecurity } from "../../api";
 import { useSectionForm } from "@/modules/settings/store/useSectionForm";
 import type { AdminSecurity } from "../../types";
+import { useI18n } from "@/i18n";
 
 export default function SecuritySection() {
+  const { t } = useI18n();
   const { data, saving, handleSubmit } = useSectionForm<AdminSecurity>({
     fetcher: fetchAdminSecurity,
     saver: saveAdminSecurity,
@@ -16,8 +18,8 @@ export default function SecuritySection() {
 
   return (
     <SubPageContent
-      title="Security"
-      description="Access control, content filtering, and HTTP security headers."
+      title={t("admin.security_title")}
+      description={t("admin.security_desc")}
       action={
         <Show when={data()}>
           <button
@@ -27,7 +29,7 @@ export default function SecuritySection() {
             class="px-4 py-2 text-sm font-medium rounded-lg bg-accent text-accent-fg
                    hover:opacity-90 disabled:opacity-40 transition-opacity"
           >
-            {saving() ? "Saving…" : "Save"}
+            {saving() ? t("admin.saving") : t("admin.save")}
           </button>
         </Show>
       }

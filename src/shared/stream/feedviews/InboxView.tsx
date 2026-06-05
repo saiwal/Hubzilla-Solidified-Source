@@ -73,6 +73,7 @@ function MessageRow(props: {
   handlers: StreamHandlers;
   locale: string;
 }) {
+  const { t } = useI18n();
   return (
     <div
       class="flex gap-2.5 px-3 py-2.5"
@@ -118,7 +119,7 @@ function MessageRow(props: {
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 15l-6-6-6 6" />
           </svg>
           <Show when={props.msg.likeCount > 0}>{props.msg.likeCount}</Show>
-          <span>upvote</span>
+          <span>{t("post.like")}</span>
         </button>
       </div>
     </div>
@@ -216,7 +217,7 @@ function InboxRow(props: {
   const [expanded, setExpanded] = createSignal(expandedByMid.has(p.mid));
   const [commentsLoaded, setCommentsLoaded] = createSignal(p.children.length > 0);
   const [commentsLoading, setCommentsLoading] = createSignal(false);
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
   let rowRef!: HTMLDivElement;
 
   onMount(() => {
@@ -428,7 +429,7 @@ function InboxRow(props: {
               <span>{replyCount()}</span>
             </Show>
             <span class="hidden sm:inline">
-              {replyCount() === 1 ? "Reply" : "Replies"}
+              {replyCount() === 1 ? t("ui.reply") : t("ui.replies")}
             </span>
           </button>
 
@@ -445,7 +446,7 @@ function InboxRow(props: {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
-              <span class="hidden sm:inline">Original</span>
+              <span class="hidden sm:inline">{t("post.import")}</span>
             </a>
           </Show>
         </div>
@@ -453,7 +454,7 @@ function InboxRow(props: {
         {/* inline thread */}
         <Show when={expanded() && commentsLoading()}>
           <div class="px-3 py-2 text-xs text-muted animate-pulse border-t border-rim">
-            Loading replies…
+            {t("post.loading_comments")}
           </div>
         </Show>
         <Show when={expanded() && !commentsLoading()}>
@@ -476,6 +477,7 @@ export default function InboxView(props: {
   handlers: StreamHandlers;
 }) {
   const auth = useAuth();
+  const { t } = useI18n();
   const profileUid = () => auth()?.uid ?? 0;
 
   return (
@@ -488,7 +490,7 @@ export default function InboxView(props: {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                 d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0H4" />
             </svg>
-            <p class="text-sm">Nothing here yet.</p>
+            <p class="text-sm">{t("network.all_caught_up")}</p>
           </div>
         }
       >

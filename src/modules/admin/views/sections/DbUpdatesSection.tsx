@@ -1,19 +1,21 @@
 import { createResource, For, Show } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchAdminDbUpdates } from "../../api";
+import { useI18n } from "@/i18n";
 
 export default function DbUpdatesSection() {
+  const { t } = useI18n();
   const [updates] = createResource(fetchAdminDbUpdates);
 
   return (
-    <SubPageContent title="DB Updates" description="Database structure update history.">
+    <SubPageContent title={t("admin.db_title")} description={t("admin.db_desc")}>
       <Show when={updates()} fallback={<Skeleton />}>
         {(list) => (
           <div class="space-y-3">
-            <p class="text-sm text-muted">{list().length} record(s)</p>
+            <p class="text-sm text-muted">{list().length} {t("admin.records")}</p>
 
             <Show when={list().length === 0}>
-              <p class="text-sm text-muted py-4 text-center">No DB update records.</p>
+              <p class="text-sm text-muted py-4 text-center">{t("admin.no_db_records")}</p>
             </Show>
 
             <Show when={list().length > 0}>

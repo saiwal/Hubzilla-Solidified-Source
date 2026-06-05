@@ -6,24 +6,16 @@ import {
 } from "../../connections/store";
 import type { ConnectionFilter, ConnectionOrder, Connection } from "../../connections/api";
 import { deleteConnection, approveConnection } from "../../connections/api";
+import { useI18n } from "@/i18n";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const FILTERS: { id: ConnectionFilter; label: string }[] = [
-  { id: "active",   label: "Active"   },
-  { id: "pending",  label: "Pending"  },
-  { id: "blocked",  label: "Blocked"  },
-  { id: "ignored",  label: "Ignored"  },
-  { id: "hidden",   label: "Hidden"   },
-  { id: "archived", label: "Archived" },
-  { id: "all",      label: "All"      },
-];
-
-const ORDERS: { id: ConnectionOrder; label: string }[] = [
-  { id: "name",           label: "Name A–Z"     },
-  { id: "name_desc",      label: "Name Z–A"     },
-  { id: "connected",      label: "Oldest first" },
-  { id: "connected_desc", label: "Newest first" },
+const FILTER_IDS: ConnectionFilter[] = ["active", "pending", "blocked", "ignored", "hidden", "archived", "all"];
+const ORDER_IDS: { id: ConnectionOrder; key: string }[] = [
+  { id: "name",           key: "order_name_asc"  },
+  { id: "name_desc",      key: "order_name_desc" },
+  { id: "connected",      key: "order_oldest"    },
+  { id: "connected_desc", key: "order_newest"    },
 ];
 
 const NETWORK_LABELS: Record<string, string> = {
@@ -44,7 +36,7 @@ function formatDate(iso: string): string {
 function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
   const [busy, setBusy] = createSignal(false);
   const [expanded, setExpanded] = createSignal(false);
-
+  const { t } = useI18n();
   const networkLabel = () => NETWORK_LABELS[props.conn.network] ?? props.conn.network;
 
   async function handleApprove() {
@@ -86,12 +78,12 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
             </span>
             <Show when={props.conn.is_forum}>
               <span class="shrink-0 text-xs px-1.5 py-0.5 rounded font-medium bg-accent-muted text-accent">
-                Forum
+                {t("directory.forum")}
               </span>
             </Show>
             <Show when={props.conn.pending}>
               <span class="shrink-0 text-xs px-1.5 py-0.5 rounded font-medium bg-accent-muted text-accent">
-                Pending
+                {t("directory.pending")}
               </span>
             </Show>
             <For each={props.conn.status}>
@@ -114,13 +106,13 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
               disabled={busy()}
               class="text-xs px-2 py-1 rounded bg-accent text-accent-fg hover:opacity-80 disabled:opacity-50 transition-opacity"
             >
-              Approve
+              {t("directory.approve")}
             </button>
           </Show>
           <button
             onClick={() => setExpanded((e) => !e)}
             class="p-1.5 rounded text-muted hover:text-txt hover:bg-overlay transition-colors"
-            title="Details"
+            title={t("directory.details")}
           >
             <svg
               class={`w-3.5 h-3.5 transition-transform ${expanded() ? "rotate-180" : ""}`}
@@ -132,7 +124,7 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
           <A
             href={`/abook/${props.conn.id}`}
             class="p-1.5 rounded text-muted hover:text-txt hover:bg-overlay transition-colors"
-            title="Edit"
+            title={t("directory.edit")}
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -143,7 +135,7 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
             onClick={handleDelete}
             disabled={busy()}
             class="p-1.5 rounded text-muted hover:text-accent hover:bg-accent-muted disabled:opacity-50 transition-colors"
-            title="Remove"
+            title={t("directory.remove")}
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -155,12 +147,12 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
 
       <Show when={expanded()}>
         <div class="px-3 pb-3 pt-0 border-t border-rim grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 text-xs">
-          <DetailField label="Connected" value={formatDate(props.conn.connected)} />
-          <DetailField label="Closeness" value={String(props.conn.closeness)} />
-          <DetailField label="Role"      value={props.conn.role} />
-          <DetailField label="Network"   value={props.conn.network} />
+          <DetailField label={t("directory.field_connected")} value={formatDate(props.conn.connected)} />
+          <DetailField label={t("directory.field_closeness")} value={String(props.conn.closeness)} />
+          <DetailField label={t("directory.field_role")}      value={props.conn.role} />
+          <DetailField label={t("directory.field_network")}   value={props.conn.network} />
           <Show when={props.conn.address}>
-            <DetailField label="Address" value={props.conn.address} />
+            <DetailField label={t("directory.field_address")} value={props.conn.address} />
           </Show>
         </div>
       </Show>
@@ -198,6 +190,7 @@ function ConnectionsSkeleton() {
 // ── Section ───────────────────────────────────────────────────────────────────
 
 export default function ConnectionsSection() {
+  const { t } = useI18n();
   const [searchInput, setSearchInput] = createSignal("");
 
   const meta        = () => connectionsData()?.meta;
@@ -224,17 +217,17 @@ export default function ConnectionsSection() {
 
       {/* ── Filter tabs ── */}
       <div class="flex flex-wrap gap-1.5">
-        <For each={FILTERS}>
-          {(f) => (
+        <For each={FILTER_IDS}>
+          {(id) => (
             <button
-              onClick={() => handleFilterChange(f.id)}
+              onClick={() => handleFilterChange(id)}
               class={`px-3 py-1 rounded-full text-sm transition-colors ${
-                filter() === f.id
+                filter() === id
                   ? "bg-accent text-accent-fg"
                   : "bg-overlay text-muted hover:bg-surface"
               }`}
             >
-              {f.label}
+              {t(`directory.filter_${id}` as any)}
             </button>
           )}
         </For>
@@ -244,7 +237,7 @@ export default function ConnectionsSection() {
       <div class="flex gap-2">
         <input
           type="search"
-          placeholder="Search connections…"
+          placeholder={t("directory.search_connections")}
           value={searchInput()}
           onInput={(e) => setSearchInput(e.currentTarget.value)}
           onKeyDown={(e) => e.key === "Enter" && applySearch()}
@@ -256,7 +249,7 @@ export default function ConnectionsSection() {
           onClick={applySearch}
           class="px-4 py-2 rounded-lg bg-accent text-accent-fg text-sm hover:opacity-80 transition-opacity"
         >
-          Search
+          {t("directory.search")}
         </button>
         <select
           value={order()}
@@ -264,8 +257,8 @@ export default function ConnectionsSection() {
           class="px-3 py-2 rounded-lg border border-rim bg-surface text-txt text-sm
                  focus:outline-none hover:border-rim-strong transition-colors"
         >
-          <For each={ORDERS}>
-            {(o) => <option value={o.id}>{o.label}</option>}
+          <For each={ORDER_IDS}>
+            {(o) => <option value={o.id}>{t(`directory.${o.key}` as any)}</option>}
           </For>
         </select>
       </div>
@@ -274,11 +267,11 @@ export default function ConnectionsSection() {
       <Show when={!connectionsData.loading} fallback={<ConnectionsSkeleton />}>
         <Show
           when={connections().length > 0}
-          fallback={<p class="py-8 text-center text-sm text-muted">No connections found.</p>}
+          fallback={<p class="py-8 text-center text-sm text-muted">{t("directory.no_connections")}</p>}
         >
           <p class="text-sm text-muted">
-            {meta()?.total} connection{meta()?.total !== 1 ? "s" : ""}
-            {search() ? ` matching "${search()}"` : ""}
+            {meta()?.total} {meta()?.total !== 1 ? t("directory.connections_plural") : t("directory.connection_singular")}
+            {search() ? ` ${t("directory.matching")} "${search()}"` : ""}
           </p>
 
           <div class="space-y-2">
@@ -295,7 +288,7 @@ export default function ConnectionsSection() {
                 class="px-3 py-1.5 rounded border border-rim text-txt text-sm
                        disabled:opacity-40 hover:bg-overlay transition-colors"
               >
-                ← Prev
+                {t("directory.page_prev")}
               </button>
               <span class="text-sm text-muted">{page() + 1} / {totalPages()}</span>
               <button
@@ -304,7 +297,7 @@ export default function ConnectionsSection() {
                 class="px-3 py-1.5 rounded border border-rim text-txt text-sm
                        disabled:opacity-40 hover:bg-overlay transition-colors"
               >
-                Next →
+                {t("directory.page_next")}
               </button>
             </div>
           </Show>

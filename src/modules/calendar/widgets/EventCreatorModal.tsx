@@ -1,6 +1,7 @@
 import { createSignal, Show, onMount, onCleanup } from "solid-js";
 import { toast } from "@/shared/store/toast";
 import { createEvent } from "../api";
+import { useI18n } from "@/i18n";
 
 interface Props {
   onClose: () => void;
@@ -13,6 +14,7 @@ function todayDate() {
 }
 
 export default function EventCreatorModal(props: Props) {
+  const { t } = useI18n();
   const [title, setTitle] = createSignal("");
   const [allDay, setAllDay] = createSignal(false);
   const [startDate, setStartDate] = createSignal(props.defaultDate ?? todayDate());
@@ -35,7 +37,7 @@ export default function EventCreatorModal(props: Props) {
 
   async function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
-    if (!title().trim()) { toast.error("Title is required"); return; }
+    if (!title().trim()) { toast.error(t("calendar.title_required")); return; }
 
     setSubmitting(true);
 
@@ -63,7 +65,7 @@ export default function EventCreatorModal(props: Props) {
       props.onCreated?.();
       props.onClose();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to create event");
+      toast.error(err instanceof Error ? err.message : t("calendar.failed_create"));
     } finally {
       setSubmitting(false);
     }
@@ -83,7 +85,7 @@ export default function EventCreatorModal(props: Props) {
 
         {/* Header */}
         <div class="flex items-center justify-between px-5 pt-5 pb-4 border-b border-rim shrink-0">
-          <h2 class="text-base font-semibold text-txt">New Event</h2>
+          <h2 class="text-base font-semibold text-txt">{t("calendar.new_event")}</h2>
           <button
             type="button"
             onClick={props.onClose}
@@ -101,12 +103,12 @@ export default function EventCreatorModal(props: Props) {
 
           {/* Title */}
           <div class="flex flex-col gap-1">
-            <label class="text-xs font-medium text-muted">Title *</label>
+            <label class="text-xs font-medium text-muted">{t("calendar.title_label")}</label>
             <input
               ref={titleRef!}
               type="text"
               required
-              placeholder="Event title"
+              placeholder={t("calendar.title_placeholder") as string}
               value={title()}
               onInput={(e) => setTitle(e.currentTarget.value)}
               class={inputClass}
@@ -121,13 +123,13 @@ export default function EventCreatorModal(props: Props) {
               onChange={(e) => setAllDay(e.currentTarget.checked)}
               class="w-4 h-4 rounded accent-accent"
             />
-            <span class="text-sm text-txt">All day</span>
+            <span class="text-sm text-txt">{t("calendar.all_day")}</span>
           </label>
 
           {/* Start */}
           <div class="flex gap-2">
             <div class="flex flex-col gap-1 flex-1">
-              <label class="text-xs font-medium text-muted">Start *</label>
+              <label class="text-xs font-medium text-muted">{t("calendar.start_label")}</label>
               <input
                 type="date"
                 required
@@ -138,7 +140,7 @@ export default function EventCreatorModal(props: Props) {
             </div>
             <Show when={!allDay()}>
               <div class="flex flex-col gap-1 w-28">
-                <label class="text-xs font-medium text-muted">Time</label>
+                <label class="text-xs font-medium text-muted">{t("calendar.time_label")}</label>
                 <input
                   type="time"
                   value={startTime()}
@@ -157,14 +159,14 @@ export default function EventCreatorModal(props: Props) {
               onChange={(e) => setNofinish(e.currentTarget.checked)}
               class="w-4 h-4 rounded accent-accent"
             />
-            <span class="text-sm text-txt">No end time</span>
+            <span class="text-sm text-txt">{t("calendar.no_end_time")}</span>
           </label>
 
           {/* End */}
           <Show when={!nofinish()}>
             <div class="flex gap-2">
               <div class="flex flex-col gap-1 flex-1">
-                <label class="text-xs font-medium text-muted">End</label>
+                <label class="text-xs font-medium text-muted">{t("calendar.end_label")}</label>
                 <input
                   type="date"
                   value={endDate()}
@@ -174,7 +176,7 @@ export default function EventCreatorModal(props: Props) {
               </div>
               <Show when={!allDay()}>
                 <div class="flex flex-col gap-1 w-28">
-                  <label class="text-xs font-medium text-muted">Time</label>
+                  <label class="text-xs font-medium text-muted">{t("calendar.time_label")}</label>
                   <input
                     type="time"
                     value={endTime()}
@@ -188,10 +190,10 @@ export default function EventCreatorModal(props: Props) {
 
           {/* Location */}
           <div class="flex flex-col gap-1">
-            <label class="text-xs font-medium text-muted">Location</label>
+            <label class="text-xs font-medium text-muted">{t("calendar.location_label")}</label>
             <input
               type="text"
-              placeholder="Optional"
+              placeholder={t("calendar.optional") as string}
               value={location()}
               onInput={(e) => setLocation(e.currentTarget.value)}
               class={inputClass}
@@ -200,9 +202,9 @@ export default function EventCreatorModal(props: Props) {
 
           {/* Description */}
           <div class="flex flex-col gap-1">
-            <label class="text-xs font-medium text-muted">Description</label>
+            <label class="text-xs font-medium text-muted">{t("calendar.description_label")}</label>
             <textarea
-              placeholder="Optional"
+              placeholder={t("calendar.optional") as string}
               rows={3}
               value={description()}
               onInput={(e) => setDescription(e.currentTarget.value)}
@@ -217,7 +219,7 @@ export default function EventCreatorModal(props: Props) {
               onClick={props.onClose}
               class="px-4 py-1.5 rounded-lg text-xs font-medium text-muted hover:bg-elevated hover:text-txt transition-colors"
             >
-              Cancel
+              {t("calendar.cancel")}
             </button>
             <button
               type="submit"
@@ -225,7 +227,7 @@ export default function EventCreatorModal(props: Props) {
               class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-accent text-accent-fg
                      hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
             >
-              {submitting() ? "Creating…" : "Create Event"}
+              {submitting() ? t("calendar.creating") : t("calendar.create_event")}
             </button>
           </div>
         </form>

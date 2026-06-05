@@ -1,6 +1,7 @@
 import { For, type Component } from "solid-js";
 import { Portal } from "solid-js/web";
 import { toasts, dismiss, type Toast, type ToastType } from "@/shared/store/toast";
+import { useI18n } from "@/i18n";
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
@@ -70,6 +71,7 @@ const styles: Record<ToastType, { bar: string; icon: string; bg: string; border:
 // ── Single toast ──────────────────────────────────────────────────────────────
 
 function ToastItem(props: { toast: Toast }) {
+  const { t } = useI18n();
   const s = styles[props.toast.type];
   return (
     <div
@@ -96,7 +98,7 @@ function ToastItem(props: { toast: Toast }) {
       {/* Dismiss */}
       <button
         onClick={() => dismiss(props.toast.id)}
-        aria-label="Dismiss notification"
+        aria-label={t("ui.dismiss_notification")}
         class="mt-2.5 mr-2.5 shrink-0 p-0.5 rounded text-muted hover:text-txt
                hover:bg-elevated transition-colors"
       >
@@ -110,23 +112,26 @@ function ToastItem(props: { toast: Toast }) {
 
 // ── Container ─────────────────────────────────────────────────────────────────
 
-const ToastContainer: Component = () => (
-  <Portal mount={document.body}>
-    <div
-      aria-label="Notifications"
-      class="fixed z-[9999] flex flex-col gap-2 pointer-events-none
-             bottom-20 right-4
-             md:bottom-6 md:right-6"
-    >
-      <For each={toasts()}>
-        {(t) => (
-          <div class="pointer-events-auto">
-            <ToastItem toast={t} />
-          </div>
-        )}
-      </For>
-    </div>
-  </Portal>
-);
+const ToastContainer: Component = () => {
+  const { t } = useI18n();
+  return (
+    <Portal mount={document.body}>
+      <div
+        aria-label={t("ui.notifications")}
+        class="fixed z-[9999] flex flex-col gap-2 pointer-events-none
+               bottom-20 right-4
+               md:bottom-6 md:right-6"
+      >
+        <For each={toasts()}>
+          {(toast) => (
+            <div class="pointer-events-auto">
+              <ToastItem toast={toast} />
+            </div>
+          )}
+        </For>
+      </div>
+    </Portal>
+  );
+};
 
 export default ToastContainer;

@@ -1,4 +1,5 @@
 import type { ToolbarLevel } from "../types/editor.types";
+import { useI18n } from "@/i18n";
 
 interface Props {
   level: ToolbarLevel;
@@ -6,6 +7,7 @@ interface Props {
 }
 
 export default function EditorToolbar(props: Props) {
+  const { t } = useI18n();
   // Preserve selection — use onMouseDown + preventDefault so the editor
   // doesn't lose focus before execCommand runs
   const exec = (cmd: string, value?: string) => {
@@ -30,19 +32,19 @@ export default function EditorToolbar(props: Props) {
   return (
     <div class="flex flex-wrap items-center gap-0.5 px-2 py-1 bg-surface border-b border-rim">
       {/* Always-present inline formatting */}
-      <ToolBtn title="Bold (Ctrl+B)" onMouseDown={() => exec("bold")}>
+      <ToolBtn title={t("editor.bold")} onMouseDown={() => exec("bold")}>
         <span class="font-bold text-xs">B</span>
       </ToolBtn>
-      <ToolBtn title="Italic (Ctrl+I)" onMouseDown={() => exec("italic")}>
+      <ToolBtn title={t("editor.italic")} onMouseDown={() => exec("italic")}>
         <span class="italic text-xs">I</span>
       </ToolBtn>
-      <ToolBtn title="Underline (Ctrl+U)" onMouseDown={() => exec("underline")}>
+      <ToolBtn title={t("editor.underline")} onMouseDown={() => exec("underline")}>
         <span class="underline text-xs">U</span>
       </ToolBtn>
-      <ToolBtn title="Strikethrough" onMouseDown={() => exec("strikeThrough")}>
+      <ToolBtn title={t("editor.strikethrough")} onMouseDown={() => exec("strikeThrough")}>
         <span class="line-through text-xs">S</span>
       </ToolBtn>
-      <ToolBtn title="Highlight" onMouseDown={() => exec("hiliteColor", "yellow")}>
+      <ToolBtn title={t("editor.highlight")} onMouseDown={() => exec("hiliteColor", "yellow")}>
         <span class="text-xs bg-yellow-300 text-yellow-900 px-0.5 rounded-sm leading-tight">H</span>
       </ToolBtn>
 
@@ -50,13 +52,13 @@ export default function EditorToolbar(props: Props) {
       {!isComment() && (
         <>
           <Sep />
-          <ToolBtn title="Link" onMouseDown={insertLink}>
+          <ToolBtn title={t("editor.link")} onMouseDown={insertLink}>
             <span class="text-xs">🔗</span>
           </ToolBtn>
-          <ToolBtn title="Bullet list" onMouseDown={() => exec("insertUnorderedList")}>
+          <ToolBtn title={t("editor.bullet_list")} onMouseDown={() => exec("insertUnorderedList")}>
             <span class="text-xs">• –</span>
           </ToolBtn>
-          <ToolBtn title="Numbered list" onMouseDown={() => exec("insertOrderedList")}>
+          <ToolBtn title={t("editor.numbered_list")} onMouseDown={() => exec("insertOrderedList")}>
             <span class="text-xs">1.</span>
           </ToolBtn>
         </>
@@ -66,26 +68,26 @@ export default function EditorToolbar(props: Props) {
       {isFull() && (
         <>
           <Sep />
-          <ToolBtn title="Heading 2" onMouseDown={() => insertBlock("h2")}>
+          <ToolBtn title={t("editor.heading2")} onMouseDown={() => insertBlock("h2")}>
             <span class="text-xs font-semibold">H2</span>
           </ToolBtn>
-          <ToolBtn title="Heading 3" onMouseDown={() => insertBlock("h3")}>
+          <ToolBtn title={t("editor.heading3")} onMouseDown={() => insertBlock("h3")}>
             <span class="text-xs">H3</span>
           </ToolBtn>
-          <ToolBtn title="Blockquote" onMouseDown={() => insertBlock("blockquote")}>
+          <ToolBtn title={t("editor.blockquote")} onMouseDown={() => insertBlock("blockquote")}>
             <span class="text-xs">❝</span>
           </ToolBtn>
-          <ToolBtn title="Code block" onMouseDown={() => insertBlock("pre")}>
+          <ToolBtn title={t("editor.code_block")} onMouseDown={() => insertBlock("pre")}>
             <span class="text-xs font-mono">{"</>"}</span>
           </ToolBtn>
           <Sep />
-          <ToolBtn title="Align left" onMouseDown={() => exec("justifyLeft")}>
+          <ToolBtn title={t("editor.align_left")} onMouseDown={() => exec("justifyLeft")}>
             <span class="text-xs">⬅</span>
           </ToolBtn>
-          <ToolBtn title="Align center" onMouseDown={() => exec("justifyCenter")}>
+          <ToolBtn title={t("editor.align_center")} onMouseDown={() => exec("justifyCenter")}>
             <span class="text-xs">↔</span>
           </ToolBtn>
-          <ToolBtn title="Clear formatting" onMouseDown={() => exec("removeFormat")}>
+          <ToolBtn title={t("editor.clear_formatting")} onMouseDown={() => exec("removeFormat")}>
             <span class="text-xs">✕</span>
           </ToolBtn>
         </>

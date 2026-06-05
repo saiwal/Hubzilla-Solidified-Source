@@ -1,13 +1,15 @@
 import { createSignal, createResource, For, Show } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchAdminChannels } from "../../api";
+import { useI18n } from "@/i18n";
 
 export default function ChannelsSection() {
+  const { t } = useI18n();
   const [page, setPage] = createSignal(0);
   const [result] = createResource(page, fetchAdminChannels);
 
   return (
-    <SubPageContent title="Channels" description="All channels on this site.">
+    <SubPageContent title={t("admin.channels_title")} description={t("admin.channels_desc")}>
       <Show when={result()} fallback={<Skeleton />}>
         {(r) => (
           <div class="space-y-4">
@@ -19,10 +21,10 @@ export default function ChannelsSection() {
               <table class="w-full text-sm">
                 <thead>
                   <tr class="border-b border-rim bg-elevated">
-                    <th class="px-3 py-2 text-left text-xs font-medium text-muted">Name</th>
-                    <th class="px-3 py-2 text-left text-xs font-medium text-muted">Address</th>
-                    <th class="px-3 py-2 text-left text-xs font-medium text-muted hidden md:table-cell">Created</th>
-                    <th class="px-3 py-2 text-left text-xs font-medium text-muted hidden md:table-cell">Last post</th>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-muted">{t("admin.col_name")}</th>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-muted">{t("admin.col_address")}</th>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-muted hidden md:table-cell">{t("admin.col_created")}</th>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-muted hidden md:table-cell">{t("admin.col_last_post")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -47,16 +49,16 @@ export default function ChannelsSection() {
                 class="px-3 py-1.5 text-sm rounded-lg border border-rim text-txt
                        hover:bg-elevated disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
-                Previous
+                {t("admin.page_prev")}
               </button>
-              <span class="text-sm text-muted">Page {page() + 1}</span>
+              <span class="text-sm text-muted">{t("admin.page_label")} {page() + 1}</span>
               <button
                 disabled={!r().meta.has_more}
                 onClick={() => setPage((p) => p + 1)}
                 class="px-3 py-1.5 text-sm rounded-lg border border-rim text-txt
                        hover:bg-elevated disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
-                Next
+                {t("admin.page_next")}
               </button>
             </div>
           </div>

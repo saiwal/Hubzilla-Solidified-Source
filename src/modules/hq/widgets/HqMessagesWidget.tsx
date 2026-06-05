@@ -1,5 +1,6 @@
 import PostDetailModal from '@/shared/views/PostDetailModal';
 import { markItemSeen } from '@/shared/lib/markSeen';
+import { useI18n } from "@/i18n";
 import {
   createSignal,
   createEffect,
@@ -136,25 +137,25 @@ async function fetchMessages(params: {
 
 // ── Tab config ────────────────────────────────────────────────────────────
 
-const TABS: { type: MessageType; label: string; path: string }[] = [
+const TAB_PATHS: { type: MessageType; key: string; path: string }[] = [
   {
     type: "",
-    label: "All",
+    key: "hq.msg_tab_all",
     path: "M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z",
   },
   {
     type: "direct",
-    label: "Direct",
+    key: "hq.msg_tab_direct",
     path: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z",
   },
   {
     type: "starred",
-    label: "Starred",
+    key: "hq.msg_tab_starred",
     path: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.175 0l-3.976 2.888c-.783.57-1.838-.197-1.539-1.118l1.519-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.381-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z",
   },
   {
     type: "notification",
-    label: "Notices",
+    key: "hq.msg_tab_notices",
     path: "M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9",
   },
 ];
@@ -321,6 +322,7 @@ const GroupHeader: Component<{ label: string; count: number }> = (props) => (
 // ── Main widget ───────────────────────────────────────────────────────────
 
 export default function HqMessagesWidget() {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = createSignal<MessageType>("");
   const [refreshKey, setRefreshKey] = createSignal(0);
   const [entries, setEntries] = createSignal<MessageEntry[]>([]);
@@ -438,7 +440,7 @@ export default function HqMessagesWidget() {
       {/* ── Header ── */}
       <div class="px-4 pt-4 pb-0 shrink-0">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="text-sm font-semibold text-txt tracking-tight">Messages</h3>
+          <h3 class="text-sm font-semibold text-txt tracking-tight">{t("hq.messages")}</h3>
           <div class="relative">
             <svg
               class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none"
@@ -455,7 +457,7 @@ export default function HqMessagesWidget() {
             </svg>
             <input
               type="text"
-              placeholder="Filter…"
+              placeholder={t("hq.filter_placeholder")}
               class="w-36 text-xs bg-overlay border-0 rounded-lg
                      pl-7 pr-3 py-1.5 text-txt placeholder-muted
                      focus:outline-none focus:ring-2 focus:ring-accent/40
@@ -467,7 +469,7 @@ export default function HqMessagesWidget() {
 
         {/* Tabs */}
         <div class="flex gap-1" role="tablist">
-          <For each={TABS}>
+          <For each={TAB_PATHS}>
             {(tab) => {
               const isActive = () => activeTab() === tab.type;
               return (
@@ -489,7 +491,7 @@ export default function HqMessagesWidget() {
                   <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={tab.path} />
                   </svg>
-                  <span class="hidden sm:inline">{tab.label}</span>
+                  <span class="hidden sm:inline">{t(tab.key as "hq.msg_tab_all")}</span>
                 </button>
               );
             }}
@@ -510,7 +512,7 @@ export default function HqMessagesWidget() {
               onClick={() => loadPage(true)}
               class="text-xs text-accent hover:underline mt-1"
             >
-              Retry
+              {t("hq.retry")}
             </button>
           </div>
         </Show>
@@ -525,7 +527,7 @@ export default function HqMessagesWidget() {
                 d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"
               />
             </svg>
-            <span>Nothing here</span>
+            <span>{t("hq.no_messages")}</span>
           </div>
         </Show>
 
@@ -551,7 +553,7 @@ export default function HqMessagesWidget() {
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
             </svg>
-            Loading
+            {t("hq.loading")}
           </div>
         </Show>
       </div>

@@ -3,8 +3,10 @@ import { useParams } from '@solidjs/router';
 import { useAuth } from '@/shared/store/auth-store';
 import { pages, loading, loadWebpages, removePage } from '../store';
 import type { WebPage } from '../api';
+import { useI18n } from '@/i18n';
 
 export default function WebpagesView() {
+  const { t } = useI18n();
   const params = useParams<{ nick: string }>();
   const auth   = useAuth();
   const [confirmIid, setConfirmIid] = createSignal<number | null>(null);
@@ -27,12 +29,12 @@ export default function WebpagesView() {
 
       {/* Header */}
       <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-bold text-txt">Webpages</h1>
+        <h1 class="text-2xl font-bold text-txt">{t("webpages.title")}</h1>
         <a
           href={`/webpages/${nick()}/new`}
           class="px-4 py-2 rounded-lg bg-accent text-accent-fg text-sm font-medium hover:opacity-90 transition-opacity"
         >
-          + New Page
+          {t("webpages.new_page")}
         </a>
       </div>
 
@@ -45,11 +47,11 @@ export default function WebpagesView() {
             <table class="w-full text-sm">
               <thead>
                 <tr class="border-b border-rim text-xs uppercase tracking-wide text-muted">
-                  <th class="px-4 py-3 text-left font-medium">Title</th>
-                  <th class="px-4 py-3 text-left font-medium hidden md:table-cell">Page Link</th>
-                  <th class="px-4 py-3 text-left font-medium hidden lg:table-cell">Last edited</th>
-                  <th class="px-4 py-3 text-left font-medium">Visibility</th>
-                  <th class="px-4 py-3 text-right font-medium">Actions</th>
+                  <th class="px-4 py-3 text-left font-medium">{t("webpages.col_title")}</th>
+                  <th class="px-4 py-3 text-left font-medium hidden md:table-cell">{t("webpages.col_page_link")}</th>
+                  <th class="px-4 py-3 text-left font-medium hidden lg:table-cell">{t("webpages.col_last_edited")}</th>
+                  <th class="px-4 py-3 text-left font-medium">{t("webpages.col_visibility")}</th>
+                  <th class="px-4 py-3 text-right font-medium">{t("webpages.col_actions")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -78,6 +80,7 @@ function PageRow(props: {
   onDelete: () => void;
   onCancelDelete: () => void;
 }) {
+  const { t } = useI18n();
   const fmtDate = (s: string) =>
     new Date(s.replace(' ', 'T') + 'Z').toLocaleDateString(undefined, {
       year: 'numeric', month: 'short', day: 'numeric',
@@ -92,7 +95,7 @@ function PageRow(props: {
           rel="noopener noreferrer"
           class="font-medium text-txt hover:text-accent transition-colors"
         >
-          {props.page.title || '(untitled)'}
+          {props.page.title || t("webpages.untitled")}
         </a>
       </td>
       <td class="px-4 py-3 hidden md:table-cell">
@@ -111,7 +114,7 @@ function PageRow(props: {
               : 'bg-green-100 text-green-700'
           }`}
         >
-          {props.page.is_private ? '🔒 Private' : '🌐 Public'}
+          {props.page.is_private ? t("webpages.private_label") : t("webpages.public_label")}
         </span>
       </td>
       <td class="px-4 py-3 text-right">
@@ -119,18 +122,18 @@ function PageRow(props: {
           when={!props.confirmingDelete}
           fallback={
             <span class="inline-flex gap-2 items-center">
-              <span class="text-xs text-muted">Delete?</span>
+              <span class="text-xs text-muted">{t("webpages.delete_confirm")}</span>
               <button
                 onClick={props.onDelete}
                 class="text-xs px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700 transition-colors"
               >
-                Yes
+                {t("webpages.yes")}
               </button>
               <button
                 onClick={props.onCancelDelete}
                 class="text-xs px-2 py-1 rounded border border-rim text-muted hover:bg-elevated transition-colors"
               >
-                No
+                {t("webpages.no")}
               </button>
             </span>
           }
@@ -142,19 +145,19 @@ function PageRow(props: {
               rel="noopener noreferrer"
               class="text-xs px-2 py-1 rounded border border-rim text-muted hover:bg-elevated transition-colors"
             >
-              View
+              {t("webpages.view")}
             </a>
             <a
               href={props.page.edit_url}
               class="text-xs px-2 py-1 rounded border border-rim text-muted hover:bg-elevated transition-colors"
             >
-              Edit
+              {t("webpages.edit")}
             </a>
             <button
               onClick={props.onDelete}
               class="text-xs px-2 py-1 rounded border border-red-300 text-red-600 hover:bg-red-50 transition-colors"
             >
-              Delete
+              {t("webpages.delete")}
             </button>
           </span>
         </Show>
@@ -164,15 +167,16 @@ function PageRow(props: {
 }
 
 function EmptyState(props: { nick: string }) {
+  const { t } = useI18n();
   return (
     <div class="text-center py-16 space-y-4">
       <div class="text-5xl">📄</div>
-      <p class="text-muted">No webpages yet.</p>
+      <p class="text-muted">{t("webpages.no_webpages")}</p>
       <a
         href={`/webpages/${props.nick}/new`}
         class="inline-block px-4 py-2 rounded-lg bg-accent text-accent-fg text-sm font-medium hover:opacity-90 transition-opacity"
       >
-        Create your first page
+        {t("webpages.create_first")}
       </a>
     </div>
   );

@@ -1,6 +1,7 @@
 // src/modules/articles/views/ArticlesView.tsx
 import { createEffect, createSignal, onMount, onCleanup, Show, For, Index } from "solid-js";
 import { useParams, useNavigate, useSearchParams } from "@solidjs/router";
+import { useI18n } from "@/i18n";
 import { Portal } from "solid-js/web";
 import { useAuth } from "@/shared/store/auth-store";
 import { useViewerRole } from "@/shared/store/site-config";
@@ -132,6 +133,7 @@ function ArticleModal(props: {
   nick: string;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   onMount(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") props.onClose(); };
     document.addEventListener("keydown", onKey);
@@ -148,7 +150,7 @@ function ArticleModal(props: {
         {/* Panel */}
         <div class="relative w-full max-w-3xl rounded-xl bg-base border border-rim shadow-xl">
           <div class="flex items-center justify-between px-4 py-3 border-b border-rim sticky top-0 bg-base z-10 rounded-t-xl">
-            <h2 class="text-sm font-semibold text-txt">New article</h2>
+            <h2 class="text-sm font-semibold text-txt">{t("articles.new_article")}</h2>
             <button
               type="button"
               onClick={props.onClose}
@@ -175,6 +177,7 @@ function ArticleModal(props: {
 export default function ArticlesView() {
   const auth = useAuth();
   const role = useViewerRole();
+  const { t } = useI18n();
   const params = useParams<{ nick: string }>();
   const navigate = useNavigate();
   const [open, setOpen] = createSignal(false);
@@ -198,7 +201,7 @@ export default function ArticlesView() {
     <div class="space-y-6 max-w-2xl mx-auto ">
       {/* ── Header row ── */}
       <div class="flex items-center justify-between">
-        <h1 class="text-xl font-bold text-txt">Articles</h1>
+        <h1 class="text-xl font-bold text-txt">{t("articles.title")}</h1>
 
         <Show when={role() === "owner"}>
           <button
@@ -209,7 +212,7 @@ export default function ArticlesView() {
                    transition-opacity"
           >
             <BiRegularEdit class="w-4 h-4" />
-            New article
+            {t("articles.new_article")}
           </button>
         </Show>
       </div>
@@ -217,7 +220,7 @@ export default function ArticlesView() {
       {/* ── Active filter banner ── */}
       <Show when={activeCategory() || activeTag()}>
         <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/10 border border-accent/25 text-sm">
-          <span class="text-muted">Filtered by:</span>
+          <span class="text-muted">{t("articles.filtered_by")}</span>
           <Show when={activeCategory()}>
             <span class="font-medium text-accent">{activeCategory()}</span>
           </Show>
@@ -229,7 +232,7 @@ export default function ArticlesView() {
             onClick={clearArticleFilter}
             class="ml-auto text-xs text-muted hover:text-txt transition-colors"
           >
-            Clear
+            {t("articles.clear")}
           </button>
         </div>
       </Show>
@@ -241,7 +244,7 @@ export default function ArticlesView() {
           fallback={
             <div class="text-center py-16 text-muted text-sm space-y-2">
               <p class="text-2xl">📝</p>
-              <p>No articles yet.</p>
+              <p>{t("articles.no_articles")}</p>
             </div>
           }
         >
@@ -264,13 +267,13 @@ export default function ArticlesView() {
                 class="px-4 py-2 text-sm font-medium rounded-lg border border-rim
                        bg-surface text-muted hover:bg-elevated transition-colors"
               >
-                Load more
+                {t("articles.load_more")}
               </button>
             </div>
           </Show>
 
           <Show when={!hasMore()}>
-            <p class="text-center py-2 text-xs text-muted">All articles loaded</p>
+            <p class="text-center py-2 text-xs text-muted">{t("articles.all_loaded")}</p>
           </Show>
         </Show>
       </Show>

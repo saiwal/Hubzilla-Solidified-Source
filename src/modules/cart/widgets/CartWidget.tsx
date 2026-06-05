@@ -2,18 +2,20 @@ import { Show, For } from 'solid-js';
 import { A } from '@solidjs/router';
 import { MdFillShopping_cart } from 'solid-icons/md';
 import { cartCount, cartItems, nick } from '../store';
+import { useI18n } from '@/i18n';
 
 export default function CartWidget() {
+  const { t } = useI18n();
   return (
     <Show when={cartCount() > 0}>
       <div class="bg-elevated border border-rim rounded-2xl p-4 flex flex-col gap-3">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <MdFillShopping_cart size={18} class="text-accent" />
-            <span class="text-sm font-semibold text-txt">Cart</span>
+            <span class="text-sm font-semibold text-txt">{t("cart.cart_label")}</span>
           </div>
           <span class="text-xs font-bold bg-accent-muted text-accent-txt rounded-full px-2 py-0.5">
-            {cartCount()} item{cartCount() === 1 ? '' : 's'}
+            {cartCount()} {cartCount() === 1 ? t("cart.item_singular") : t("cart.item_plural")}
           </span>
         </div>
 
@@ -21,7 +23,7 @@ export default function CartWidget() {
           <Show
             when={cartItems().length > 0}
             fallback={
-              <p class="text-xs text-muted">No items yet.</p>
+              <p class="text-xs text-muted">{t("cart.no_items_yet")}</p>
             }
           >
             <For each={cartItems().slice(0, 3)}>
@@ -44,7 +46,7 @@ export default function CartWidget() {
           href={`/cart/${nick()}`}
           class="text-center text-xs font-medium text-accent hover:text-accent-txt transition-colors"
         >
-          View cart →
+          {t("cart.view_cart")}
         </A>
       </div>
     </Show>

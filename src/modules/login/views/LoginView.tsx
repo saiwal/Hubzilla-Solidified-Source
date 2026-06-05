@@ -1,8 +1,10 @@
 import { createSignal, onMount } from "solid-js";
 import { fetchLoginToken, submitLogin } from "../api/api";
 import { toast } from "@/shared/store/toast";
+import { useI18n } from "@/i18n";
 
 export default function LoginView() {
+  const { t } = useI18n();
   const [token, setToken] = createSignal("");
   const [username, setUsername] = createSignal("");
   const [password, setPassword] = createSignal("");
@@ -48,14 +50,14 @@ export default function LoginView() {
           >
             Hz
           </div>
-          <h1 class="text-2xl font-bold text-txt">Sign in</h1>
-          <p class="text-sm text-muted mt-1">to continue to Hubzilla</p>
+          <h1 class="text-2xl font-bold text-txt">{t("auth.sign_in")}</h1>
+          <p class="text-sm text-muted mt-1">{t("auth.continue_to")}</p>
         </div>
 
         <form onSubmit={handleSubmit} class="space-y-4" noValidate={false}>
           <div class="space-y-1">
             <label class="text-sm font-medium text-txt" for="login-username">
-              Email or username
+              {t("auth.email_or_username")}
             </label>
             <input
               id="login-username"
@@ -69,13 +71,13 @@ export default function LoginView() {
                      placeholder:text-muted
                      focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent
                      disabled:opacity-60 transition-colors"
-              placeholder="you@example.com or yournick"
+              placeholder={t("auth.email_placeholder")}
             />
           </div>
 
           <div class="space-y-1">
             <label class="text-sm font-medium text-txt" for="login-password">
-              Password
+              {t("auth.password")}
             </label>
             <input
               id="login-password"
@@ -89,7 +91,7 @@ export default function LoginView() {
                      placeholder:text-muted
                      focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent
                      disabled:opacity-60 transition-colors"
-              placeholder="••••••••"
+              placeholder={t("auth.password_placeholder")}
             />
           </div>
 
@@ -102,7 +104,7 @@ export default function LoginView() {
                    focus:outline-none focus:ring-2 focus:ring-accent/40
                    transition-opacity"
           >
-            {loading() ? "Signing in…" : "Sign in"}
+            {loading() ? t("auth.signing_in") : t("auth.sign_in")}
           </button>
         </form>
       </div>

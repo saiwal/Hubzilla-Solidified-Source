@@ -14,7 +14,7 @@ import { isAdmin } from "../store/auth-store";
 import type { NavItemDef } from "../types/module.types";
 import type { NavActions, NavChannelTab, NavApp } from "../lib/nav-api";
 import { biToNavIcon } from "../lib/nav-api";
-import { getRoutes } from "./module-registry";
+import { getNavItems, getRoutes } from "./module-registry";
 import { useI18n } from "@/i18n";
 import { useViewerRole } from "../store/site-config";
 import { applyNavOrder } from "../store/nav-order";
@@ -68,10 +68,12 @@ function tabToNavItem(tab: NavChannelTab): NavItemDef {
   };
 }
 
-function appToNavItem(app: NavApp): NavItemDef {
+function appToNavItem(app: NavApp, moduleLabelMap: Map<string, NavItemDef["label"]>): NavItemDef {
   const href = toSpaHref(app.url);
+  const root = href.split("/").filter(Boolean)[0] ?? "";
+  const label = moduleLabelMap.get(root) ?? app.label;
   return {
-    label: app.label,
+    label,
     icon: biToNavIcon(app.bi_icon),
     href,
     path: urlToPath(href),
@@ -84,6 +86,18 @@ function buildSpaRoots(): Set<string> {
   return new Set(
     getRoutes()().map((r) => r.path.split("/").filter(Boolean)[0] ?? ""),
   );
+}
+
+// Map path root → registered module label so server-provided app names are
+// replaced with the i18n-aware label from the module registration.
+// e.g. "network" → () => t("nav.network")
+function buildModuleLabelMap(): Map<string, NavItemDef["label"]> {
+  const map = new Map<string, NavItemDef["label"]>();
+  for (const item of getNavItems()()) {
+    const root = item.path.split("/").filter(Boolean)[0];
+    if (root) map.set(root, item.label);
+  }
+  return map;
 }
 
 function isSpaApp(app: NavApp, spaRoots: Set<string>): boolean {
@@ -117,6 +131,7 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
     const role = viewerRole();
     const nick = subjectNick();
     const spaRoots = buildSpaRoots();
+    const moduleLabelMap = buildModuleLabelMap();
 
     // Logged-in local user visiting someone else's channel → channel tabs only.
     // System apps are excluded because they carry the viewer's own nick in
@@ -132,7 +147,7 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
       const tabs = (channelNav()?.channel_tabs ?? []).map(tabToNavItem);
       const sysApps = systemApps()
         .filter((a) => isSpaApp(a, spaRoots))
-        .map(appToNavItem);
+        .map((a) => appToNavItem(a, moduleLabelMap));
       return dedupByHref([...tabs, ...sysApps]);
     }
 
@@ -147,7 +162,8 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
           !pinnedUrls.has(toSpaHref(a.url)) &&
           (installed.size === 0 || installed.has(a.name)),
       );
-      const items = applyNavOrder([...filteredPinned, ...filteredFeatured]).map(appToNavItem);
+      const items = applyNavOrder([...filteredPinned, ...filteredFeatured])
+        .map((a) => appToNavItem(a, moduleLabelMap));
 
       if (isAdmin())
         items.push({ label: t("nav.admin"), icon: "admin", href: "/admin", path: "/admin" });
@@ -158,7 +174,7 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
     // Visitor (anon/remote) not on a channel → system apps only
     return systemApps()
       .filter((a) => isSpaApp(a, spaRoots))
-      .map(appToNavItem);
+      .map((a) => appToNavItem(a, moduleLabelMap));
   });
 }
 

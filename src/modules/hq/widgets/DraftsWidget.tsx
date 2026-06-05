@@ -4,15 +4,18 @@ import { storageGet, storageSet, storageDel, storageKeys } from "@/shared/lib/st
 import type { SavedDraft } from "@/shared/editor/store/createComposerStore";
 import PostComposer from "@/shared/editor/composers/PostComposer";
 import { useAuth } from "@/shared/store/auth-store";
+import { useI18n } from "@/i18n";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function scopeLabel(scope: string): string {
-  if (scope === "post:new") return "New Post";
-  if (scope === "article:new") return "New Article";
-  if (scope.startsWith("post:reply:")) return "Reply";
-  if (scope.startsWith("article:edit:")) return "Article";
-  return "Draft";
+function makeScopeLabel(t: (key: string) => string) {
+  return function scopeLabel(scope: string): string {
+    if (scope === "post:new") return t("hq.draft_new_post");
+    if (scope === "article:new") return t("hq.draft_new_article");
+    if (scope.startsWith("post:reply:")) return t("hq.draft_reply");
+    if (scope.startsWith("article:edit:")) return t("hq.draft_article");
+    return t("hq.draft_label");
+  };
 }
 
 function isPostScope(scope: string): boolean {
@@ -23,16 +26,18 @@ function isArticleNewScope(scope: string): boolean {
   return scope === "article:new";
 }
 
-function timeAgo(ms: number): string {
-  const diff = Date.now() - ms;
-  const secs = Math.floor(diff / 1000);
-  if (secs < 60) return "just now";
-  const mins = Math.floor(secs / 60);
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+function makeTimeAgo(t: (key: string) => string) {
+  return function timeAgo(ms: number): string {
+    const diff = Date.now() - ms;
+    const secs = Math.floor(diff / 1000);
+    if (secs < 60) return t("hq.just_now");
+    const mins = Math.floor(secs / 60);
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  };
 }
 
 type DraftEntry = { scope: string; draft: SavedDraft };
@@ -54,6 +59,9 @@ const SkeletonRow = () => (
 export default function DraftsWidget() {
   const auth = useAuth();
   const navigate = useNavigate();
+  const { t } = useI18n();
+  const scopeLabel = makeScopeLabel(t as (key: string) => string);
+  const timeAgo = makeTimeAgo(t as (key: string) => string);
   const [entries, setEntries] = createSignal<DraftEntry[]>([]);
   const [loading, setLoading] = createSignal(true);
   const [activeEntry, setActiveEntry] = createSignal<DraftEntry | null>(null);
@@ -113,7 +121,7 @@ export default function DraftsWidget() {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
                 d="M15 3v5H9V3m0 14h6" />
             </svg>
-            <h3 class="text-sm font-semibold text-txt">Drafts</h3>
+            <h3 class="text-sm font-semibold text-txt">{t("hq.drafts")}</h3>
           </div>
           <Show when={!loading() && entries().length > 0}>
             <span class="text-xs text-muted tabular-nums">{entries().length}</span>
@@ -133,7 +141,7 @@ export default function DraftsWidget() {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                 d="M15 3v5H9V3m0 14h6" />
             </svg>
-            <span class="text-xs">No saved drafts</span>
+            <span class="text-xs">{t("hq.no_drafts")}</span>
           </div>
         </Show>
 
@@ -164,7 +172,7 @@ export default function DraftsWidget() {
                     </p>
                   </Show>
                   <p class="text-xs text-muted truncate">
-                    <Show when={entry.draft.preview} fallback={<em>Empty draft</em>}>
+                    <Show when={entry.draft.preview} fallback={<em>{t("hq.empty_draft")}</em>}>
                       {entry.draft.preview}
                     </Show>
                   </p>
@@ -178,17 +186,17 @@ export default function DraftsWidget() {
                   <Show when={isPostScope(entry.scope) || isArticleNewScope(entry.scope)}>
                     <button
                       type="button"
-                      title="Load in composer"
+                      title={t("hq.load_in_composer")}
                       onClick={() => handleLoad(entry)}
                       class="px-2 py-0.5 text-[10px] rounded border border-rim text-muted
                              hover:text-txt hover:border-rim-strong transition-colors"
                     >
-                      Load
+                      {t("hq.load")}
                     </button>
                   </Show>
                   <button
                     type="button"
-                    title="Delete draft"
+                    title={t("hq.delete_draft")}
                     onClick={() => void deleteDraft(entry.scope, entry.draft.id)}
                     class="p-1 rounded text-muted hover:text-red-500 transition-colors"
                   >

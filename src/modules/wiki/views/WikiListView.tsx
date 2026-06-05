@@ -5,9 +5,11 @@ import { wikis, wikisLoading, canCreate, wikisError, loadWikis, resetWikis } fro
 import { createWiki } from "../api";
 import { createSignal } from "solid-js";
 import { toast } from "@/shared/store/toast";
+import { useI18n } from "@/i18n";
 
 export default function WikiListView() {
   const params = useParams<{ nick: string }>();
+  const { t } = useI18n();
   const [creating, setCreating] = createSignal(false);
   const [newName, setNewName]   = createSignal("");
   const [newMime, setNewMime]   = createSignal<"text/markdown" | "text/bbcode" | "text/plain">("text/markdown");
@@ -34,7 +36,7 @@ export default function WikiListView() {
         loadWikis(params.nick);
       }
     } catch (err: any) {
-      toast.error(err.message ?? "Error creating wiki");
+      toast.error(err.message ?? t("wiki.error_creating"));
     } finally {
       setBusy(false);
     }
@@ -49,14 +51,14 @@ export default function WikiListView() {
   return (
     <div class="space-y-4 max-w-2xl mx-auto p-4">
       <div class="flex items-center justify-between">
-        <h1 class="text-xl font-semibold text-txt">Wikis</h1>
+        <h1 class="text-xl font-semibold text-txt">{t("wiki.wikis")}</h1>
         <Show when={canCreate()}>
           <button
             type="button"
             onClick={() => setCreating((v) => !v)}
             class="text-sm border border-rim text-muted hover:bg-elevated px-3 py-1.5 rounded-lg transition-colors"
           >
-            {creating() ? "Cancel" : "New Wiki"}
+            {creating() ? t("wiki.cancel") : t("wiki.new_wiki")}
           </button>
         </Show>
       </div>
@@ -68,19 +70,19 @@ export default function WikiListView() {
           onSubmit={handleCreate}
         >
           <div class="space-y-1">
-            <label class="text-xs text-muted font-medium">Wiki name</label>
+            <label class="text-xs text-muted font-medium">{t("wiki.wiki_name_label")}</label>
             <input
               type="text"
               class="w-full bg-surface border border-rim text-txt rounded-lg px-3 py-2 text-sm
                      hover:border-rim-strong focus:outline-none"
-              placeholder="My Wiki"
+              placeholder={t("wiki.wiki_name_placeholder") as string}
               value={newName()}
               onInput={(e) => setNewName(e.currentTarget.value)}
               required
             />
           </div>
           <div class="space-y-1">
-            <label class="text-xs text-muted font-medium">Content type</label>
+            <label class="text-xs text-muted font-medium">{t("wiki.content_type_label")}</label>
             <select
               class="w-full bg-surface border border-rim text-txt rounded-lg px-3 py-2 text-sm
                      hover:border-rim-strong focus:outline-none"
@@ -98,7 +100,7 @@ export default function WikiListView() {
             class="bg-accent-muted text-accent px-4 py-2 rounded-lg text-sm
                    hover:bg-elevated disabled:opacity-50 transition-colors"
           >
-            {busy() ? "Creating…" : "Create Wiki"}
+            {busy() ? t("wiki.creating") : t("wiki.create_wiki")}
           </button>
         </form>
       </Show>

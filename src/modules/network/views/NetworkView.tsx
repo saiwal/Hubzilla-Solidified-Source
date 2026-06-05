@@ -1,6 +1,7 @@
 // src/modules/network/views/NetworkView.tsx
 import { createEffect, Show, For, Switch, Match } from "solid-js";
 import { useAuth } from "@/shared/store/auth-store";
+import { useI18n } from "@/i18n";
 import StreamList from "@/shared/stream/feedviews/StreamList";
 import type { StreamHandlers } from "@/shared/stream/types";
 import { ListPlaceholder } from "@/shared/stream/feedviews/ListView";
@@ -27,6 +28,7 @@ const handlers: StreamHandlers = {
 
 export default function NetworkView() {
   const auth = useAuth();
+  const { t } = useI18n();
   let initialized = false;
 
   createEffect(() => {
@@ -47,7 +49,7 @@ export default function NetworkView() {
             onClick={flushNewPosts}
             class="px-4 py-2 rounded-full bg-accent text-accent-fg text-sm font-medium shadow-lg hover:opacity-90 transition-opacity"
           >
-            ↑ {newPosts().length} new {newPosts().length === 1 ? "post" : "posts"}
+            ↑ {newPosts().length} {t("network.new_posts")}
           </button>
         </div>
       </Show>
@@ -91,13 +93,13 @@ export default function NetworkView() {
               class="px-4 py-2 text-sm font-medium rounded-lg border border-rim
                      bg-surface text-muted hover:bg-overlay transition-colors"
             >
-              Load more
+              {t("network.load_more")}
             </button>
           </div>
         </Show>
 
         <Show when={!hasMore() && posts().length > 0}>
-          <p class="text-center py-4 text-sm text-muted">You're all caught up</p>
+          <p class="text-center py-4 text-sm text-muted">{t("network.all_caught_up")}</p>
         </Show>
       </Show>
     </div>

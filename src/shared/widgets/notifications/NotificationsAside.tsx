@@ -8,6 +8,7 @@ import {
   onCleanup,
   lazy,
 } from "solid-js";
+import { useI18n } from "@/i18n";
 import { useAuth, updateInterval } from "@/shared/store/auth-store";
 import {
   MdFillNotifications,
@@ -295,6 +296,7 @@ function StreamSection(props: {
   onClearAll: (key: string) => void;
   onOpenModal: (uuid: string) => void;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = createSignal(false);
   const meta = KNOWN_META[props.id] ?? {
     label: props.id,
@@ -366,7 +368,7 @@ function StreamSection(props: {
                 e.stopPropagation();
                 props.onClearAll(props.id);
               }}
-              title="Mark all read"
+              title={t("ui.mark_all_read")}
               class="p-0.5 rounded text-subtle hover:text-txt hover:bg-elevated transition-colors"
             >
               <MdFillDone_all class="w-3.5 h-3.5" />
@@ -411,7 +413,7 @@ function StreamSection(props: {
               when={notifications().length > 0}
               fallback={
                 <p class="text-[11px] text-muted text-center py-3">
-                  Nothing new
+                  {t("ui.nothing_new")}
                 </p>
               }
             >
@@ -460,6 +462,7 @@ function StatusDot(props: { status: ConnStatus }) {
 // ── Main widget ───────────────────────────────────────────────────────────────
 
 export default function NotificationsAside() {
+  const { t } = useI18n();
   const auth = useAuth();
 
   const emptyBucket = (): StreamBucket => ({ count: 0, notifications: [] });
@@ -741,13 +744,13 @@ export default function NotificationsAside() {
         <div class="flex items-center justify-between">
           <h3 class="text-sm font-bold text-txt flex items-center gap-1.5">
             <StatusDot status={connStatus()} />
-            Notifications
+            {t("ui.notifications_title")}
           </h3>
           <div class="flex items-center gap-1.5">
             <Show when={booted() && hasAnyCount()}>
               <button
                 onClick={markAllRead}
-                title="Mark all read"
+                title={t("ui.mark_all_read")}
                 class="p-1 rounded text-subtle hover:text-txt hover:bg-elevated transition-colors"
               >
                 <MdFillDone_all class="w-4 h-4" />
@@ -756,7 +759,7 @@ export default function NotificationsAside() {
             <button
               onClick={manualRefresh}
               disabled={refreshing()}
-              title="Refresh"
+              title={t("ui.refresh")}
               class="p-1 rounded text-subtle hover:text-txt hover:bg-elevated
                      transition-colors disabled:opacity-40"
             >
@@ -769,7 +772,7 @@ export default function NotificationsAside() {
 
         <Show when={!auth.loading && !auth()?.isLoggedIn}>
           <p class="text-xs text-muted text-center py-4">
-            Sign in to see notifications
+            {t("ui.sign_in_notifs")}
           </p>
         </Show>
 
@@ -832,7 +835,7 @@ export default function NotificationsAside() {
         >
           <div class="text-center py-2">
             <p class="text-2xl mb-1">✓</p>
-            <p class="text-xs text-muted">All caught up</p>
+            <p class="text-xs text-muted">{t("ui.all_caught_up")}</p>
           </div>
         </Show>
       </div>

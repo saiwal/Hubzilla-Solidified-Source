@@ -4,6 +4,7 @@ import {
   Show, For
 } from "solid-js";
 import { toast } from "@/shared/store/toast";
+import { useI18n } from "@/i18n";
 import { useParams, A, useNavigate } from "@solidjs/router";
 import { Portal } from "solid-js/web";
 import { fetchArticle, deleteArticle } from "../api";
@@ -47,6 +48,7 @@ function extractHeadings(container: HTMLElement): TocEntry[] {
 // ── TOC ───────────────────────────────────────────────────────────────────────
 
 function TableOfContents(props: { entries: TocEntry[]; activeId: string }) {
+  const { t } = useI18n();
   const [expanded, setExpanded] = createSignal(true);
   const minLevel = () => Math.min(...props.entries.map((e) => e.level));
   const indent = (level: number) => {
@@ -66,7 +68,7 @@ function TableOfContents(props: { entries: TocEntry[]; activeId: string }) {
         class="flex items-center justify-between w-full xl:cursor-default"
       >
         <span class="text-xs font-semibold uppercase tracking-wide text-muted">
-          On this page
+          {t("articles.on_this_page")}
         </span>
         <span class="xl:hidden text-muted text-xs">{expanded() ? "▲" : "▼"}</span>
       </button>
@@ -107,6 +109,7 @@ function EditModal(props: {
   onSaved: () => void;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   let dialogRef: HTMLDialogElement | undefined;
   onMount(() => dialogRef?.showModal());
 
@@ -124,7 +127,7 @@ function EditModal(props: {
                bg-base border border-rim shadow-xl p-0 backdrop:bg-black/50"
       >
         <div class="flex items-center justify-between px-4 py-3 border-b border-rim sticky top-0 bg-base z-10">
-          <h2 class="text-sm font-semibold text-txt">Edit article</h2>
+          <h2 class="text-sm font-semibold text-txt">{t("articles.edit_article")}</h2>
           <button
             type="button"
             onClick={close}
@@ -157,6 +160,7 @@ function EditModal(props: {
 // ── delete confirm ────────────────────────────────────────────────────────────
 
 function DeleteConfirm(props: { mid: string; onDeleted: () => void; onCancel: () => void }) {
+  const { t } = useI18n();
   const [deleting, setDeleting] = createSignal(false);
 
   const confirm = async () => {
@@ -165,7 +169,7 @@ function DeleteConfirm(props: { mid: string; onDeleted: () => void; onCancel: ()
       await deleteArticle(props.mid);
       props.onDeleted();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Delete failed");
+      toast.error(e instanceof Error ? e.message : t("articles.delete_failed"));
       setDeleting(false);
     }
   };
@@ -173,14 +177,14 @@ function DeleteConfirm(props: { mid: string; onDeleted: () => void; onCancel: ()
   return (
     <div class="flex items-center gap-3 px-4 py-3 bg-surface border border-rim rounded-xl">
       <p class="text-sm text-txt flex-1">
-        Delete this article? This cannot be undone.
+        {t("articles.delete_confirm")}
       </p>
       <button
         type="button"
         onClick={props.onCancel}
         class="px-3 py-1.5 text-sm rounded-lg border border-rim text-muted hover:bg-elevated transition-colors"
       >
-        Cancel
+        {t("articles.cancel")}
       </button>
       <button
         type="button"
@@ -189,7 +193,7 @@ function DeleteConfirm(props: { mid: string; onDeleted: () => void; onCancel: ()
         class="px-3 py-1.5 text-sm font-medium rounded-lg bg-red-500 text-white
                hover:opacity-90 disabled:opacity-40 transition-opacity"
       >
-        {deleting() ? "Deleting…" : "Delete"}
+        {deleting() ? t("articles.deleting") : t("articles.delete")}
       </button>
     </div>
   );
@@ -203,6 +207,7 @@ export default function ArticleView() {
   const nick = () => params.nick || pageNick();
   const role = useViewerRole();
   const auth = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
 
   const [data, { refetch }] = createResource(
@@ -323,7 +328,7 @@ export default function ArticleView() {
                 href={`/articles/${nick()}`}
                 class="inline-flex items-center gap-1 text-sm text-muted hover:text-txt transition-colors"
               >
-                ← All articles
+                {t("articles.all_articles")}
               </A>
 
               {/* Delete confirm banner */}
@@ -393,7 +398,7 @@ export default function ArticleView() {
                     ).toLocaleDateString(undefined, {
                       year: "numeric", month: "long", day: "numeric",
                     })}
-                    {" by "}
+                    {" "}{t("articles.by")}{" "}
                     <a href={d().article.authorUrl} class="hover:underline text-txt">
                       {d().article.authorName}
                     </a>
@@ -463,7 +468,7 @@ export default function ArticleView() {
                              text-muted hover:bg-overlay hover:text-txt transition-colors"
                     >
                       <MdFillChat size={17} />
-                      <span>Comment</span>
+                      <span>{t("articles.comment")}</span>
                     </button>
                   </Show>
                 </div>
@@ -498,11 +503,11 @@ export default function ArticleView() {
                 {/* Comments */}
                 <section class="space-y-4">
                   <h2 class="text-base font-semibold text-txt">
-                    Comments ({localComments().length})
+                    {t("articles.comments")} ({localComments().length})
                   </h2>
                   <Show
                     when={localComments().length > 0}
-                    fallback={<p class="text-sm text-muted">No comments yet.</p>}
+                    fallback={<p class="text-sm text-muted">{t("articles.no_comments")}</p>}
                   >
                     <For each={localComments()}>
                       {(c) => (

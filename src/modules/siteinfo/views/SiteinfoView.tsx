@@ -2,13 +2,15 @@ import { createResource, Show, For } from "solid-js";
 import { fetchSiteInfo } from "../api";
 import { bbcode } from "@/shared/lib/bbcode";
 import DOMPurify from "dompurify";
+import { useI18n } from "@/i18n";
 
 export default function SiteinfoView() {
+  const { t } = useI18n();
   const [info] = createResource(fetchSiteInfo);
 
   return (
     <Show when={!info.loading} fallback={<SiteinfoPending />}>
-      <Show when={info()} fallback={<p class="text-sm text-accent">Failed to load site info.</p>}>
+      <Show when={info()} fallback={<p class="text-sm text-accent">{t("ui.siteinfo_load_failed")}</p>}>
         {(data) => (
           <div class="max-w-2xl mx-auto space-y-8">
 
@@ -37,7 +39,7 @@ export default function SiteinfoView() {
 
             {/* About */}
             <Show when={data().site_about}>
-              <Section title="About this site">
+              <Section title={t("ui.siteinfo_about")}>
                 <div
                   class="prose prose-sm dark:prose-invert max-w-none text-txt
                            prose-a:text-accent prose-a:no-underline hover:prose-a:underline"
@@ -48,7 +50,7 @@ export default function SiteinfoView() {
 
             {/* Admin */}
             <Show when={data().admin_about}>
-              <Section title="Administrator">
+              <Section title={t("ui.siteinfo_admin")}>
                 <div
                   class="prose prose-sm dark:prose-invert max-w-none text-txt
                            prose-a:text-accent prose-a:no-underline hover:prose-a:underline"
@@ -58,10 +60,10 @@ export default function SiteinfoView() {
             </Show>
 
             {/* Federation */}
-            <Section title="Federation">
+            <Section title={t("ui.siteinfo_federation")}>
               <div class="space-y-2">
                 <p class="text-sm text-txt">
-                  Powered by{" "}
+                  {t("ui.siteinfo_powered_by")}{" "}
                   <a
                     href={data().project_link}
                     target="_blank"
@@ -78,7 +80,7 @@ export default function SiteinfoView() {
                       rel="noopener noreferrer"
                       class="text-accent hover:underline"
                     >
-                      Source code
+                      {t("ui.siteinfo_source")}
                     </a>
                   </Show>
                 </p>
@@ -96,7 +98,7 @@ export default function SiteinfoView() {
             <Show when={data().addons.length > 0 || data().themes.length > 0}>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Show when={data().addons.length > 0}>
-                  <Section title="Addons" compact>
+                  <Section title={t("ui.siteinfo_addons")} compact>
                     <div class="flex flex-wrap gap-1.5">
                       <For each={data().addons}>
                         {(addon) => <Chip label={addon} />}
@@ -105,7 +107,7 @@ export default function SiteinfoView() {
                   </Section>
                 </Show>
                 <Show when={data().themes.length > 0}>
-                  <Section title="Themes" compact>
+                  <Section title={t("ui.siteinfo_themes")} compact>
                     <div class="flex flex-wrap gap-1.5">
                       <For each={data().themes}>
                         {(theme) => <Chip label={theme} />}
@@ -149,10 +151,11 @@ function Chip(props: { label: string; variant?: 'info' | 'default' }) {
 }
 
 function RegistrationBadge(props: { policy: 0 | 1 | 2 }) {
+  const { t } = useI18n();
   const label = () =>
-    props.policy === 1 ? "Open registration"
-    : props.policy === 2 ? "Approval required"
-    : "Closed";
+    props.policy === 1 ? t("ui.siteinfo_open_reg")
+    : props.policy === 2 ? t("ui.siteinfo_approval")
+    : t("ui.siteinfo_closed");
 
   const cls = () =>
     props.policy === 1

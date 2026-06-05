@@ -1,6 +1,7 @@
 // src/shared/views/RemoteAuthBanner.tsx
 import { type Component, Show } from "solid-js";
 import type { ViewerRole } from "../store/site-config.ts";
+import { useI18n } from "@/i18n";
 
 interface Props {
   role: ViewerRole;
@@ -9,6 +10,8 @@ interface Props {
 }
 
 const RemoteAuthBanner: Component<Props> = (props) => {
+  const { t } = useI18n();
+
   // OWA zot-redirect URL — Hubzilla's standard remote login handshake
   const owaUrl = () =>
     `/magic?f=&dest=${encodeURIComponent(window.location.href)}`;
@@ -33,9 +36,9 @@ const RemoteAuthBanner: Component<Props> = (props) => {
           <span class="flex-1">
             <Show
               when={props.subjectNick}
-              fallback={<>You're browsing this site as a remote visitor.</>}
+              fallback={<>{t("ui.remote_visitor")}</>}
             >
-              You're viewing <strong>{props.subjectNick}</strong>'s channel as a remote visitor.
+              {t("ui.remote_visitor_channel", { nick: props.subjectNick })}
             </Show>
           </span>
           <Show when={props.homeUrl}>
@@ -45,7 +48,7 @@ const RemoteAuthBanner: Component<Props> = (props) => {
                      bg-amber-200 dark:bg-amber-700 hover:bg-amber-300
                      dark:hover:bg-amber-600 transition-colors"
             >
-              ← Go to your home
+              {t("ui.go_home_link")}
             </a>
           </Show>
         </Show>
@@ -54,11 +57,12 @@ const RemoteAuthBanner: Component<Props> = (props) => {
         <Show when={props.role === "anonymous"}>
           <span class="opacity-70">👁</span>
           <span class="flex-1">
-            You're browsing{" "}
-            <Show when={props.subjectNick} fallback={<>this site</>}>
-              <strong>{props.subjectNick}</strong>'s channel{" "}
+            <Show
+              when={props.subjectNick}
+              fallback={<>{t("ui.remote_visitor")}</>}
+            >
+              {t("ui.remote_guest", { nick: props.subjectNick })}
             </Show>
-            as a guest.
           </span>
           <a
             href={owaUrl()}
@@ -66,7 +70,7 @@ const RemoteAuthBanner: Component<Props> = (props) => {
                    bg-amber-200 dark:bg-amber-700 hover:bg-amber-300
                    dark:hover:bg-amber-600 transition-colors"
           >
-            Sign in / Remote auth
+            {t("ui.sign_in_remote")}
           </a>
         </Show>
       </div>

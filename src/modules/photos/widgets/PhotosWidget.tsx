@@ -5,9 +5,11 @@ import {
   recentPhotos, albums, albumsLoading,
   loadRecentPhotos, loadAlbums,
 } from "../store/store";
+import { useI18n } from "@/i18n";
 
 export default function PhotosWidget() {
   const params = useParams<{ nick?: string }>();
+  const { t } = useI18n();
   const nick   = () => params.nick ?? '';
 
   createEffect(() => {
@@ -24,13 +26,13 @@ export default function PhotosWidget() {
         <div>
           <div class="flex items-center justify-between mb-2">
             <span class="text-xs font-semibold text-muted uppercase tracking-wide flex items-center gap-1">
-              <MdFillImage size={13} /> Recent
+              <MdFillImage size={13} /> {t("photos.recent")}
             </span>
             <A
               href={`/photos/${nick()}`}
               class="text-xs text-accent hover:underline"
             >
-              See all
+              {t("photos.see_all")}
             </A>
           </div>
           <div class="grid grid-cols-4 gap-1">
@@ -58,7 +60,7 @@ export default function PhotosWidget() {
       <Show when={!albumsLoading() && albums().length > 0}>
         <div>
           <span class="text-xs font-semibold text-muted uppercase tracking-wide flex items-center gap-1 mb-2">
-            <MdFillPhoto_library size={13} /> Albums
+            <MdFillPhoto_library size={13} /> {t("photos.albums")}
           </span>
           <div class="space-y-1">
             <For each={albums()}>
@@ -86,7 +88,7 @@ export default function PhotosWidget() {
                     <p class="text-sm font-medium text-txt truncate group-hover:text-accent transition-colors">
                       {album.album}
                     </p>
-                    <p class="text-xs text-muted">{album.total} photos</p>
+                    <p class="text-xs text-muted">{album.total} {t("photos.photos_count")}</p>
                   </div>
                 </A>
               )}

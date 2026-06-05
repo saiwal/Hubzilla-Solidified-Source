@@ -1,0 +1,128 @@
+export const editor = {
+  // PostComposer
+  composer_label:         "Post composer",
+  reply_header:           "Reply",
+  new_post:               "New Post",
+  fullscreen_enter:       "Fullscreen",
+  fullscreen_exit:        "Exit fullscreen",
+  close_esc:              "Close (Esc)",
+  title_placeholder:      "Title (optional)",
+  category_placeholder:   "Category",
+  drafts_btn:             "Drafts ({{count}})",
+  saved_drafts:           "Saved drafts",
+  save_draft:             "Save as draft",
+  clear_composer:         "Clear composer",
+  posting:                "Posting…",
+  post_btn:               "Post",
+  reply_btn:              "Reply",
+  sending:                "Sending…",
+  reshare_btn:            "Reshare",
+  sharing:                "Sharing…",
+  publish_btn:            "Publish",
+  save_changes:           "Save changes",
+  saving:                 "Saving…",
+  discard:                "Discard",
+  cancel_btn:             "Cancel",
+  write_reply_placeholder: "Write a reply…",
+  write_reply_ctrl:       "Write a reply… (Ctrl+Enter to send)",
+  write_placeholder:      "What's on your mind?",
+  reshare_placeholder:    "Add a comment to your reshare… (optional)",
+  article_title_placeholder: "Article title…",
+  article_summary_placeholder: "Short summary (shown in article listings)…",
+  slug_label:             "Slug",
+  slug_placeholder:       "url-slug",
+  category_label:         "Category",
+  category_field_placeholder: "e.g. tech, personal",
+  format_label:           "Format",
+  words_count:            "{{count}} words",
+  start_writing:          "Start writing…",
+
+  // EditorToolbar
+  bold:             "Bold (Ctrl+B)",
+  italic:           "Italic (Ctrl+I)",
+  underline:        "Underline (Ctrl+U)",
+  strikethrough:    "Strikethrough",
+  highlight:        "Highlight",
+  link:             "Link",
+  bullet_list:      "Bullet list",
+  numbered_list:    "Numbered list",
+  heading2:         "Heading 2",
+  heading3:         "Heading 3",
+  blockquote:       "Blockquote",
+  code_block:       "Code block",
+  align_left:       "Align left",
+  align_center:     "Align center",
+  clear_formatting: "Clear formatting",
+
+  // RichEditor tabs
+  write_tab:   "Write",
+  source_tab:  "Source",
+  preview_tab: "Preview",
+
+  // RichEditor source placeholders
+  bbcode_source_placeholder:  "BBCode source…",
+  markdown_source_placeholder: "Markdown source…",
+  html_source_placeholder:    "HTML source…",
+
+  // AclPicker
+  acl_search_placeholder: "Search connections & groups…",
+  acl_legend:             "Row = allow | ✕ button = deny",
+  acl_allowed:            "allowed",
+  acl_denied:             "denied",
+  acl_loading:            "Loading…",
+  acl_deny_title:         "Deny this connection",
+  acl_clear_all:          "Clear all",
+
+  // DraftsList
+  drafts_header:  "Saved Drafts",
+  close_drafts:   "Close drafts",
+  no_drafts:      "No saved drafts",
+  empty_draft:    "Empty draft",
+  load_draft:     "Load this draft",
+  load_btn:       "Load",
+  delete_draft:   "Delete draft",
+
+  // AttachmentBar
+  attach_upload:   "Upload",
+  attach_browse:   "Browse",
+  attach_file_title: "Attach file from device",
+  attach_browse_title: "Browse existing files and photos",
+  drop_files:      "Drop files here",
+  uploading:       "Uploading…",
+
+  // AttachmentPreview
+  insert_into_editor: "Insert into editor",
+  insert_btn:         "Insert",
+  remove_attachment:  "Remove",
+  alt_text_label:     "Alt text",
+  alt_text_desc:      "Describe the image for screen readers and visitors who cannot see it. Leave empty to use the filename.",
+  alt_text_placeholder: "e.g. A cat sitting on a window sill in the afternoon sun",
+  add_alt_text:       "Add alt text",
+
+  // FilePickerModal
+  attach_existing:    "Attach existing",
+  photos_tab:         "Photos",
+  files_tab:          "Files",
+  select_to_attach:   "Select items to attach",
+  selected_count:     "{{count}} selected",
+  attach_btn:         "Attach",
+  attach_count_btn:   "Attach ({{count}})",
+
+  // FilesPicker
+  files_root:         "Files",
+  empty_folder:       "This folder is empty",
+
+  // PhotosPicker
+  photos_root:        "Photos",
+  no_albums:          "No albums found",
+  no_album_photos:    "No photos in this album",
+  photo_count:        "{{count}} photos",
+
+  // HqComposer toolbar
+  hq_bold:    "Bold",
+  hq_italic:  "Italic",
+  hq_link:    "Link",
+  hq_mention: "Mention",
+  hq_hashtag: "Hashtag",
+  open_full_composer: "Open full composer",
+} as const;

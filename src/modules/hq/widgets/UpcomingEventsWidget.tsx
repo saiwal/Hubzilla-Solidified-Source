@@ -3,6 +3,7 @@ import { toast } from "@/shared/store/toast";
 import { currentNick } from "@/shared/store/auth-store";
 import { fetchEvents, type CalEvent } from "@/modules/calendar/api";
 import EventCreatorModal from "@/modules/calendar/widgets/EventCreatorModal";
+import { useI18n } from "@/i18n";
 
 function next30DaysRange() {
   const start = new Date();
@@ -22,8 +23,8 @@ function fmtDay(iso: string) {
   return new Date(iso).getDate();
 }
 
-function fmtTime(iso: string, allDay: boolean) {
-  if (allDay) return "All day";
+function fmtTime(iso: string, allDay: boolean, allDayLabel: string) {
+  if (allDay) return allDayLabel;
   return new Date(iso).toLocaleTimeString(undefined, {
     hour: "numeric",
     minute: "2-digit",
@@ -41,6 +42,7 @@ const SkeletonRow = () => (
 );
 
 export default function UpcomingEventsWidget() {
+  const { t } = useI18n();
   const [events, setEvents] = createSignal<CalEvent[]>([]);
   const [loading, setLoading] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
@@ -76,7 +78,7 @@ export default function UpcomingEventsWidget() {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <h3 class="text-sm font-semibold text-txt">Upcoming Events</h3>
+            <h3 class="text-sm font-semibold text-txt">{t("hq.upcoming_events")}</h3>
           </div>
           <button
             type="button"
@@ -87,7 +89,7 @@ export default function UpcomingEventsWidget() {
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
             </svg>
-            New
+            {t("hq.new_event")}
           </button>
         </div>
 
@@ -99,7 +101,7 @@ export default function UpcomingEventsWidget() {
 
           <Show when={!loading() && error()}>
             <div class="px-4 py-4 text-center">
-              <button onClick={load} class="text-xs text-accent hover:underline">Retry</button>
+              <button onClick={load} class="text-xs text-accent hover:underline">{t("hq.retry")}</button>
             </div>
           </Show>
 
@@ -109,13 +111,13 @@ export default function UpcomingEventsWidget() {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <span class="text-xs">No upcoming events in the next 30 days</span>
+              <span class="text-xs">{t("hq.no_upcoming_events")}</span>
               <button
                 type="button"
                 onClick={() => setShowCreator(true)}
                 class="text-xs text-accent hover:underline mt-1"
               >
-                Create one
+                {t("hq.create_one")}
               </button>
             </div>
           </Show>
@@ -143,7 +145,7 @@ export default function UpcomingEventsWidget() {
                     {ev.title || "(no title)"}
                   </p>
                   <p class="text-xs text-muted mt-0.5 truncate">
-                    {fmtTime(ev.start, ev.allDay)}
+                    {fmtTime(ev.start, ev.allDay, t("hq.all_day"))}
                     <Show when={ev.location}>
                       <span class="mx-1 opacity-40">·</span>
                       {ev.location}

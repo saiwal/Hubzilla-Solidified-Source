@@ -4,8 +4,10 @@ import { Portal } from "solid-js/web";
 import { marked } from "marked";
 import { useHelpMode, type DocType } from "@/shared/store/help-mode";
 import { useDocs } from "@/shared/lib/useDocs";
+import { useI18n } from "@/i18n";
 
 export default function HelpOverlay() {
+  const { t } = useI18n();
   const { helpMode, helpTarget, exit } = useHelpMode();
 
   return (
@@ -15,12 +17,12 @@ export default function HelpOverlay() {
           <div class="fixed top-4 left-1/2 -translate-x-1/2 z-[9999]
                       flex items-center gap-3 px-4 py-2.5 rounded-xl
                       bg-accent text-accent-fg text-sm shadow-lg">
-            <span>Click on anything to get help with it</span>
+            <span>{t("help.click_for_help")}</span>
             <button
               onClick={exit}
               class="opacity-70 hover:opacity-100 transition-opacity leading-none"
             >
-              ✕ Cancel
+              {t("help.cancel")}
             </button>
           </div>
         </Portal>
@@ -49,11 +51,12 @@ export default function HelpOverlay() {
 }
 
 function HelpModalHeader(props: { target: string; onClose: () => void }) {
+  const { t } = useI18n();
   const { docType, setDocType } = useHelpMode();
 
-  const tabs: { id: DocType; label: string }[] = [
-    { id: "user", label: "User Guide" },
-    { id: "dev",  label: "Dev Guide"  },
+  const tabs: { id: DocType; label: () => string }[] = [
+    { id: "user", label: () => t("help.user_guide") },
+    { id: "dev",  label: () => t("help.dev_guide")  },
   ];
 
   return (
@@ -82,7 +85,7 @@ function HelpModalHeader(props: { target: string; onClose: () => void }) {
                 : "border-transparent text-muted hover:text-txt hover:bg-elevated"
               }`}
           >
-            {tab.label}
+            {tab.label()}
           </button>
         ))}
       </div>
@@ -91,19 +94,20 @@ function HelpModalHeader(props: { target: string; onClose: () => void }) {
 }
 
 function DocContent(props: { target: string }) {
+  const { t } = useI18n();
   const { docType } = useHelpMode();
   const [module, section] = props.target.split(".");
   const [md] = useDocs(module, docType);
 
   return (
     <Suspense fallback={
-      <p class="text-sm text-muted animate-pulse">Loading…</p>
+      <p class="text-sm text-muted animate-pulse">{t("help.loading")}</p>
     }>
       <Show
         when={md()}
         fallback={
           <p class="text-sm text-muted">
-            No {docType() === "dev" ? "developer" : "user"} documentation found for this section.
+            {docType() === "dev" ? t("help.no_dev_docs") : t("help.no_user_docs")}
           </p>
         }
       >

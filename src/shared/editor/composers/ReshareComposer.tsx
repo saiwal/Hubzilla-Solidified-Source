@@ -1,5 +1,6 @@
 import { createSignal, Show } from "solid-js";
 import { apiFetch } from "@/shared/lib/fetch";
+import { useI18n } from "@/i18n";
 
 interface Props {
   postUuid: string;
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export default function ReshareComposer(props: Props) {
+  const { t } = useI18n();
   const [body, setBody] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
@@ -44,7 +46,7 @@ export default function ReshareComposer(props: Props) {
       <textarea
         value={body()}
         onInput={(e) => setBody(e.currentTarget.value)}
-        placeholder="Add a comment to your reshare… (optional)"
+        placeholder={t("editor.reshare_placeholder")}
         rows={3}
         class="w-full px-3 py-2 text-sm rounded-lg border border-rim bg-surface text-txt placeholder:text-muted
                focus:outline-none focus:ring-1 focus:ring-accent resize-none"
@@ -58,7 +60,7 @@ export default function ReshareComposer(props: Props) {
           onClick={props.onCancel}
           class="px-3 py-1 text-xs rounded-lg border border-rim text-muted hover:bg-elevated transition-colors"
         >
-          Cancel
+          {t("editor.cancel_btn")}
         </button>
         <button
           type="button"
@@ -67,7 +69,7 @@ export default function ReshareComposer(props: Props) {
           class="px-3 py-1 text-xs font-medium rounded-lg bg-accent text-accent-fg
                  hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
         >
-          {submitting() ? "Sharing…" : "Reshare"}
+          {submitting() ? t("editor.sharing") : t("editor.reshare_btn")}
         </button>
       </div>
     </div>

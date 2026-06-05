@@ -1,0 +1,60 @@
+import type { RawDictionary } from "../namespaces/types";
+
+export const post: RawDictionary["post"] = {
+  // actions
+  like:                 "Like",
+  dislike:              "Dislike",
+  repeat:               "Repeat",
+  reshare_with_comment: "Reshare with comment",
+  more_sharing:         "More sharing options",
+  star:                 "Star",
+  unstar:               "Unstar",
+  follow:               "Follow",
+  unfollow:             "Unfollow",
+  follow_for_notifs:    "Follow post for notifications",
+  unfollow_post:        "Unfollow post",
+  statistics:           "Statistics",
+  post_statistics:      "Post Statistics",
+  view_source:          "View source",
+  import_post:          "Import post",
+  import:               "Import",
+  toggle_comments:      "Toggle comments",
+  toggle_flat:          "Switch to flat view",
+  toggle_threaded:      "Switch to threaded view",
+  flat:                 "Flat",
+  threaded:             "Threaded",
+  flat_view:            "Flat view",
+  threaded_view:        "Threaded view",
+  refresh:              "Refresh",
+  more_actions:         "More actions",
+  reply:                "Reply",
+  delete_post:          "Delete post",
+  delete:               "Delete",
+  confirm:              "Confirm?",
+  confirm_delete:       "Confirm delete?",
+  // badges
+  op:                   "OP",
+  op_title:             "Original poster",
+  new_badge:            "New",
+  // counts
+  comments_singular:    "comment",
+  comments_plural:      "comments",
+  // loading
+  loading_comments:     "Loading comments…",
+  loading:              "Loading…",
+  loading_source:       "Loading source…",
+  // stats tabs
+  likes:                "Likes",
+  dislikes:             "Dislikes",
+  repeats:              "Repeats",
+  no_activity:          "No activity details available.",
+  // source viewer
+  cached:               "cached",
+  generated:            "generated",
+  // fallbacks
+  unknown:              "Unknown",
+  // modal
+  modal_title:          "Post",
+  modal_close:          "Close",
+  load_error:           "Failed to load post",
+};

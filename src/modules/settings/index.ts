@@ -3,13 +3,13 @@ import { useI18n } from "@/i18n";
 import type { SubPageItem } from "@/shared/views/SubPageLayout";
 
 export const SETTINGS_ITEMS: SubPageItem[] = [
-  { path: "profile",       label: "Profile" },
-  { path: "account",       label: "Account" },
-  { path: "privacy",       label: "Privacy" },
-  { path: "notifications", label: "Notifications" },
-  { path: "display",       label: "Display"},
-  { path: "integrations",  label: "Integrations" },
-  { path: "danger",        label: "Danger zone"  },
+  { path: "profile",       label: () => useI18n().t("settings.title_profile") },
+  { path: "account",       label: () => useI18n().t("settings.title_account") },
+  { path: "privacy",       label: () => useI18n().t("settings.title_privacy") },
+  { path: "notifications", label: () => useI18n().t("settings.title_notifications") },
+  { path: "display",       label: () => useI18n().t("settings.title_display") },
+  { path: "integrations",  label: () => useI18n().t("settings.title_integrations") },
+  { path: "danger",        label: () => useI18n().t("settings.title_danger") },
 ];
 
 // Derive all sub-routes from SETTINGS_ITEMS so the list is always in sync.

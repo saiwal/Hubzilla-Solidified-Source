@@ -5,6 +5,7 @@ import EditorPreview from "./EditorPreview";
 import BBCodeToolbar from "./BBCodeToolbar";
 import { sourceToHtml } from "./sourceToHtml";
 import { htmlToSource } from "./htmlToSource";
+import { useI18n } from "@/i18n";
 
 interface Props {
   body: string;
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export default function RichEditor(props: Props) {
+  const { t } = useI18n();
   let editorRef: HTMLDivElement | undefined;
   let textareaRef: HTMLTextAreaElement | undefined;
   let isUserTyping = false;
@@ -94,14 +96,14 @@ export default function RichEditor(props: Props) {
             active={props.tab === "wysiwyg"}
             onClick={() => props.onTabChange("wysiwyg")}
           >
-            Write
+            {t("editor.write_tab")}
           </TabBtn>
           <Show when={showSourceTab()}>
             <TabBtn
               active={props.tab === "source"}
               onClick={() => props.onTabChange("source")}
             >
-              Source
+              {t("editor.source_tab")}
             </TabBtn>
           </Show>
           <Show when={showPreviewTab()}>
@@ -109,7 +111,7 @@ export default function RichEditor(props: Props) {
               active={props.tab === "preview"}
               onClick={() => props.onTabChange("preview")}
             >
-              Preview
+              {t("editor.preview_tab")}
             </TabBtn>
           </Show>
         </div>
@@ -141,7 +143,7 @@ export default function RichEditor(props: Props) {
           dir="ltr"
           onInput={onEditorInput}
           onKeyDown={handleKeyDown}
-          data-placeholder={props.placeholder ?? "What's on your mind?"}
+          data-placeholder={props.placeholder ?? t("editor.write_placeholder")}
           style={{ "min-height": minH() }}
           class="p-3 outline-none text-sm text-txt
                  empty:before:content-[attr(data-placeholder)]
@@ -158,7 +160,13 @@ export default function RichEditor(props: Props) {
           onKeyDown={handleKeyDown}
           style={{ "min-height": minH() }}
           class="w-full p-3 text-sm font-mono bg-surface text-txt outline-none resize-y"
-          placeholder={sourcePlaceholder(mime())}
+          placeholder={
+            mime() === "text/markdown"
+              ? t("editor.markdown_source_placeholder")
+              : mime() === "text/html"
+                ? t("editor.html_source_placeholder")
+                : t("editor.bbcode_source_placeholder")
+          }
         />
       </Show>
 
@@ -168,12 +176,6 @@ export default function RichEditor(props: Props) {
       </Show>
     </div>
   );
-}
-
-function sourcePlaceholder(mime: MimeType): string {
-  if (mime === "text/markdown") return "Markdown source…";
-  if (mime === "text/html") return "HTML source…";
-  return "BBCode source…";
 }
 
 function TabBtn(props: {

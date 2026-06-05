@@ -1,6 +1,7 @@
 import { createSignal, Show, onCleanup } from "solid-js";
 import { DraftsList } from "../components/DraftsList";
 import { createComposerStore } from "../store/createComposerStore";
+import { useI18n } from "@/i18n";
 import RichEditor from "../core/RichEditor";
 import { CAPABILITIES } from "../types/editor.types";
 import { apiFetch } from "@/shared/lib/fetch";
@@ -32,6 +33,7 @@ interface Props {
 }
 
 export default function ArticleComposer(props: Props) {
+  const { t } = useI18n();
   const caps = CAPABILITIES.article;
   const [wordCount, setWordCount] = createSignal(0);
   const [draftsOpen, setDraftsOpen] = createSignal(false);
@@ -285,7 +287,7 @@ export default function ArticleComposer(props: Props) {
       {/* Title */}
       <input
         type="text"
-        placeholder="Article title…"
+        placeholder={t("editor.article_title_placeholder")}
         value={store.title()}
         onInput={(e) => onTitleChange(e.currentTarget.value)}
         class="w-full px-0 py-2 text-2xl font-bold bg-transparent text-txt
@@ -296,7 +298,7 @@ export default function ArticleComposer(props: Props) {
       {/* Summary */}
       <Show when={caps.summary}>
         <textarea
-          placeholder="Short summary (shown in article listings)…"
+          placeholder={t("editor.article_summary_placeholder")}
           value={store.summary()}
           onInput={(e) => store.setSummary(e.currentTarget.value)}
           rows={2}
@@ -310,10 +312,10 @@ export default function ArticleComposer(props: Props) {
       <div class="flex gap-3">
         <Show when={caps.slug}>
           <div class="flex-1 min-w-0">
-            <label class="block text-xs text-muted mb-1">Slug</label>
+            <label class="block text-xs text-muted mb-1">{t("editor.slug_label")}</label>
             <input
               type="text"
-              placeholder="url-slug"
+              placeholder={t("editor.slug_placeholder")}
               value={store.slug()}
               onInput={(e) => store.setSlug(e.currentTarget.value)}
               class="w-full px-2 py-1.5 text-sm font-mono rounded border border-rim bg-surface
@@ -323,10 +325,10 @@ export default function ArticleComposer(props: Props) {
         </Show>
         <Show when={caps.category}>
           <div class="flex-1 min-w-0">
-            <label class="block text-xs text-muted mb-1">Category</label>
+            <label class="block text-xs text-muted mb-1">{t("editor.category_label")}</label>
             <input
               type="text"
-              placeholder="e.g. tech, personal"
+              placeholder={t("editor.category_field_placeholder")}
               value={store.category()}
               onInput={(e) => store.setCategory(e.currentTarget.value)}
               class="w-full px-2 py-1.5 text-sm rounded border border-rim bg-surface
@@ -338,7 +340,7 @@ export default function ArticleComposer(props: Props) {
 
       {/* Mimetype picker */}
       <div class="flex items-center gap-3">
-        <label class="text-xs text-muted">Format</label>
+        <label class="text-xs text-muted">{t("editor.format_label")}</label>
         <select
           value={store.mimetype()}
           onChange={(e) =>
@@ -350,7 +352,7 @@ export default function ArticleComposer(props: Props) {
           <option value="text/markdown">Markdown</option>
           <option value="text/html">HTML</option>
         </select>
-        <span class="text-xs text-muted ml-auto">{wordCount()} words</span>
+        <span class="text-xs text-muted ml-auto">{t("editor.words_count", { count: wordCount() })}</span>
       </div>
 
       {/* Editor */}
@@ -362,7 +364,7 @@ export default function ArticleComposer(props: Props) {
           tab={store.tab()}
           onTabChange={store.setTab}
           mimetype={store.mimetype()}
-          placeholder="Start writing…"
+          placeholder={t("editor.start_writing")}
           minHeight="400px"
         />
         <AttachmentBar
@@ -415,12 +417,12 @@ export default function ArticleComposer(props: Props) {
             class="px-3 py-1.5 text-sm rounded-lg border border-rim text-muted
                    hover:bg-elevated transition-colors"
           >
-            {isEditing() ? "Cancel" : "Discard"}
+            {isEditing() ? t("editor.cancel_btn") : t("editor.discard")}
           </button>
           <Show when={store.body().trim()}>
             <button
               type="button"
-              title="Save as draft"
+              title={t("editor.save_draft")}
               onClick={() => void store.saveAsDraft()}
               class="p-1.5 rounded-lg border border-rim text-muted hover:text-txt hover:bg-elevated transition-colors"
             >
@@ -441,7 +443,7 @@ export default function ArticleComposer(props: Props) {
                   : "border-rim text-muted hover:text-txt hover:bg-elevated")
               }
             >
-              Drafts ({store.savedDrafts().length})
+              {t("editor.drafts_btn", { count: store.savedDrafts().length })}
             </button>
           </Show>
         </div>
@@ -472,10 +474,10 @@ export default function ArticleComposer(props: Props) {
                  hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
         >
           {store.submitting()
-            ? "Saving…"
+            ? t("editor.saving")
             : isEditing()
-              ? "Save changes"
-              : "Publish"}
+              ? t("editor.save_changes")
+              : t("editor.publish_btn")}
         </button>
       </div>
     </div>

@@ -79,11 +79,13 @@ export default function PostCard(props: {
   highlighted?: boolean;
   highlightUuid?: string;
   postAuthorAddress?: string;
+  initiallyExpanded?: boolean;
 }) {
   const threadMode = useThreadMode();
   const [replyOpen, setReplyOpen] = createSignal(false);
   const [reshareOpen, setReshareOpen] = createSignal(false);
   const [showComments, setShowComments] = createSignal(
+    !!props.initiallyExpanded ||
     openedByMid.has(props.post.mid) ||
     (!props.compact && !!props.highlightUuid) ||
     (!!props.compact && !!props.highlightUuid && subtreeContainsUuid(props.post.children, props.highlightUuid))
@@ -114,7 +116,7 @@ export default function PostCard(props: {
   let repeatDropdownPortalRef!: HTMLDivElement;
   let moreDropdownRef!: HTMLDivElement;
   let deleteTimer: ReturnType<typeof setTimeout> | null = null;
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
   const auth = useAuth();
   let cardRef!: HTMLDivElement;
 
@@ -295,7 +297,7 @@ export default function PostCard(props: {
         const data = await res.json();
         const arr = Array.isArray(data) ? data : (data?.result ?? []);
         return arr.map((a: any) => ({
-          name: a.name ?? "Unknown",
+          name: a.name ?? t("post.unknown"),
           avatar: a.photo ?? undefined,
           url: a.url ?? undefined,
         }));
@@ -376,7 +378,7 @@ export default function PostCard(props: {
             </Show>
           </AuthorPopover>
           <Show when={props.postAuthorAddress && props.post.authorAddress === props.postAuthorAddress}>
-            <span class="shrink-0 px-1 py-px rounded text-[10px] font-bold leading-none bg-accent text-accent-fg" title="Original poster">OP</span>
+            <span class="shrink-0 px-1 py-px rounded text-[10px] font-bold leading-none bg-accent text-accent-fg" title={t("post.op_title")}>{t("post.op")}</span>
           </Show>
           <a href={props.post.authorUrl} class="font-medium text-sm text-txt hover:underline truncate">
             {props.post.authorName}
@@ -437,14 +439,14 @@ export default function PostCard(props: {
           <CompactActionBtn
             icon={props.post.viewerLiked ? <MdFillThumb_up size={14} /> : <MdOutlineThumb_up size={14} />}
             count={props.post.likeCount}
-            label="Like"
+            label={t("post.like")}
             onClick={onLike}
             active={props.post.viewerLiked}
           />
           <CompactActionBtn
             icon={props.post.viewerDisliked ? <MdFillThumb_down size={14} /> : <MdOutlineThumb_down size={14} />}
             count={props.post.dislikeCount}
-            label="Dislike"
+            label={t("post.dislike")}
             onClick={onDislike}
             active={props.post.viewerDisliked}
           />
@@ -454,7 +456,7 @@ export default function PostCard(props: {
               <CompactActionBtn
                 icon={props.post.viewerRepeated ? <MdFillShare size={14} /> : <MdOutlineShare size={14} />}
                 count={props.post.repeatCount}
-                label="Repeat"
+                label={t("post.repeat")}
                 onClick={onRepeat}
                 active={props.post.viewerRepeated}
               />
@@ -463,7 +465,7 @@ export default function PostCard(props: {
             <div ref={repeatDropdownRef} class="relative flex items-center">
               <button
                 onClick={onRepeat}
-                title="Repeat"
+                title={t("post.repeat")}
                 class={`flex items-center gap-1 pl-2 pr-1 py-1 rounded-l-md text-xs
                        transition-colors select-none hover:bg-overlay
                        ${props.post.viewerRepeated ? "text-accent" : "text-subtle"}`}
@@ -473,7 +475,7 @@ export default function PostCard(props: {
               </button>
               <button
                 onClick={openRepeatDropdown}
-                title="More sharing options"
+                title={t("post.more_sharing")}
                 class={`flex items-center px-0.5 py-1 rounded-r-md text-xs border-l border-rim/50
                        transition-colors select-none hover:bg-overlay
                        ${repeatDropdownOpen() ? "text-accent" : "text-subtle hover:text-txt"}`}
@@ -486,7 +488,7 @@ export default function PostCard(props: {
           <Show when={canStar()}>
             <button
               onClick={onStar}
-              title={props.post.viewerStarred ? "Unstar" : "Star"}
+              title={props.post.viewerStarred ? t("post.unstar") : t("post.star")}
               class={`flex items-center gap-1 px-2 py-1 rounded-md text-xs
                      transition-colors select-none hover:bg-overlay
                      ${props.post.viewerStarred ? "text-yellow-500" : "text-subtle hover:text-txt"}`}
@@ -501,7 +503,7 @@ export default function PostCard(props: {
             <button
               onClick={onFollowToggle}
               disabled={followPending()}
-              title={following() ? "Unfollow post" : "Follow post for notifications"}
+              title={following() ? t("post.unfollow_post") : t("post.follow_for_notifs")}
               class={`flex items-center gap-1 px-2 py-1 rounded-md text-xs
                      transition-colors select-none hover:bg-overlay disabled:opacity-50
                      ${following() ? "text-accent" : "text-subtle hover:text-txt"}`}
@@ -524,7 +526,7 @@ export default function PostCard(props: {
               class={`flex items-center gap-1 px-2 py-1 rounded-md text-xs
                      transition-colors hover:bg-overlay
                      ${showStats() ? "text-accent" : "text-subtle hover:text-txt"}`}
-              title="Post Statistics"
+              title={t("post.post_statistics")}
             >
               <MdFillBar_chart size={14} />
             </button>
@@ -536,7 +538,7 @@ export default function PostCard(props: {
               class={`flex items-center gap-1 px-2 py-1 rounded-md text-xs
                      transition-colors hover:bg-overlay
                      ${showSource() ? "text-accent" : "text-subtle hover:text-txt"}`}
-              title="View source"
+              title={t("post.view_source")}
             >
               <MdOutlineCode size={14} />
             </button>
@@ -546,7 +548,7 @@ export default function PostCard(props: {
             <button
               onClick={handleRssImport}
               disabled={rssImporting()}
-              title="Import post"
+              title={t("post.import_post")}
               class="flex items-center gap-1 px-2 py-1 rounded-md text-xs
                      text-subtle hover:bg-overlay hover:text-accent transition-colors
                      disabled:opacity-50"
@@ -577,7 +579,7 @@ export default function PostCard(props: {
               onClick={() => setThreaded((v) => !v)}
               class="flex items-center gap-1 px-2 py-1 rounded-md text-xs
                      text-subtle hover:bg-overlay hover:text-txt transition-colors"
-              title={threaded() ? "Switch to flat view" : "Switch to threaded view"}
+              title={threaded() ? t("post.toggle_flat") : t("post.toggle_threaded")}
             >
               <Show when={threaded()} fallback={<MdFillAccount_tree size={14} />}>
                 <MdFillFormat_list_bulleted size={14} />
@@ -591,13 +593,13 @@ export default function PostCard(props: {
                    text-subtle hover:bg-overlay hover:text-txt transition-colors"
           >
             <MdOutlineReply size={14} />
-            <span>Reply</span>
+            <span>{t("post.reply")}</span>
           </button>
 
           <Show when={canDelete()}>
             <button
               onClick={onDeleteClick}
-              title="Delete post"
+              title={t("post.delete_post")}
               class={`flex items-center gap-1 px-2 py-1 rounded-md text-xs
                      transition-colors select-none
                      ${deleteConfirming()
@@ -606,7 +608,7 @@ export default function PostCard(props: {
             >
               <MdOutlineDelete size={14} />
               <Show when={deleteConfirming()}>
-                <span>Confirm?</span>
+                <span>{t("post.confirm")}</span>
               </Show>
             </button>
           </Show>
@@ -641,7 +643,7 @@ export default function PostCard(props: {
           <PostSource loading={sourceLoading()} data={sourceData()} />
         </Show>
         <Show when={commentsLoading()}>
-          <div class="mt-2 ml-2 text-xs text-muted animate-pulse">Loading comments…</div>
+          <div class="mt-2 ml-2 text-xs text-muted animate-pulse">{t("post.loading_comments")}</div>
         </Show>
         <CommentThread
           comments={visibleComments()}
@@ -719,7 +721,7 @@ export default function PostCard(props: {
         <div class="ml-auto flex items-center gap-2 shrink-0">
           <Show when={isUnseen()}>
             <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-accent text-accent-fg leading-none">
-              New
+              {t("post.new_badge")}
             </span>
           </Show>
           <a
@@ -768,7 +770,7 @@ export default function PostCard(props: {
         <ActionBtn
           icon={props.post.viewerLiked ? <MdFillThumb_up size={17} /> : <MdOutlineThumb_up size={17} />}
           count={props.post.likeCount}
-          label="Like"
+          label={t("post.like")}
           onClick={onLike}
           active={props.post.viewerLiked}
           activeClass="text-accent"
@@ -776,7 +778,7 @@ export default function PostCard(props: {
         <ActionBtn
           icon={props.post.viewerDisliked ? <MdFillThumb_down size={17} /> : <MdOutlineThumb_down size={17} />}
           count={props.post.dislikeCount}
-          label="Dislike"
+          label={t("post.dislike")}
           onClick={onDislike}
           active={props.post.viewerDisliked}
           activeClass="text-accent"
@@ -787,7 +789,7 @@ export default function PostCard(props: {
             <ActionBtn
               icon={props.post.viewerRepeated ? <MdFillShare size={17} /> : <MdOutlineShare size={17} />}
               count={props.post.repeatCount}
-              label="Repeat"
+              label={t("post.repeat")}
               onClick={onRepeat}
               active={props.post.viewerRepeated}
               activeClass="text-accent"
@@ -797,7 +799,7 @@ export default function PostCard(props: {
           <div ref={repeatDropdownRef} class="relative flex items-center">
             <button
               onClick={onRepeat}
-              title="Repeat"
+              title={t("post.repeat")}
               class={`flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-l-lg text-sm font-medium
                      transition-colors select-none hover:bg-overlay
                      ${props.post.viewerRepeated ? "text-accent" : "text-muted"}`}
@@ -807,7 +809,7 @@ export default function PostCard(props: {
             </button>
             <button
               onClick={openRepeatDropdown}
-              title="More sharing options"
+              title={t("post.more_sharing")}
               class={`flex items-center px-1.5 py-1.5 rounded-r-lg text-sm font-medium border-l border-rim/50
                      transition-colors select-none hover:bg-overlay
                      ${repeatDropdownOpen() ? "text-accent" : "text-muted hover:text-txt"}`}
@@ -821,7 +823,7 @@ export default function PostCard(props: {
         <Show when={canStar()}>
           <button
             onClick={onStar}
-            title={props.post.viewerStarred ? "Unstar" : "Star"}
+            title={props.post.viewerStarred ? t("post.unstar") : t("post.star")}
             class={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
                    transition-colors select-none hover:bg-overlay
                    ${props.post.viewerStarred ? "text-yellow-500" : "text-muted hover:text-txt"}`}
@@ -836,7 +838,7 @@ export default function PostCard(props: {
           <button
             onClick={onFollowToggle}
             disabled={followPending()}
-            title={following() ? "Unfollow post" : "Follow post for notifications"}
+            title={following() ? t("post.unfollow_post") : t("post.follow_for_notifs")}
             class={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
                    transition-colors select-none hover:bg-overlay disabled:opacity-50
                    ${following() ? "text-accent" : "text-muted hover:text-txt"}`}
@@ -859,7 +861,7 @@ export default function PostCard(props: {
             class={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
                    transition-colors hover:bg-overlay
                    ${showStats() ? "text-accent" : "text-muted hover:text-txt"}`}
-            title="Post Statistics"
+            title={t("post.post_statistics")}
           >
             <MdFillBar_chart size={17} />
           </button>
@@ -871,7 +873,7 @@ export default function PostCard(props: {
             class={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
                    transition-colors hover:bg-overlay
                    ${showSource() ? "text-accent" : "text-muted hover:text-txt"}`}
-            title="View source"
+            title={t("post.view_source")}
           >
             <MdOutlineCode size={17} />
           </button>
@@ -881,13 +883,13 @@ export default function PostCard(props: {
           <button
             onClick={handleRssImport}
             disabled={rssImporting()}
-            title="Import post"
+            title={t("post.import_post")}
             class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
                    text-muted hover:bg-overlay hover:text-accent transition-colors
                    disabled:opacity-50"
           >
             <MdOutlineRefresh size={17} classList={{ "animate-spin": rssImporting() }} />
-            <span>Import</span>
+            <span>{t("post.import")}</span>
           </button>
         </Show>
 
@@ -897,7 +899,7 @@ export default function PostCard(props: {
             onClick={toggleComments}
             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
                    text-muted hover:bg-overlay hover:text-txt transition-colors"
-            title="Toggle comments"
+            title={t("post.toggle_comments")}
           >
             <Show
               when={showComments()}
@@ -906,7 +908,7 @@ export default function PostCard(props: {
               <MdFillKeyboard_arrow_up size={17} />
             </Show>
             <MdFillChat size={15} class="md:hidden" />
-            <span class="hidden md:inline">{totalComments()} comment{totalComments() !== 1 ? "s" : ""}</span>
+            <span class="hidden md:inline">{totalComments()} {totalComments() !== 1 ? t("post.comments_plural") : t("post.comments_singular")}</span>
             <span class="md:hidden">{totalComments()}</span>
           </button>
         </Show>
@@ -917,12 +919,12 @@ export default function PostCard(props: {
             onClick={() => setThreaded((v) => !v)}
             class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
                    text-muted hover:bg-overlay hover:text-txt transition-colors"
-            title={threaded() ? "Switch to flat view" : "Switch to threaded view"}
+            title={threaded() ? t("post.toggle_flat") : t("post.toggle_threaded")}
           >
             <Show when={threaded()} fallback={<MdFillAccount_tree size={17} />}>
               <MdFillFormat_list_bulleted size={17} />
             </Show>
-            <span>{threaded() ? "Flat" : "Threaded"}</span>
+            <span>{threaded() ? t("post.flat") : t("post.threaded")}</span>
           </button>
         </Show>
 
@@ -931,7 +933,7 @@ export default function PostCard(props: {
           <button
             onClick={onRefresh}
             disabled={refreshing()}
-            title="Refresh"
+            title={t("post.refresh")}
             class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
                    text-muted hover:bg-overlay hover:text-txt transition-colors disabled:opacity-50"
           >
@@ -946,7 +948,7 @@ export default function PostCard(props: {
         <div ref={moreDropdownRef} class="relative md:hidden">
           <button
             onClick={() => setMoreDropdownOpen(v => !v)}
-            title="More actions"
+            title={t("post.more_actions")}
             class={`flex items-center px-2 py-1.5 rounded-lg text-sm font-medium
                    transition-colors hover:bg-overlay
                    ${moreDropdownOpen() ? "text-accent" : "text-muted"}`}
@@ -966,7 +968,7 @@ export default function PostCard(props: {
                   <Show when={props.post.viewerStarred} fallback={<MdFillStar_border size={15} />}>
                     <MdFillStar size={15} />
                   </Show>
-                  <span>{props.post.viewerStarred ? "Unstar" : "Star"}</span>
+                  <span>{props.post.viewerStarred ? t("post.unstar") : t("post.star")}</span>
                 </button>
               </Show>
               <Show when={canFollow()}>
@@ -979,7 +981,7 @@ export default function PostCard(props: {
                   <Show when={following()} fallback={<MdOutlineNotifications_none size={15} />}>
                     <MdFillNotifications size={15} />
                   </Show>
-                  <span>{following() ? "Unfollow" : "Follow"}</span>
+                  <span>{following() ? t("post.unfollow") : t("post.follow")}</span>
                 </button>
               </Show>
               <Show when={props.post.likeCount > 0 || props.post.dislikeCount > 0 || props.post.repeatCount > 0}>
@@ -989,7 +991,7 @@ export default function PostCard(props: {
                          ${showStats() ? "text-accent" : "text-txt"}`}
                 >
                   <MdFillBar_chart size={15} />
-                  <span>Statistics</span>
+                  <span>{t("post.statistics")}</span>
                 </button>
               </Show>
               <Show when={canViewSource()}>
@@ -999,7 +1001,7 @@ export default function PostCard(props: {
                          ${showSource() ? "text-accent" : "text-txt"}`}
                 >
                   <MdOutlineCode size={15} />
-                  <span>View source</span>
+                  <span>{t("post.view_source")}</span>
                 </button>
               </Show>
               <Show when={isRss()}>
@@ -1009,7 +1011,7 @@ export default function PostCard(props: {
                   class="w-full flex items-center gap-2 px-3 py-2 text-sm text-txt hover:bg-overlay transition-colors text-left disabled:opacity-50"
                 >
                   <MdOutlineRefresh size={15} classList={{ "animate-spin": rssImporting() }} />
-                  <span>Import</span>
+                  <span>{t("post.import")}</span>
                 </button>
               </Show>
               <Show when={hasNestedComments(props.post.children)}>
@@ -1020,7 +1022,7 @@ export default function PostCard(props: {
                   <Show when={threaded()} fallback={<MdFillAccount_tree size={15} />}>
                     <MdFillFormat_list_bulleted size={15} />
                   </Show>
-                  <span>{threaded() ? "Flat view" : "Threaded view"}</span>
+                  <span>{threaded() ? t("post.flat_view") : t("post.threaded_view")}</span>
                 </button>
               </Show>
               <Show when={!!props.handlers.onRefresh}>
@@ -1030,7 +1032,7 @@ export default function PostCard(props: {
                   class="w-full flex items-center gap-2 px-3 py-2 text-sm text-txt hover:bg-overlay transition-colors text-left disabled:opacity-50"
                 >
                   <MdOutlineRefresh size={15} class={refreshing() ? "animate-spin" : ""} />
-                  <span>Refresh</span>
+                  <span>{t("post.refresh")}</span>
                 </button>
               </Show>
               <Show when={canDelete()}>
@@ -1040,7 +1042,7 @@ export default function PostCard(props: {
                          ${deleteConfirming() ? "text-red-500" : "text-txt"}`}
                 >
                   <MdOutlineDelete size={15} />
-                  <span>{deleteConfirming() ? "Confirm delete?" : "Delete"}</span>
+                  <span>{deleteConfirming() ? t("post.confirm_delete") : t("post.delete")}</span>
                 </button>
               </Show>
             </div>
@@ -1052,17 +1054,17 @@ export default function PostCard(props: {
           onClick={() => { setReplyOpen((v) => !v); if (!showComments()) toggleComments(); }}
           class="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
                  text-muted hover:bg-overlay hover:text-txt transition-colors"
-          title="Reply"
+          title={t("post.reply")}
         >
           <MdOutlineReply size={17} />
-          <span>Reply</span>
+          <span>{t("post.reply")}</span>
         </button>
 
         {/* ── Delete: desktop only (mobile is in more dropdown) ── */}
         <Show when={canDelete()}>
           <button
             onClick={onDeleteClick}
-            title="Delete post"
+            title={t("post.delete_post")}
             class={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
                    transition-colors select-none
                    ${deleteConfirming()
@@ -1071,7 +1073,7 @@ export default function PostCard(props: {
           >
             <MdOutlineDelete size={17} />
             <Show when={deleteConfirming()}>
-              <span>Confirm?</span>
+              <span>{t("post.confirm")}</span>
             </Show>
           </button>
         </Show>
@@ -1089,7 +1091,7 @@ export default function PostCard(props: {
               class="w-full flex items-center gap-2 px-3 py-2 text-sm text-txt hover:bg-overlay transition-colors text-left"
             >
               <BiSolidShareAlt size={15} />
-              <span>Reshare with comment</span>
+              <span>{t("post.reshare_with_comment")}</span>
             </button>
           </div>
         </Show>
@@ -1125,7 +1127,7 @@ export default function PostCard(props: {
         />
       </Show>
       <Show when={commentsLoading()}>
-        <div class="mt-3 text-sm text-muted animate-pulse">Loading comments…</div>
+        <div class="mt-3 text-sm text-muted animate-pulse">{t("post.loading_comments")}</div>
       </Show>
       <CommentThread
         comments={visibleComments()}
@@ -1181,14 +1183,15 @@ function PostStats(props: {
   loading: boolean;
   data: { likes: StatActor[]; dislikes: StatActor[]; repeats: StatActor[] } | null;
 }) {
+  const { t } = useI18n();
   const tabs = () => {
     const d = props.data;
     if (!d) return [];
     return [
-      { key: "likes" as const, label: "Likes", count: d.likes.length },
-      { key: "dislikes" as const, label: "Dislikes", count: d.dislikes.length },
-      { key: "repeats" as const, label: "Repeats", count: d.repeats.length },
-    ].filter(t => t.count > 0);
+      { key: "likes" as const, label: t("post.likes"), count: d.likes.length },
+      { key: "dislikes" as const, label: t("post.dislikes"), count: d.dislikes.length },
+      { key: "repeats" as const, label: t("post.repeats"), count: d.repeats.length },
+    ].filter(tab => tab.count > 0);
   };
 
   const [tab, setTab] = createSignal<"likes" | "dislikes" | "repeats">("likes");
@@ -1207,12 +1210,12 @@ function PostStats(props: {
   return (
     <div class="mt-3 pt-3 border-t border-rim text-sm">
       <Show when={props.loading}>
-        <div class="text-xs text-muted animate-pulse">Loading…</div>
+        <div class="text-xs text-muted animate-pulse">{t("post.loading")}</div>
       </Show>
       <Show when={!props.loading && props.data}>
         <Show
           when={tabs().length > 0}
-          fallback={<div class="text-xs text-muted">No activity details available.</div>}
+          fallback={<div class="text-xs text-muted">{t("post.no_activity")}</div>}
         >
           <div class="flex border-b border-rim mb-3">
             <For each={tabs()}>
@@ -1254,11 +1257,12 @@ interface ItemSourceResponse {
 }
 
 function PostSource(props: { loading: boolean; data: unknown }) {
+  const { t } = useI18n();
   const typed = () => props.data as ItemSourceResponse | null;
   return (
     <div class="mt-3 pt-3 border-t border-rim text-xs">
       <Show when={props.loading}>
-        <div class="text-muted animate-pulse">Loading source…</div>
+        <div class="text-muted animate-pulse">{t("post.loading_source")}</div>
       </Show>
       <Show when={!props.loading && typed()?.error}>
         <div class="text-red-500">{typed()!.error}</div>
@@ -1267,7 +1271,7 @@ function PostSource(props: { loading: boolean; data: unknown }) {
         <div class="flex flex-wrap gap-x-4 gap-y-0.5 mb-2 text-muted font-mono">
           <span>id: <span class="text-txt">{typed()!.id}</span></span>
           <span>uuid: <span class="text-txt">{typed()!.uuid}</span></span>
-          <span>{typed()!.cached ? "cached" : "generated"}</span>
+          <span>{typed()!.cached ? t("post.cached") : t("post.generated")}</span>
           <a href={typed()!.plink} target="_blank" rel="noopener noreferrer"
              class="text-accent hover:underline">plink</a>
           <a href={typed()!.llink} target="_blank" rel="noopener noreferrer"

@@ -1,39 +1,41 @@
 import { createResource, For, Show } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchAdminSummary } from "../../api";
+import { useI18n } from "@/i18n";
 
 export default function SummarySection() {
+  const { t } = useI18n();
   const [data] = createResource(fetchAdminSummary);
 
   return (
-    <SubPageContent title="Summary" description="Overview of this Hubzilla installation.">
+    <SubPageContent title={t("admin.summary_title")} description={t("admin.summary_desc")}>
       <Show when={data()} fallback={<Skeleton />}>
         {(d) => (
           <div class="space-y-6">
             <StatGrid
-              label="Accounts"
+              label={t("admin.accounts_title")}
               stats={[
-                { label: "Total", value: d().accounts.total },
-                { label: "Blocked", value: d().accounts.blocked },
-                { label: "Expired", value: d().accounts.expired },
-                { label: "Expiring soon", value: d().accounts.expiring },
+                { label: t("admin.stat_total"), value: d().accounts.total },
+                { label: t("admin.stat_blocked"), value: d().accounts.blocked },
+                { label: t("admin.stat_expired"), value: d().accounts.expired },
+                { label: t("admin.stat_expiring"), value: d().accounts.expiring },
               ]}
             />
 
             <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              <Stat label="Channels" value={d().channels} />
-              <Stat label="Pending registrations" value={d().pending} />
-              <Stat label="Queued messages" value={d().queue} accent={d().queue > 0} />
+              <Stat label={t("admin.stat_channels")} value={d().channels} />
+              <Stat label={t("admin.stat_pending")} value={d().pending} />
+              <Stat label={t("admin.stat_queue")} value={d().queue} accent={d().queue > 0} />
             </div>
 
             <div class="space-y-1.5">
-              <p class="text-sm font-medium text-txt">Version</p>
+              <p class="text-sm font-medium text-txt">{t("admin.version_label")}</p>
               <p class="text-sm text-muted font-mono">{d().version}</p>
             </div>
 
             <Show when={d().plugins.length > 0}>
               <div class="space-y-1.5">
-                <p class="text-sm font-medium text-txt">Active plugins ({d().plugins.length})</p>
+                <p class="text-sm font-medium text-txt">{t("admin.active_plugins")} ({d().plugins.length})</p>
                 <div class="flex flex-wrap gap-1.5">
                   <For each={d().plugins}>
                     {(p) => (

@@ -8,6 +8,7 @@ import { buildThreadTree } from "../lib/thread";
 import type { Post } from "../types/post.types";
 import { mapActivityToPost } from "../lib/activity.mapper";
 import { BiRegularX } from "solid-icons/bi";
+import { useI18n } from "@/i18n";
 
 async function fetchDisplay(uuid: string): Promise<ThreadNode> {
   const res = await fetch(`/api/display/${uuid}`);
@@ -59,6 +60,7 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
   const [nestedUuid, setNestedUuid] = createSignal<string | null>(null);
   const [localReactions, setLocalReactions] = createSignal<Record<string, ReactionOverride>>({});
 
+  const { t } = useI18n();
   let dialogRef!: HTMLDivElement;
   onMount(() => dialogRef?.focus());
 
@@ -188,13 +190,13 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
           {/* Header */}
           <div class="flex items-center justify-between px-5 py-3 shrink-0 border-b border-rim bg-surface">
             <h2 id="post-modal-title" class="text-sm font-semibold text-muted">
-              Post
+              {t("post.modal_title")}
             </h2>
             <button
               onClick={props.onClose}
               class="p-1.5 rounded-lg hover:bg-elevated
                      text-subtle hover:text-txt transition-colors"
-              aria-label="Close"
+              aria-label={t("post.modal_close")}
             >
               <BiRegularX />
             </button>
@@ -228,7 +230,7 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
             <Show when={node.error}>
               <div class="bg-surface rounded-2xl p-6 text-center">
                 <p class="text-sm text-red-500">
-                  Failed to load post: {node.error?.message}
+                  {t("post.load_error")}: {node.error?.message}
                 </p>
               </div>
             </Show>
@@ -238,6 +240,7 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
                 <PostCard
                   post={n()}
                   highlightUuid={highlightUuid()}
+                  initiallyExpanded
                   handlers={
                     wrappedHandlers ?? {
                       onLike: () => {},

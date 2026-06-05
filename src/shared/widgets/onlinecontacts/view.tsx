@@ -1,4 +1,5 @@
 import { createResource, For, Show } from "solid-js";
+import { useI18n } from "@/i18n";
 
 type Contact = {
   name: string;
@@ -20,18 +21,19 @@ function initials(name: string) {
 }
 
 export default function OnlineContactsWidget() {
+  const { t } = useI18n();
   const [contacts] = createResource(fetchRecentContacts);
 
   return (
     <div class="bg-surface border border-rim rounded-xl p-4">
       <p class="text-xs font-medium text-muted uppercase tracking-wider mb-3">
-        Recently active
+        {t("ui.recently_active")}
       </p>
       <Show when={contacts.loading}>
-        <p class="text-xs text-muted text-center py-2">Loading...</p>
+        <p class="text-xs text-muted text-center py-2">{t("ui.loading")}</p>
       </Show>
       <Show when={!contacts.loading && (contacts()?.length ?? 0) === 0}>
-        <p class="text-xs text-muted text-center py-2">No recent contacts</p>
+        <p class="text-xs text-muted text-center py-2">{t("ui.no_recent_contacts")}</p>
       </Show>
       <For each={contacts()}>
         {(c) => (

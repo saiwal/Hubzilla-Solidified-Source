@@ -1,4 +1,5 @@
 import { createSignal } from "solid-js";
+import { useI18n } from "@/i18n";
 
 type Mode = "encode" | "decode";
 
@@ -19,6 +20,7 @@ function decodeBase64(str: string): string {
 }
 
 export function Base64Tool() {
+  const { t } = useI18n();
   const [mode, setMode] = createSignal<Mode>("encode");
   const [input, setInput] = createSignal("");
   const [copied, setCopied] = createSignal(false);
@@ -59,7 +61,7 @@ export function Base64Tool() {
                 : "text-muted hover:text-txt"
             }`}
           >
-            {m}
+            {m === "encode" ? t("tools.base64_encode") : t("tools.base64_decode")}
           </button>
         ))}
       </div>
@@ -67,7 +69,7 @@ export function Base64Tool() {
       {/* Input */}
       <div class="flex flex-col gap-2">
         <label class="text-sm text-muted">
-          {mode() === "encode" ? "Plain text" : "Base64 input"}
+          {mode() === "encode" ? t("tools.base64_plain") : t("tools.base64_input")}
         </label>
         <textarea
           class={textareaCls}
@@ -83,21 +85,21 @@ export function Base64Tool() {
         <div class="flex flex-col gap-2">
           <div class="flex items-center justify-between">
             <label class="text-sm text-muted">
-              {mode() === "encode" ? "Base64 output" : "Decoded text"}
+              {mode() === "encode" ? t("tools.base64_output") : t("tools.base64_decoded")}
             </label>
             <div class="flex gap-2">
               <button
                 onClick={swap}
                 class="text-xs border border-rim text-muted hover:bg-elevated hover:text-txt rounded-lg px-3 py-1 transition-colors"
-                title="Use output as next input"
+                title={t("tools.base64_use_input")}
               >
-                Use as input ⇅
+                {t("tools.base64_use_input")}
               </button>
               <button
                 onClick={copyOutput}
                 class="text-xs border border-rim text-muted hover:bg-elevated hover:text-txt rounded-lg px-3 py-1 transition-colors"
               >
-                {copied() ? "Copied ✓" : "Copy"}
+                {copied() ? t("tools.base64_copied") : t("tools.base64_copy")}
               </button>
             </div>
           </div>
@@ -112,7 +114,7 @@ export function Base64Tool() {
 
       {/* File input — encode a file's bytes */}
       <div class="border-t border-rim pt-4 flex flex-col gap-2">
-        <label class="text-sm text-muted">Or encode a file</label>
+        <label class="text-sm text-muted">{t("tools.base64_encode_file")}</label>
         <input
           type="file"
           class="text-sm text-muted file:mr-3 file:py-1.5 file:px-4 file:rounded-lg file:border file:border-rim file:bg-surface file:text-muted hover:file:bg-elevated cursor-pointer"
@@ -130,7 +132,7 @@ export function Base64Tool() {
             reader.readAsDataURL(file);
           }}
         />
-        <p class="text-xs text-muted">File contents are Base64-encoded in your browser — nothing is uploaded.</p>
+        <p class="text-xs text-muted">{t("tools.base64_file_note")}</p>
       </div>
     </div>
   );

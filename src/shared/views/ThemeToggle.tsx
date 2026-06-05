@@ -4,8 +4,10 @@ import { THEMES } from "../types/theme.types";
 import { BiRegularPalette } from "solid-icons/bi";
 import { useDropdown } from "../lib/useDropdown";
 import { Motion, Presence, scalePreset } from "../lib/motion-presets";
+import { useI18n } from "@/i18n";
 
 const ThemeToggle = () => {
+  const { t } = useI18n();
   const { theme, switchTheme } = useTheme();
   const { open, toggle, floatStyle, setTriggerRef, setPanelRef } =
     useDropdown({ placement: "top-start" });
@@ -24,7 +26,7 @@ const ThemeToggle = () => {
       <button
         ref={setTriggerRef}
         onClick={toggle}
-        title="Theme"
+        title={t("ui.theme")}
         class={`p-2 rounded-lg transition-colors text-muted hover:bg-elevated hover:text-txt
                 ${open() ? "bg-elevated text-txt" : ""}`}
       >
@@ -40,7 +42,7 @@ const ThemeToggle = () => {
             class="z-50 w-64 bg-surface border border-rim rounded-xl shadow-xl overflow-hidden"
           >
             <div class="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted border-b border-rim flex justify-between">
-              <span>Themes</span>
+              <span>{t("ui.themes")}</span>
               <span class="text-muted normal-case">{currentLabel()}</span>
             </div>
 
@@ -94,14 +96,14 @@ const ThemeToggle = () => {
                   <div class="h-1.5 w-full rounded bg-muted/40" />
                 </div>
                 <div class="flex items-center justify-between">
-                  <span class="text-xs text-txt">Custom</span>
+                  <span class="text-xs text-txt">{t("ui.custom")}</span>
                   <div class="flex items-center gap-1.5">
                     <Show when={isCustom()}>
                       <svg class="w-3.5 h-3.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
                       </svg>
                     </Show>
-                    <span class="text-xs text-muted">Settings → Display</span>
+                    <span class="text-xs text-muted">{t("ui.display_settings")}</span>
                   </div>
                 </div>
               </button>

@@ -1,7 +1,8 @@
-import { createContext, useContext, createMemo, createSignal, onMount } from "solid-js";
+import { createContext, useContext, createMemo, createSignal, createResource } from "solid-js";
 import type { ParentComponent } from "solid-js";
 import * as i18n from "@solid-primitives/i18n";
-import { storageGet, storageSet } from "@/shared/lib/storage";
+import { storageSet } from "@/shared/lib/storage";
+import { dict as enDict } from "./locales/en/index";
 import { localeRegistry } from "./locales/index";
 import type { Locale, RawDictionary } from "./locales/index";
 
@@ -22,16 +23,30 @@ type I18nCtx = {
 const I18nContext = createContext<I18nCtx>();
 const FALLBACK: Locale = "en";
 
-export const I18nProvider: ParentComponent = (props) => {
-  const [locale, setLocaleSignal] = createSignal<Locale>(FALLBACK);
-  const dict = createMemo(() => i18n.flatten(localeRegistry[locale()].dict));
-  const rawT = i18n.translator(dict, i18n.resolveTemplate);
+function getInitialLocale(): Locale {
+  try {
+    const saved = localStorage.getItem("hz-locale");
+    if (saved && saved in localeRegistry) return saved as Locale;
+  } catch {}
+  return FALLBACK;
+}
 
-  onMount(async () => {
-    const saved = await storageGet<string>("hz-locale", FALLBACK);
-    const initial: Locale = saved in localeRegistry ? (saved as Locale) : FALLBACK;
-    setLocaleSignal(initial);
-  });
+export const I18nProvider: ParentComponent = (props) => {
+  const [locale, setLocaleSignal] = createSignal<Locale>(getInitialLocale());
+
+  // EN is statically imported above (main bundle). Other locales load lazily.
+  // initialValue seeds the resource so the first render is never empty.
+  const [rawDict] = createResource(
+    locale,
+    (loc) => localeRegistry[loc].load(),
+    { initialValue: enDict },
+  );
+
+  // .latest keeps the previous locale visible while the next one loads —
+  // avoids a flash of raw keys on locale switch.
+  const dict = createMemo((): Dictionary => i18n.flatten(rawDict.latest ?? enDict));
+
+  const rawT = i18n.translator(dict, i18n.resolveTemplate);
 
   const t = (key: any, ...args: any[]) => {
     try {
@@ -42,6 +57,7 @@ export const I18nProvider: ParentComponent = (props) => {
       return key as string;
     }
   };
+
   const setLocale = (l: Locale) => {
     storageSet("hz-locale", l);
     setLocaleSignal(l);

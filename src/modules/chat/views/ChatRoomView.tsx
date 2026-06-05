@@ -9,6 +9,7 @@ import {
 	on,
 	untrack,
 } from "solid-js";
+import { useI18n } from "@/i18n";
 import { useParams, useNavigate } from "@solidjs/router";
 import { usePageNick } from "@/shared/store/site-config";
 import {
@@ -33,6 +34,7 @@ export default function ChatRoomView() {
 	const params = useParams<{ nick: string; roomId: string }>();
 	const navigate = useNavigate();
 	const pageNick = usePageNick();
+	const { t } = useI18n();
 
 	const nick = () => params.nick || pageNick();
 	const roomId = () => parseInt(params.roomId);
@@ -108,7 +110,7 @@ export default function ChatRoomView() {
 					<MdFillChat class="text-accent shrink-0" />
 					<span class="font-medium text-txt text-sm truncate">
 						{/* Room name from messages or loading */}
-						{messages()[0] ? "Chatroom" : chatLoading() ? "Loading…" : "Chatroom"}
+						{messages()[0] ? t("chat.chatroom") : chatLoading() ? t("calendar.loading") : t("chat.chatroom")}
 					</span>
 				</div>
 				<button
@@ -148,7 +150,7 @@ export default function ChatRoomView() {
 						<div class="flex-1 flex items-center justify-center">
 							<div class="text-center space-y-2">
 								<MdFillChat class="text-3xl text-muted mx-auto" />
-								<p class="text-sm text-muted">No messages yet. Say hello!</p>
+								<p class="text-sm text-muted">{t("chat.no_messages")}</p>
 							</div>
 						</div>
 					</Show>
@@ -249,7 +251,7 @@ export default function ChatRoomView() {
 								value={text()}
 								onInput={(e) => setText(e.currentTarget.value)}
 								onKeyDown={handleKey}
-								placeholder="Write a message… (Enter to send)"
+								placeholder={t("chat.write_message") as string}
 								rows={1}
 								class="flex-1 bg-surface border border-rim text-txt text-sm rounded-xl px-3 py-2 resize-none hover:border-rim-strong focus:outline-none focus:border-accent transition-colors leading-relaxed"
 								style={{ "max-height": "7rem", "overflow-y": "auto" }}
@@ -269,7 +271,7 @@ export default function ChatRoomView() {
 				<Show when={showPresence()}>
 					<div class="w-48 border-l border-rim bg-surface flex flex-col shrink-0">
 						<p class="text-xs font-medium text-muted px-3 py-2 border-b border-rim">
-							{presenceCount()} online
+							{presenceCount()} {t("chat.online_count")}
 						</p>
 						<div class="overflow-y-auto flex-1 px-2 py-2 space-y-1">
 							<For each={presence()}>

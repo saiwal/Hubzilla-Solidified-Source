@@ -2,6 +2,7 @@ import { createResource, createSignal, createMemo, For, Show } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchAdminLogs } from "../../api";
 import type { LogEntry, LogLevel } from "../../types";
+import { useI18n } from "@/i18n";
 
 // ── Level metadata ────────────────────────────────────────────────────────────
 
@@ -78,6 +79,7 @@ function getMeta(level: LogLevel) {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function LogsSection() {
+  const { t } = useI18n();
   const [data, { refetch }] = createResource(fetchAdminLogs);
   const [search, setSearch] = createSignal("");
   const [levelFilter, setLevelFilter] = createSignal<Severity | "all">("all");
@@ -114,14 +116,14 @@ export default function LogsSection() {
 
   return (
     <SubPageContent
-      title="Logs"
-      description="Most recent log entries, newest first."
+      title={t("admin.logs_title")}
+      description={t("admin.logs_desc")}
       action={
         <button
           onClick={refetch}
           class="px-3 py-1.5 text-xs rounded-lg border border-rim text-txt hover:bg-elevated transition-colors"
         >
-          Refresh
+          {t("admin.refresh")}
         </button>
       }
     >
@@ -131,11 +133,11 @@ export default function LogsSection() {
             {/* Logfile path */}
             <Show when={d().logfile} fallback={
               <div class="rounded-lg border border-rim bg-elevated/40 px-4 py-3 text-sm text-muted">
-                No logfile configured in system settings.
+                {t("admin.no_logfile")}
               </div>
             }>
               <div class="flex items-center gap-2 text-xs text-muted">
-                <span class="font-medium">Logfile:</span>
+                <span class="font-medium">{t("admin.logfile_label")}</span>
                 <code class="font-mono">{d().logfile}</code>
               </div>
             </Show>
@@ -168,7 +170,7 @@ export default function LogsSection() {
               <div class="ml-auto">
                 <input
                   type="search"
-                  placeholder="Search messages…"
+                  placeholder={t("admin.search_messages")}
                   value={search()}
                   onInput={(e) => setSearch(e.currentTarget.value)}
                   class="w-48 px-3 py-1 text-xs rounded-lg border border-rim bg-surface text-txt
@@ -180,7 +182,7 @@ export default function LogsSection() {
             {/* Results info */}
             <Show when={filtered().length !== d().entries.length}>
               <p class="text-xs text-muted">
-                Showing {filtered().length} of {d().entries.length} entries
+                {t("admin.show_of")} {filtered().length} {t("admin.of")} {d().entries.length} {t("admin.entries")}
               </p>
             </Show>
 
@@ -193,7 +195,7 @@ export default function LogsSection() {
                 when={filtered().length > 0}
                 fallback={
                   <p class="text-sm text-muted py-6 text-center">
-                    {d().entries.length === 0 ? "Log is empty." : "No entries match your filter."}
+                    {d().entries.length === 0 ? t("admin.log_empty") : t("admin.no_filter_match")}
                   </p>
                 }
               >
@@ -219,6 +221,7 @@ function LogRow(props: {
   expanded: boolean;
   onToggle: (idx: number) => void;
 }) {
+  const { t } = useI18n();
   const meta = () => getMeta(props.entry.level);
   const ts   = () => fmtTimestamp(props.entry.ts);
   const isLong = () => props.entry.message.length > 120;
@@ -246,7 +249,7 @@ function LogRow(props: {
               onClick={() => props.onToggle(props.idx)}
               class="text-[10px] text-accent hover:underline"
             >
-              {props.expanded ? "Show less" : "Show more"}
+              {props.expanded ? t("admin.show_less") : t("admin.show_more")}
             </button>
           </Show>
 

@@ -3,6 +3,7 @@ import SubPageContent from "@/shared/views/SubPageContent";
 import { apiFetch } from "@/shared/lib/fetch";
 import { useSectionForm } from "../../store/useSectionForm";
 import { SaveBar } from "../../store/FormHelpers";
+import { useI18n } from "@/i18n";
 
 interface ProfileData {
   name: string;
@@ -34,6 +35,7 @@ async function saveProfile(payload: Partial<ProfileData>): Promise<void> {
 }
 
 export default function ProfileSection() {
+  const { t } = useI18n();
   const { data, saving, handleSubmit } = useSectionForm({
     fetcher: fetchProfile,
     saver: saveProfile,
@@ -42,37 +44,37 @@ export default function ProfileSection() {
   });
 
   return (
-    <SubPageContent title="Profile" description="Your public profile information.">
+    <SubPageContent title={t("settings.title_profile")} description={t("settings.desc_profile")}>
       <Show when={data()} fallback={<Skeleton />}>
         <form onSubmit={handleSubmit} class="space-y-5">
 
-          <Field label="Display name">
+          <Field label={t("settings.display_name")}>
             <input type="text" name="name" value={data()!.name}
               class={input} />
           </Field>
 
-          <Field label="Short description">
+          <Field label={t("settings.short_description")}>
             <input type="text" name="pdesc" value={data()!.pdesc}
-              placeholder="e.g. developer, photographer…"
+              placeholder={t("settings.short_description_placeholder")}
               class={input} />
           </Field>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Hometown">
+            <Field label={t("settings.hometown")}>
               <input type="text" name="hometown" value={data()!.hometown} class={input} />
             </Field>
-            <Field label="Gender">
+            <Field label={t("settings.gender")}>
               <input type="text" name="gender" value={data()!.gender} class={input} />
             </Field>
-            <Field label="Birthday" hint="YYYY-MM-DD or MM-DD">
+            <Field label={t("settings.birthday")} hint={t("settings.birthday_hint")}>
               <input type="text" name="birthday" value={data()!.birthday} class={input} />
             </Field>
-            <Field label="Homepage">
+            <Field label={t("settings.homepage")}>
               <input type="url" name="homepage" value={data()!.homepage} class={input} />
             </Field>
           </div>
 
-          <Field label="About" hint="Supports BBCode.">
+          <Field label={t("settings.about")} hint={t("settings.about_hint")}>
             <textarea
               name="about"
               rows="4"
@@ -82,7 +84,7 @@ export default function ProfileSection() {
             </textarea>
           </Field>
 
-          <Field label="Keywords" hint="Comma-separated. Used for search and suggestions.">
+          <Field label={t("settings.keywords")} hint={t("settings.keywords_hint")}>
             <input type="text" name="keywords" value={data()!.keywords} class={input} />
           </Field>
 
@@ -94,7 +96,7 @@ export default function ProfileSection() {
               checked={!!data()!.hide_friends}
               class="h-4 w-4 rounded border-rim accent-accent"
             />
-            <span class="text-sm text-txt">Hide my connections list from others</span>
+            <span class="text-sm text-txt">{t("settings.hide_friends")}</span>
           </label>
 
           <SaveBar saving={saving()} />

@@ -9,6 +9,7 @@ import FilesPicker from "./FilesPicker";
 import type { FileMeta } from "@/modules/files/api";
 import type { Photo } from "@/modules/photos/api/api";
 import type { AttachmentAccept } from "../AttachmentBar";
+import { useI18n } from "@/i18n";
 
 type Tab = "photos" | "files";
 
@@ -21,6 +22,7 @@ interface Props {
 }
 
 const FilePickerModal: Component<Props> = (props) => {
+  const { t } = useI18n();
   const defaultTab = (): Tab =>
     props.accept === "files" ? "files" : "photos";
 
@@ -82,7 +84,7 @@ const FilePickerModal: Component<Props> = (props) => {
         <div class="flex flex-col w-full max-w-2xl max-h-[85vh] bg-surface border border-rim rounded-xl shadow-2xl overflow-hidden">
           {/* Header */}
           <header class="flex items-center justify-between px-4 py-3 border-b border-rim shrink-0">
-            <span class="text-sm font-semibold text-txt">Attach existing</span>
+            <span class="text-sm font-semibold text-txt">{t("editor.attach_existing")}</span>
             <button
               type="button"
               onClick={props.onClose}
@@ -98,14 +100,14 @@ const FilePickerModal: Component<Props> = (props) => {
           <div class="flex border-b border-rim shrink-0">
             <Show when={props.accept !== "files"}>
               <TabButton
-                label="Photos"
+                label={t("editor.photos_tab")}
                 active={tab() === "photos"}
                 onClick={() => setTab("photos")}
               />
             </Show>
             <Show when={props.accept !== "photos"}>
               <TabButton
-                label="Files"
+                label={t("editor.files_tab")}
                 active={tab() === "files"}
                 onClick={() => setTab("files")}
               />
@@ -134,8 +136,8 @@ const FilePickerModal: Component<Props> = (props) => {
           {/* Footer */}
           <footer class="flex items-center justify-between px-4 py-3 border-t border-rim bg-elevated shrink-0">
             <span class="text-xs text-muted">
-              <Show when={selectionCount() > 0} fallback="Select items to attach">
-                {selectionCount()} selected
+              <Show when={selectionCount() > 0} fallback={t("editor.select_to_attach")}>
+                {t("editor.selected_count", { count: selectionCount() })}
               </Show>
             </span>
             <div class="flex gap-2">
@@ -144,7 +146,7 @@ const FilePickerModal: Component<Props> = (props) => {
                 onClick={props.onClose}
                 class="px-3 py-1.5 text-sm rounded-lg border border-rim text-muted hover:bg-surface transition-colors"
               >
-                Cancel
+                {t("editor.cancel_btn")}
               </button>
               <button
                 type="button"
@@ -153,7 +155,9 @@ const FilePickerModal: Component<Props> = (props) => {
                 class="px-4 py-1.5 text-sm font-medium rounded-lg bg-accent text-accent-fg
                        hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
               >
-                Attach {selectionCount() > 0 ? `(${selectionCount()})` : ""}
+                {selectionCount() > 0
+                  ? t("editor.attach_count_btn", { count: selectionCount() })
+                  : t("editor.attach_btn")}
               </button>
             </div>
           </footer>

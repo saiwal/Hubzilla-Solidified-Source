@@ -1,4 +1,5 @@
 import { createSignal, createMemo } from "solid-js";
+import { useI18n } from "@/i18n";
 
 const LOWER = "abcdefghijklmnopqrstuvwxyz";
 const UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -10,11 +11,11 @@ function entropy(charsetSize: number, length: number): number {
   return length * Math.log2(charsetSize);
 }
 
-function strengthLabel(bits: number): { label: string; color: string; width: string } {
-  if (bits < 40) return { label: "Weak",   color: "bg-red-400",    width: "w-1/4" };
-  if (bits < 60) return { label: "Fair",   color: "bg-amber-400",  width: "w-2/4" };
-  if (bits < 80) return { label: "Strong", color: "bg-green-400",  width: "w-3/4" };
-  return              { label: "Very strong", color: "bg-accent", width: "w-full" };
+function strengthLabel(bits: number): { labelKey: string; color: string; width: string } {
+  if (bits < 40) return { labelKey: "tools.pw_weak",        color: "bg-red-400",    width: "w-1/4" };
+  if (bits < 60) return { labelKey: "tools.pw_fair",        color: "bg-amber-400",  width: "w-2/4" };
+  if (bits < 80) return { labelKey: "tools.pw_strong",      color: "bg-green-400",  width: "w-3/4" };
+  return              { labelKey: "tools.pw_very_strong",  color: "bg-accent",     width: "w-full" };
 }
 
 function generate(opts: {
@@ -39,6 +40,7 @@ function generate(opts: {
 }
 
 export function PasswordGenerator() {
+  const { t } = useI18n();
   const [length, setLength] = createSignal(20);
   const [lower, setLower] = createSignal(true);
   const [upper, setUpper] = createSignal(true);
@@ -105,13 +107,13 @@ export function PasswordGenerator() {
       {/* Password display */}
       <div class="bg-surface border border-rim rounded-xl px-4 py-3 flex items-center gap-3">
         <span class="font-mono text-txt text-base flex-1 break-all select-all">
-          {password() || <span class="text-muted">Select at least one character set</span>}
+          {password() || <span class="text-muted">{t("tools.pw_select_charset")}</span>}
         </span>
         <button
           onClick={() => copy(password())}
           class="shrink-0 text-xs border border-rim text-muted hover:bg-elevated hover:text-txt rounded-lg px-3 py-1.5 transition-colors"
         >
-          {copied() ? "Copied ✓" : "Copy"}
+          {copied() ? t("tools.pw_copied") : t("tools.pw_copy")}
         </button>
       </div>
 
@@ -119,8 +121,8 @@ export function PasswordGenerator() {
       {password() && (
         <div class="flex flex-col gap-1.5">
           <div class="flex justify-between text-xs text-muted">
-            <span>{strength().label}</span>
-            <span>{Math.round(bits())} bits of entropy</span>
+            <span>{t(strength().labelKey as any)}</span>
+            <span>{Math.round(bits())} {t("tools.pw_bits")}</span>
           </div>
           <div class="h-1.5 bg-elevated rounded-full overflow-hidden">
             <div class={`h-full rounded-full transition-all ${strength().color} ${strength().width}`} />
@@ -131,7 +133,7 @@ export function PasswordGenerator() {
       {/* Length slider */}
       <div class="flex flex-col gap-2">
         <div class="flex justify-between text-sm">
-          <span class="text-muted">Length</span>
+          <span class="text-muted">{t("tools.pw_length")}</span>
           <span class="text-txt font-mono">{length()}</span>
         </div>
         <input
@@ -146,12 +148,12 @@ export function PasswordGenerator() {
 
       {/* Options */}
       <div class="grid grid-cols-2 gap-3 bg-surface border border-rim rounded-xl p-4">
-        <CheckBox label="Lowercase (a-z)" checked={lower()} onChange={setLower} />
-        <CheckBox label="Uppercase (A-Z)" checked={upper()} onChange={setUpper} />
-        <CheckBox label="Digits (0-9)"    checked={digits()} onChange={setDigits} />
-        <CheckBox label="Symbols (!@#…)"  checked={symbols()} onChange={setSymbols} />
+        <CheckBox label={t("tools.pw_lowercase")} checked={lower()} onChange={setLower} />
+        <CheckBox label={t("tools.pw_uppercase")} checked={upper()} onChange={setUpper} />
+        <CheckBox label={t("tools.pw_digits")}    checked={digits()} onChange={setDigits} />
+        <CheckBox label={t("tools.pw_symbols")}   checked={symbols()} onChange={setSymbols} />
         <div class="col-span-2">
-          <CheckBox label="Exclude ambiguous chars (0, O, l, 1, I)" checked={noAmbiguous()} onChange={setNoAmbiguous} />
+          <CheckBox label={t("tools.pw_no_ambiguous")} checked={noAmbiguous()} onChange={setNoAmbiguous} />
         </div>
       </div>
 
@@ -160,13 +162,13 @@ export function PasswordGenerator() {
         onClick={regen}
         class="bg-accent text-accent-fg rounded-xl py-3 font-medium hover:opacity-90 active:scale-95 transition-all"
       >
-        Generate new password
+        {t("tools.pw_generate")}
       </button>
 
       {/* History */}
       {history().length > 1 && (
         <div class="flex flex-col gap-1.5">
-          <p class="text-xs text-muted">Recent (session only)</p>
+          <p class="text-xs text-muted">{t("tools.pw_recent")}</p>
           {history().slice(1).map((pw) => (
             <div class="flex items-center gap-2 bg-surface border border-rim rounded-lg px-3 py-2">
               <span class="font-mono text-xs text-muted flex-1 truncate">{pw}</span>
@@ -174,7 +176,7 @@ export function PasswordGenerator() {
                 onClick={() => copy(pw)}
                 class="text-xs text-muted hover:text-txt transition-colors shrink-0"
               >
-                Copy
+                {t("tools.pw_copy")}
               </button>
             </div>
           ))}

@@ -1,0 +1,19 @@
+import type { RawDictionary } from "../namespaces/types";
+
+export const manage: RawDictionary["manage"] = {
+  channels:         "Channels",
+  new_channel:      "+ New channel",
+  current_badge:    "current",
+  default_badge:    "default",
+  new_badge:        "new",
+  make_default:     "Make default",
+  switch:           "Switch",
+  delegated:        "Delegated channels",
+  delegate_arrow:   "delegate →",
+  switch_confirm_title: "Switch channel?",
+  switch_confirm_body:  "You'll be switched to",
+  page_reload:      "The page will reload.",
+  cancel:           "Cancel",
+  channels_of:      "of",
+  channels_used:    "channels used",
+};

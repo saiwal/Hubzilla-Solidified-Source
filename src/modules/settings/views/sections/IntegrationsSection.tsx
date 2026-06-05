@@ -13,6 +13,7 @@ import {
   MdFillArrow_downward,
 } from "solid-icons/md";
 import { navOrder, setNavOrder } from "@/shared/store/nav-order";
+import { useI18n } from "@/i18n";
 
 interface AppEntry {
   name: string;
@@ -81,6 +82,7 @@ function AppIcon(props: { app: AppEntry }) {
 }
 
 export default function IntegrationsSection() {
+  const { t } = useI18n();
   const [data, { refetch }] = createResource(fetchIntegrations);
   const [busy, setBusy] = createSignal<string | null>(null);
   const [search, setSearch] = createSignal("");
@@ -173,17 +175,17 @@ export default function IntegrationsSection() {
     }
   };
 
-  const TABS: { value: FilterTab; label: string }[] = [
-    { value: "all", label: "All" },
-    { value: "installed", label: "Installed" },
-    { value: "available", label: "Available" },
-    { value: "order", label: "Nav Order" },
+  const TABS: { value: FilterTab; labelKey: string }[] = [
+    { value: "all",       labelKey: "settings.integ_tab_all" },
+    { value: "installed", labelKey: "settings.integ_tab_installed" },
+    { value: "available", labelKey: "settings.integ_tab_available" },
+    { value: "order",     labelKey: "settings.integ_tab_order" },
   ];
 
   return (
     <SubPageContent
-      title="Integrations"
-      description="Install apps and pin them to your nav or app tray."
+      title={t("settings.title_integrations")}
+      description={t("settings.desc_integrations")}
     >
       <div class="flex gap-2 flex-wrap">
         <div class="flex rounded-lg border border-rim overflow-hidden text-xs font-medium">
@@ -198,7 +200,7 @@ export default function IntegrationsSection() {
                     : "text-muted hover:bg-elevated hover:text-txt"
                   }`}
               >
-                {tab.label}
+                {t(tab.labelKey as any)}
               </button>
             )}
           </For>
@@ -206,7 +208,7 @@ export default function IntegrationsSection() {
         <Show when={filter() !== "order"}>
           <input
             type="search"
-            placeholder="Search apps…"
+            placeholder={t("settings.integ_search_placeholder")}
             value={search()}
             onInput={(e) => setSearch(e.currentTarget.value)}
             class="flex-1 min-w-0 px-3 py-1.5 text-sm rounded-lg bg-surface border border-rim
@@ -222,7 +224,7 @@ export default function IntegrationsSection() {
           when={orderedNavApps().length > 0}
           fallback={
             <p class="text-sm text-muted text-center py-8">
-              No apps pinned to nav yet. Pin apps using the other tabs.
+              {t("settings.integ_no_pinned")}
             </p>
           }
         >
@@ -235,7 +237,7 @@ export default function IntegrationsSection() {
                   <div class="flex gap-0.5 shrink-0">
                     <button
                       type="button"
-                      title="Move up"
+                      title={t("settings.integ_move_up")}
                       disabled={index() === 0}
                       onClick={() => moveApp(app.name, -1)}
                       class="w-7 h-7 flex items-center justify-center rounded-lg text-muted
@@ -246,7 +248,7 @@ export default function IntegrationsSection() {
                     </button>
                     <button
                       type="button"
-                      title="Move down"
+                      title={t("settings.integ_move_down")}
                       disabled={index() === orderedNavApps().length - 1}
                       onClick={() => moveApp(app.name, 1)}
                       class="w-7 h-7 flex items-center justify-center rounded-lg text-muted
@@ -269,7 +271,7 @@ export default function IntegrationsSection() {
           <Show
             when={filtered().length > 0}
             fallback={
-              <p class="text-sm text-muted text-center py-8">No apps match your search.</p>
+              <p class="text-sm text-muted text-center py-8">{t("settings.integ_no_results")}</p>
             }
           >
             <div class="divide-y divide-rim">
@@ -290,7 +292,7 @@ export default function IntegrationsSection() {
                       <div class="flex items-center gap-1 shrink-0">
                         <button
                           type="button"
-                          title={app.pinned ? "Unpin from nav" : "Pin to nav"}
+                          title={app.pinned ? t("settings.integ_unpin") : t("settings.integ_pin")}
                           disabled={!!isBusy(app.name)}
                           onClick={() => run(app, "pin")}
                           class={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors
@@ -310,7 +312,7 @@ export default function IntegrationsSection() {
 
                         <button
                           type="button"
-                          title={app.featured ? "Remove from app tray" : "Add to app tray"}
+                          title={app.featured ? t("settings.integ_unfeature") : t("settings.integ_feature")}
                           disabled={!!isBusy(app.name)}
                           onClick={() => run(app, "feature")}
                           class={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors
@@ -342,10 +344,10 @@ export default function IntegrationsSection() {
                         }`}
                     >
                       {isBusy(app.name, app.installed ? "uninstall" : "install")
-                        ? "…"
+                        ? t("settings.integ_busy")
                         : app.installed
-                          ? "Remove"
-                          : "Install"}
+                          ? t("settings.integ_remove")
+                          : t("settings.integ_install")}
                     </button>
                   </div>
                 )}

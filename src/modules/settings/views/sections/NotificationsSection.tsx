@@ -2,6 +2,7 @@ import { Show } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchNotificationSettings, saveNotificationSettings } from "../../api/api";
 import { useSectionForm } from "../../store/useSectionForm";
+import { useI18n } from "@/i18n";
 
 const NOTIFY_FIELDS = [
   "notify1","notify2","notify3","notify4","notify5",
@@ -14,6 +15,7 @@ const NOTIFY_FIELDS = [
 ] as const;
 
 export default function NotificationsSection() {
+  const { t } = useI18n();
   const { data, saving, handleSubmit } = useSectionForm({
     fetcher: fetchNotificationSettings,
     saver: saveNotificationSettings,
@@ -22,59 +24,59 @@ export default function NotificationsSection() {
   });
 
   return (
-    <SubPageContent title="Notifications" description="Email and visual notification preferences.">
+    <SubPageContent title={t("settings.title_notifications")} description={t("settings.desc_notifications")}>
       <Show when={data()} fallback={<Skeleton />}>
         {(d) => (
           <form onSubmit={handleSubmit} class="space-y-8">
 
             {/* Activity auto-posts */}
-            <Section title="Auto-post activity">
-              <Toggle name="post_newfriend"      label="Accepting a friend request"             checked={!!d().post_newfriend} />
-              <Toggle name="post_joingroup"      label="Joining a forum or community"           checked={!!d().post_joingroup} />
-              <Toggle name="post_profilechange"  label="Making an interesting profile change"   checked={!!d().post_profilechange} />
+            <Section title={t("settings.notif_autopost_title")}>
+              <Toggle name="post_newfriend"      label={t("settings.notif_friend_request")}  checked={!!d().post_newfriend} />
+              <Toggle name="post_joingroup"      label={t("settings.notif_join_forum")}       checked={!!d().post_joingroup} />
+              <Toggle name="post_profilechange"  label={t("settings.notif_profile_change")}   checked={!!d().post_profilechange} />
             </Section>
 
             {/* Email notifications */}
-            <Section title="Email notifications">
-              <Toggle name="notify1" label="Connection request received"    checked={!!d().notify1} />
-              <Toggle name="notify2" label="Connection confirmed"           checked={!!d().notify2} />
-              <Toggle name="notify3" label="Someone posts on your wall"     checked={!!d().notify3} />
-              <Toggle name="notify4" label="New followup comment"           checked={!!d().notify4} />
-              <Toggle name="notify5" label="Private message received"       checked={!!d().notify5} />
-              <Toggle name="notify6" label="Friend suggestion"              checked={!!d().notify6} />
-              <Toggle name="notify7" label="Tagged in a post"               checked={!!d().notify7} />
-              <Toggle name="notify8" label="Poked or prodded in a post"     checked={!!d().notify8} />
-              <Toggle name="notify9" label="Someone liked your post"        checked={!!d().notify9} />
+            <Section title={t("settings.notif_email_title")}>
+              <Toggle name="notify1" label={t("settings.notif_email_conn_req")}        checked={!!d().notify1} />
+              <Toggle name="notify2" label={t("settings.notif_email_conn_confirmed")}  checked={!!d().notify2} />
+              <Toggle name="notify3" label={t("settings.notif_email_wall_post")}       checked={!!d().notify3} />
+              <Toggle name="notify4" label={t("settings.notif_email_followup")}        checked={!!d().notify4} />
+              <Toggle name="notify5" label={t("settings.notif_email_private")}         checked={!!d().notify5} />
+              <Toggle name="notify6" label={t("settings.notif_email_friend_suggest")}  checked={!!d().notify6} />
+              <Toggle name="notify7" label={t("settings.notif_email_tagged")}          checked={!!d().notify7} />
+              <Toggle name="notify8" label={t("settings.notif_email_poked")}           checked={!!d().notify8} />
+              <Toggle name="notify9" label={t("settings.notif_email_liked")}           checked={!!d().notify9} />
             </Section>
 
             {/* Visual notifications */}
-            <Section title="Visual notifications">
-              <Toggle name="vnotify1"  label="Unseen stream activity"       checked={!!d().vnotify1} />
-              <Toggle name="vnotify2"  label="Unseen channel activity"      checked={!!d().vnotify2} />
-              <Toggle name="vnotify3"  label="Unseen private messages"      checked={!!d().vnotify3} />
-              <Toggle name="vnotify4"  label="Upcoming events"              checked={!!d().vnotify4} />
-              <Toggle name="vnotify5"  label="Events today"                 checked={!!d().vnotify5} />
-              <Toggle name="vnotify6"  label="Upcoming birthdays"           checked={!!d().vnotify6} />
-              <Toggle name="vnotify7"  label="System notifications"         checked={!!d().vnotify7} />
-              <Toggle name="vnotify8"  label="System info messages"         checked={!!d().vnotify8} />
-              <Toggle name="vnotify9"  label="System critical alerts"       checked={!!d().vnotify9} />
-              <Toggle name="vnotify10" label="New connections"              checked={!!d().vnotify10} />
-              <Toggle name="vnotify12" label="Unseen shared files"          checked={!!d().vnotify12} />
-              <Toggle name="vnotify14" label="Unseen likes and dislikes"    checked={!!d().vnotify14} />
-              <Toggle name="vnotify15" label="Unseen forum posts"           checked={!!d().vnotify15} />
+            <Section title={t("settings.notif_visual_title")}>
+              <Toggle name="vnotify1"  label={t("settings.notif_visual_stream")}         checked={!!d().vnotify1} />
+              <Toggle name="vnotify2"  label={t("settings.notif_visual_channel")}        checked={!!d().vnotify2} />
+              <Toggle name="vnotify3"  label={t("settings.notif_visual_private")}        checked={!!d().vnotify3} />
+              <Toggle name="vnotify4"  label={t("settings.notif_visual_events")}         checked={!!d().vnotify4} />
+              <Toggle name="vnotify5"  label={t("settings.notif_visual_events_today")}   checked={!!d().vnotify5} />
+              <Toggle name="vnotify6"  label={t("settings.notif_visual_birthdays")}      checked={!!d().vnotify6} />
+              <Toggle name="vnotify7"  label={t("settings.notif_visual_system")}         checked={!!d().vnotify7} />
+              <Toggle name="vnotify8"  label={t("settings.notif_visual_system_info")}    checked={!!d().vnotify8} />
+              <Toggle name="vnotify9"  label={t("settings.notif_visual_system_critical")} checked={!!d().vnotify9} />
+              <Toggle name="vnotify10" label={t("settings.notif_visual_connections")}    checked={!!d().vnotify10} />
+              <Toggle name="vnotify12" label={t("settings.notif_visual_files")}          checked={!!d().vnotify12} />
+              <Toggle name="vnotify14" label={t("settings.notif_visual_likes")}          checked={!!d().vnotify14} />
+              <Toggle name="vnotify15" label={t("settings.notif_visual_forum")}          checked={!!d().vnotify15} />
               <Show when={d().vnotify11}>
-                <Toggle name="vnotify11" label="System registrations (admin)" checked={!!d().vnotify11} />
+                <Toggle name="vnotify11" label={t("settings.notif_visual_registrations")} checked={!!d().vnotify11} />
               </Show>
               <Show when={d().vnotify13 !== undefined}>
-                <Toggle name="vnotify13" label="Unseen public stream activity" checked={!!d().vnotify13} />
+                <Toggle name="vnotify13" label={t("settings.notif_visual_pubstream")}    checked={!!d().vnotify13} />
               </Show>
             </Section>
 
             {/* Misc */}
-            <Section title="Other">
-              <Toggle name="always_show_in_notices"      label="Show new wall posts and messages under Notices"       checked={!!d().always_show_in_notices} />
-              <Toggle name="update_notices_per_parent"   label="Mark entire thread read when clicking a notice"       checked={!!d().update_notices_per_parent} />
-              <Field label="Event advance notice (days)" hint="Notify this many days before an upcoming event.">
+            <Section title={t("settings.notif_other_title")}>
+              <Toggle name="always_show_in_notices"    label={t("settings.notif_show_in_notices")}  checked={!!d().always_show_in_notices} />
+              <Toggle name="update_notices_per_parent" label={t("settings.notif_mark_thread_read")} checked={!!d().update_notices_per_parent} />
+              <Field label={t("settings.notif_event_advance_days")} hint={t("settings.notif_event_advance_hint")}>
                 <input
                   type="number"
                   name="evdays"
@@ -95,7 +97,7 @@ export default function NotificationsSection() {
                 class="px-4 py-2 text-sm font-medium rounded-lg bg-accent text-accent-fg
                        hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
               >
-                {saving() ? "Saving…" : "Save changes"}
+                {saving() ? t("settings.saving") : t("settings.save")}
               </button>
             </div>
 

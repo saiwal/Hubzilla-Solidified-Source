@@ -3,10 +3,12 @@ import { createResource } from "solid-js";
 import { toast } from "@/shared/store/toast";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { apiFetch } from "@/shared/lib/fetch";
+import { useI18n } from "@/i18n";
 
 interface DangerData { nick: string; name: string; account_email: string; }
 
 export default function DangerSection() {
+  const { t } = useI18n();
   const [data] = createResource<DangerData>(async () => {
     const res = await apiFetch("/api/settings/danger");
     const { data } = await res.json();
@@ -34,14 +36,14 @@ export default function DangerSection() {
   };
 
   return (
-    <SubPageContent title="Danger zone" description="Irreversible actions. Proceed with care.">
+    <SubPageContent title={t("settings.title_danger")} description={t("settings.desc_danger")}>
       <Show when={data()}>
         <div class="space-y-6">
 
           {/* Remove channel */}
           <div class="rounded-xl border border-red-200 bg-red-50/50 dark:bg-red-900/10 p-5 space-y-4">
             <div>
-              <h3 class="text-sm font-semibold text-red-700">Remove this channel</h3>
+              <h3 class="text-sm font-semibold text-red-700">{t("settings.danger_remove_channel")}</h3>
               <p class="text-xs text-red-600 mt-1">
                 Permanently deletes <strong>{data()!.name}</strong> (@{data()!.nick}) and all
                 its posts, connections, and data. This cannot be undone.
@@ -50,7 +52,7 @@ export default function DangerSection() {
 
             <div class="space-y-2">
               <label class="block text-xs font-medium text-red-700">
-                Type <strong>{data()!.nick}</strong> to confirm
+                {t("settings.danger_type_to_confirm").replace("{{nick}}", data()!.nick)}
               </label>
               <input
                 type="text"
@@ -70,7 +72,7 @@ export default function DangerSection() {
                      hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed
                      transition-colors"
             >
-              {busy() ? "Removing…" : "Remove channel permanently"}
+              {busy() ? t("settings.danger_removing") : t("settings.danger_remove_btn")}
             </button>
           </div>
 

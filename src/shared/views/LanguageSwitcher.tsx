@@ -4,7 +4,7 @@ import { Motion, Presence, scalePreset } from "../lib/motion-presets";
 import { useDropdown } from "../lib/useDropdown";
 
 const LanguageSwitcher = () => {
-  const { locale, setLocale } = useI18n();
+  const { t, locale, setLocale } = useI18n();
   const { open, setOpen, toggle, floatStyle, setTriggerRef, setPanelRef } =
     useDropdown({ placement: "top-start" });
 
@@ -20,7 +20,7 @@ const LanguageSwitcher = () => {
       <button
         ref={setTriggerRef}
         onClick={toggle}
-        title="Language"
+        title={t("ui.language")}
         class={`p-2 rounded-lg transition-colors text-muted hover:bg-elevated hover:text-txt
                 ${open() ? "bg-elevated text-txt" : ""}`}
       >
@@ -36,7 +36,7 @@ const LanguageSwitcher = () => {
             class="z-50 w-44 bg-surface border border-rim rounded-lg shadow-lg overflow-hidden"
           >
             <div class="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted border-b border-rim">
-              Language
+              {t("ui.language")}
             </div>
             <div class="py-1">
               <For each={LOCALES}>

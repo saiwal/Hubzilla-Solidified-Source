@@ -5,6 +5,7 @@ import { A } from "@solidjs/router";
 import { BiRegularInfoCircle } from "solid-icons/bi";
 import type { NavViewer, NavActions } from "@/shared/lib/nav-api";
 import Usermenu from "./UserMenu";
+import { useI18n } from "@/i18n";
 
 interface NavUtilitiesProps {
   viewer?: NavViewer;
@@ -14,6 +15,7 @@ interface NavUtilitiesProps {
 }
 
 export default function NavUtilities(props: NavUtilitiesProps) {
+  const { t } = useI18n();
   return (
     <>
       <Usermenu
@@ -29,7 +31,7 @@ export default function NavUtilities(props: NavUtilitiesProps) {
         <HelpTrigger />
         <A
           href="/siteinfo"
-          title="Site info"
+          title={t("ui.site_info")}
           class="p-2 rounded-lg text-muted hover:bg-elevated hover:text-txt transition-colors"
         >
           <BiRegularInfoCircle size={18} />

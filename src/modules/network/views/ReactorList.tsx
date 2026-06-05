@@ -2,6 +2,7 @@
 
 import { createResource, Show, For } from 'solid-js';
 import { fetchDislikes, fetchLikes, fetchRepeats } from '../api';
+import { useI18n } from "@/i18n";
 
 interface Props {
   mid: string;
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export default function ReactorList(props: Props) {
+  const { t } = useI18n();
   const fetcher = () =>
     props.verb === 'likes'    ? fetchLikes(props.mid)    :
     props.verb === 'dislikes' ? fetchDislikes(props.mid) :
@@ -17,7 +19,7 @@ export default function ReactorList(props: Props) {
   const [data] = createResource(() => props.mid, fetcher);
 
   return (
-    <Show when={!data.loading} fallback={<p>Loading...</p>}>
+    <Show when={!data.loading} fallback={<p>{t("network.loading")}</p>}>
       <For each={data()?.reactions ?? []}>
         {(r) => (
           <div class="flex items-center gap-2 py-1">

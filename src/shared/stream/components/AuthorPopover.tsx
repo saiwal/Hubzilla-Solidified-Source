@@ -6,6 +6,7 @@ import { addConnection } from "@/modules/directory/people/api";
 import { fetchConnectionByAddress } from "@/modules/directory/connections/api";
 import type { Connection } from "@/modules/directory/connections/api";
 import ConnectionEditorModal from "@/shared/views/ConnectionEditorModal";
+import { useI18n } from "@/i18n";
 
 interface Props {
   name: string;
@@ -23,6 +24,7 @@ type ConnState =
   | { tag: "just_connected" };
 
 export default function AuthorPopover(props: Props) {
+  const { t } = useI18n();
   const [open, setOpen] = createSignal(false);
   const [connState, setConnState] = createSignal<ConnState>({ tag: "idle" });
   const [editOpen, setEditOpen] = createSignal(false);
@@ -134,7 +136,7 @@ export default function AuthorPopover(props: Props) {
                            hover:border-accent hover:text-accent transition-colors"
                   >
                     <MdOutlinePerson size={14} />
-                    <span>View Profile</span>
+                    <span>{t("ui.view_profile")}</span>
                   </a>
                 </Show>
 
@@ -156,7 +158,7 @@ export default function AuthorPopover(props: Props) {
                              hover:border-accent hover:text-accent transition-colors"
                     >
                       <MdOutlinePerson_add size={14} />
-                      <span>Connect</span>
+                      <span>{t("ui.connect")}</span>
                     </button>
                   </Show>
 
@@ -164,7 +166,7 @@ export default function AuthorPopover(props: Props) {
                   <Show when={cs().tag === "just_connected"}>
                     <button disabled class="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5
                                            border border-rim rounded-lg text-xs text-muted cursor-default">
-                      <span>✓ Connected</span>
+                      <span>{t("ui.connected_check")}</span>
                     </button>
                   </Show>
 
@@ -177,7 +179,7 @@ export default function AuthorPopover(props: Props) {
                              hover:border-accent hover:text-accent transition-colors"
                     >
                       <MdOutlineEdit size={14} />
-                      <span>Edit Connection</span>
+                      <span>{t("ui.edit_connection")}</span>
                     </button>
                   </Show>
                 </Show>

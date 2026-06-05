@@ -1,6 +1,7 @@
 import { createSignal, onCleanup, Show, type Component } from "solid-js";
 import { Portal } from "solid-js/web";
 import type { Attachment } from "./types";
+import { useI18n } from "@/i18n";
 
 interface Props {
   attachment: Attachment;
@@ -11,6 +12,7 @@ interface Props {
 }
 
 const AttachmentPreview: Component<Props> = (props) => {
+  const { t } = useI18n();
   const a = () => props.attachment;
   const isUploading = () => a().status === "uploading";
   const isError = () => a().status === "error";
@@ -103,7 +105,7 @@ const AttachmentPreview: Component<Props> = (props) => {
         <button
           type="button"
           onClick={openAlt}
-          title={hasAlt() ? `Alt: ${a().altText}` : "Add alt text"}
+          title={hasAlt() ? `Alt: ${a().altText}` : t("editor.add_alt_text")}
           class={
             "text-[10px] px-1.5 py-0.5 rounded w-full truncate transition-colors " +
             (hasAlt()
@@ -119,18 +121,18 @@ const AttachmentPreview: Component<Props> = (props) => {
       <Show when={!isUploading() && !isError() && a().isImage && props.onInsert}>
         <button
           type="button"
-          title="Insert into editor"
+          title={t("editor.insert_into_editor")}
           onClick={() => props.onInsert!(props.insertBBCode(a().id))}
           class="text-[10px] px-1.5 py-0.5 rounded bg-accent/20 text-accent hover:bg-accent/30 transition-colors w-full truncate"
         >
-          Insert
+          {t("editor.insert_btn")}
         </button>
       </Show>
 
       {/* Remove button */}
       <button
         type="button"
-        title="Remove"
+        title={t("editor.remove_attachment")}
         onClick={props.onRemove}
         class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-surface border border-rim
                flex items-center justify-center text-muted hover:text-red-400 hover:border-red-400
@@ -150,7 +152,7 @@ const AttachmentPreview: Component<Props> = (props) => {
             class="bg-surface border border-rim rounded-xl shadow-2xl p-3 flex flex-col gap-2"
           >
             <div class="flex items-center justify-between">
-              <span class="text-xs font-semibold text-txt">Alt text</span>
+              <span class="text-xs font-semibold text-txt">{t("editor.alt_text_label")}</span>
               <button
                 type="button"
                 onClick={() => setAltOpen(false)}
@@ -163,13 +165,12 @@ const AttachmentPreview: Component<Props> = (props) => {
             </div>
 
             <p class="text-[11px] text-muted leading-snug">
-              Describe the image for screen readers and visitors who cannot see it.
-              Leave empty to use the filename.
+              {t("editor.alt_text_desc")}
             </p>
 
             <textarea
               rows={3}
-              placeholder="e.g. A cat sitting on a window sill in the afternoon sun"
+              placeholder={t("editor.alt_text_placeholder")}
               value={a().altText ?? ""}
               onInput={(e) => props.onAltTextChange(e.currentTarget.value)}
               autofocus

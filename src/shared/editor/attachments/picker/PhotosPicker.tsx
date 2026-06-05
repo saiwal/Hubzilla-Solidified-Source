@@ -7,6 +7,7 @@ import {
 } from "solid-js";
 import { fetchAlbums, fetchPhotoAlbum } from "@/modules/photos/api/api";
 import type { Photo, Album } from "@/modules/photos/api/api";
+import { useI18n } from "@/i18n";
 
 interface Props {
   nick: string;
@@ -15,6 +16,7 @@ interface Props {
 }
 
 const PhotosPicker: Component<Props> = (props) => {
+  const { t } = useI18n();
   const [currentAlbum, setCurrentAlbum] = createSignal<Album | null>(null);
 
   const [albums] = createResource(() => props.nick, fetchAlbums);
@@ -39,7 +41,7 @@ const PhotosPicker: Component<Props> = (props) => {
             (currentAlbum() ? "text-accent" : "text-txt font-medium")
           }
         >
-          Photos
+          {t("editor.photos_root")}
         </button>
         <Show when={currentAlbum()}>
           <span class="text-muted">/</span>
@@ -57,7 +59,7 @@ const PhotosPicker: Component<Props> = (props) => {
           >
             <Show
               when={(albums() ?? []).length > 0}
-              fallback={<EmptyState label="No albums found" />}
+              fallback={<EmptyState label={t("editor.no_albums")} />}
             >
               <div class="grid grid-cols-3 gap-2">
                 <For each={albums()}>
@@ -82,7 +84,7 @@ const PhotosPicker: Component<Props> = (props) => {
                       </div>
                       <div class="px-2 py-1.5 text-left">
                         <p class="text-xs font-medium text-txt truncate">{album.album}</p>
-                        <p class="text-[10px] text-muted">{album.total} photos</p>
+                        <p class="text-[10px] text-muted">{t("editor.photo_count", { count: album.total })}</p>
                       </div>
                     </button>
                   )}
@@ -100,7 +102,7 @@ const PhotosPicker: Component<Props> = (props) => {
           >
             <Show
               when={(albumPhotos()?.photos ?? []).length > 0}
-              fallback={<EmptyState label="No photos in this album" />}
+              fallback={<EmptyState label={t("editor.no_album_photos")} />}
             >
               <div class="grid grid-cols-3 gap-2">
                 <For each={albumPhotos()?.photos ?? []}>

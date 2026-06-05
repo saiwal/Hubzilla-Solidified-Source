@@ -4,14 +4,15 @@ import {
   MdFillFormat_list_bulleted, MdFillShort_text,
 } from "solid-icons/md";
 import type { ViewMode } from "@/shared/stream/types";
+import { useI18n } from "@/i18n";
 
 type IconType = Component<{ size?: number; class?: string }>;
 
-const ALL_VIEWS: { id: ViewMode; label: string; icon: IconType }[] = [
-  { id: "feed",    label: "Feed",  icon: MdFillShort_text },
-  { id: "masonry", label: "Grid",  icon: MdFillApps },
-  { id: "list",    label: "List",  icon: MdFillFormat_list_bulleted },
-  { id: "inbox",   label: "Inbox", icon: MdFillAll_inbox },
+const ALL_VIEWS: { id: ViewMode; key: string; icon: IconType }[] = [
+  { id: "feed",    key: "feed",  icon: MdFillShort_text },
+  { id: "masonry", key: "grid",  icon: MdFillApps },
+  { id: "list",    key: "list",  icon: MdFillFormat_list_bulleted },
+  { id: "inbox",   key: "inbox", icon: MdFillAll_inbox },
 ];
 
 export default function ViewSwitcher(props: {
@@ -19,6 +20,7 @@ export default function ViewSwitcher(props: {
   onChange: (v: ViewMode) => void;
   available?: ViewMode[];
 }) {
+  const { t } = useI18n();
   const views = () =>
     props.available
       ? ALL_VIEWS.filter((v) => props.available!.includes(v.id))
@@ -29,7 +31,7 @@ export default function ViewSwitcher(props: {
       <For each={views()}>
         {(v) => (
           <button
-            title={v.label}
+            title={t(`network.${v.key}` as any)}
             onClick={() => props.onChange(v.id)}
             class={`px-3 py-1.5 text-sm rounded-lg transition-colors
               ${props.viewMode === v.id

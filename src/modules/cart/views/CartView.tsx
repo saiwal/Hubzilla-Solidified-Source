@@ -9,10 +9,12 @@ import {
   catalog, loading, cartItems, cartCount, cartSubtotal, nick,
   loadCatalog, addItem, removeItem,
 } from '../store';
+import { useI18n } from '@/i18n';
 
 type Tab = 'catalog' | 'cart';
 
 export default function CartView() {
+  const { t } = useI18n();
   const params = useParams<{ nick?: string }>();
   const [tab, setTab] = createSignal<Tab>('catalog');
 
@@ -26,11 +28,11 @@ export default function CartView() {
       {/* Tab bar */}
       <div class="flex gap-1 mb-5 p-1 bg-surface border border-rim rounded-xl w-fit">
         <TabBtn active={tab() === 'catalog'} onClick={() => setTab('catalog')}>
-          Catalog
+          {t("cart.catalog_tab")}
         </TabBtn>
         <TabBtn active={tab() === 'cart'} onClick={() => setTab('cart')}>
           <span class="flex items-center gap-1.5">
-            Cart
+            {t("cart.cart_tab")}
             <Show when={cartCount() > 0}>
               <span class="bg-accent text-accent-fg text-[10px] font-bold rounded-full min-w-[1.1rem] h-[1.1rem] flex items-center justify-center px-1">
                 {cartCount()}
@@ -74,11 +76,12 @@ function TabBtn(props: { active: boolean; onClick: () => void; children: any }) 
 // ── Catalog grid ──────────────────────────────────────────────────────────────
 
 function CatalogGrid() {
+  const { t } = useI18n();
   return (
     <>
       <Show when={catalog().length === 0}>
         <p class="text-sm text-muted py-8 text-center">
-          No items in catalog.
+          {t("cart.no_items")}
         </p>
       </Show>
 
@@ -111,20 +114,20 @@ function CatalogGrid() {
                   class="flex items-center justify-center gap-2 w-full py-2 rounded-xl
                          bg-accent text-accent-fg text-sm font-medium hover:opacity-90 transition-opacity"
                 >
-                  <MdOutlineAdd_shopping_cart size={16} /> Add to Cart
+                  <MdOutlineAdd_shopping_cart size={16} /> {t("cart.add_to_cart")}
                 </button>
               </Show>
 
               <Show when={item.orderQty > 0}>
                 <div class="flex items-center justify-between text-xs">
                   <span class="text-green-600 dark:text-green-400 font-medium">
-                    In cart: {item.orderQty}
+                    {t("cart.in_cart")} {item.orderQty}
                   </span>
                   <button
                     onClick={() => removeItem(item.sku)}
                     class="flex items-center gap-1 text-red-400 hover:text-red-600 transition-colors"
                   >
-                    <MdFillRemove_shopping_cart size={14} /> Remove
+                    <MdFillRemove_shopping_cart size={14} /> {t("cart.remove")}
                   </button>
                 </div>
                 <button
@@ -134,7 +137,7 @@ function CatalogGrid() {
                          hover:bg-accent-muted
                          text-sm font-medium transition-colors"
                 >
-                  <MdOutlineAdd_shopping_cart size={16} /> Add More
+                  <MdOutlineAdd_shopping_cart size={16} /> {t("cart.add_more")}
                 </button>
               </Show>
             </div>
@@ -148,17 +151,18 @@ function CatalogGrid() {
 // ── Cart contents ─────────────────────────────────────────────────────────────
 
 function CartContents(props: { onBrowse: () => void }) {
+  const { t } = useI18n();
   return (
     <div class="flex flex-col gap-4">
       <Show when={cartItems().length === 0}>
         <div class="text-center py-14">
           <MdFillShopping_cart size={48} class="text-subtle mx-auto mb-3" />
-          <p class="text-muted text-sm mb-3">Your cart is empty.</p>
+          <p class="text-muted text-sm mb-3">{t("cart.cart_empty")}</p>
           <button
             onClick={props.onBrowse}
             class="text-accent hover:text-accent-txt text-sm font-medium hover:underline"
           >
-            Browse catalog
+            {t("cart.browse_catalog")}
           </button>
         </div>
       </Show>
@@ -204,11 +208,11 @@ function CartContents(props: { onBrowse: () => void }) {
         {/* Totals */}
         <div class="bg-elevated border border-rim rounded-2xl p-4">
           <div class="flex justify-between text-sm font-semibold text-txt">
-            <span>Estimated Total</span>
+            <span>{t("cart.estimated_total")}</span>
             <span>{cartSubtotal()}</span>
           </div>
           <p class="text-xs text-muted mt-1">
-            Taxes and final total calculated at checkout.
+            {t("cart.checkout_note")}
           </p>
         </div>
 
@@ -218,7 +222,7 @@ function CartContents(props: { onBrowse: () => void }) {
           class="block w-full py-3 rounded-2xl bg-accent hover:opacity-90
                  text-accent-fg text-center font-medium text-sm transition-opacity"
         >
-          Proceed to Checkout
+          {t("cart.checkout")}
         </a>
       </Show>
     </div>

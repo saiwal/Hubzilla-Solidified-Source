@@ -7,6 +7,7 @@ import {
   type Component,
 } from "solid-js";
 import { toast } from "@/shared/store/toast";
+import { useI18n } from "@/i18n";
 import { useParams } from "@solidjs/router";
 import { MdFillFolder, MdFillDelete, MdFillAdd, MdFillLock, MdFillLock_open } from "solid-icons/md";
 import { useAuth } from "@/shared/store/auth-store";
@@ -74,6 +75,7 @@ const PermissionsPanel: Component<{
   onSaved: (updated: FileMeta) => void;
   onClose: () => void;
 }> = (props) => {
+  const { t } = useI18n();
   const [allowGid, setAllowGid] = createSignal<string[]>(props.item.acl.allow_gid);
   const [recurse,  setRecurse]  = createSignal(false);
   const [busy,     setBusy]     = createSignal(false);
@@ -115,7 +117,7 @@ const PermissionsPanel: Component<{
     <div class="mt-1 mb-2 mx-1 rounded-xl border border-rim bg-elevated px-4 py-4 space-y-4">
       <div class="flex items-center justify-between">
         <p class="text-sm font-semibold text-txt">
-          Permissions — <span class="font-normal text-muted">{props.item.filename}</span>
+          {t("files_mod.permissions")} — <span class="font-normal text-muted">{props.item.filename}</span>
         </p>
         <button onClick={props.onClose} class="text-muted hover:text-txt text-lg leading-none">
           ×
@@ -132,16 +134,16 @@ const PermissionsPanel: Component<{
           <MdFillLock size={14} />
         </Show>
         {restricted()
-          ? "Restricted — only selected groups can view"
-          : "Public — anyone with storage access can view"}
+          ? t("files_mod.restricted_msg")
+          : t("files_mod.public_msg")}
       </div>
 
       {/* Privacy group checkboxes */}
       <Show when={props.groups.length > 0} fallback={
-        <p class="text-sm text-muted">No privacy groups. Create one in Directory → Privacy Groups.</p>
+        <p class="text-sm text-muted">{t("files_mod.no_groups")}</p>
       }>
         <div class="space-y-1.5">
-          <p class="text-xs font-semibold uppercase tracking-wide text-muted">Allow access to</p>
+          <p class="text-xs font-semibold uppercase tracking-wide text-muted">{t("files_mod.allow_access_to")}</p>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
             <For each={props.groups}>
               {(g) => (
@@ -174,7 +176,7 @@ const PermissionsPanel: Component<{
             onChange={(e) => setRecurse(e.currentTarget.checked)}
             class="accent-[var(--accent)]"
           />
-          Apply to all files and sub-folders
+          {t("files_mod.apply_recursive")}
         </label>
       </Show>
 
@@ -189,14 +191,14 @@ const PermissionsPanel: Component<{
           class="px-4 py-1.5 rounded-lg bg-accent text-accent-fg text-sm
                  disabled:opacity-50 hover:opacity-90 transition-opacity"
         >
-          {busy() ? "Saving…" : "Save"}
+          {busy() ? t("files_mod.saving") : t("files_mod.save")}
         </button>
         <button
           onClick={props.onClose}
           class="px-4 py-1.5 rounded-lg border border-rim text-sm text-muted
                  hover:bg-overlay transition-colors"
         >
-          Cancel
+          {t("files_mod.cancel")}
         </button>
       </div>
     </div>
@@ -481,6 +483,7 @@ function GridIcon() {
 export default function FilesView() {
   const params = useParams();
   const auth   = useAuth();
+  const { t }  = useI18n();
   const nick   = () => params.nick ?? auth()?.nick ?? "";
 
   // Navigation stack — start at root
@@ -610,7 +613,7 @@ export default function FilesView() {
             onClick={toggleViewMode}
             class="p-1.5 rounded-lg border border-rim text-muted hover:bg-elevated
                    transition-colors"
-            title={viewMode() === "list" ? "Switch to grid view" : "Switch to list view"}
+            title={viewMode() === "list" ? t("files_mod.switch_grid") as string : t("files_mod.switch_list") as string}
           >
             <Show when={viewMode() === "list"} fallback={<ListIcon />}>
               <GridIcon />
@@ -623,7 +626,7 @@ export default function FilesView() {
                    text-sm text-muted hover:bg-elevated transition-colors"
           >
             <MdFillFolder size={14} />
-            New folder
+            {t("files_mod.new_folder")}
           </button>
 
           <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent
@@ -632,7 +635,7 @@ export default function FilesView() {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
-            Upload
+            {t("files_mod.upload")}
             <input type="file" multiple class="sr-only" onChange={handleUpload} />
           </label>
         </div>
@@ -641,7 +644,7 @@ export default function FilesView() {
       {/* ── Upload progress ── */}
       <Show when={uploadPct() !== null}>
         <div class="space-y-1">
-          <p class="text-xs text-muted">Uploading… {uploadPct()}%</p>
+          <p class="text-xs text-muted">{t("files_mod.uploading")} {uploadPct()}%</p>
           <div class="h-1 w-full bg-overlay rounded-full overflow-hidden">
             <div class="h-full bg-accent transition-all" style={{ width: `${uploadPct()}%` }} />
           </div>
@@ -657,7 +660,7 @@ export default function FilesView() {
           <input
             type="text"
             autofocus
-            placeholder="Folder name…"
+            placeholder={t("files_mod.folder_name_placeholder") as string}
             value={folderName()}
             onInput={(e) => setFolderName(e.currentTarget.value)}
             class="flex-1 px-3 py-2 rounded-lg border border-rim bg-surface text-sm text-txt
@@ -670,7 +673,7 @@ export default function FilesView() {
                    text-sm disabled:opacity-50 hover:opacity-90 transition-opacity"
           >
             <MdFillAdd size={14} />
-            {folderBusy() ? "Creating…" : "Create"}
+            {folderBusy() ? t("files_mod.creating") : t("files_mod.create")}
           </button>
           <button
             type="button"
@@ -678,7 +681,7 @@ export default function FilesView() {
             class="px-3 py-2 rounded-lg border border-rim text-sm text-muted
                    hover:bg-elevated transition-colors"
           >
-            Cancel
+            {t("files_mod.cancel")}
           </button>
         </form>
       </Show>
@@ -688,10 +691,10 @@ export default function FilesView() {
         <div class="border-t border-rim" />
         <div class="flex items-center gap-3 px-3 text-[10px] font-semibold uppercase tracking-wide text-muted">
           <span class="w-6 shrink-0" />
-          <span class="flex-1">Name</span>
-          <span class="hidden sm:block w-20 shrink-0 text-right">Access</span>
-          <span class="hidden sm:block w-20 shrink-0 text-right">Size</span>
-          <span class="hidden md:block w-28 shrink-0 text-right">Created</span>
+          <span class="flex-1">{t("files_mod.name_col")}</span>
+          <span class="hidden sm:block w-20 shrink-0 text-right">{t("files_mod.access_col")}</span>
+          <span class="hidden sm:block w-20 shrink-0 text-right">{t("files_mod.size_col")}</span>
+          <span class="hidden md:block w-28 shrink-0 text-right">{t("files_mod.created_col")}</span>
           <span class="w-20 shrink-0" />
         </div>
       </Show>
@@ -702,17 +705,17 @@ export default function FilesView() {
           when={!files.error}
           fallback={
             <div class="py-10 text-center space-y-2">
-              <p class="text-sm text-red-500">Failed to load files.</p>
+              <p class="text-sm text-red-500">{t("files_mod.load_failed")}</p>
               <p class="text-xs text-muted">{String(files.error)}</p>
               <button onClick={() => refetch()} class="text-xs text-accent hover:underline">
-                Retry
+                {t("files_mod.retry")}
               </button>
             </div>
           }
         >
           <Show
             when={displayFiles().length > 0}
-            fallback={<p class="py-12 text-center text-sm text-muted">This folder is empty.</p>}
+            fallback={<p class="py-12 text-center text-sm text-muted">{t("files_mod.folder_empty")}</p>}
           >
             <Show
               when={viewMode() === "list"}

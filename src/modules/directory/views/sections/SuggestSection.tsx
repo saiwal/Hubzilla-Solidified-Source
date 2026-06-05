@@ -6,8 +6,10 @@ import {
 import DirectoryCard from "../DirectoryCard";
 import DirectoryEntryModal from "../DirectoryEntryModal";
 import type { DirectoryEntry } from "../../people/api";
+import { useI18n } from "@/i18n";
 
 export default function SuggestSection() {
+  const { t } = useI18n();
   const [selected, setSelected] = createSignal<DirectoryEntry | null>(null);
 
   onMount(() => {
@@ -18,7 +20,7 @@ export default function SuggestSection() {
   return (
     <div class="px-4 md:px-6 py-6 space-y-4">
       <Show when={!loading() && total() > 0}>
-        <p class="text-sm text-muted">{total().toLocaleString()} suggestions</p>
+        <p class="text-sm text-muted">{total().toLocaleString()} {t("directory.suggestions_count")}</p>
       </Show>
 
       <Show when={loading()}>
@@ -30,7 +32,7 @@ export default function SuggestSection() {
       <Show when={!loading()}>
         <Show
           when={entries().length > 0}
-          fallback={<p class="py-12 text-center text-muted">No suggestions available.</p>}
+          fallback={<p class="py-12 text-center text-muted">{t("directory.no_suggestions")}</p>}
         >
           <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <For each={entries()}>
@@ -46,7 +48,7 @@ export default function SuggestSection() {
               class="px-4 py-2 text-sm font-medium rounded-lg border border-rim
                      bg-surface text-muted hover:bg-overlay transition-colors"
             >
-              Load more
+              {t("directory.load_more")}
             </button>
           </div>
         </Show>
@@ -58,7 +60,7 @@ export default function SuggestSection() {
         </Show>
 
         <Show when={!hasMore() && entries().length > 0}>
-          <p class="py-4 text-center text-sm text-muted">End of results</p>
+          <p class="py-4 text-center text-sm text-muted">{t("directory.end_of_results")}</p>
         </Show>
       </Show>
 

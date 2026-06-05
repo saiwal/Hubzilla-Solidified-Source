@@ -3,6 +3,7 @@ import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchAdminSite, saveAdminSite } from "../../api";
 import { useSectionForm } from "@/modules/settings/store/useSectionForm";
 import type { AdminSite } from "../../types";
+import { useI18n } from "@/i18n";
 
 const REGISTER_POLICIES = [
   { value: 0, label: "No (closed)" },
@@ -18,6 +19,7 @@ const ACCESS_POLICIES = [
 ];
 
 export default function SiteSection() {
+  const { t } = useI18n();
   const { data, saving, handleSubmit } = useSectionForm<AdminSite>({
     fetcher: fetchAdminSite,
     saver: saveAdminSite,
@@ -27,8 +29,8 @@ export default function SiteSection() {
 
   return (
     <SubPageContent
-      title="Site"
-      description="Site-wide configuration."
+      title={t("admin.site_title")}
+      description={t("admin.site_desc")}
       action={
         <Show when={data()}>
           <button
@@ -38,7 +40,7 @@ export default function SiteSection() {
             class="px-4 py-2 text-sm font-medium rounded-lg bg-accent text-accent-fg
                    hover:opacity-90 disabled:opacity-40 transition-opacity"
           >
-            {saving() ? "Saving…" : "Save"}
+            {saving() ? t("admin.saving") : t("admin.save")}
           </button>
         </Show>
       }

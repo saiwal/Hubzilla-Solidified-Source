@@ -1,6 +1,7 @@
 // modules/directory/views/DirectoryCard.tsx
 import { Show, For, type Component } from "solid-js";
 import { addConnection, type DirectoryEntry } from "../people/api";
+import { useI18n } from "@/i18n";
 
 interface Props {
   entry: DirectoryEntry;
@@ -8,12 +9,12 @@ interface Props {
 }
 
 const DirectoryCard: Component<Props> = (props) => {
-
+  const { t } = useI18n();
   const e = () => props.entry;
   const blurb = () => e().description || stripTags(e().about);
-	async function handleAdd() {
-		await addConnection(props.entry.address);
-	}
+  async function handleAdd() {
+    await addConnection(props.entry.address);
+  }
   return (
     <div
       class="flex flex-col rounded-xl border border-rim bg-surface overflow-hidden hover:shadow-md hover:-translate-y-px transition-all duration-200 cursor-pointer group"
@@ -36,7 +37,7 @@ const DirectoryCard: Component<Props> = (props) => {
             </span>
             <Show when={e().common_count !== null && e().common_count! > 0}>
               <span class="shrink-0 ml-auto text-xs text-accent font-medium whitespace-nowrap">
-                {e().common_count} mutual
+                {e().common_count} {(e().common_count ?? 0) === 1 ? t("directory.mutual") : t("directory.mutuals")}
               </span>
             </Show>
           </div>
@@ -54,7 +55,7 @@ const DirectoryCard: Component<Props> = (props) => {
               <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
               <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/>
             </svg>
-            Public Forum
+            {t("directory.public_forum")}
           </span>
         </div>
       </Show>
@@ -101,7 +102,7 @@ const DirectoryCard: Component<Props> = (props) => {
           when={!e().is_connected}
           fallback={
             <span class="flex-1 text-center px-3 py-1.5 rounded-lg text-xs font-medium border border-rim text-muted cursor-default">
-              ✓ Connected
+              ✓ {t("directory.connected")}
             </span>
           }
         >
@@ -109,13 +110,13 @@ const DirectoryCard: Component<Props> = (props) => {
 						onclick={handleAdd}
             class="flex-1 text-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-accent text-accent-fg hover:opacity-80 transition-opacity"
           >
-            {e().connect_url ? "Connect" : "View Profile"}
+            {e().connect_url ? t("directory.connect") : t("directory.view_profile")}
           </button>
         </Show>
         <Show when={e().ignore_url && !e().is_connected}>
          <a 
             href={e().ignore_url!}
-            title="Ignore"
+            title={t("directory.ignore")}
             class="p-1.5 rounded-lg border border-rim text-muted hover:text-txt hover:bg-overlay transition-colors"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

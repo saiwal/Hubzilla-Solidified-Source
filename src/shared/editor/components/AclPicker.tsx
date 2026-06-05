@@ -16,6 +16,7 @@ import { fetchConnections } from "@/modules/network/api";
 import type { AclEntry } from "@/modules/network/api";
 import { useDropdown } from "@/shared/lib/useDropdown";
 import { motion } from "solid-motionone";
+import { useI18n } from "@/i18n";
 void motion;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -44,6 +45,7 @@ export interface AclPickerProps {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const AclPicker: Component<AclPickerProps> = (props) => {
+  const { t } = useI18n();
   const [fetched] = createResource(() => !props.entries, fetchConnections);
   const [query, setQuery] = createSignal("");
   const loading = () => !props.entries && fetched.loading;
@@ -113,7 +115,7 @@ const AclPicker: Component<AclPickerProps> = (props) => {
           <div class="px-3 py-2 border-b border-rim shrink-0">
             <input
               type="text"
-              placeholder="Search connections & groups…"
+              placeholder={t("editor.acl_search_placeholder")}
               value={query()}
               onInput={(e) => setQuery(e.currentTarget.value)}
               class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-rim
@@ -176,7 +178,7 @@ const AclPicker: Component<AclPickerProps> = (props) => {
                 onClick={props.onClear}
                 class="px-2 py-0.5 rounded-full text-xs text-muted hover:text-red-500 transition-colors border border-rim"
               >
-                Clear all
+                {t("editor.acl_clear_all")}
               </button>
             </div>
           </Show>
@@ -184,15 +186,15 @@ const AclPicker: Component<AclPickerProps> = (props) => {
           {/* Legend */}
           <div class="flex items-center gap-4 px-3 py-1.5 border-b border-rim shrink-0">
             <span class="text-[10px] text-muted">
-              Row = allow &nbsp;|&nbsp; ✕ button = deny
+              {t("editor.acl_legend")}
             </span>
             <span class="flex items-center gap-1 text-[10px] text-green-600 dark:text-green-400 ml-auto">
               <span class="w-2 h-2 rounded-full bg-green-400 inline-block" />{" "}
-              allowed
+              {t("editor.acl_allowed")}
             </span>
             <span class="flex items-center gap-1 text-[10px] text-red-500 dark:text-red-400">
               <span class="w-2 h-2 rounded-full bg-red-400 inline-block" />{" "}
-              denied
+              {t("editor.acl_denied")}
             </span>
           </div>
 
@@ -200,7 +202,7 @@ const AclPicker: Component<AclPickerProps> = (props) => {
           <ul class="overflow-y-auto flex-1 py-1">
             <Show when={loading()}>
               <li class="px-4 py-3 text-xs text-muted text-center">
-                Loading…
+                {t("editor.acl_loading")}
               </li>
             </Show>
             <For each={filtered()}>
@@ -262,7 +264,7 @@ const AclPicker: Component<AclPickerProps> = (props) => {
                     <Show when={props.showDeny !== false}>
                       <button
                         type="button"
-                        title="Deny this connection"
+                        title={t("editor.acl_deny_title")}
                         onClick={() => props.onToggle(c, "deny")}
                         class={
                           "shrink-0 w-6 h-6 rounded flex items-center justify-center text-xs transition-colors " +

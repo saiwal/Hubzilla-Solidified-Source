@@ -4,6 +4,7 @@ import {
 } from "solid-js";
 import { toast } from "@/shared/store/toast";
 import { useParams, A, useNavigate } from "@solidjs/router";
+import { useI18n } from "@/i18n";
 import DOMPurify from "dompurify";
 import {
   pageData, pageLoading, editMode, draftContent, canWrite,
@@ -13,6 +14,7 @@ import {
 import { savePage, deletePage } from "../api";
 
 export default function WikiPageView() {
+  const { t } = useI18n();
   const params   = useParams<{ nick: string; wikiName: string; pageName: string }>();
   const navigate = useNavigate();
   const [saving, setSaving]         = createSignal(false);
@@ -54,7 +56,7 @@ export default function WikiPageView() {
       toggleEditMode();
       loadPage(params.nick, params.wikiName, params.pageName);
     } catch (e: any) {
-      toast.error(e.message ?? "Error saving");
+      toast.error(e.message ?? t("wiki.error_saving"));
     } finally {
       setSaving(false);
     }
@@ -66,7 +68,7 @@ export default function WikiPageView() {
       await deletePage(params.nick, params.wikiName, params.pageName);
       navigate(`/wiki/${params.nick}/${params.wikiName}/Home`, { replace: true });
     } catch (e: any) {
-      toast.error(e.message ?? "Error deleting");
+      toast.error(e.message ?? t("wiki.error_deleting"));
       setDeleting(false);
     }
   }
@@ -116,7 +118,7 @@ export default function WikiPageView() {
               href={`/wiki/${params.nick}`}
               class="text-xs text-muted hover:text-txt transition-colors"
             >
-              ← All wikis
+              {t("wiki.all_wikis")}
             </A>
           </div>
         </div>
@@ -153,7 +155,7 @@ export default function WikiPageView() {
                   onClick={toggleEditMode}
                   class="text-sm border border-rim text-muted hover:bg-elevated px-3 py-1.5 rounded-lg transition-colors"
                 >
-                  {editMode() ? "Cancel" : "Edit"}
+                  {editMode() ? t("wiki.cancel_edit") : t("wiki.edit")}
                 </button>
 
                 <Show when={editMode()}>
@@ -165,7 +167,7 @@ export default function WikiPageView() {
                            hover:bg-elevated px-3 py-1.5 rounded-lg transition-colors
                            disabled:opacity-50"
                   >
-                    {saving() ? "Saving…" : "Save"}
+                    {saving() ? t("wiki.saving") : t("wiki.save")}
                   </button>
                 </Show>
 
@@ -175,7 +177,7 @@ export default function WikiPageView() {
                     onClick={() => setConfirmDel(true)}
                     class="text-sm border border-rim text-muted hover:bg-elevated px-3 py-1.5 rounded-lg transition-colors"
                   >
-                    Delete
+                    {t("wiki.delete")}
                   </button>
                 </Show>
               </div>
@@ -195,7 +197,7 @@ export default function WikiPageView() {
                 type="text"
                 class="w-full bg-surface border border-rim text-txt rounded-lg px-3 py-2 text-sm
                        hover:border-rim-strong focus:outline-none"
-                placeholder="Short description of your changes (optional)"
+                placeholder={t("wiki.changes_placeholder")}
                 value={commitMsg()}
                 onInput={(e) => setCommitMsg(e.currentTarget.value)}
               />
@@ -219,7 +221,7 @@ export default function WikiPageView() {
           <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div class="bg-surface border border-rim rounded-xl p-6 space-y-4 max-w-sm w-full mx-4">
               <p class="text-txt text-sm">
-                Delete <strong>{params.pageName}</strong>? This cannot be undone.
+                {t("wiki.delete")} <strong>{params.pageName}</strong>{t("wiki.delete_confirm")}
               </p>
               <div class="flex gap-2 justify-end">
                 <button
@@ -227,7 +229,7 @@ export default function WikiPageView() {
                   onClick={() => setConfirmDel(false)}
                   class="text-sm border border-rim text-muted hover:bg-elevated px-3 py-1.5 rounded-lg"
                 >
-                  Cancel
+                  {t("wiki.cancel")}
                 </button>
                 <button
                   type="button"
@@ -236,7 +238,7 @@ export default function WikiPageView() {
                   class="text-sm border border-rim text-red-400 hover:bg-elevated px-3 py-1.5 rounded-lg
                          disabled:opacity-50"
                 >
-                  {deleting() ? "Deleting…" : "Delete"}
+                  {deleting() ? t("wiki.deleting") : t("wiki.delete")}
                 </button>
               </div>
             </div>

@@ -11,6 +11,7 @@ import {
   type Component,
 } from "solid-js";
 import { A } from "@solidjs/router";
+import { useI18n } from "@/i18n";
 import {
   MdFillGroup,
   MdFillAdd,
@@ -34,6 +35,7 @@ import type { PrivacyGroup } from "../../groups/api";
 // ── Inline create form ────────────────────────────────────────────────────────
 
 const CreateForm: Component = () => {
+  const { t } = useI18n();
   const [name, setName] = createSignal("");
   const [visible, setVisible] = createSignal(false);
   const [busy, setBusy] = createSignal(false);
@@ -52,7 +54,7 @@ const CreateForm: Component = () => {
     <div class="flex flex-col sm:flex-row gap-2">
       <input
         type="text"
-        placeholder="Group name…"
+        placeholder={t("directory.group_name_placeholder")}
         value={name()}
         onInput={(e) => setName(e.currentTarget.value)}
         class="flex-1 bg-surface border border-rim text-txt rounded-lg px-3 py-2 text-sm
@@ -65,7 +67,7 @@ const CreateForm: Component = () => {
           onChange={(e) => setVisible(e.currentTarget.checked)}
           class="accent-[var(--accent)]"
         />
-        Members visible
+        {t("directory.members_visible")}
       </label>
       <button
         onClick={submit}
@@ -74,7 +76,7 @@ const CreateForm: Component = () => {
                text-sm font-medium disabled:opacity-50 hover:opacity-90 transition-opacity shrink-0"
       >
         <MdFillAdd size={16} />
-        {busy() ? "Creating…" : "Create"}
+        {busy() ? t("directory.creating") : t("directory.create")}
       </button>
     </div>
   );
@@ -83,6 +85,7 @@ const CreateForm: Component = () => {
 // ── Group row ─────────────────────────────────────────────────────────────────
 
 const GroupRow: Component<{ group: PrivacyGroup }> = (props) => {
+  const { t } = useI18n();
   const [deleteBusy, setDeleteBusy] = createSignal(false);
 
   async function handleDelete(e: Event) {
@@ -115,14 +118,14 @@ const GroupRow: Component<{ group: PrivacyGroup }> = (props) => {
         <div class="flex items-center gap-2 mt-0.5">
           <span class="flex items-center gap-1 text-xs text-muted">
             {props.group.visible
-              ? <><MdFillVisibility size={11} />Visible</>
-              : <><MdFillVisibility_off size={11} />Private</>}
+              ? <><MdFillVisibility size={11} />{t("directory.visible_label")}</>
+              : <><MdFillVisibility_off size={11} />{t("directory.private_label")}</>}
           </span>
           <Show when={props.group.is_default_group}>
-            <span class="text-xs text-accent">· default group</span>
+            <span class="text-xs text-accent">· {t("directory.default_group")}</span>
           </Show>
           <Show when={props.group.is_default_acl}>
-            <span class="text-xs text-accent">· default ACL</span>
+            <span class="text-xs text-accent">· {t("directory.default_acl")}</span>
           </Show>
         </div>
       </div>
@@ -130,7 +133,7 @@ const GroupRow: Component<{ group: PrivacyGroup }> = (props) => {
       {/* Star = default ACL shortcut */}
       <button
         onClick={toggleDefaultAcl}
-        title={props.group.is_default_acl ? "Remove default ACL" : "Set as default ACL"}
+        title={props.group.is_default_acl ? t("directory.remove_default_acl") : t("directory.set_default_acl")}
         class="text-muted hover:text-accent transition-colors"
       >
         {props.group.is_default_acl
@@ -142,14 +145,14 @@ const GroupRow: Component<{ group: PrivacyGroup }> = (props) => {
         href={`/directory/privacy-groups/${props.group.id}`}
         class="text-xs border border-rim text-muted hover:bg-elevated rounded-lg px-3 py-1.5 transition-colors"
       >
-        Edit
+        {t("directory.edit_label")}
       </A>
 
       <button
         onClick={handleDelete}
         disabled={deleteBusy()}
         class="text-muted hover:text-red-500 disabled:opacity-40 transition-colors"
-        title="Delete group"
+        title={t("directory.delete_group")}
       >
         <MdFillDelete size={17} />
       </button>
@@ -160,12 +163,13 @@ const GroupRow: Component<{ group: PrivacyGroup }> = (props) => {
 // ── View ──────────────────────────────────────────────────────────────────────
 
 const PrivacyGroupsView: Component = () => {
+  const { t } = useI18n();
   onMount(() => loadGroups());
 
   return (
     <SubPageContent
-      title="Privacy Groups"
-      description="Group your connections to control who sees each post."
+      title={t("directory.privacy_groups_title")}
+      description={t("directory.privacy_groups_desc")}
       action={<CreateForm />}
     >
       <Show
@@ -182,7 +186,7 @@ const PrivacyGroupsView: Component = () => {
           when={groups().length > 0}
           fallback={
             <p class="text-muted text-sm text-center py-10">
-              No privacy groups yet. Create one above.
+              {t("directory.no_privacy_groups")}
             </p>
           }
         >

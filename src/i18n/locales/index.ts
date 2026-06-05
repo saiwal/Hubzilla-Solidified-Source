@@ -1,15 +1,11 @@
-import { dict as en } from "./en/index";  // ← was "./en"
-import { dict as hi } from "./hi";
-// ← import new locale dict here
-
 import type { RawDictionary } from "./namespaces/types";
 
 export type { RawDictionary };
 
 export const localeRegistry = {
-  en: { dict: en, label: "English", flag: "🇬🇧" },
-  hi: { dict: hi, label: "Hindi",   flag: "🇮🇳" },
-  // ← and register it here
-} satisfies Record<string, { dict: RawDictionary; label: string; flag: string }>;
+  en: { label: "English", flag: "🇬🇧", load: (): Promise<RawDictionary> => import("./en/index").then((m) => m.dict) },
+  hi: { label: "Hindi",   flag: "🇮🇳", load: (): Promise<RawDictionary> => import("./hi").then((m) => m.dict) },
+  // ← add new locales here
+} satisfies Record<string, { label: string; flag: string; load: () => Promise<RawDictionary> }>;
 
 export type Locale = keyof typeof localeRegistry;

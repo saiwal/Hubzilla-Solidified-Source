@@ -3,6 +3,7 @@ import { useParams, A } from "@solidjs/router";
 import DOMPurify from "dompurify";
 import { bbcodeToHtml } from "@/shared/lib/bbcode";
 import { fetchWebPageByPagelink } from "../api";
+import { useI18n } from "@/i18n";
 
 // Renders a Hubzilla webpage inline in the SPA by fetching its body via the
 // JSON API. Branches on mimetype so BBCode goes through bbcodeToHtml first,
@@ -27,6 +28,7 @@ function renderBody(body: string, mimetype: string): string {
 }
 
 export default function PageView() {
+  const { t } = useI18n();
   const params = useParams<{ nick: string; path: string }>();
 
   // params.path is the wildcard segment after /page/:nick/
@@ -52,7 +54,7 @@ export default function PageView() {
           href={`/webpages/${nick()}`}
           class="hover:text-txt transition-colors"
         >
-          ← Webpages
+          {t("webpages.back")}
         </A>
         <span>/</span>
         <span class="font-mono text-muted">{pagelink()}</span>
@@ -72,7 +74,7 @@ export default function PageView() {
       {/* Error */}
       <Show when={detail.error}>
         <div class="p-4 rounded-xl border border-red-300 bg-red-50 text-red-700 text-sm">
-          {detail.error?.message ?? "Failed to load page"}
+          {detail.error?.message ?? t("webpages.load_failed")}
         </div>
       </Show>
 

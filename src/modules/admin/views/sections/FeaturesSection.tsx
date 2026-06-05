@@ -3,8 +3,10 @@ import { toast } from "@/shared/store/toast";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchAdminFeatures, saveAdminFeatures } from "../../api";
 import type { FeatureItem } from "../../types";
+import { useI18n } from "@/i18n";
 
 export default function FeaturesSection() {
+  const { t } = useI18n();
   const [features, { refetch }] = createResource(fetchAdminFeatures);
   const [saving, setSaving] = createSignal(false);
 
@@ -34,8 +36,8 @@ export default function FeaturesSection() {
 
   return (
     <SubPageContent
-      title="Features"
-      description="Enable or disable optional site features."
+      title={t("admin.features_title")}
+      description={t("admin.features_desc")}
       action={
         <Show when={features()}>
           <button
@@ -45,7 +47,7 @@ export default function FeaturesSection() {
             class="px-4 py-2 text-sm font-medium rounded-lg bg-accent text-accent-fg
                    hover:opacity-90 disabled:opacity-40 transition-opacity"
           >
-            {saving() ? "Saving…" : "Save"}
+            {saving() ? t("admin.saving") : t("admin.save")}
           </button>
         </Show>
       }
@@ -72,6 +74,7 @@ export default function FeaturesSection() {
 }
 
 function FeatureRow(props: { item: FeatureItem }) {
+  const { t } = useI18n();
   return (
     <label class={`flex items-start gap-3 p-3 rounded-lg border border-rim hover:bg-elevated/50 transition-colors ${props.item.locked ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}>
       <input
@@ -85,7 +88,7 @@ function FeatureRow(props: { item: FeatureItem }) {
         <p class="text-sm font-medium text-txt">{props.item.label}</p>
         <p class="text-xs text-muted">{props.item.desc}</p>
         <Show when={props.item.locked}>
-          <p class="text-xs text-accent">Locked by admin</p>
+          <p class="text-xs text-accent">{t("admin.locked_by_admin")}</p>
         </Show>
       </div>
     </label>

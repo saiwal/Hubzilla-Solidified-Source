@@ -3,6 +3,7 @@ import { createComposerStore } from "../store/createComposerStore";
 import RichEditor from "../core/RichEditor";
 import { CAPABILITIES } from "../types/editor.types";
 import { useAuth, currentNick } from "@/shared/store/auth-store";
+import { useI18n } from "@/i18n";
 import {
   useMention,
   getWysiwygMentionQuery,
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export default function CommentComposer(props: Props) {
+  const { t } = useI18n();
   const auth = useAuth();
   const caps = CAPABILITIES.comment;
 
@@ -153,7 +155,7 @@ export default function CommentComposer(props: Props) {
             onCtrlEnter={() => {
               if (!mention.open()) store.submit();
             }}
-            placeholder="Write a reply… (Ctrl+Enter to send)"
+            placeholder={t("editor.write_reply_ctrl")}
             minHeight="60px"
           />
           <AttachmentBar
@@ -175,7 +177,7 @@ export default function CommentComposer(props: Props) {
             onClick={store.reset}
             class="px-3 py-1 text-xs rounded-lg border border-rim text-muted hover:bg-elevated transition-colors"
           >
-            Cancel
+            {t("editor.cancel_btn")}
           </button>
         </Show>
         <button
@@ -185,7 +187,7 @@ export default function CommentComposer(props: Props) {
           class="px-3 py-1 text-xs font-medium rounded-lg bg-accent text-accent-fg
                  hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
         >
-          {store.submitting() ? "Sending\u2026" : "Reply"}
+          {store.submitting() ? t("editor.sending") : t("editor.reply_btn")}
         </button>
       </div>
 

@@ -1,8 +1,10 @@
 // src/shared/views/HelpTrigger.tsx
 import { useHelpMode } from "@/shared/store/help-mode";
 import { MdFillLive_help } from "solid-icons/md";
+import { useI18n } from "@/i18n";
 
 export default function HelpTrigger() {
+  const { t } = useI18n();
   const { helpMode, enter, exit } = useHelpMode();
   return (
     <button
@@ -12,7 +14,7 @@ export default function HelpTrigger() {
           ? "bg-accent-muted text-accent"
           : "text-muted hover:bg-elevated"
         }`}
-      title="Help mode"
+      title={t("ui.help_mode")}
     >
     <MdFillLive_help size={17}/>
     </button>

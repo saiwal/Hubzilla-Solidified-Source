@@ -1,5 +1,6 @@
 // src/modules/pubstream/views/PubstreamView.tsx
 import { Show, createEffect, onMount, createSignal } from "solid-js";
+import { useI18n } from "@/i18n";
 import {
   threads,
   posts,
@@ -57,6 +58,7 @@ function usePubstreamHandlers(tag: () => string): StreamHandlers {
 
 // ── Tag filter bar ─────────────────────────────────────────────────────────
 function TagBar(props: { tag: string; onTag: (t: string) => void }) {
+  const { t: tr } = useI18n();
   const [draft, setDraft] = createSignal(props.tag);
   const submit = () => props.onTag(draft().trim());
 
@@ -67,7 +69,7 @@ function TagBar(props: { tag: string; onTag: (t: string) => void }) {
         value={draft()}
         onInput={(e) => setDraft(e.currentTarget.value)}
         onKeyDown={(e) => e.key === "Enter" && submit()}
-        placeholder="filter by tag…"
+        placeholder={tr("pubstream.filter_by_tag")}
         class="flex-1 bg-surface border border-rim rounded-lg px-3 py-1.5 text-sm
                text-txt placeholder:text-subtle focus:outline-none
                hover:border-rim-strong focus:border-accent transition-colors"
@@ -81,7 +83,7 @@ function TagBar(props: { tag: string; onTag: (t: string) => void }) {
           class="text-xs text-muted hover:text-txt px-2 py-1.5 rounded-lg
                  border border-rim hover:bg-elevated transition-colors"
         >
-          Clear
+          {tr("pubstream.clear")}
         </button>
       </Show>
       <button
@@ -89,7 +91,7 @@ function TagBar(props: { tag: string; onTag: (t: string) => void }) {
         class="text-xs px-3 py-1.5 rounded-lg bg-accent text-accent-fg font-medium
                hover:opacity-90 transition-opacity"
       >
-        Filter
+        {tr("pubstream.filter")}
       </button>
     </div>
   );
@@ -97,6 +99,7 @@ function TagBar(props: { tag: string; onTag: (t: string) => void }) {
 
 // ── Main view ──────────────────────────────────────────────────────────────
 export default function PubstreamView() {
+  const { t } = useI18n();
   const [tag, setTag] = createSignal("");
   const handlers = usePubstreamHandlers(tag);
 
@@ -124,9 +127,9 @@ export default function PubstreamView() {
       fallback={
         <div class="flex flex-col items-center justify-center py-20 gap-4 text-center">
           <MdFillPublic size={40} class="text-muted" />
-          <p class="text-txt font-semibold">Public Stream Unavailable</p>
+          <p class="text-txt font-semibold">{t("pubstream.unavailable")}</p>
           <p class="text-sm text-muted max-w-xs">
-            The public stream is not enabled on this site.
+            {t("pubstream.unavailable_desc")}
           </p>
         </div>
       }
@@ -135,10 +138,10 @@ export default function PubstreamView() {
         {/* Header */}
         <div class="flex items-center gap-2 mb-4">
           <MdFillWhatshot size={18} class="text-accent shrink-0" />
-          <h1 class="font-semibold text-txt text-base">Public Stream</h1>
+          <h1 class="font-semibold text-txt text-base">{t("pubstream.title")}</h1>
           <Show when={meta()?.firehose}>
             <span class="ml-auto text-xs text-muted border border-rim rounded-full px-2 py-0.5">
-              site firehose
+              {t("pubstream.firehose")}
             </span>
           </Show>
         </div>
@@ -167,14 +170,14 @@ export default function PubstreamView() {
               class="px-6 py-2 rounded-xl border border-rim text-sm text-muted
                      hover:bg-elevated hover:text-txt transition-colors"
             >
-              Load more
+              {t("pubstream.load_more")}
             </button>
           </div>
         </Show>
 
         <Show when={!loading() && !hasMore() && threads().length > 0}>
           <p class="text-center text-xs text-muted mt-6 mb-2">
-            You've reached the end of the public stream.
+            {t("pubstream.end_of_stream")}
           </p>
         </Show>
       </div>

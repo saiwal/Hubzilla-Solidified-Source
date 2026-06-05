@@ -1,5 +1,6 @@
 import { createResource, For, Show, createSignal, createMemo } from 'solid-js';
 import { fetchPubsites, type PubSite } from '../../hubs/api';
+import { useI18n } from "@/i18n";
 
 const ACCESS_STYLES: Record<string, string> = {
   free:   'bg-accent-muted text-accent',
@@ -95,6 +96,7 @@ function HubCard(props: { site: PubSite }) {
 }
 
 export default function PubsitesView() {
+  const { t } = useI18n();
   const [sites] = createResource(fetchPubsites);
   const [filter, setFilter] = createSignal('');
   const [accessFilter, setAccessFilter] = createSignal('all');
@@ -114,9 +116,9 @@ export default function PubsitesView() {
     <div class="px-4 md:px-6 py-6 space-y-4">
       {/* Header */}
       <div>
-        <h1 class="text-2xl font-bold text-txt">Public Hubs</h1>
+        <h1 class="text-2xl font-bold text-txt">{t("directory.public_hubs")}</h1>
         <p class="mt-1 text-sm text-muted max-w-2xl">
-          All hubs are interlinked — joining any gives you membership across the whole network.
+          {t("directory.hubs_subtext")}
         </p>
       </div>
 
@@ -124,7 +126,7 @@ export default function PubsitesView() {
       <div class="flex flex-col sm:flex-row gap-2">
         <input
           type="search"
-          placeholder="Search hubs or location…"
+          placeholder={t("directory.search_hubs")}
           value={filter()}
           onInput={(e) => setFilter(e.currentTarget.value)}
           class="flex-1 px-3 py-2 text-sm rounded-lg border border-rim
@@ -139,10 +141,10 @@ export default function PubsitesView() {
                  bg-surface text-txt
                  focus:outline-none focus:ring-2 focus:ring-accent/40 transition"
         >
-          <option value="all">All access</option>
-          <option value="free">Free</option>
-          <option value="tiered">Tiered</option>
-          <option value="paid">Paid</option>
+          <option value="all">{t("directory.all_access")}</option>
+          <option value="free">{t("directory.access_free")}</option>
+          <option value="tiered">{t("directory.access_tiered")}</option>
+          <option value="paid">{t("directory.access_paid")}</option>
         </select>
         <select
           value={registerFilter()}
@@ -151,21 +153,21 @@ export default function PubsitesView() {
                  bg-surface text-txt
                  focus:outline-none focus:ring-2 focus:ring-accent/40 transition"
         >
-          <option value="all">All registration</option>
-          <option value="open">Open</option>
-          <option value="approve">Approval</option>
-          <option value="closed">Closed</option>
+          <option value="all">{t("directory.all_registration")}</option>
+          <option value="open">{t("directory.reg_open")}</option>
+          <option value="approve">{t("directory.reg_approve")}</option>
+          <option value="closed">{t("directory.reg_closed")}</option>
         </select>
       </div>
 
       {/* Stats row */}
       <Show when={!sites.loading && (sites()?.length ?? 0) > 0}>
         <div class="flex items-center gap-4 text-xs text-muted">
-          <span>{filtered().length} of {sites()!.length} hubs</span>
+          <span>{filtered().length} {t("directory.of_hubs")} {sites()!.length} {t("directory.hubs_label")}</span>
           <span>·</span>
-          <span>{sites()!.filter(s => s.register === 'open').length} open registration</span>
+          <span>{sites()!.filter(s => s.register === 'open').length} {t("directory.open_registration")}</span>
           <span>·</span>
-          <span>{sites()!.filter(s => s.access === 'free').length} free access</span>
+          <span>{sites()!.filter(s => s.access === 'free').length} {t("directory.free_access")}</span>
         </div>
       </Show>
 
@@ -180,7 +182,7 @@ export default function PubsitesView() {
       <Show when={!sites.loading && filtered().length === 0}>
         <div class="text-center py-16 text-muted">
           <p class="text-4xl mb-3">○</p>
-          <p class="text-sm">No hubs match your filters</p>
+          <p class="text-sm">{t("directory.no_hubs")}</p>
         </div>
       </Show>
 

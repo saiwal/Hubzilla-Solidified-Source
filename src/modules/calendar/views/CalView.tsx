@@ -16,6 +16,7 @@ import {
 import { useParams } from "@solidjs/router";
 import { usePageNick } from "@/shared/store/site-config";
 import DOMPurify from "dompurify";
+import { useI18n } from "@/i18n";
 import {
   MdFillChevron_left,
   MdFillChevron_right,
@@ -82,12 +83,13 @@ const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 export default function CalView() {
   const params = useParams<{ nick?: string }>();
   const pageNick = usePageNick();
+  const { t } = useI18n();
 
   const resolvedNick = () => params.nick || pageNick();
 
-  const t = today();
-  const [year, setYear] = createSignal(t.year);
-  const [month, setMonth] = createSignal(t.month);
+  const todayDate = today();
+  const [year, setYear] = createSignal(todayDate.year);
+  const [month, setMonth] = createSignal(todayDate.month);
   const [activeDay, setActiveDay] = createSignal<string | null>(null);
 
   // ── load on nick / month change ───────────────────────────────────────────
@@ -140,7 +142,7 @@ export default function CalView() {
     return [...Array(offset).fill(null), ...Array.from({ length: days }, (_, i) => i + 1)];
   });
 
-  const todayKey = isoDate(t.year, t.month, new Date().getDate());
+  const todayKey = isoDate(todayDate.year, todayDate.month, new Date().getDate());
 
   const monthLabel = () =>
     new Date(year(), month() - 1, 1).toLocaleDateString(undefined, {
@@ -157,7 +159,7 @@ export default function CalView() {
           <h1 class="text-lg font-semibold text-txt">{monthLabel()}</h1>
           <div class="flex items-center gap-1">
             <Show when={loading()}>
-              <span class="text-xs text-muted mr-2">Loading…</span>
+              <span class="text-xs text-muted mr-2">{t("calendar.loading")}</span>
             </Show>
             <button
               onClick={prevMonth}
@@ -267,7 +269,7 @@ export default function CalView() {
           <Show
             when={activeDayEvents().length > 0}
             fallback={
-              <p class="text-sm text-muted">No events on this day.</p>
+              <p class="text-sm text-muted">{t("calendar.no_events")}</p>
             }
           >
             <div class="flex flex-col gap-2">
@@ -329,6 +331,7 @@ function EventListItem(props: {
 
 function EventDetail(props: { event: CalEvent }) {
   const ev = props.event;
+  const { t } = useI18n();
 
   const sanitizedDescription = () =>
     ev.description
@@ -355,7 +358,7 @@ function EventDetail(props: { event: CalEvent }) {
           </p>
         </Show>
         <Show when={ev.allDay}>
-          <p>All-day event</p>
+          <p>{t("calendar.all_day_event")}</p>
         </Show>
       </div>
 
@@ -386,7 +389,7 @@ function EventDetail(props: { event: CalEvent }) {
           class="inline-flex items-center gap-1 text-xs text-accent hover:underline"
         >
           <MdFillOpen_in_new size={12} />
-          View source
+          {t("calendar.view_source")}
         </a>
       </Show>
     </div>

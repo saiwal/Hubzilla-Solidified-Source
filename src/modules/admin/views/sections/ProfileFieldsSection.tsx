@@ -1,19 +1,21 @@
 import { createResource, For, Show } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchAdminProfileFields } from "../../api";
+import { useI18n } from "@/i18n";
 
 export default function ProfileFieldsSection() {
+  const { t } = useI18n();
   const [fields] = createResource(fetchAdminProfileFields);
 
   return (
-    <SubPageContent title="Profile Fields" description="Custom profile field definitions.">
+    <SubPageContent title={t("admin.profile_fields_title")} description={t("admin.profile_fields_desc")}>
       <Show when={fields()} fallback={<Skeleton />}>
         {(list) => (
           <div class="space-y-3">
-            <p class="text-sm text-muted">{list().length} field(s) defined</p>
+            <p class="text-sm text-muted">{list().length} {t("admin.fields_defined")}</p>
 
             <Show when={list().length === 0}>
-              <p class="text-sm text-muted py-4 text-center">No custom profile fields defined.</p>
+              <p class="text-sm text-muted py-4 text-center">{t("admin.no_profile_fields")}</p>
             </Show>
 
             <Show when={list().length > 0}>

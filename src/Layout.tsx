@@ -21,6 +21,7 @@ import { createMediaQuery } from "@solid-primitives/media";
 import { useNavActions, useNavViewer, setNavNick } from "./shared/store/nav-store";
 import { motion } from "solid-motionone";
 import ToastContainer from "@/shared/views/ToastContainer";
+import { useI18n } from "@/i18n";
 void motion;
 
 // ── Mobile bottom tab ─────────────────────────────────────────────────────────
@@ -53,6 +54,7 @@ function MobileTab(props: {
 
 // ── Layout ────────────────────────────────────────────────────────────────────
 const Layout: ParentComponent = (props) => {
+  const { t } = useI18n();
   const [rightOpen, setRightOpen] = createSignal(false);
   const [moreOpen, setMoreOpen] = createSignal(false);
   const [actionsOpen, setActionsOpen] = createSignal(false);
@@ -121,7 +123,7 @@ const Layout: ParentComponent = (props) => {
                focus:px-4 focus:py-2 focus:rounded-lg focus:bg-base focus:text-txt
                focus:border focus:border-rim focus:shadow-lg focus:outline-none"
       >
-        Skip to content
+        {t("layout.skip_to_content")}
       </a>
       <HelpOverlay />
       <ToastContainer />
@@ -147,7 +149,7 @@ const Layout: ParentComponent = (props) => {
                 clip-rule="evenodd"
               />
             </svg>
-            Offline — showing cached content
+            {t("layout.offline")}
           </div>
         </Show>
 
@@ -162,7 +164,7 @@ const Layout: ParentComponent = (props) => {
               DESKTOP LEFT SIDEBAR
           ═══════════════════════════════════════════════════════ */}
           <aside
-            aria-label="Navigation"
+            aria-label={t("layout.navigation")}
             class="hidden lg:flex flex-col w-56 shrink-0 relative z-20
                    bg-surface border-r border-rim py-3 px-2"
           >
@@ -295,7 +297,7 @@ const Layout: ParentComponent = (props) => {
           >
             <div class="flex items-center justify-between xl:hidden mb-2">
               <span class="text-[10px] font-semibold uppercase tracking-widest text-muted">
-                Panel
+                {t("layout.panel")}
               </span>
               <button
                 ref={rightCloseRef}
@@ -327,7 +329,7 @@ const Layout: ParentComponent = (props) => {
             id="more-drawer"
             ref={morePanelRef}
             role="navigation"
-            aria-label="More"
+            aria-label={t("layout.more")}
             aria-hidden={!moreOpen()}
             class={`
               fixed left-0 right-0 z-40 lg:hidden
@@ -343,7 +345,7 @@ const Layout: ParentComponent = (props) => {
             {/* ── Nav tiles ── */}
             <Show when={navItems().slice(bottomLimit()).length > 0}>
               <p class="px-4 pb-2 text-[0.625rem] font-semibold uppercase tracking-widest text-muted">
-                Navigation
+                {t("layout.navigation")}
               </p>
               <div class="grid grid-cols-4 gap-1.5 px-2.5 pb-4">
                 <For each={navItems().slice(bottomLimit())}>
@@ -424,7 +426,7 @@ const Layout: ParentComponent = (props) => {
               MOBILE — Bottom Tab Bar
           ═══════════════════════════════════════════════════════ */}
           <nav
-            aria-label="Main navigation"
+            aria-label={t("layout.navigation")}
             class="fixed bottom-0 left-0 right-0 z-50 h-16 lg:hidden
                    bg-surface border-t border-rim
                    flex items-center px-2 gap-1"
@@ -457,7 +459,7 @@ const Layout: ParentComponent = (props) => {
                         }`}
               >
                 <MdFillMore_horiz size={22} />
-                <span>More</span>
+                <span>{t("layout.more")}</span>
               </button>
             {/* </Show> */}
 
@@ -495,7 +497,7 @@ const Layout: ParentComponent = (props) => {
                   </span>
                 </Show>
               </span>
-              <span>Panel</span>
+              <span>{t("layout.panel")}</span>
             </button>
           </nav>
 

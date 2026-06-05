@@ -39,6 +39,7 @@ import {
 } from "solid-icons/md";
 import { helpable } from "@/shared/lib/helpable";
 import { toast } from "@/shared/store/toast";
+import { useI18n } from "@/i18n";
 import type { ViewMode } from "@/shared/stream/types";
 import {
   fetchConnections,
@@ -51,17 +52,17 @@ void helpable;
 
 type Order = NonNullable<NetworkParams["order"]>;
 
-const ORDER_OPTIONS: { value: Order; label: string; Icon: any }[] = [
-  { value: "created",    label: "Latest", Icon: MdFillSchedule },
-  { value: "commented",  label: "Active", Icon: MdFillForum    },
-  { value: "unthreaded", label: "All",    Icon: MdFillFormat_list_bulleted },
+const ORDER_OPTS: { value: Order; key: string; Icon: any }[] = [
+  { value: "created",    key: "latest", Icon: MdFillSchedule },
+  { value: "commented",  key: "active", Icon: MdFillForum    },
+  { value: "unthreaded", key: "all",    Icon: MdFillFormat_list_bulleted },
 ];
 
-const VIEWS: { id: ViewMode; label: string; Icon: any }[] = [
-  { id: "feed",    label: "Feed",  Icon: MdFillShort_text          },
-  { id: "masonry", label: "Grid",  Icon: MdFillApps                },
-  { id: "list",    label: "List",  Icon: MdFillFormat_list_bulleted },
-  { id: "inbox",   label: "Inbox", Icon: MdFillAll_inbox           },
+const VIEW_OPTS: { id: ViewMode; key: string; Icon: any }[] = [
+  { id: "feed",    key: "feed",  Icon: MdFillShort_text          },
+  { id: "masonry", key: "grid",  Icon: MdFillApps                },
+  { id: "list",    key: "list",  Icon: MdFillFormat_list_bulleted },
+  { id: "inbox",   key: "inbox", Icon: MdFillAll_inbox           },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -89,6 +90,7 @@ const isUrl = (val: string) => val.startsWith("https://");
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function StreamFilters() {
+  const { t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Expand state for collapsible inputs
@@ -279,10 +281,10 @@ export default function StreamFilters() {
   const ViewSwitcher = () => (
     <div class="flex rounded-lg border border-rim overflow-hidden shrink-0"
       role="group" aria-label="View mode">
-      <For each={VIEWS}>
+      <For each={VIEW_OPTS}>
         {(v) => (
           <button
-            title={v.label}
+            title={t(`network.${v.key}` as any)}
             aria-pressed={viewMode() === v.id}
             onClick={() => changeView(v.id)}
             class={`px-2 py-1.5 transition-colors
@@ -314,7 +316,7 @@ export default function StreamFilters() {
         <button
           onClick={() => { resetPosts(); loadNetwork(); }}
           disabled={loading()}
-          title="Refresh"
+          title={t("network.refresh")}
           class="p-1.5 rounded-lg hover:bg-elevated transition-colors
                  disabled:opacity-40 text-muted hover:text-txt shrink-0
                  flex items-center justify-center"
@@ -327,9 +329,9 @@ export default function StreamFilters() {
 
         {/* Order — text labels on desktop, icon-only on mobile */}
         <div class="flex rounded-lg border border-rim overflow-hidden shrink-0">
-          {ORDER_OPTIONS.map((opt) => (
+          {ORDER_OPTS.map((opt) => (
             <button
-              title={opt.label}
+              title={t(`network.${opt.key}` as any)}
               onClick={() => setOrderAndApply(opt.value)}
               class={`flex items-center gap-1 py-1.5 transition-colors
                 px-1.5 sm:px-2.5
@@ -341,42 +343,42 @@ export default function StreamFilters() {
               {/* Icon always shown */}
               <opt.Icon size={14} />
               {/* Label hidden on mobile */}
-              <span class="hidden sm:inline text-xs font-medium">{opt.label}</span>
+              <span class="hidden sm:inline text-xs font-medium">{t(`network.${opt.key}` as any)}</span>
             </button>
           ))}
         </div>
 
         {/* Toggle chips — icon only, no text */}
         <button
-          title="Starred"
+          title={t("network.starred")}
           onClick={() => toggleFlag("star", star())}
           class={star() ? ICON_BTN_ACTIVE : ICON_BTN}
         >
           <MdFillStar size={15} />
         </button>
         <button
-          title="Following"
+          title={t("network.following")}
           onClick={() => toggleFlag("pf", pf())}
           class={pf() ? ICON_BTN_ACTIVE : ICON_BTN}
         >
           <MdFillNotifications size={15} />
         </button>
         <button
-          title="Conversations"
+          title={t("network.conversations")}
           onClick={() => toggleFlag("conv", conv())}
           class={conv() ? ICON_BTN_ACTIVE : ICON_BTN}
         >
           <MdFillPerson size={15} />
         </button>
         <button
-          title="Direct messages"
+          title={t("network.direct_messages")}
           onClick={() => toggleFlag("dm", dm())}
           class={dm() ? ICON_BTN_ACTIVE : ICON_BTN}
         >
           <MdFillMail size={15} />
         </button>
         <button
-          title="Events"
+          title={t("network.events")}
           onClick={() => toggleFlag("event", event())}
           class={event() ? ICON_BTN_ACTIVE : ICON_BTN}
         >
@@ -393,7 +395,7 @@ export default function StreamFilters() {
             <Show
               when={connOpen()}
               fallback={
-                <button onClick={openConn} title="Filter by connection" class={ICON_BTN}>
+                <button onClick={openConn} title={t("network.filter_by_connection")} class={ICON_BTN}>
                   <MdFillPerson size={15} />
                 </button>
               }
@@ -402,7 +404,7 @@ export default function StreamFilters() {
                 <input
                   ref={connInputRef}
                   type="text"
-                  placeholder="Connection…"
+                  placeholder={t("network.connection_placeholder")}
                   value={connInput()}
                   onInput={(e) => { setConnInput(e.currentTarget.value); setConnSuggestOpen(true); }}
                   onFocus={() => connInput() && setConnSuggestOpen(true)}
@@ -453,7 +455,7 @@ export default function StreamFilters() {
                        max-w-[110px] sm:max-w-[140px] shrink-0">
             <MdFillPerson size={13} class="shrink-0" />
             <span class="truncate">{xchanLabel() || cid() || gid()}</span>
-            <button onClick={clearConnection} title="Remove"
+            <button onClick={clearConnection} title={t("network.remove")}
               class="shrink-0 hover:opacity-70 transition-opacity">
               <MdFillClose size={12} />
             </button>
@@ -464,7 +466,7 @@ export default function StreamFilters() {
         <Show
           when={searchOpen() || !!search()}
           fallback={
-            <button onClick={openSearch} title="Search" class={ICON_BTN}>
+            <button onClick={openSearch} title={t("network.search")} class={ICON_BTN}>
               <MdFillSearch size={15} />
             </button>
           }
@@ -475,7 +477,7 @@ export default function StreamFilters() {
               <span class="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-lg
                            border border-accent bg-accent-muted text-accent shrink-0">
                 <MdFillRefresh size={13} class="animate-spin shrink-0" />
-                Fetching post…
+                {t("network.fetching_post")}
               </span>
             }
           >
@@ -487,7 +489,7 @@ export default function StreamFilters() {
               <input
                 ref={searchInputRef}
                 type="search"
-                placeholder="Search or paste URL…"
+                placeholder={t("network.search_placeholder")}
                 value={search()}
                 onInput={(e) => onSearchInput(e.currentTarget.value)}
                 onBlur={onSearchBlur}
@@ -509,7 +511,7 @@ export default function StreamFilters() {
         {/* Advanced toggle */}
         <button
           onClick={() => setAdvOpen((v) => !v)}
-          title="More filters"
+          title={t("network.more_filters")}
           class={`relative ${advOpen() || hasAdvanced() ? ICON_BTN_ACTIVE : ICON_BTN}`}
         >
           <MdFillFilter_list size={14} />
@@ -520,7 +522,7 @@ export default function StreamFilters() {
 
         {/* Clear all */}
         <Show when={hasAnyFilter()}>
-          <button onClick={clearAll} title="Clear filters"
+          <button onClick={clearAll} title={t("network.clear_filters")}
             class="p-1.5 rounded-lg text-muted hover:text-accent hover:bg-elevated
                    transition-colors shrink-0">
             <MdFillClose size={15} />
@@ -544,10 +546,10 @@ export default function StreamFilters() {
       <Show when={advOpen()}>
         <div class="flex flex-wrap gap-2.5 p-3 rounded-lg bg-elevated border border-rim">
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-muted font-medium">Tag</span>
+            <span class="text-xs text-muted font-medium">{t("network.tag")}</span>
             <input
               type="text"
-              placeholder="e.g. solidjs"
+              placeholder={t("network.tag_placeholder")}
               value={tag()}
               onInput={(e) => sp({ tag: e.currentTarget.value || undefined })}
               onBlur={apply}
@@ -556,26 +558,26 @@ export default function StreamFilters() {
             />
           </label>
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-muted font-medium">From</span>
+            <span class="text-xs text-muted font-medium">{t("network.date_from")}</span>
             <input type="date" value={dbegin()}
               onChange={(e) => { sp({ dbegin: e.currentTarget.value || undefined }); apply(); }}
               class={INPUT_CLS} />
           </label>
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-muted font-medium">To</span>
+            <span class="text-xs text-muted font-medium">{t("network.date_to")}</span>
             <input type="date" value={dend()}
               onChange={(e) => { sp({ dend: e.currentTarget.value || undefined }); apply(); }}
               class={INPUT_CLS} />
           </label>
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-muted font-medium">Affinity min</span>
-            <input type="number" min="0" placeholder="0" value={cmin()}
+            <span class="text-xs text-muted font-medium">{t("network.affinity_min")}</span>
+            <input type="number" min="0" placeholder={t("network.affinity_min_placeholder")} value={cmin()}
               onInput={(e) => sp({ cmin: e.currentTarget.value || undefined })}
               onBlur={apply} class={`${INPUT_CLS} w-20`} />
           </label>
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-muted font-medium">Affinity max</span>
-            <input type="number" min="0" placeholder="100" value={cmax()}
+            <span class="text-xs text-muted font-medium">{t("network.affinity_max")}</span>
+            <input type="number" min="0" placeholder={t("network.affinity_max_placeholder")} value={cmax()}
               onInput={(e) => sp({ cmax: e.currentTarget.value || undefined })}
               onBlur={apply} class={`${INPUT_CLS} w-20`} />
           </label>

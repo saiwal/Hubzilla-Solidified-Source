@@ -6,6 +6,7 @@ import {
   Show,
   type Component,
 } from "solid-js";
+import { useI18n } from "@/i18n";
 import {
   MdFillVisibility,
   MdFillVisibility_off,
@@ -35,11 +36,13 @@ const ContactPill: Component<{
   inGroup: boolean;
   onToggle: () => void;
   busy: boolean;
-}> = (props) => (
+}> = (props) => {
+  const { t } = useI18n();
+  return (
   <button
     onClick={props.onToggle}
     disabled={props.busy}
-    title={props.inGroup ? "Remove from group" : "Add to group"}
+    title={props.inGroup ? t("directory.remove_from_group") : t("directory.add_to_group")}
     class={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm transition-colors w-full text-left
       ${props.inGroup
         ? "bg-accent-muted border-accent text-accent"
@@ -62,7 +65,8 @@ const ContactPill: Component<{
       {props.inGroup ? <MdFillPerson_remove size={15} /> : <MdFillPerson_add size={15} />}
     </span>
   </button>
-);
+  );
+};
 
 // ── Detail view ───────────────────────────────────────────────────────────────
 
@@ -72,6 +76,7 @@ interface Props {
 }
 
 const PrivacyGroupDetailView: Component<Props> = (props) => {
+  const { t } = useI18n();
   const [name, setName] = createSignal("");
   const [visible, setVisible] = createSignal(false);
   const [editBusy, setEditBusy] = createSignal(false);
@@ -165,7 +170,7 @@ const PrivacyGroupDetailView: Component<Props> = (props) => {
           <>
             <SubPageContent
               title={detail.group.name}
-              description="Edit name, visibility, and default settings."
+              description={t("directory.group_edit_desc")}
               action={
                 <button
                   onClick={saveEdit}
@@ -174,7 +179,7 @@ const PrivacyGroupDetailView: Component<Props> = (props) => {
                          text-sm font-medium disabled:opacity-50 hover:opacity-90 transition-opacity"
                 >
                   <MdFillSave size={15} />
-                  {editBusy() ? "Saving…" : "Save"}
+                  {editBusy() ? t("directory.saving") : t("directory.save")}
                 </button>
               }
             >
@@ -183,7 +188,7 @@ const PrivacyGroupDetailView: Component<Props> = (props) => {
                   type="text"
                   value={name()}
                   onInput={(e) => setName(e.currentTarget.value)}
-                  placeholder="Group name"
+                  placeholder={t("directory.group_name_input")}
                   class="w-full bg-surface border border-rim text-txt rounded-lg px-3 py-2 text-sm
                          hover:border-rim-strong focus:outline-none focus:border-accent"
                 />
@@ -196,8 +201,8 @@ const PrivacyGroupDetailView: Component<Props> = (props) => {
                     class="accent-[var(--accent)]"
                   />
                   {visible()
-                    ? <span class="flex items-center gap-1"><MdFillVisibility size={13} />Members visible to others</span>
-                    : <span class="flex items-center gap-1"><MdFillVisibility_off size={13} />Keep membership private</span>}
+                    ? <span class="flex items-center gap-1"><MdFillVisibility size={13} />{t("directory.visibility_visible")}</span>
+                    : <span class="flex items-center gap-1"><MdFillVisibility_off size={13} />{t("directory.visibility_private")}</span>}
                 </label>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
@@ -209,7 +214,7 @@ const PrivacyGroupDetailView: Component<Props> = (props) => {
                         : "border-rim text-muted hover:bg-elevated"}`}
                   >
                     {detail.group.is_default_acl ? <MdFillStar size={14} /> : <MdFillStar_border size={14} />}
-                    Post to this group by default
+                    {t("directory.post_to_group_default")}
                   </button>
 
                   <button
@@ -220,7 +225,7 @@ const PrivacyGroupDetailView: Component<Props> = (props) => {
                         : "border-rim text-muted hover:bg-elevated"}`}
                   >
                     {detail.group.is_default_group ? <MdFillStar size={14} /> : <MdFillStar_border size={14} />}
-                    Add new connections by default
+                    {t("directory.add_connections_default")}
                   </button>
                 </div>
 
@@ -232,19 +237,19 @@ const PrivacyGroupDetailView: Component<Props> = (props) => {
                            disabled:opacity-50 transition-colors"
                   >
                     <MdFillDelete size={15} />
-                    {deleteBusy() ? "Deleting…" : "Delete group"}
+                    {deleteBusy() ? t("directory.deleting") : t("directory.delete")}
                   </button>
                 </div>
               </div>
             </SubPageContent>
 
             <SubPageContent
-              title={`Members (${detail.members.length})`}
-              description="Click a connection to add or remove them from the group."
+              title={`${t("directory.members_title")} (${detail.members.length})`}
+              description={t("directory.members_desc")}
               action={
                 <input
                   type="search"
-                  placeholder="Search…"
+                  placeholder={t("directory.search_placeholder")}
                   value={search()}
                   onInput={(e) => setSearch(e.currentTarget.value)}
                   class="bg-surface border border-rim text-txt text-xs rounded-lg px-2.5 py-1.5 w-36
@@ -257,7 +262,7 @@ const PrivacyGroupDetailView: Component<Props> = (props) => {
                   each={filtered()}
                   fallback={
                     <p class="text-muted text-sm col-span-2 py-6 text-center">
-                      No connections found.
+                      {t("directory.no_connections_found")}
                     </p>
                   }
                 >

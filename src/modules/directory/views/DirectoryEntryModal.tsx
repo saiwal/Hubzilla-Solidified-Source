@@ -2,6 +2,7 @@
 import { Show, For, type Component, createEffect, on } from "solid-js";
 import { Portal } from "solid-js/web";
 import type { DirectoryEntry } from "../people/api";
+import { useI18n } from "@/i18n";
 
 interface Props {
   entry: DirectoryEntry | null;
@@ -9,6 +10,7 @@ interface Props {
 }
 
 const DirectoryEntryModal: Component<Props> = (props) => {
+  const { t } = useI18n();
   const e = () => props.entry;
 
   const handleBackdrop = (ev: MouseEvent) => {
@@ -63,7 +65,7 @@ const DirectoryEntryModal: Component<Props> = (props) => {
                     ref={(el) => (closeButtonRef = el)}
                     onClick={props.onClose}
                     class="shrink-0 p-1.5 rounded-lg text-muted hover:text-txt hover:bg-overlay transition-colors"
-                    aria-label="Close"
+                    aria-label={t("directory.close")}
                   >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -79,17 +81,17 @@ const DirectoryEntryModal: Component<Props> = (props) => {
                         <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
                         <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/>
                       </svg>
-                      Public Forum
+                      {t("directory.public_forum")}
                     </span>
                   </Show>
                   <Show when={e()!.is_connected}>
                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-accent-muted text-accent border border-accent/30">
-                      ✓ Connected
+                      ✓ {t("directory.connected")}
                     </span>
                   </Show>
                   <Show when={e()!.common_count !== null && e()!.common_count! > 0}>
                     <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-accent-muted text-accent border border-accent/30">
-                      {e()!.common_count} mutual
+                      {e()!.common_count} {(e()!.common_count ?? 0) === 1 ? t("directory.mutual") : t("directory.mutuals")}
                     </span>
                   </Show>
                 </div>
@@ -144,7 +146,7 @@ const DirectoryEntryModal: Component<Props> = (props) => {
               {/* Keywords */}
               <Show when={e()!.keywords.length > 0}>
                 <div>
-                  <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Interests</p>
+                  <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">{t("directory.interests")}</p>
                   <div class="flex flex-wrap gap-1.5">
                     <For each={e()!.keywords}>
                       {(kw) => (
@@ -169,21 +171,21 @@ const DirectoryEntryModal: Component<Props> = (props) => {
                   rel="noopener noreferrer"
                   class="flex-1 text-center px-4 py-2 rounded-lg text-sm font-semibold bg-accent text-accent-fg hover:opacity-80 transition-opacity"
                 >
-                  {e()!.connect_url ? "Connect" : "View Profile"}
+                  {e()!.connect_url ? t("directory.connect") : t("directory.view_profile")}
                 </a>
               </Show>
-             <a 
+             <a
                 href={e()!.profile_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 class="px-4 py-2 rounded-lg text-sm font-medium border border-rim text-muted hover:bg-overlay transition-colors"
               >
-                View Profile
+                {t("directory.view_profile")}
               </a>
               <Show when={e()!.ignore_url && !e()!.is_connected}>
-               <a 
+               <a
                   href={e()!.ignore_url!}
-                  title="Ignore"
+                  title={t("directory.ignore")}
                   class="p-2 rounded-lg border border-rim text-muted hover:text-txt hover:bg-overlay transition-colors"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

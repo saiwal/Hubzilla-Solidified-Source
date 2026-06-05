@@ -1,0 +1,35 @@
+import type { RawDictionary } from "../namespaces/types";
+
+export const files_mod: RawDictionary["files_mod"] = {
+  new_folder:       "New folder",
+  upload:           "Upload",
+  uploading:        "Uploading…",
+  creating:         "Creating…",
+  create:           "Create",
+  cancel:           "Cancel",
+  name_col:         "Name",
+  access_col:       "Access",
+  size_col:         "Size",
+  created_col:      "Created",
+  folder_empty:     "This folder is empty.",
+  load_failed:      "Failed to load files.",
+  retry:            "Retry",
+  restricted:       "Restricted",
+  public_access:    "Public",
+  switch_grid:      "Switch to grid view",
+  switch_list:      "Switch to list view",
+  folder_name_placeholder: "Folder name…",
+  // Permissions panel
+  permissions:      "Permissions",
+  restricted_msg:   "Restricted — only selected groups can view",
+  public_msg:       "Public — anyone with storage access can view",
+  allow_access_to:  "Allow access to",
+  no_groups:        "No privacy groups. Create one in Directory → Privacy Groups.",
+  apply_recursive:  "Apply to all files and sub-folders",
+  saving:           "Saving…",
+  save:             "Save",
+  // Tooltips
+  download:         "Download",
+  delete:           "Delete",
+  permissions_title: "Permissions",
+};

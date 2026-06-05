@@ -2,6 +2,7 @@ import { createSignal, For, Show } from "solid-js";
 import { Portal } from "solid-js/web";
 import type { Connection } from "@/modules/directory/connections/api";
 import { updateConnection, deleteConnection } from "@/modules/directory/connections/api";
+import { useI18n } from "@/i18n";
 
 const BUILTIN_ROLES = ["contributor", "muted"];
 
@@ -25,6 +26,7 @@ function capitalize(s: string): string {
 }
 
 export default function ConnectionEditorModal(props: Props) {
+  const { t } = useI18n();
   const [role, setRole] = createSignal(props.connection.role ?? "");
   const [closeness, setCloseness] = createSignal(props.connection.closeness ?? 80);
   const [saving, setSaving] = createSignal(false);
@@ -96,7 +98,7 @@ export default function ConnectionEditorModal(props: Props) {
             <button
               onClick={props.onClose}
               class="p-1.5 rounded-lg text-muted hover:text-txt hover:bg-overlay transition-colors shrink-0"
-              aria-label="Close"
+              aria-label={t("connection.close")}
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -110,7 +112,7 @@ export default function ConnectionEditorModal(props: Props) {
             {/* Role */}
             <div>
               <label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">
-                Role
+                {t("connection.role")}
               </label>
               <select
                 value={role()}
@@ -127,7 +129,7 @@ export default function ConnectionEditorModal(props: Props) {
             {/* Closeness */}
             <div>
               <label class="flex items-center justify-between text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">
-                <span>Closeness</span>
+                <span>{t("connection.closeness")}</span>
                 <span class="text-txt tabular-nums font-medium normal-case">{closeness()}</span>
               </label>
               <input
@@ -139,8 +141,8 @@ export default function ConnectionEditorModal(props: Props) {
                 class="w-full accent-accent"
               />
               <div class="flex justify-between text-[10px] text-muted mt-1">
-                <span>Distant</span>
-                <span>Close</span>
+                <span>{t("connection.distant")}</span>
+                <span>{t("connection.close_label")}</span>
               </div>
             </div>
 
@@ -148,12 +150,12 @@ export default function ConnectionEditorModal(props: Props) {
             <div class="flex flex-wrap gap-x-4 gap-y-1">
               <Show when={connectedOn()}>
                 <div class="text-xs text-muted">
-                  Connected <span class="text-txt">{connectedOn()}</span>
+                  {t("connection.connected")} <span class="text-txt">{connectedOn()}</span>
                 </div>
               </Show>
               <Show when={props.connection.pending}>
                 <span class="text-xs px-1.5 py-0.5 rounded bg-accent-muted text-accent font-medium">
-                  Pending
+                  {t("connection.pending")}
                 </span>
               </Show>
               <For each={props.connection.status}>
@@ -180,7 +182,7 @@ export default function ConnectionEditorModal(props: Props) {
               <Show when={deleting()}>
                 <span class="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
               </Show>
-              {confirmDelete() ? "Confirm remove?" : "Remove"}
+              {confirmDelete() ? t("connection.confirm_remove") : t("connection.remove")}
             </button>
 
             <div class="flex-1" />
@@ -190,7 +192,7 @@ export default function ConnectionEditorModal(props: Props) {
               class="px-3 py-1.5 rounded-lg text-xs border border-rim text-muted
                      hover:bg-overlay transition-colors"
             >
-              Cancel
+              {t("connection.cancel")}
             </button>
             <button
               onClick={handleSave}
@@ -202,7 +204,7 @@ export default function ConnectionEditorModal(props: Props) {
               <Show when={saving()}>
                 <span class="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
               </Show>
-              {saving() ? "Saving…" : "Save"}
+              {saving() ? t("connection.saving") : t("connection.save")}
             </button>
           </div>
         </div>

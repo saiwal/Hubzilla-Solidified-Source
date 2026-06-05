@@ -4,6 +4,7 @@ import { useParams } from "@solidjs/router";
 import { useViewerRole } from "@/shared/store/site-config";
 import { MdFillPublic, MdFillLocation_on, MdFillExpand_more, MdFillExpand_less } from "solid-icons/md";
 import { apiFetch } from "@/shared/lib/fetch";
+import { useI18n } from "@/i18n";
 
 type ChannelProfile = {
   channel_name: string;
@@ -88,6 +89,7 @@ function ProfileCard(props: {
   isVisitor: boolean;
 }) {
   const { p } = props;
+  const { t } = useI18n();
   const [expanded, setExpanded] = createSignal(false);
 
   const hasDetails = () =>
@@ -111,11 +113,11 @@ function ProfileCard(props: {
           />
         </div>
         <Show when={props.isOwner}>
-					<a  
+					<a
             href="/settings/channel"
             class="absolute top-3 right-3 px-3 py-1.5 text-xs font-medium rounded-lg bg-black/40 hover:bg-black/60 text-white backdrop-blur-sm transition-colors"
           >
-            Edit profile
+            {t("channel.edit_profile")}
           </a>
         </Show>
       </div>
@@ -166,7 +168,7 @@ function ProfileCard(props: {
           </Show>
           <Show when={p.connections > 0}>
             <span>
-              <strong class="text-txt">{p.connections}</strong> connections
+              <strong class="text-txt">{p.connections}</strong> {t("channel.connections")}
             </span>
           </Show>
         </div>
@@ -189,56 +191,56 @@ function ProfileCard(props: {
           <div class="mt-4 pt-4 border-t border-rim space-y-4">
             {/* Personal */}
             <Show when={p.gender || p.marital || p.sexual || (p.dob && p.dob !== "0000-00-00") || p.hometown}>
-              <FieldGroup label="Personal">
-                <ProfileField label="Gender" value={p.gender} />
-                <ProfileField label="Born" value={p.dob && p.dob !== "0000-00-00" ? p.dob : ""} />
-                <ProfileField label="Hometown" value={p.hometown} />
-                <ProfileField label="Relationship" value={p.marital} />
-                <ProfileField label="Sexual preference" value={p.sexual} />
+              <FieldGroup label={t("channel.group_personal")}>
+                <ProfileField label={t("channel.field_gender")} value={p.gender} />
+                <ProfileField label={t("channel.field_born")} value={p.dob && p.dob !== "0000-00-00" ? p.dob : ""} />
+                <ProfileField label={t("channel.field_hometown")} value={p.hometown} />
+                <ProfileField label={t("channel.field_relationship")} value={p.marital} />
+                <ProfileField label={t("channel.field_sexual")} value={p.sexual} />
               </FieldGroup>
             </Show>
 
             {/* Beliefs */}
             <Show when={p.politic || p.religion}>
-              <FieldGroup label="Beliefs">
-                <ProfileField label="Politics" value={p.politic} />
-                <ProfileField label="Religion" value={p.religion} />
+              <FieldGroup label={t("channel.group_beliefs")}>
+                <ProfileField label={t("channel.field_politics")} value={p.politic} />
+                <ProfileField label={t("channel.field_religion")} value={p.religion} />
               </FieldGroup>
             </Show>
 
             {/* Interests */}
             <Show when={p.interest || p.romance || p.likes || p.dislikes}>
-              <FieldGroup label="Interests">
-                <ProfileField label="Hobbies" value={p.interest} />
-                <ProfileField label="Romance" value={p.romance} />
-                <ProfileField label="Likes" value={p.likes} />
-                <ProfileField label="Dislikes" value={p.dislikes} />
+              <FieldGroup label={t("channel.group_interests")}>
+                <ProfileField label={t("channel.field_hobbies")} value={p.interest} />
+                <ProfileField label={t("channel.field_romance")} value={p.romance} />
+                <ProfileField label={t("channel.field_likes")} value={p.likes} />
+                <ProfileField label={t("channel.field_dislikes")} value={p.dislikes} />
               </FieldGroup>
             </Show>
 
             {/* Culture */}
             <Show when={p.music || p.book || p.tv || p.film}>
-              <FieldGroup label="Culture">
-                <ProfileField label="Music" value={p.music} />
-                <ProfileField label="Books" value={p.book} />
-                <ProfileField label="Television" value={p.tv} />
-                <ProfileField label="Film" value={p.film} />
+              <FieldGroup label={t("channel.group_culture")}>
+                <ProfileField label={t("channel.field_music")} value={p.music} />
+                <ProfileField label={t("channel.field_books")} value={p.book} />
+                <ProfileField label={t("channel.field_television")} value={p.tv} />
+                <ProfileField label={t("channel.field_film")} value={p.film} />
               </FieldGroup>
             </Show>
 
             {/* Work & Education */}
             <Show when={p.work || p.education}>
-              <FieldGroup label="Work & Education">
-                <ProfileField label="Work" value={p.work} />
-                <ProfileField label="Education" value={p.education} />
+              <FieldGroup label={t("channel.group_work")}>
+                <ProfileField label={t("channel.field_work")} value={p.work} />
+                <ProfileField label={t("channel.field_education")} value={p.education} />
               </FieldGroup>
             </Show>
 
             {/* Contact & Social */}
             <Show when={p.contact || p.channels}>
-              <FieldGroup label="Contact & Social">
-                <ProfileField label="Contact" value={p.contact} />
-                <ProfileField label="Other channels" value={p.channels} />
+              <FieldGroup label={t("channel.group_contact")}>
+                <ProfileField label={t("channel.field_contact")} value={p.contact} />
+                <ProfileField label={t("channel.field_other_channels")} value={p.channels} />
               </FieldGroup>
             </Show>
           </div>
@@ -250,8 +252,8 @@ function ProfileCard(props: {
             onClick={() => setExpanded((e) => !e)}
             class="mt-4 w-full flex items-center justify-center gap-1 text-xs text-muted hover:text-accent transition-colors py-1"
           >
-            <Show when={!expanded()} fallback={<><MdFillExpand_less size={16} /> Show less</>}>
-              <MdFillExpand_more size={16} /> More details
+            <Show when={!expanded()} fallback={<><MdFillExpand_less size={16} /> {t("channel.show_less")}</>}>
+              <MdFillExpand_more size={16} /> {t("channel.more_details")}
             </Show>
           </button>
         </Show>
@@ -274,6 +276,7 @@ function FieldGroup(props: { label: string; children: any }) {
 }
 
 function FollowButton(props: { nick: string; connected: boolean; isVisitor: boolean }) {
+  const { t } = useI18n();
   const href = () =>
     props.isVisitor
       ? `/follow?url=${encodeURIComponent(props.nick)}`
@@ -285,7 +288,7 @@ function FollowButton(props: { nick: string; connected: boolean; isVisitor: bool
 
   return (
     <a href={href()} class={`shrink-0 px-4 py-1.5 text-sm font-medium rounded-full border transition-colors ${cls}`}>
-      {props.connected ? "Connected" : "Connect"}
+      {props.connected ? t("channel.connected") : t("channel.connect")}
     </a>
   );
 }

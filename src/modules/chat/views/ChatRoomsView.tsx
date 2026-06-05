@@ -7,6 +7,7 @@ import {
   createResource,
   on,
 } from "solid-js";
+import { useI18n } from "@/i18n";
 import { useNavigate, useParams } from "@solidjs/router";
 import { usePageNick } from "@/shared/store/site-config";
 import {
@@ -69,6 +70,7 @@ function PrivatePicker(props: {
   onToggleCid: (hash: string) => void;
   onToggleGid: (hash: string) => void;
 }) {
+  const { t } = useI18n();
   const [query, setQuery] = createSignal("");
 
   const filteredConns = () => {
@@ -93,13 +95,13 @@ function PrivatePicker(props: {
         <MdFillSearch class="text-muted text-sm shrink-0" />
         <input
           type="text"
-          placeholder="Search connections & groups…"
+          placeholder={t("chat.search_placeholder") as string}
           value={query()}
           onInput={(e) => setQuery(e.currentTarget.value)}
           class="flex-1 bg-transparent text-txt text-xs focus:outline-none placeholder:text-subtle"
         />
         <Show when={totalSelected() > 0}>
-          <span class="text-[10px] text-accent font-medium">{totalSelected()} selected</span>
+          <span class="text-[10px] text-accent font-medium">{totalSelected()} {t("chat.selected")}</span>
         </Show>
       </div>
 
@@ -107,7 +109,7 @@ function PrivatePicker(props: {
         {/* Groups */}
         <Show when={filteredGroups().length > 0}>
           <div class="px-3 py-1.5 bg-elevated">
-            <p class="text-[10px] font-medium text-muted uppercase tracking-wider">Privacy Groups</p>
+            <p class="text-[10px] font-medium text-muted uppercase tracking-wider">{t("chat.privacy_groups")}</p>
           </div>
           <For each={filteredGroups()}>
             {(g) => {
@@ -141,7 +143,7 @@ function PrivatePicker(props: {
         {/* Connections */}
         <Show when={filteredConns().length > 0}>
           <div class="px-3 py-1.5 bg-elevated">
-            <p class="text-[10px] font-medium text-muted uppercase tracking-wider">Connections</p>
+            <p class="text-[10px] font-medium text-muted uppercase tracking-wider">{t("chat.connections_section")}</p>
           </div>
           <For each={filteredConns()}>
             {(c) => {
@@ -183,7 +185,7 @@ function PrivatePicker(props: {
         </Show>
 
         <Show when={filteredConns().length === 0 && filteredGroups().length === 0}>
-          <p class="text-xs text-muted px-3 py-4 text-center">No matches</p>
+          <p class="text-xs text-muted px-3 py-4 text-center">{t("chat.no_matches")}</p>
         </Show>
       </div>
     </div>
@@ -196,6 +198,7 @@ export default function ChatRoomsView() {
   const params = useParams<{ nick: string }>();
   const navigate = useNavigate();
   const pageNick = usePageNick();
+  const { t } = useI18n();
 
   const nick = () => params.nick || pageNick();
 
@@ -284,7 +287,7 @@ export default function ChatRoomsView() {
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
           <MdFillChat class="text-accent text-xl" />
-          <h1 class="text-lg font-semibold text-txt">Chatrooms</h1>
+          <h1 class="text-lg font-semibold text-txt">{t("chat.chatrooms")}</h1>
         </div>
         <Show when={isOwner()}>
           <button
@@ -292,7 +295,7 @@ export default function ChatRoomsView() {
             class="flex items-center gap-1.5 text-sm border border-rim text-muted hover:bg-elevated hover:text-txt rounded-lg px-3 py-1.5 transition-colors"
           >
             <MdFillAdd class="text-base" />
-            New room
+            {t("chat.new_room")}
           </button>
         </Show>
       </div>
@@ -303,12 +306,12 @@ export default function ChatRoomsView() {
           onSubmit={handleCreate}
           class="bg-surface border border-rim rounded-xl p-4 space-y-4"
         >
-          <h2 class="text-sm font-medium text-txt">New Chatroom</h2>
+          <h2 class="text-sm font-medium text-txt">{t("chat.new_chatroom")}</h2>
 
           {/* Name */}
           <input
             type="text"
-            placeholder="Room name"
+            placeholder={t("chat.room_name_placeholder") as string}
             value={newName()}
             onInput={(e) => setNewName(e.currentTarget.value)}
             class="w-full bg-surface border border-rim text-txt text-sm rounded-lg px-3 py-2 hover:border-rim-strong focus:outline-none focus:border-accent transition-colors"
@@ -317,7 +320,7 @@ export default function ChatRoomsView() {
 
           {/* Expiry */}
           <div class="flex items-center gap-2">
-            <label class="text-xs text-muted shrink-0">Expire after</label>
+            <label class="text-xs text-muted shrink-0">{t("chat.expire_after")}</label>
             <input
               type="number"
               min="0"
@@ -326,39 +329,39 @@ export default function ChatRoomsView() {
               onInput={(e) => setNewExpire(parseInt(e.currentTarget.value) || 0)}
               class="w-24 bg-surface border border-rim text-txt text-sm rounded-lg px-3 py-1.5 hover:border-rim-strong focus:outline-none focus:border-accent transition-colors"
             />
-            <span class="text-xs text-muted">minutes (0 = never)</span>
+            <span class="text-xs text-muted">{t("chat.minutes_never")}</span>
           </div>
 
           {/* Visibility */}
           <div class="space-y-2">
-            <p class="text-xs font-medium text-muted">Visibility</p>
+            <p class="text-xs font-medium text-muted">{t("chat.visibility")}</p>
             <div class="flex items-center gap-2">
               <VisibilityPill
                 value="public"
                 current={visibility()}
-                label="Public"
+                label={t("chat.public_label") as string}
                 icon={MdFillPublic}
                 onClick={() => setVisibility("public")}
               />
               <VisibilityPill
                 value="connections"
                 current={visibility()}
-                label="Connections"
+                label={t("chat.connections_label") as string}
                 icon={MdFillPeople}
                 onClick={() => setVisibility("connections")}
               />
               <VisibilityPill
                 value="private"
                 current={visibility()}
-                label="Private"
+                label={t("chat.private_label") as string}
                 icon={MdFillLock}
                 onClick={() => setVisibility("private")}
               />
             </div>
             <p class="text-[11px] text-muted">
-              {visibility() === "public" && "Anyone with chat permission can join."}
-              {visibility() === "connections" && "Only your approved connections can join."}
-              {visibility() === "private" && "Only the people or groups you select below can join."}
+              {visibility() === "public" && t("chat.visibility_public")}
+              {visibility() === "connections" && t("chat.visibility_connections")}
+              {visibility() === "private" && t("chat.visibility_private")}
             </p>
           </div>
 
@@ -382,7 +385,7 @@ export default function ChatRoomsView() {
           {/* Connections hint */}
           <Show when={visibility() === "connections" && aclOptions()?.default_group === ""}>
             <p class="text-[11px] text-yellow-500">
-              No default privacy group set — all approved connections will be allowed.
+              {t("chat.no_default_group")}
             </p>
           </Show>
 
@@ -396,14 +399,14 @@ export default function ChatRoomsView() {
               onClick={() => { setShowForm(false); resetForm(); }}
               class="text-sm border border-rim text-muted hover:bg-elevated rounded-lg px-3 py-1.5 transition-colors"
             >
-              Cancel
+              {t("chat.cancel")}
             </button>
             <button
               type="submit"
               disabled={creating()}
               class="text-sm bg-accent text-accent-fg rounded-lg px-4 py-1.5 hover:opacity-90 transition-opacity disabled:opacity-50"
             >
-              {creating() ? "Creating…" : "Create"}
+              {creating() ? t("chat.creating") : t("chat.create")}
             </button>
           </div>
         </form>
@@ -413,7 +416,7 @@ export default function ChatRoomsView() {
       <Show when={!chatroomsInstalled() && !roomsLoading()}>
         <div class="bg-surface border border-rim rounded-xl p-8 text-center space-y-2">
           <MdFillChat class="text-3xl text-muted mx-auto" />
-          <p class="text-sm text-muted">Chatrooms app is not installed for this channel.</p>
+          <p class="text-sm text-muted">{t("chat.not_installed")}</p>
         </div>
       </Show>
 
@@ -432,9 +435,9 @@ export default function ChatRoomsView() {
       <Show when={!roomsLoading() && chatroomsInstalled() && rooms().length === 0}>
         <div class="bg-surface border border-rim rounded-xl p-8 text-center space-y-2">
           <MdFillChat class="text-3xl text-muted mx-auto" />
-          <p class="text-sm text-muted">No chatrooms yet.</p>
+          <p class="text-sm text-muted">{t("chat.no_chatrooms")}</p>
           <Show when={isOwner()}>
-            <p class="text-xs text-muted">Create one above to get started.</p>
+            <p class="text-xs text-muted">{t("chat.create_hint")}</p>
           </Show>
         </div>
       </Show>
@@ -457,7 +460,7 @@ export default function ChatRoomsView() {
                     <div class="flex items-center gap-3 mt-0.5">
                       <span class="flex items-center gap-1 text-xs text-muted">
                         <MdFillPeople class="text-sm" />
-                        {room.in_room} online
+                        {room.in_room} {t("chat.online")}
                       </span>
                       <Show when={room.last_msg}>
                         <span class="flex items-center gap-1 text-xs text-muted">

@@ -104,7 +104,7 @@ function ListRow(props: {
     p.children.length > 0
       ? countAllComments(p.children)
       : (p.commentCount ?? 0);
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
   let rowRef!: HTMLDivElement;
 
   onMount(() => {
@@ -228,7 +228,7 @@ function ListRow(props: {
               <Show when={p.repeatCount > 0}>
                 <span>{p.repeatCount}</span>
               </Show>
-              <span class="hidden sm:inline">Boost</span>
+              <span class="hidden sm:inline">{t("post.repeat")}</span>
             </button>
 
             {/* comments */}
@@ -244,7 +244,7 @@ function ListRow(props: {
                 </svg>
                 <span>{replyCount()}</span>
                 <span class="hidden sm:inline">
-                  {replyCount() > 1 ? "Comments" : "Comment"}
+                  {replyCount() > 1 ? t("post.comments_plural") : t("post.comments_singular")}
                 </span>
               </button>
             </Show>
@@ -298,6 +298,7 @@ export default function ListView(props: {
   handlers: StreamHandlers;
 }) {
   const [modalUuid, setModalUuid] = createSignal<string | null>(null);
+  const { t } = useI18n();
 
   return (
     <>
@@ -319,7 +320,7 @@ export default function ListView(props: {
                   d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
                 />
               </svg>
-              <p class="text-sm">Nothing here yet.</p>
+              <p class="text-sm">{t("network.all_caught_up")}</p>
             </div>
           }
         >

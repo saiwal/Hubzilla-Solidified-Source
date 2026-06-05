@@ -1,7 +1,9 @@
 // settings/store/FormHelpers.tsx
 import { Show } from "solid-js";
+import { useI18n } from "@/i18n";
 
 export function SaveBar(props: { saving: boolean }) {
+  const { t } = useI18n();
   return (
     <div class="flex items-center gap-3 pt-2 border-t border-rim">
       <button
@@ -10,7 +12,7 @@ export function SaveBar(props: { saving: boolean }) {
         class="px-4 py-2 text-sm font-medium rounded-lg bg-accent text-accent-fg
                hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
       >
-        {props.saving ? "Saving…" : "Save changes"}
+        {props.saving ? t("settings.saving") : t("settings.save")}
       </button>
     </div>
   );

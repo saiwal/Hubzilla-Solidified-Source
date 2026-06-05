@@ -2,18 +2,20 @@ import { Show } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchAccountSettings } from "../../api/api";
 import { useSectionForm } from "../../store/useSectionForm";
+import { useI18n } from "@/i18n";
 
 export default function AccountSection() {
+  const { t } = useI18n();
   const { data, saving, handleSubmit } = useSectionForm({
     fetcher: fetchAccountSettings,
     saver: async () => {}, // account email change not yet wired in PHP
   });
 
   return (
-    <SubPageContent title="Account" description="Your login credentials.">
+    <SubPageContent title={t("settings.title_account")} description={t("settings.desc_account")}>
       <Show when={data()} fallback={<Skeleton />}>
         <form onSubmit={handleSubmit} class="space-y-6">
-          <Field label="Email address">
+          <Field label={t("settings.email")}>
             <input
               type="email"
               name="email"
@@ -31,7 +33,7 @@ export default function AccountSection() {
               class="px-4 py-2 text-sm font-medium rounded-lg bg-accent text-accent-fg
                      hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
             >
-              {saving() ? "Saving…" : "Save changes"}
+              {saving() ? t("settings.saving") : t("settings.save")}
             </button>
           </div>
         </form>

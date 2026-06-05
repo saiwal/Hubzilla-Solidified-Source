@@ -39,6 +39,7 @@ import { createAttachmentStore } from "../attachments/useAttachments";
 import { currentNick } from "@/shared/store/auth-store";
 import { bbcodeToInsert } from "../attachments/insertHelpers";
 import type { FileAcl } from "@/modules/files/api";
+import { useI18n } from "@/i18n";
 void helpable;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -60,6 +61,7 @@ export interface ComposerProps {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const PostComposer: Component<ComposerProps> = (props) => {
+  const { t } = useI18n();
   const caps = CAPABILITIES.post;
 
   // ── Scope (shared by both stores for matching IDB keys) ───────────────────
@@ -323,17 +325,17 @@ const PostComposer: Component<ComposerProps> = (props) => {
             }
             role="dialog"
             aria-modal="true"
-            aria-label="Post composer"
+            aria-label={t("editor.composer_label")}
           >
             {/* ── Header ── */}
             <header class="flex items-center justify-between px-4 py-3 border-b border-rim shrink-0">
               <span class="text-xs font-semibold tracking-widest uppercase text-muted select-none">
-                {props.parentId ? "Reply" : "New Post"}
+                {props.parentId ? t("editor.reply_header") : t("editor.new_post")}
               </span>
               <div class="flex items-center gap-1">
                 <button
                   type="button"
-                  title={fullscreen() ? "Exit fullscreen" : "Fullscreen"}
+                  title={fullscreen() ? t("editor.fullscreen_exit") : t("editor.fullscreen_enter")}
                   onClick={() => setFullscreen((f) => !f)}
                   class="p-1.5 rounded-md text-muted hover:text-txt hover:bg-elevated transition-colors"
                 >
@@ -364,7 +366,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
                 </button>
                 <button
                   type="button"
-                  title="Close (Esc)"
+                  title={t("editor.close_esc")}
                   onClick={props.onClose}
                   class="p-1.5 rounded-md text-muted hover:text-txt hover:bg-elevated transition-colors"
                 >
@@ -387,7 +389,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
                 <Show when={caps.title}>
                   <input
                     type="text"
-                    placeholder="Title (optional)"
+                    placeholder={t("editor.title_placeholder")}
                     value={store.title()}
                     onInput={(e) => store.setTitle(e.currentTarget.value)}
                     class="flex-1 min-w-0 bg-transparent text-sm font-medium text-txt
@@ -397,7 +399,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
                 <Show when={caps.category}>
                   <input
                     type="text"
-                    placeholder="Category"
+                    placeholder={t("editor.category_placeholder")}
                     value={store.category()}
                     onInput={(e) => store.setCategory(e.currentTarget.value)}
                     class="w-32 shrink-0 bg-transparent text-sm text-txt
@@ -427,7 +429,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
                 onTabChange={store.setTab}
                 mimetype={store.mimetype()}
                 onCtrlEnter={() => { if (!mention.open()) void store.submit(); }}
-                placeholder={props.parentId ? "Write a reply…" : "What's on your mind?"}
+                placeholder={props.parentId ? t("editor.write_reply_placeholder") : t("editor.write_placeholder")}
                 minHeight="200px"
               />
               <AttachmentBar
@@ -490,7 +492,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
                 <Show when={store.savedDrafts().length > 0}>
                   <button
                     type="button"
-                    title="Saved drafts"
+                    title={t("editor.saved_drafts")}
                     onClick={() => setDraftsOpen((o) => !o)}
                     class={
                       "px-2 py-1 rounded-md text-xs transition-colors " +
@@ -499,13 +501,13 @@ const PostComposer: Component<ComposerProps> = (props) => {
                         : "text-muted hover:text-txt hover:bg-elevated")
                     }
                   >
-                    Drafts ({store.savedDrafts().length})
+                    {t("editor.drafts_btn", { count: store.savedDrafts().length })}
                   </button>
                 </Show>
                 <Show when={store.body().trim()}>
                   <button
                     type="button"
-                    title="Save as draft"
+                    title={t("editor.save_draft")}
                     onClick={() => void store.saveAsDraft()}
                     class="p-1.5 rounded-md text-muted hover:text-txt hover:bg-elevated transition-colors"
                   >
@@ -516,7 +518,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
                   </button>
                   <button
                     type="button"
-                    title="Clear composer"
+                    title={t("editor.clear_composer")}
                     onClick={resetAll}
                     class="p-1.5 rounded-md text-muted hover:text-red-500 hover:bg-red-500/10 transition-colors"
                   >
@@ -531,7 +533,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
                   onClick={() => void store.submit()}
                   class="px-5 py-1.5 rounded-lg text-sm font-semibold bg-accent text-accent-fg hover:opacity-90 active:opacity-80 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  {store.submitting() ? "Posting…" : "Post"}
+                  {store.submitting() ? t("editor.posting") : t("editor.post_btn")}
                 </button>
               </div>
             </footer>

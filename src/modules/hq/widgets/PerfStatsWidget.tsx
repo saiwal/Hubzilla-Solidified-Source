@@ -1,6 +1,7 @@
 import { isAdmin } from "@/shared/store/auth-store";
 import { createSignal, createEffect, on, onCleanup, onMount, For, Show } from "solid-js";
 import { toast } from "@/shared/store/toast";
+import { useI18n } from "@/i18n";
 
 interface PerfStats {
   loadavg: [number, number, number];
@@ -33,6 +34,7 @@ export default function PerfStatsPanel() {
 }
 
 function PerfStatsPanelInner() {
+  const { t } = useI18n();
   const [points, setPoints] = createSignal<TimePoint[]>([]);
   const [latest, setLatest] = createSignal<PerfStats | null>(null);
   const [error, setError] = createSignal<string | null>(null);
@@ -133,7 +135,7 @@ function PerfStatsPanelInner() {
       {/* Header */}
       <div class="flex items-center justify-between mb-3">
         <span class="text-xs font-medium uppercase tracking-wider text-muted">
-          Server performance
+          {t("hq.server_performance")}
         </span>
         <Show when={latest()}>
           <span class="flex items-center gap-1.5 text-xs text-muted">

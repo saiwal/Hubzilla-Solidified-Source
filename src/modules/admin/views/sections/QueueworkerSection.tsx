@@ -1,27 +1,29 @@
 import { createResource, For, Show } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchAdminQueueworker } from "../../api";
+import { useI18n } from "@/i18n";
 
 export default function QueueworkerSection() {
+  const { t } = useI18n();
   const [jobs, { refetch }] = createResource(fetchAdminQueueworker);
 
   return (
-    <SubPageContent title="Queueworker" description="Background worker job queue.">
+    <SubPageContent title={t("admin.queueworker_title")} description={t("admin.queueworker_desc")}>
       <Show when={jobs()} fallback={<Skeleton />}>
         {(list) => (
           <div class="space-y-3">
             <div class="flex items-center justify-between">
-              <p class="text-sm text-muted">{list().length} job(s)</p>
+              <p class="text-sm text-muted">{list().length} {t("admin.jobs")}</p>
               <button
                 onClick={refetch}
                 class="px-3 py-1.5 text-xs rounded-lg border border-rim text-txt hover:bg-elevated transition-colors"
               >
-                Refresh
+                {t("admin.refresh")}
               </button>
             </div>
 
             <Show when={list().length === 0}>
-              <p class="text-sm text-muted py-4 text-center">No jobs in queue.</p>
+              <p class="text-sm text-muted py-4 text-center">{t("admin.no_jobs")}</p>
             </Show>
 
             <Show when={list().length > 0}>
@@ -29,10 +31,10 @@ export default function QueueworkerSection() {
                 <table class="w-full text-xs">
                   <thead>
                     <tr class="border-b border-rim bg-elevated">
-                      <th class="px-3 py-2 text-left font-medium text-muted">ID</th>
-                      <th class="px-3 py-2 text-left font-medium text-muted">Priority</th>
-                      <th class="px-3 py-2 text-left font-medium text-muted hidden sm:table-cell">Created</th>
-                      <th class="px-3 py-2 text-left font-medium text-muted hidden md:table-cell">Command</th>
+                      <th class="px-3 py-2 text-left font-medium text-muted">{t("admin.col_id")}</th>
+                      <th class="px-3 py-2 text-left font-medium text-muted">{t("admin.col_priority")}</th>
+                      <th class="px-3 py-2 text-left font-medium text-muted hidden sm:table-cell">{t("admin.col_created")}</th>
+                      <th class="px-3 py-2 text-left font-medium text-muted hidden md:table-cell">{t("admin.col_command")}</th>
                     </tr>
                   </thead>
                   <tbody>

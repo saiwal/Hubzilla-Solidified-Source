@@ -1,16 +1,18 @@
 import { createResource, For, Show } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchAdminAddons } from "../../api";
+import { useI18n } from "@/i18n";
 
 export default function AddonsSection() {
+  const { t } = useI18n();
   const [addons] = createResource(fetchAdminAddons);
 
   return (
-    <SubPageContent title="Addons" description="Plugins installed in the addon directory.">
+    <SubPageContent title={t("admin.addons_title")} description={t("admin.addons_desc")}>
       <Show when={addons()} fallback={<Skeleton />}>
         {(list) => (
           <div class="space-y-2">
-            <p class="text-sm text-muted">{list().length} addon(s) found</p>
+            <p class="text-sm text-muted">{list().length} {t("admin.addons_found")}</p>
             <div class="space-y-2">
               <For each={list()}>
                 {(addon) => (
@@ -20,7 +22,7 @@ export default function AddonsSection() {
                         <p class="text-sm font-medium text-txt">{addon.name}</p>
                         <Show when={addon.active}>
                           <span class="px-1.5 py-0.5 text-xs rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                            Active
+                            {t("admin.active_badge")}
                           </span>
                         </Show>
                       </div>
@@ -38,7 +40,7 @@ export default function AddonsSection() {
                       </div>
                     </div>
                     <span class={`shrink-0 px-2 py-0.5 text-xs rounded border ${addon.installed ? "border-accent text-accent" : "border-rim text-muted"}`}>
-                      {addon.installed ? "Installed" : "Not installed"}
+                      {addon.installed ? t("admin.installed_badge") : t("admin.not_installed_badge")}
                     </span>
                   </div>
                 )}

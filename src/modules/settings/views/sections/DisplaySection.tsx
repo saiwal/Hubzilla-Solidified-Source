@@ -7,8 +7,10 @@ import { useThreadMode, setThreadMode } from "@/shared/store/thread-mode";
 import { useBgUrl, useBgFit, setBgUrl, setBgFit, type BgFit } from "@/shared/lib/background";
 import { initTheme, useTheme } from "@/shared/lib/useTheme";
 import { THEMES, type ThemeId } from "@/shared/types/theme.types";
+import { useI18n } from "@/i18n";
 
 export default function DisplaySection() {
+  const { t } = useI18n();
   const threadMode = useThreadMode();
   const bgUrl = useBgUrl();
   const bgFit = useBgFit();
@@ -48,13 +50,13 @@ export default function DisplaySection() {
   });
 
   return (
-    <SubPageContent title="Display" description="Appearance and theme preferences.">
+    <SubPageContent title={t("settings.title_display")} description={t("settings.desc_display")}>
       <Show when={data()} fallback={<FormSkeleton />}>
         <form onSubmit={handleSubmit} class="space-y-6">
 
           {/* Hubzilla theme */}
           <Show when={data()!.themes.length > 0}>
-            <Field label="Theme" hint="The Hubzilla server-side theme. Requires a page reload to apply.">
+            <Field label={t("settings.theme")} hint={t("settings.theme_hint")}>
               <select
                 name="theme"
                 class="w-full px-3 py-2 rounded-lg border border-rim bg-surface text-txt
@@ -62,9 +64,9 @@ export default function DisplaySection() {
                        transition-colors text-sm"
               >
                 <For each={data()!.themes}>
-                  {(t) => (
-                    <option value={t} selected={t === data()!.theme}>
-                      {t}
+                  {(th) => (
+                    <option value={th} selected={th === data()!.theme}>
+                      {th}
                     </option>
                   )}
                 </For>
@@ -73,7 +75,7 @@ export default function DisplaySection() {
           </Show>
 
           {/* SPA color scheme */}
-          <Field label="Color scheme">
+          <Field label={t("settings.color_scheme")}>
             <select
               name="color_scheme"
               class="w-full px-3 py-2 rounded-lg border border-rim bg-surface text-txt
@@ -86,9 +88,9 @@ export default function DisplaySection() {
               }}
             >
               <For each={[...THEMES].sort((a, b) => a.label.localeCompare(b.label))}>
-                {(t) => (
-                  <option value={t.id} selected={t.id === previewScheme()}>
-                    {t.label}
+                {(th) => (
+                  <option value={th.id} selected={th.id === previewScheme()}>
+                    {th.label}
                   </option>
                 )}
               </For>
@@ -98,27 +100,27 @@ export default function DisplaySection() {
           {/* Custom theme color editor */}
           <Show when={previewScheme() === "custom"}>
             <div class="rounded-xl border border-rim bg-elevated p-4 space-y-4">
-              <p class="text-sm font-medium text-txt">Custom theme colors</p>
+              <p class="text-sm font-medium text-txt">{t("settings.custom_theme_colors")}</p>
               <p class="text-xs text-muted -mt-2">
-                Changes apply immediately and are saved to your account.
+                {t("settings.custom_theme_hint")}
               </p>
 
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <ColorSwatch
-                  label="Background"
-                  hint="Main page background"
+                  label={t("settings.color_bg")}
+                  hint={t("settings.color_bg_hint")}
                   value={customColors().base}
                   onChange={(v) => updateCustomColors({ ...customColors(), base: v })}
                 />
                 <ColorSwatch
-                  label="Text"
-                  hint="Primary text color"
+                  label={t("settings.color_txt")}
+                  hint={t("settings.color_txt_hint")}
                   value={customColors().txt}
                   onChange={(v) => updateCustomColors({ ...customColors(), txt: v })}
                 />
                 <ColorSwatch
-                  label="Accent"
-                  hint="Buttons, links, highlights"
+                  label={t("settings.color_accent")}
+                  hint={t("settings.color_accent_hint")}
                   value={customColors().accent}
                   onChange={(v) => updateCustomColors({ ...customColors(), accent: v })}
                 />
@@ -133,12 +135,12 @@ export default function DisplaySection() {
                   }
                   class="accent-accent cursor-pointer"
                 />
-                <span class="text-sm text-txt">Dark mode</span>
+                <span class="text-sm text-txt">{t("settings.dark_mode")}</span>
               </label>
 
               <div class="pt-1 border-t border-rim">
                 <p class="text-xs text-muted">
-                  Surface, border, and muted colors are automatically derived from your background and text choices.
+                  {t("settings.custom_theme_derived")}
                 </p>
               </div>
             </div>
@@ -146,8 +148,8 @@ export default function DisplaySection() {
 
           {/* Items per page */}
           <Field
-            label="Items per page"
-            hint="How many posts to load at once (1–30)."
+            label={t("settings.items_per_page")}
+            hint={t("settings.items_per_page_hint")}
           >
             <input
               type="number"
@@ -163,8 +165,8 @@ export default function DisplaySection() {
 
           {/* Update interval */}
           <Field
-            label="Stream refresh interval (seconds)"
-            hint="How often the network stream checks for new posts."
+            label={t("settings.stream_refresh")}
+            hint={t("settings.stream_refresh_hint")}
           >
             <input
               type="number"
@@ -179,13 +181,13 @@ export default function DisplaySection() {
           </Field>
 
           {/* Typography */}
-          <Field label="Font size">
+          <Field label={t("settings.font_size")}>
             <div class="flex gap-3">
               <For each={[
-                { value: "small", label: "Small" },
-                { value: "medium", label: "Medium" },
-                { value: "large", label: "Large" },
-                { value: "xl", label: "Extra large" },
+                { value: "small",  labelKey: "settings.font_size_small"  },
+                { value: "medium", labelKey: "settings.font_size_medium" },
+                { value: "large",  labelKey: "settings.font_size_large"  },
+                { value: "xl",     labelKey: "settings.font_size_xl"     },
               ] as const}>
                 {(size) => (
                   <label class="flex items-center gap-1.5 cursor-pointer">
@@ -195,19 +197,19 @@ export default function DisplaySection() {
                       value={size.value}
                       checked={previewSize() === size.value}
                       onChange={() => {
-                        setPreviewSize(size.value);
+                        setPreviewSize(size.value as FontSize);
                         applyTypography(size.value, previewFamily());
                       }}
                       class="accent-accent cursor-pointer"
                     />
-                    <span class="text-sm text-txt">{size.label}</span>
+                    <span class="text-sm text-txt">{t(size.labelKey)}</span>
                   </label>
                 )}
               </For>
             </div>
           </Field>
 
-          <Field label="Font family">
+          <Field label={t("settings.font_family")}>
             <select
               name="font_family"
               class="w-full px-3 py-2 rounded-lg border border-rim bg-surface text-txt
@@ -219,29 +221,29 @@ export default function DisplaySection() {
                 applyTypography(previewSize(), fam);
               }}
             >
-              <optgroup label="Standard">
+              <optgroup label={t("settings.font_group_standard")}>
                 <option value="system"    selected={previewFamily() === "system"}>System (default)</option>
                 <option value="serif"     selected={previewFamily() === "serif"}>Serif — Georgia</option>
                 <option value="monospace" selected={previewFamily() === "monospace"}>Monospace</option>
               </optgroup>
-              <optgroup label="Clean &amp; Friendly">
+              <optgroup label={t("settings.font_group_clean")}>
                 <option value="nunito"    selected={previewFamily() === "nunito"}>Nunito — rounded, approachable</option>
               </optgroup>
-              <optgroup label="Editorial">
+              <optgroup label={t("settings.font_group_editorial")}>
                 <option value="playfair"  selected={previewFamily() === "playfair"}>Playfair Display — elegant serif</option>
               </optgroup>
-              <optgroup label="Retro &amp; Techy">
+              <optgroup label={t("settings.font_group_retro")}>
                 <option value="space-mono" selected={previewFamily() === "space-mono"}>Space Mono — terminal vibes</option>
                 <option value="righteous"  selected={previewFamily() === "righteous"}>Righteous — bold &amp; retro</option>
               </optgroup>
-              <optgroup label="Rounded &amp; Playful">
+              <optgroup label={t("settings.font_group_rounded")}>
                 <option value="comfortaa" selected={previewFamily() === "comfortaa"}>Comfortaa — rounded geometric</option>
                 <option value="pacifico"  selected={previewFamily() === "pacifico"}>Pacifico — friendly display</option>
               </optgroup>
-              <optgroup label="Just for Fun">
+              <optgroup label={t("settings.font_group_fun")}>
                 <option value="comic"     selected={previewFamily() === "comic"}>Comic Neue — the friendly classic</option>
               </optgroup>
-              <optgroup label="Accessibility">
+              <optgroup label={t("settings.font_group_accessibility")}>
                 <option value="opendyslexic" selected={previewFamily() === "opendyslexic"}>OpenDyslexic — easier to read</option>
               </optgroup>
             </select>
@@ -249,7 +251,7 @@ export default function DisplaySection() {
 
 
           {/* Comment view mode */}
-          <Field label="Comment view" hint="How replies are displayed under posts. Takes effect immediately.">
+          <Field label={t("settings.comment_view")} hint={t("settings.comment_view_hint")}>
             <div class="flex gap-4">
               {(["threaded", "flat"] as const).map((mode) => (
                 <label class="flex items-center gap-1.5 cursor-pointer">
@@ -268,7 +270,7 @@ export default function DisplaySection() {
           </Field>
 
           {/* Background image */}
-          <Field label="Background image URL" hint="Paste a URL to use as the page background. Saved with your other display settings.">
+          <Field label={t("settings.bg_image_url")} hint={t("settings.bg_image_url_hint")}>
             <div class="space-y-2">
               <div class="flex gap-2">
                 <input
@@ -289,7 +291,7 @@ export default function DisplaySection() {
                     class="px-3 py-2 text-sm rounded-lg border border-rim bg-surface text-muted
                            hover:text-txt hover:border-rim-strong transition-colors"
                   >
-                    Clear
+                    {t("settings.bg_clear")}
                   </button>
                 </Show>
               </div>
@@ -320,7 +322,7 @@ export default function DisplaySection() {
                      hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed
                      transition-opacity"
             >
-              {saving() ? "Saving…" : "Save changes"}
+              {saving() ? t("settings.saving") : t("settings.save")}
             </button>
 
           </div>

@@ -1,6 +1,7 @@
 // src/modules/channel/views/ChannelView.tsx
 import { createEffect, onCleanup, Show, For, Switch, Match } from "solid-js";
 import { useParams, useSearchParams } from "@solidjs/router";
+import { useI18n } from "@/i18n";
 import {
   posts,
   loading,
@@ -45,6 +46,7 @@ const handlers: StreamHandlers = {
 export default function ChannelView() {
   const params = useParams<{ nick: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { t } = useI18n();
 
 const role = useViewerRole();
   createEffect(() => {
@@ -93,7 +95,7 @@ const role = useViewerRole();
       />
       <Show when={searchParams.cat || searchParams.tag}>
         <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/10 border border-accent/25 text-sm mb-3">
-          <span class="text-muted">Filtered by:</span>
+          <span class="text-muted">{t("channel.filtered_by")}</span>
           <Show when={searchParams.cat}>
             <span class="font-medium text-accent">{searchParams.cat}</span>
           </Show>
@@ -105,7 +107,7 @@ const role = useViewerRole();
             onClick={() => setSearchParams({ cat: undefined, tag: undefined })}
             class="ml-auto text-xs text-muted hover:text-txt transition-colors"
           >
-            Clear
+            {t("channel.clear")}
           </button>
         </div>
       </Show>
@@ -116,7 +118,7 @@ const role = useViewerRole();
           class="w-full mb-3 py-2 text-sm font-medium rounded-xl
                  bg-accent text-accent-fg border border-accent hover:opacity-90 transition-opacity"
         >
-          ↑ {newPosts().length} new {newPosts().length === 1 ? "post" : "posts"}
+          ↑ {newPosts().length} {newPosts().length === 1 ? t("channel.new_post") : t("channel.new_posts")}
         </button>
       </Show>
 
@@ -137,7 +139,7 @@ const role = useViewerRole();
         }
       >
         <Show when={posts().length === 0}>
-          <p class="text-sm text-muted py-4 text-center">No posts yet.</p>
+          <p class="text-sm text-muted py-4 text-center">{t("channel.no_posts")}</p>
         </Show>
 
         <StreamList posts={posts()} viewMode={viewMode()} handlers={handlers} />
@@ -160,7 +162,7 @@ const role = useViewerRole();
       <div ref={sentinel} class="h-1" />
 
       <Show when={!hasMore() && posts().length > 0}>
-        <p class="text-center text-xs text-muted py-6">You're all caught up.</p>
+        <p class="text-center text-xs text-muted py-6">{t("channel.all_caught_up")}</p>
       </Show>
     </>
   );
