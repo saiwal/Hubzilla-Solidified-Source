@@ -4,7 +4,9 @@ import { fetchDisplaySettings, saveDisplaySettings } from "../../api/api";
 import { useSectionForm } from "../../store/useSectionForm";
 import { applyTypography, type FontSize, type FontFamily } from "@/shared/lib/typography";
 import { useThreadMode, setThreadMode } from "@/shared/store/thread-mode";
-import { useBgUrl, useBgFit, setBgUrl, setBgFit, type BgFit } from "@/shared/lib/background";
+import { useBgUrl, useBgFit, setBgUrl, setBgFit } from "@/shared/lib/background";
+import PATTERN_PRESETS from "virtual:public-listing/patterns";
+import BG_PRESETS from "virtual:public-listing/bg";
 import { initTheme, useTheme } from "@/shared/lib/useTheme";
 import { THEMES, type ThemeId } from "@/shared/types/theme.types";
 import { useI18n } from "@/i18n";
@@ -12,18 +14,12 @@ import { useI18n } from "@/i18n";
 export default function DisplaySection() {
   const { t } = useI18n();
   const threadMode = useThreadMode();
-  const bgUrl = useBgUrl();
-  const bgFit = useBgFit();
   const { customColors, updateCustomColors } = useTheme();
 
   const [previewSize, setPreviewSize] = createSignal<FontSize>("medium");
   const [previewFamily, setPreviewFamily] = createSignal<FontFamily>("system");
   const [previewScheme, setPreviewScheme] = createSignal<ThemeId>("light");
 
-  function commitUrl(e: Event) {
-    const val = (e.currentTarget as HTMLInputElement).value.trim();
-    setBgUrl(val);
-  }
   const { data, saving, handleSubmit } = useSectionForm({
     fetcher: fetchDisplaySettings,
     saver: saveDisplaySettings,
@@ -269,49 +265,8 @@ export default function DisplaySection() {
             </div>
           </Field>
 
-          {/* Background image */}
-          <Field label={t("settings.bg_image_url")} hint={t("settings.bg_image_url_hint")}>
-            <div class="space-y-2">
-              <div class="flex gap-2">
-                <input
-                  type="url"
-                  name="bg_url"
-                  placeholder="https://example.com/image.jpg"
-                  value={bgUrl()}
-                  onBlur={commitUrl}
-                  onKeyDown={(e) => e.key === "Enter" && commitUrl(e)}
-                  class="flex-1 px-3 py-2 rounded-lg border border-rim bg-surface text-txt
-                         hover:border-rim-strong focus:outline-none focus:border-rim-strong
-                         transition-colors text-sm"
-                />
-                <Show when={bgUrl()}>
-                  <button
-                    type="button"
-                    onClick={() => setBgUrl("")}
-                    class="px-3 py-2 text-sm rounded-lg border border-rim bg-surface text-muted
-                           hover:text-txt hover:border-rim-strong transition-colors"
-                  >
-                    {t("settings.bg_clear")}
-                  </button>
-                </Show>
-              </div>
-              <div class="flex gap-4">
-                {(["cover", "tile"] as BgFit[]).map((fit) => (
-                  <label class="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="bg_fit"
-                      value={fit}
-                      checked={bgFit() === fit}
-                      onChange={() => setBgFit(fit)}
-                      class="accent-accent cursor-pointer"
-                    />
-                    <span class="text-sm text-txt capitalize">{fit}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </Field>
+          {/* Background picker */}
+          <BackgroundPicker />
 
           {/* Feedback + submit */}
           <div class="flex items-center gap-3 pt-2">
@@ -330,6 +285,142 @@ export default function DisplaySection() {
         </form>
       </Show>
     </SubPageContent>
+  );
+}
+
+// ── Background picker ─────────────────────────────────────────────────────────
+
+type BgKind = "pattern" | "background";
+
+const _BASE = import.meta.env.BASE_URL;
+const PATTERN_FOLDER = `${_BASE}patterns/`;
+const BG_FOLDER = `${_BASE}bg/`;
+
+
+function BackgroundPicker() {
+  const { t } = useI18n();
+  const bgUrl = useBgUrl();
+  const bgFit = useBgFit();
+
+  const [kind, setKind] = createSignal<BgKind>(
+    bgUrl().startsWith(PATTERN_FOLDER) || bgFit() === "tile" ? "pattern" : "background"
+  );
+  const [customUrlVal, setCustomUrlVal] = createSignal(
+    bgUrl() && !bgUrl().startsWith(PATTERN_FOLDER) && !bgUrl().startsWith(BG_FOLDER) ? bgUrl() : ""
+  );
+
+  createEffect(() => {
+    const url = bgUrl();
+    if (url.startsWith(PATTERN_FOLDER)) setKind("pattern");
+    else if (url.startsWith(BG_FOLDER)) setKind("background");
+    else if (url) setCustomUrlVal(url);
+    else setCustomUrlVal("");
+  });
+
+  const presets = () => kind() === "pattern" ? PATTERN_PRESETS : BG_PRESETS;
+  const folder = () => kind() === "pattern" ? PATTERN_FOLDER : BG_FOLDER;
+
+  function switchKind(k: BgKind) {
+    setKind(k);
+    setBgFit(k === "pattern" ? "tile" : "cover");
+    const url = bgUrl();
+    if ((k === "pattern" && url.startsWith(BG_FOLDER)) || (k === "background" && url.startsWith(PATTERN_FOLDER))) {
+      setBgUrl("");
+    }
+  }
+
+  function selectPreset(name: string) {
+    setBgUrl(folder() + name);
+    setBgFit(kind() === "pattern" ? "tile" : "cover");
+    setCustomUrlVal("");
+  }
+
+  function applyCustomUrl(url: string) {
+    const trimmed = url.trim();
+    setBgUrl(trimmed);
+    if (!trimmed) setCustomUrlVal("");
+  }
+
+  return (
+    <Field label={t("settings.bg_image_url")} hint={t("settings.bg_image_url_hint")}>
+      <input type="hidden" name="bg_url" value={bgUrl()} />
+      <input type="hidden" name="bg_fit" value={bgFit()} />
+      <div class="space-y-3">
+        {/* Tabs */}
+        <div class="flex gap-1 p-1 bg-elevated rounded-lg w-fit">
+          {(["background", "pattern"] as BgKind[]).map((k) => (
+            <button
+              type="button"
+              onClick={() => switchKind(k)}
+              class={`px-3 py-1.5 text-sm rounded-md transition-colors
+                ${kind() === k ? "bg-accent text-accent-fg" : "text-muted hover:text-txt"}`}
+            >
+              {k === "pattern" ? t("settings.bg_tab_pattern") : t("settings.bg_tab_background")}
+            </button>
+          ))}
+        </div>
+
+        {/* Preset grid */}
+        <div class="grid grid-cols-6 sm:grid-cols-8 gap-1.5 max-h-64 overflow-y-auto pr-0.5">
+          <For each={presets()}>
+            {(name) => {
+              const url = folder() + name;
+              const selected = () => bgUrl() === url;
+              const label = name.replace(/\.[^.]+$/, "").replace(/-/g, " ");
+              return (
+                <button
+                  type="button"
+                  onClick={() => selectPreset(name)}
+                  title={label}
+                  class={`relative aspect-square rounded-md overflow-hidden border-2 transition-all focus:outline-none
+                    ${selected() ? "border-accent" : "border-rim hover:border-accent/60"}`}
+                  style={{
+                    "background-image": `url(${url})`,
+                    "background-size": kind() === "pattern" ? "auto" : "cover",
+                    "background-repeat": kind() === "pattern" ? "repeat" : "no-repeat",
+                    "background-position": "center",
+                  }}
+                >
+                  <Show when={selected()}>
+                    <div class="absolute inset-0 bg-accent/20 flex items-center justify-center">
+                      <div class="w-5 h-5 rounded-full bg-accent text-accent-fg text-xs flex items-center justify-center">✓</div>
+                    </div>
+                  </Show>
+                </button>
+              );
+            }}
+          </For>
+        </div>
+
+        {/* Custom URL */}
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-muted shrink-0">{t("settings.bg_custom_url")}</span>
+          <input
+            type="url"
+            placeholder="https://example.com/image.jpg"
+            value={customUrlVal()}
+            onInput={(e) => setCustomUrlVal(e.currentTarget.value)}
+            onBlur={(e) => applyCustomUrl(e.currentTarget.value)}
+            onKeyDown={(e) => e.key === "Enter" && applyCustomUrl((e.currentTarget as HTMLInputElement).value)}
+            class="flex-1 px-3 py-1.5 rounded-lg border border-rim bg-surface text-txt
+                   hover:border-rim-strong focus:outline-none focus:border-rim-strong
+                   transition-colors text-sm"
+          />
+        </div>
+
+        {/* Clear */}
+        <Show when={bgUrl()}>
+          <button
+            type="button"
+            onClick={() => { setBgUrl(""); setCustomUrlVal(""); }}
+            class="text-xs px-3 py-1.5 rounded-lg border border-rim bg-surface text-muted
+                   hover:text-txt hover:border-rim-strong transition-colors"
+          >
+            {t("settings.bg_clear")}
+          </button>
+        </Show>
+      </div>
+    </Field>
   );
 }
 

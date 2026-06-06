@@ -404,6 +404,9 @@ export type RawDictionary = {
     bg_image_url:            string;
     bg_image_url_hint:       string;
     bg_clear:                string;
+    bg_tab_background:       string;
+    bg_tab_pattern:          string;
+    bg_custom_url:           string;
     // Font optgroup labels
     font_group_standard:     string;
     font_group_clean:        string;

@@ -1,7 +1,29 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import solid from "vite-plugin-solid";
 import path from "path";
+import { readdirSync } from "fs";
+
+/** Virtual module `virtual:public-listing/<folder>` → sorted filename array. */
+function publicDirListing(): Plugin {
+  const PREFIX = "virtual:public-listing/";
+  const RESOLVED = "\0" + PREFIX;
+  return {
+    name: "public-dir-listing",
+    resolveId(id) {
+      if (id.startsWith(PREFIX)) return RESOLVED + id.slice(PREFIX.length);
+    },
+    load(id) {
+      if (!id.startsWith(RESOLVED)) return;
+      const folder = id.slice(RESOLVED.length);
+      const dir = path.join(__dirname, "public", folder);
+      const files = readdirSync(dir)
+        .filter((f) => /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(f))
+        .sort();
+      return `export default ${JSON.stringify(files)}`;
+    },
+  };
+}
 
 const ASSET_WEB_PATH = "/view/theme/solidified/assets";
 const OUT_DIR = path.resolve(
@@ -11,6 +33,7 @@ const OUT_DIR = path.resolve(
 
 export default defineConfig({
   plugins: [
+    publicDirListing(),
     solid(),
     viteStaticCopy({
       targets: [{ src: "src/docs", dest: "../" },
