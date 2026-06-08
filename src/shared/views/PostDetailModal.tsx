@@ -9,6 +9,7 @@ import type { Post } from "../types/post.types";
 import { mapActivityToPost } from "../lib/activity.mapper";
 import { BiRegularX } from "solid-icons/bi";
 import { useI18n } from "@/i18n";
+import { apiDeleteItem } from "@/shared/lib/item-api";
 
 async function fetchDisplay(uuid: string): Promise<ThreadNode> {
   const res = await fetch(`/api/display/${uuid}`);
@@ -157,7 +158,12 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
             }
           : undefined,
         onDelete: props.handlers!.onDelete
-          ? async (mid: string) => { await props.handlers!.onDelete!(mid); props.onClose(); }
+          ? async (mid: string) => {
+              const found = findInTree(node(), mid);
+              if (found?.uuid) await apiDeleteItem(found.uuid);
+              props.handlers!.onDelete!(mid);
+              props.onClose();
+            }
           : undefined,
         onRefresh: async () => { refetch(); },
       }
