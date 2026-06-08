@@ -28,6 +28,7 @@ import {
   MdFillCircle,
 } from "solid-icons/md";
 import { setNotifCount } from "@/shared/lib/notificationCount";
+import { markNotifySeen } from "@/shared/lib/markSeen";
 const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -224,7 +225,16 @@ function NotifRow(props: {
   onDismiss: (b64mid: string) => void;
   onOpenModal: (uuid: string) => void;
 }) {
+  const [hidden, setHidden] = createSignal(false);
   const uuid = () => getDisplayUuid(props.n);
+
+  const dismiss = () => {
+    if (props.n.b64mid) {
+      setHidden(true);
+      props.onDismiss(props.n.b64mid);
+    }
+    if (props.n.notify_id) markNotifySeen(props.n.notify_id);
+  };
 
   const handleClick = (e: MouseEvent) => {
     const u = uuid();
@@ -232,16 +242,17 @@ function NotifRow(props: {
       e.preventDefault();
       props.onOpenModal(u);
     }
-    if (props.n.b64mid) props.onDismiss(props.n.b64mid);
+    dismiss();
   };
 
   const handleDismiss = (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (props.n.b64mid) props.onDismiss(props.n.b64mid);
+    dismiss();
   };
 
   return (
+    <Show when={!hidden()}>
     <div class="flex items-start gap-1 group">
       <a
         href={toRelativePath(props.n.notify_link)}
@@ -283,6 +294,7 @@ function NotifRow(props: {
         </button>
       </Show>
     </div>
+    </Show>
   );
 }
 
@@ -322,11 +334,6 @@ function StreamSection(props: {
     const count = props.bucket.count;
     if (open() && needsFetch() && count > prevCount) setFetchTick((t) => t + 1);
     prevCount = count;
-  });
-
-  createEffect(() => {
-    void props.bucket.notifications;
-    if (open() && needsFetch()) setFetchTick((t) => t + 1);
   });
 
   const notifications = (): HzNotification[] =>
