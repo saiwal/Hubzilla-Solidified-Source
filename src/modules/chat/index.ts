@@ -26,7 +26,9 @@ registerModule({
     context: "all", // only shown in channel context
     // hidden: true,       // excluded from main nav; shown via channel_tabs
   },
-  slots: {},
+  slots: {
+    right: [() => import("./widgets/BookmarkedRoomsWidget")],
+  },
   permissions: [],
   appName: "Chatrooms",
 });

@@ -31,6 +31,7 @@ export const dict: RawDictionary = {
     siteinfo:      "साइट जानकारी",
     pubsites:      "पब्लिक साइट्स",
     pubstream:     "पब्लिक स्ट्रीम",
+    bookmarks:     "बुकमार्क",
   },
   layout: {
     title:              "Hubzilla",
@@ -525,7 +526,7 @@ export const dict: RawDictionary = {
   network: {
     latest:               "नवीनतम",
     active:               "सक्रिय",
-    all:                  "सभी",
+    unthreaded:           "अनथ्रेडेड",
     feed:                 "फ़ीड",
     grid:                 "ग्रिड",
     list:                 "सूची",
@@ -840,6 +841,11 @@ export const dict: RawDictionary = {
     no_messages:      "अभी तक कोई संदेश नहीं। हैलो कहें!",
     write_message:    "संदेश लिखें… (भेजने के लिए Enter दबाएँ)",
     online_count:     "ऑनलाइन",
+    bookmarked_rooms: "बुकमार्क किए गए कक्ष",
+    bookmark:         "बुकमार्क करें",
+    unbookmark:       "बुकमार्क हटाएँ",
+    no_bookmarks:     "अभी तक कोई बुकमार्क नहीं।",
+    bookmarked:       "बुकमार्क किया गया",
   },
   files_mod: {
     new_folder:       "नया फ़ोल्डर",
@@ -1054,5 +1060,14 @@ export const dict: RawDictionary = {
     item_plural:      "आइटम",
     no_items_yet:     "अभी कोई आइटम नहीं।",
     view_cart:        "कार्ट देखें →",
+  },
+  bookmarks: {
+    title:            "बुकमार्क",
+    no_bookmarks:     "अभी तक कोई बुकमार्क नहीं।",
+    no_bookmarks_desc: "यहाँ खोजने के लिए चैटरूम या लिंक बुकमार्क करें।",
+    remove:           "हटाएँ",
+    visit:            "जाएँ",
+    chat_badge:       "चैट",
+    untitled_folder:  "बुकमार्क",
   },
 };

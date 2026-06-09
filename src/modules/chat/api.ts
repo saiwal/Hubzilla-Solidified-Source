@@ -48,6 +48,7 @@ export interface ChatMessagesResponse {
   messages: ChatMessage[];
   presence: PresenceMember[];
   viewer_hash: string;
+  room_name: string;
 }
 
 // ── Room list ─────────────────────────────────────────────────────────────────

@@ -32,6 +32,7 @@ export type RawDictionary = {
     siteinfo:      string;
     pubsites:      string;
     pubstream:     string;
+    bookmarks:     string;
   };
   layout: {
     title:              string;
@@ -492,7 +493,7 @@ export type RawDictionary = {
   network: {
     latest:               string;
     active:               string;
-    all:                  string;
+    unthreaded:           string;
     feed:                 string;
     grid:                 string;
     list:                 string;
@@ -808,6 +809,11 @@ export type RawDictionary = {
     no_messages:      string;
     write_message:    string;
     online_count:     string;
+    bookmarked_rooms: string;
+    bookmark:         string;
+    unbookmark:       string;
+    no_bookmarks:     string;
+    bookmarked:       string;
   };
   files_mod: {
     new_folder:       string;
@@ -1022,5 +1028,14 @@ export type RawDictionary = {
     item_plural:      string;
     no_items_yet:     string;
     view_cart:        string;
+  };
+  bookmarks: {
+    title:            string;
+    no_bookmarks:     string;
+    no_bookmarks_desc: string;
+    remove:           string;
+    visit:            string;
+    chat_badge:       string;
+    untitled_folder:  string;
   };
 };

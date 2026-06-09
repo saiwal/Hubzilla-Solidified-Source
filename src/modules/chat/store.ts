@@ -43,8 +43,9 @@ const [chatLoading, setChatLoading] = createSignal(false);
 const [sendError, setSendError] = createSignal<string | null>(null);
 const [activeRoomId, setActiveRoomId] = createSignal<number | null>(null);
 const [viewerHash, setViewerHash] = createSignal("");
+const [roomName, setRoomName] = createSignal("");
 
-export { messages, presence, chatLoading, sendError, activeRoomId, viewerHash };
+export { messages, presence, chatLoading, sendError, activeRoomId, viewerHash, roomName };
 
 // Track the latest message timestamp for polling
 let lastSince: string | undefined;
@@ -61,6 +62,7 @@ export async function enterRoom(
     setActiveRoomId(roomId);
     setMessages([]);
     setPresence([]);
+    setRoomName("");
     lastSince = undefined;
     setChatLoading(true);
   });
@@ -72,6 +74,7 @@ export async function enterRoom(
       setMessages(data.messages);
       setPresence(data.presence);
       if (data.viewer_hash) setViewerHash(data.viewer_hash);
+      if (data.room_name)   setRoomName(data.room_name);
       if (data.messages.length > 0)
         lastSince = data.messages[data.messages.length - 1].created;
       setChatLoading(false);

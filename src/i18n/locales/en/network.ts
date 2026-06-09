@@ -4,7 +4,7 @@ export const network: RawDictionary["network"] = {
   // Sort order buttons
   latest:               "Latest",
   active:               "Active",
-  all:                  "All",
+  unthreaded:           "Unthreaded",
   // View mode labels
   feed:                 "Feed",
   grid:                 "Grid",

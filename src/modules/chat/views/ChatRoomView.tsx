@@ -18,10 +18,19 @@ import {
 	chatLoading,
 	sendError,
 	viewerHash,
+	roomName,
 	enterRoom,
 	exitRoom,
 	sendChatMessage,
 } from "../store";
+import {
+	loadChatBookmarks,
+	isRoomBookmarked,
+	bookmarkIdForRoom,
+	addChatBookmark,
+	removeChatBookmark,
+} from "../bookmarks";
+import { isLocalUser } from "@/shared/store/auth-store";
 import {
 	MdFillArrow_back,
 	MdFillSend,
@@ -45,6 +54,20 @@ export default function ChatRoomView() {
 
 	let messagesEl: HTMLDivElement | undefined;
 	let inputEl: HTMLTextAreaElement | undefined;
+
+	const isBookmarked = createMemo(() => isRoomBookmarked(nick(), roomId()));
+
+	// Load bookmarks once for local users
+	createEffect(() => { if (isLocalUser()) loadChatBookmarks(); });
+
+	async function toggleBookmark() {
+		if (isBookmarked()) {
+			const id = bookmarkIdForRoom(nick(), roomId());
+			if (id) await removeChatBookmark(id);
+		} else {
+			await addChatBookmark(nick(), roomId(), roomName() || t("chat.chatroom") as string);
+		}
+	}
 
 	// Enter room on mount / param change
 	createEffect(on([nick, roomId] as const, ([n, r]) => {
@@ -109,10 +132,28 @@ export default function ChatRoomView() {
 				<div class="flex items-center gap-2 flex-1 min-w-0">
 					<MdFillChat class="text-accent shrink-0" />
 					<span class="font-medium text-txt text-sm truncate">
-						{/* Room name from messages or loading */}
-						{messages()[0] ? t("chat.chatroom") : chatLoading() ? t("calendar.loading") : t("chat.chatroom")}
+						{roomName() || (chatLoading() ? t("calendar.loading") : t("chat.chatroom"))}
 					</span>
 				</div>
+				<Show when={isLocalUser()}>
+					<button
+						onClick={() => void toggleBookmark()}
+						title={isBookmarked() ? t("chat.unbookmark") as string : t("chat.bookmark") as string}
+						class="p-1.5 rounded-lg transition-colors hover:bg-elevated"
+						classList={{
+							"text-accent": isBookmarked(),
+							"text-muted hover:text-txt": !isBookmarked(),
+						}}
+					>
+						<svg class="w-4 h-4" viewBox="0 0 24 24"
+							fill={isBookmarked() ? "currentColor" : "none"}
+							stroke="currentColor" stroke-width="2"
+						>
+							<path stroke-linecap="round" stroke-linejoin="round"
+								d="M5 3a2 2 0 00-2 2v16l7-3 7 3V5a2 2 0 00-2-2H5z" />
+						</svg>
+					</button>
+				</Show>
 				<button
 					onClick={() => setShowPresence((v) => !v)}
 					class="flex items-center gap-1.5 text-xs text-muted hover:text-txt border border-rim rounded-lg px-2.5 py-1.5 hover:bg-elevated transition-colors"

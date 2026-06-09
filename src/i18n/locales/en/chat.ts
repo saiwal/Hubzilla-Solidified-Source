@@ -34,4 +34,10 @@ export const chat: RawDictionary["chat"] = {
   no_messages:      "No messages yet. Say hello!",
   write_message:    "Write a message… (Enter to send)",
   online_count:     "online",
+  // Bookmarks
+  bookmarked_rooms: "Bookmarked Rooms",
+  bookmark:         "Bookmark",
+  unbookmark:       "Remove bookmark",
+  no_bookmarks:     "No bookmarked rooms yet.",
+  bookmarked:       "Bookmarked",
 };

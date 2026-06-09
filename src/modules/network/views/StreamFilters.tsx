@@ -21,7 +21,6 @@ import { apiFetch } from "@/shared/lib/fetch";
 const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
 import { loadNetwork, loading, resetPosts, viewMode, changeView } from "../store";
 import {
-  MdFillFilter_list,
   MdFillPerson,
   MdFillRefresh,
   MdFillSearch,
@@ -53,7 +52,7 @@ type Order = NonNullable<NetworkParams["order"]>;
 const ORDER_OPTS: { value: Order; key: string; Icon: any }[] = [
   { value: "created",    key: "latest", Icon: MdFillSchedule },
   { value: "commented",  key: "active", Icon: MdFillForum    },
-  { value: "unthreaded", key: "all",    Icon: MdFillFormat_list_bulleted },
+  { value: "unthreaded", key: "unthreaded", Icon: MdFillFormat_list_bulleted },
 ];
 
 const VIEW_OPTS: { id: ViewMode; key: string; Icon: any }[] = [
@@ -79,9 +78,6 @@ const ICON_BTN =
   "hover:bg-elevated hover:text-txt transition-colors shrink-0 " +
   "flex items-center justify-center";
 
-const ICON_BTN_ACTIVE =
-  "p-1.5 rounded-lg border border-accent bg-accent-muted text-accent " +
-  "transition-colors shrink-0 flex items-center justify-center";
 
 const isUrl = (val: string) => val.startsWith("https://");
 
@@ -94,7 +90,6 @@ export default function StreamFilters() {
   // Expand state for collapsible inputs
   const [searchOpen, setSearchOpen] = createSignal(false);
   const [connOpen,   setConnOpen]   = createSignal(false);
-  const [advOpen,    setAdvOpen]    = createSignal(false);
 
   // Connection typeahead
   const [connInput, setConnInput]             = createSignal("");
@@ -133,10 +128,11 @@ export default function StreamFilters() {
   const gid        = ()        => str(searchParams.gid);
   const xchanLabel = ()        => str(searchParams.xchan_label);
 
-  const hasAdvanced  = () => !!(tag() || dbegin() || dend() || cmin() || cmax());
-  const hasAnyFilter = () =>
+  const hasAdvanced   = () => !!(tag() || dbegin() || dend() || cmin() || cmax());
+  const hasAnyFilter  = () =>
     order() !== "created" || !!search() || star() || pf() || conv() || dm() || event() ||
     hasAdvanced() || !!(cid() || gid());
+  const hasSaveableSearch = () => !!(search() || tag() || xchanLabel());
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -492,20 +488,8 @@ export default function StreamFilters() {
           </Show>
         </Show>
 
-        {/* Advanced toggle */}
-        <button
-          onClick={() => setAdvOpen((v) => !v)}
-          title={t("network.more_filters")}
-          class={`relative ${advOpen() || hasAdvanced() ? ICON_BTN_ACTIVE : ICON_BTN}`}
-        >
-          <MdFillFilter_list size={14} />
-          <Show when={hasAdvanced()}>
-            <span class="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-accent" />
-          </Show>
-        </button>
-
         {/* Save search */}
-        <Show when={hasAnyFilter()}>
+        <Show when={hasSaveableSearch()}>
           <button onClick={() => void saveSearch()} title={t("network.save_search")} class={ICON_BTN}>
             <MdFillBookmark_add size={15} />
           </button>
@@ -514,9 +498,10 @@ export default function StreamFilters() {
         {/* Clear all */}
         <Show when={hasAnyFilter()}>
           <button onClick={clearAll} title={t("network.clear_filters")}
-            class="p-1.5 rounded-lg text-muted hover:text-accent hover:bg-elevated
-                   transition-colors shrink-0">
-            <MdFillClose size={15} />
+            class="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs text-muted
+                   hover:text-accent hover:bg-elevated transition-colors shrink-0">
+            <MdFillClose size={13} />
+            <span>{t("network.clear_filters")}</span>
           </button>
         </Show>
 
@@ -532,48 +517,6 @@ export default function StreamFilters() {
       <div class="flex sm:hidden justify-center">
         <ViewSwitcher />
       </div>
-
-      {/* ── Advanced panel ── */}
-      <Show when={advOpen()}>
-        <div class="flex flex-wrap gap-2.5 p-3 rounded-lg bg-elevated border border-rim">
-          <label class="flex flex-col gap-1">
-            <span class="text-xs text-muted font-medium">{t("network.tag")}</span>
-            <input
-              type="text"
-              placeholder={t("network.tag_placeholder")}
-              value={tag()}
-              onInput={(e) => sp({ tag: e.currentTarget.value || undefined })}
-              onBlur={apply}
-              onKeyDown={(e) => e.key === "Enter" && apply()}
-              class={INPUT_CLS}
-            />
-          </label>
-          <label class="flex flex-col gap-1">
-            <span class="text-xs text-muted font-medium">{t("network.date_from")}</span>
-            <input type="date" value={dbegin()}
-              onChange={(e) => { sp({ dbegin: e.currentTarget.value || undefined }); apply(); }}
-              class={INPUT_CLS} />
-          </label>
-          <label class="flex flex-col gap-1">
-            <span class="text-xs text-muted font-medium">{t("network.date_to")}</span>
-            <input type="date" value={dend()}
-              onChange={(e) => { sp({ dend: e.currentTarget.value || undefined }); apply(); }}
-              class={INPUT_CLS} />
-          </label>
-          <label class="flex flex-col gap-1">
-            <span class="text-xs text-muted font-medium">{t("network.affinity_min")}</span>
-            <input type="number" min="0" placeholder={t("network.affinity_min_placeholder")} value={cmin()}
-              onInput={(e) => sp({ cmin: e.currentTarget.value || undefined })}
-              onBlur={apply} class={`${INPUT_CLS} w-20`} />
-          </label>
-          <label class="flex flex-col gap-1">
-            <span class="text-xs text-muted font-medium">{t("network.affinity_max")}</span>
-            <input type="number" min="0" placeholder={t("network.affinity_max_placeholder")} value={cmax()}
-              onInput={(e) => sp({ cmax: e.currentTarget.value || undefined })}
-              onBlur={apply} class={`${INPUT_CLS} w-20`} />
-          </label>
-        </div>
-      </Show>
 
       <Show when={importedUuid()}>
         {(uuid) => (

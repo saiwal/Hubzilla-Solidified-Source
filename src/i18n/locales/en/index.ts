@@ -25,6 +25,7 @@ import { manage }     from "./manage";
 import { pubstream }  from "./pubstream";
 import { admin }      from "./admin";
 import { cart }       from "./cart";
+import { bookmarks }  from "./bookmarks";
 
 export const dict: RawDictionary = {
   nav,
@@ -53,4 +54,5 @@ export const dict: RawDictionary = {
   pubstream,
   admin,
   cart,
+  bookmarks,
 };
