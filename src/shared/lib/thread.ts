@@ -34,17 +34,12 @@ export function buildThreadTree(posts: Post[]): ThreadNode[] {
     }
   });
 
-  const sortByDate = (nodes: ThreadNode[], descending = false): ThreadNode[] =>
+  const sortChildrenAsc = (nodes: ThreadNode[]): ThreadNode[] =>
     nodes
-      .sort((a, b) => {
-        const aKey = descending ? (a.commented ?? a.created) : a.created;
-        const bKey = descending ? (b.commented ?? b.created) : b.created;
-        const diff = new Date(aKey).getTime() - new Date(bKey).getTime();
-        return descending ? -diff : diff;
-      })
-      .map((node) => ({ ...node, children: sortByDate(node.children, false) }));
+      .sort((a, b) => new Date(a.created).getTime() - new Date(b.created).getTime())
+      .map((node) => ({ ...node, children: sortChildrenAsc(node.children) }));
 
-  return sortByDate(roots, true);
+  return roots.map((node) => ({ ...node, children: sortChildrenAsc(node.children) }));
 }
 
 export function flattenThread(node: ThreadNode): Post[] {

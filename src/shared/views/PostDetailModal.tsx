@@ -210,7 +210,7 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
 
           {/* Scrollable body */}
           <div
-            class="flex-1 overflow-y-auto p-4"
+            class="flex-1 overflow-y-auto"
             style={{ "-webkit-overflow-scrolling": "touch" }}
             onClick={(e) => { e.stopPropagation(); handleBodyClick(e); }}
           >

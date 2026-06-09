@@ -1,6 +1,8 @@
 import { registerModule } from "@/shared/lib/module-registry";
 import { useI18n } from "@/i18n";
 
+const filtersLoader = () => import("./widgets/StreamFiltersWidget");
+
 registerModule({
   id: "network",
   routes: [
@@ -14,8 +16,7 @@ registerModule({
     context: "owner",
   },
   slots: {
-    right: [
-    ],
+    right: [filtersLoader],
   },
   permissions: [],
 });

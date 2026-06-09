@@ -519,6 +519,7 @@ export type RawDictionary = {
     affinity_max:         string;
     affinity_min_placeholder: string;
     affinity_max_placeholder: string;
+    filters:              string;
     loading:              string;
     new_post:             string;
     new_posts:            string;

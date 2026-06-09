@@ -22,11 +22,9 @@ const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
 import { loadNetwork, loading, resetPosts, viewMode, changeView } from "../store";
 import {
   MdFillFilter_list,
-  MdFillMail,
   MdFillPerson,
   MdFillRefresh,
   MdFillSearch,
-  MdFillStar,
   MdFillClose,
   MdFillShort_text,
   MdFillApps,
@@ -34,8 +32,6 @@ import {
   MdFillAll_inbox,
   MdFillSchedule,
   MdFillForum,
-  MdFillEvent,
-  MdFillNotifications,
 } from "solid-icons/md";
 import { helpable } from "@/shared/lib/helpable";
 import { toast } from "@/shared/store/toast";
@@ -71,7 +67,7 @@ const str = (v: string | string[] | undefined): string =>
   Array.isArray(v) ? (v[0] ?? "") : (v ?? "");
 
 const INPUT_CLS =
-  "text-sm border border-rim rounded-lg bg-surface text-txt " +
+  "h-8 text-sm border border-rim rounded-lg bg-surface text-txt " +
   "placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent " +
   "py-1.5 px-2.5";
 
@@ -167,11 +163,6 @@ export default function StreamFilters() {
 
   function setOrderAndApply(o: Order) {
     sp({ order: o === "created" ? undefined : o });
-    setTimeout(apply, 0);
-  }
-
-  function toggleFlag(key: string, current: boolean) {
-    sp({ [key]: current ? undefined : "1" });
     setTimeout(apply, 0);
   }
 
@@ -347,43 +338,6 @@ export default function StreamFilters() {
             </button>
           ))}
         </div>
-
-        {/* Toggle chips — icon only, no text */}
-        <button
-          title={t("network.starred")}
-          onClick={() => toggleFlag("star", star())}
-          class={star() ? ICON_BTN_ACTIVE : ICON_BTN}
-        >
-          <MdFillStar size={15} />
-        </button>
-        <button
-          title={t("network.following")}
-          onClick={() => toggleFlag("pf", pf())}
-          class={pf() ? ICON_BTN_ACTIVE : ICON_BTN}
-        >
-          <MdFillNotifications size={15} />
-        </button>
-        <button
-          title={t("network.conversations")}
-          onClick={() => toggleFlag("conv", conv())}
-          class={conv() ? ICON_BTN_ACTIVE : ICON_BTN}
-        >
-          <MdFillPerson size={15} />
-        </button>
-        <button
-          title={t("network.direct_messages")}
-          onClick={() => toggleFlag("dm", dm())}
-          class={dm() ? ICON_BTN_ACTIVE : ICON_BTN}
-        >
-          <MdFillMail size={15} />
-        </button>
-        <button
-          title={t("network.events")}
-          onClick={() => toggleFlag("event", event())}
-          class={event() ? ICON_BTN_ACTIVE : ICON_BTN}
-        >
-          <MdFillEvent size={15} />
-        </button>
 
         {/* Spacer */}
         <div class="flex-1 min-w-0" />

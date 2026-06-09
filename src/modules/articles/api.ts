@@ -47,10 +47,10 @@ export async function fetchArticle(
 }
 
 export async function updateArticle(
-  mid: string,
+  uuid: string,
   fields: { body: string; title: string; summary: string },
 ): Promise<void> {
-  const res = await apiFetch(`/api/item/${encodeURIComponent(mid)}/edit`, {
+  const res = await apiFetch(`/api/item/${uuid}/edit`, {
     method: "POST",
     body: JSON.stringify(fields),
   });
@@ -60,8 +60,8 @@ export async function updateArticle(
   }
 }
  
-export async function deleteArticle(mid: string): Promise<void> {
-  const res = await apiFetch(`/api/item/${encodeURIComponent(mid)}/delete`, {
+export async function deleteArticle(uuid: string): Promise<void> {
+  const res = await apiFetch(`/api/item/${uuid}/delete`, {
     method: "POST",
     body: JSON.stringify({}),
   });

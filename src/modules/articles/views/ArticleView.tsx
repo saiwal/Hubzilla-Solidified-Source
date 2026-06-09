@@ -103,7 +103,7 @@ function TableOfContents(props: { entries: TocEntry[]; activeId: string }) {
 // ── edit modal ────────────────────────────────────────────────────────────────
 
 function EditModal(props: {
-  article: { mid: string; title: string; summary?: string; slug?: string; category?: string; body: string };
+  article: { uuid: string; title: string; summary?: string; slug?: string; category?: string; body: string };
   nick: string;
   profileUid: number;
   onSaved: () => void;
@@ -140,7 +140,7 @@ function EditModal(props: {
           profileUid={props.profileUid}
           nick={props.nick}
           initial={{
-            mid:      props.article.mid,
+            uuid:     props.article.uuid,
             title:    props.article.title,
             summary:  props.article.summary ?? "",
             slug:     props.article.slug    ?? "",
@@ -159,14 +159,14 @@ function EditModal(props: {
 
 // ── delete confirm ────────────────────────────────────────────────────────────
 
-function DeleteConfirm(props: { mid: string; onDeleted: () => void; onCancel: () => void }) {
+function DeleteConfirm(props: { uuid: string; onDeleted: () => void; onCancel: () => void }) {
   const { t } = useI18n();
   const [deleting, setDeleting] = createSignal(false);
 
   const confirm = async () => {
     setDeleting(true);
     try {
-      await deleteArticle(props.mid);
+      await deleteArticle(props.uuid);
       props.onDeleted();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("articles.delete_failed"));
@@ -334,7 +334,7 @@ export default function ArticleView() {
               {/* Delete confirm banner */}
               <Show when={confirmDelete()}>
                 <DeleteConfirm
-                  mid={d().article.mid}
+                  uuid={d().article.uuid}
                   onDeleted={() => navigate(`/articles/${nick()}`)}
                   onCancel={() => setConfirmDelete(false)}
                 />
@@ -344,7 +344,7 @@ export default function ArticleView() {
               <Show when={editing()}>
                 <EditModal
                   article={{
-                    mid:      d().article.mid,
+                    uuid:     d().article.uuid,
                     title:    d().article.title,
                     summary:  d().article.summary,
                     body:     d().article.body ?? "",

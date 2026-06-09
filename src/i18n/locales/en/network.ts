@@ -26,6 +26,7 @@ export const network: RawDictionary["network"] = {
   search_placeholder:   "Search or paste URL…",
   // Status
   fetching_post:        "Fetching post…",
+  filters:              "Filters",
   // Advanced filters
   more_filters:         "More filters",
   clear_filters:        "Clear filters",

@@ -22,7 +22,7 @@ interface Props {
   nick: string;
   /** Pass existing article data to edit rather than create */
   initial?: {
-    mid: string;      // required for edit — passed to /api/item/:mid/edit
+    uuid: string;
     title: string;
     summary: string;
     slug: string;
@@ -37,11 +37,11 @@ export default function ArticleComposer(props: Props) {
   const caps = CAPABILITIES.article;
   const [wordCount, setWordCount] = createSignal(0);
   const [draftsOpen, setDraftsOpen] = createSignal(false);
-  const isEditing = () => !!props.initial?.mid;
+  const isEditing = () => !!props.initial?.uuid;
 
   // ── Scope (shared by both stores for matching IDB keys) ─────────────────────
-  const scope = props.initial?.mid
-    ? `article:edit:${props.initial.mid}`
+  const scope = props.initial?.uuid
+    ? `article:edit:${props.initial.uuid}`
     : "article:new";
 
   // ── Attachment store ─────────────────────────────────────────────────────────
@@ -133,7 +133,7 @@ export default function ArticleComposer(props: Props) {
       }
 
       const res = await apiFetch(
-        `/api/item/${encodeURIComponent(props.initial!.mid)}/edit`,
+        `/api/item/${props.initial!.uuid}/edit`,
         {
           method: "POST",
           body: JSON.stringify({

@@ -542,6 +542,7 @@ export const dict: RawDictionary = {
     search:               "खोजें",
     search_placeholder:   "खोजें या URL पेस्ट करें…",
     fetching_post:        "पोस्ट प्राप्त हो रही है…",
+    filters:              "फ़िल्टर",
     more_filters:         "अधिक फ़िल्टर",
     clear_filters:        "फ़िल्टर साफ़ करें",
     tag:                  "टैग",
