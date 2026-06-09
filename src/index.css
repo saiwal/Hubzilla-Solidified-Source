@@ -140,3 +140,16 @@
 
   /* --radius-xl: var(--radius-xl); */
 }
+
+/* Unlayered — wins over @layer components (typography plugin).
+   Code blocks use theme variables so they're readable on all themes. */
+.prose pre {
+  background-color: var(--color-surface) !important;
+  color: var(--color-txt) !important;
+}
+.prose pre code {
+  background-color: transparent !important;
+  color: inherit !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
