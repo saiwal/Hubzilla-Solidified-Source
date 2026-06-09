@@ -525,6 +525,12 @@ export type RawDictionary = {
     new_posts:            string;
     load_more:            string;
     all_caught_up:        string;
+    // Saved searches
+    saved_searches:            string;
+    save_search:               string;
+    save_search_placeholder:   string;
+    search_saved:              string;
+    delete_saved_search:       string;
   };
   directory: {
     connections:          string;

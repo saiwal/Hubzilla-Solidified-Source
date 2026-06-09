@@ -46,4 +46,10 @@ export const network: RawDictionary["network"] = {
   // Stream end
   load_more:            "Load more",
   all_caught_up:        "You're all caught up",
+  // Saved searches
+  saved_searches:          "Saved searches",
+  save_search:             "Save search",
+  save_search_placeholder: "Search name…",
+  search_saved:            "Search saved",
+  delete_saved_search:     "Delete saved search",
 };

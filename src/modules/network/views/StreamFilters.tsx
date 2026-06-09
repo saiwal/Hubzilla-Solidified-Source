@@ -32,6 +32,7 @@ import {
   MdFillAll_inbox,
   MdFillSchedule,
   MdFillForum,
+  MdFillBookmark_add,
 } from "solid-icons/md";
 import { helpable } from "@/shared/lib/helpable";
 import { toast } from "@/shared/store/toast";
@@ -42,6 +43,7 @@ import {
   type AclConnection,
   type NetworkParams,
 } from "../api";
+import { addSavedSearch } from "../saved-searches";
 void helpable;
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -168,6 +170,34 @@ export default function StreamFilters() {
 
   const [importing, setImporting] = createSignal(false);
   const [importedUuid, setImportedUuid] = createSignal<string | null>(null);
+
+  function captureParams(): Record<string, string> {
+    const keys = ["order","search","tag","star","pf","conv","dm","event","dbegin","dend","cmin","cmax","cid","gid","xchan_label"];
+    const p: Record<string, string> = {};
+    for (const k of keys) {
+      const v = str(searchParams[k]);
+      if (v) p[k] = v;
+    }
+    return p;
+  }
+
+  function autoLabel(): string {
+    if (search())      return search();
+    if (tag())         return `#${tag()}`;
+    if (xchanLabel())  return xchanLabel();
+    const parts: string[] = [];
+    if (star())  parts.push(t("network.starred"));
+    if (pf())    parts.push(t("network.following"));
+    if (conv())  parts.push(t("network.conversations"));
+    if (dm())    parts.push(t("network.direct_messages"));
+    if (event()) parts.push(t("network.events"));
+    return parts.join(", ") || t("network.save_search");
+  }
+
+  async function saveSearch() {
+    await addSavedSearch(autoLabel(), captureParams());
+    toast.success(t("network.search_saved"));
+  }
 
   async function handleUrlImport(url: string) {
     setImporting(true);
@@ -473,6 +503,13 @@ export default function StreamFilters() {
             <span class="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-accent" />
           </Show>
         </button>
+
+        {/* Save search */}
+        <Show when={hasAnyFilter()}>
+          <button onClick={() => void saveSearch()} title={t("network.save_search")} class={ICON_BTN}>
+            <MdFillBookmark_add size={15} />
+          </button>
+        </Show>
 
         {/* Clear all */}
         <Show when={hasAnyFilter()}>

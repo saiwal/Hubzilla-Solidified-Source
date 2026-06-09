@@ -558,6 +558,11 @@ export const dict: RawDictionary = {
     new_posts:            "पोस्ट",
     load_more:            "और लोड करें",
     all_caught_up:        "आप सब देख चुके हैं",
+    saved_searches:          "सहेजी गई खोजें",
+    save_search:             "खोज सहेजें",
+    save_search_placeholder: "खोज का नाम…",
+    search_saved:            "खोज सहेजी गई",
+    delete_saved_search:     "सहेजी गई खोज हटाएँ",
   },
   directory: {
     connections:          "कनेक्शन",
