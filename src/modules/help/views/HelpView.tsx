@@ -460,6 +460,7 @@ export default function HelpView() {
                          prose-a:text-accent prose-a:no-underline hover:prose-a:underline
                          prose-blockquote:not-italic prose-blockquote:border-accent
                          prose-code:bg-overlay prose-code:px-1 prose-code:rounded prose-code:text-sm
+                         prose-code:before:content-none prose-code:after:content-none
                          prose-img:rounded-lg break-words"
                   innerHTML={rendered()}
                 />
