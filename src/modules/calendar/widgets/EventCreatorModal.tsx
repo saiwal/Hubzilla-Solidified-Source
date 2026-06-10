@@ -1,12 +1,20 @@
-import { createSignal, Show, onMount, onCleanup } from "solid-js";
+import { createSignal, createResource, Show, For, onMount, onCleanup } from "solid-js";
 import { toast } from "@/shared/store/toast";
 import { createEvent } from "../api";
+import { fetchCdavCalendars } from "../api/cdav";
 import { useI18n } from "@/i18n";
 
 interface Props {
   onClose: () => void;
   onCreated?: () => void;
   defaultDate?: string; // YYYY-MM-DD, pre-fills start date
+}
+
+interface CalendarOption {
+  label: string;
+  color: string;
+  calendarId?: number;
+  calendarInstanceId?: number;
 }
 
 function todayDate() {
@@ -25,6 +33,30 @@ export default function EventCreatorModal(props: Props) {
   const [location, setLocation] = createSignal("");
   const [description, setDescription] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
+  const [selectedCalIdx, setSelectedCalIdx] = createSignal(0);
+
+  const [calData] = createResource(fetchCdavCalendars);
+
+  const calendarOptions = (): CalendarOption[] => {
+    const d = calData();
+    const opts: CalendarOption[] = [
+      {
+        label: d?.channel_calendar?.displayname ?? t("calendar.channel_calendar"),
+        color: d?.channel_calendar?.color ?? "#3a87ad",
+      },
+    ];
+    if (d?.has_cdav) {
+      for (const cal of d.my_calendars) {
+        opts.push({ label: cal.displayname, color: cal.color, calendarId: cal.id as number, calendarInstanceId: cal.instanceId });
+      }
+      for (const cal of d.shared_calendars) {
+        if (cal.access === "read-write") {
+          opts.push({ label: cal.displayname, color: cal.color, calendarId: cal.id as number, calendarInstanceId: cal.instanceId });
+        }
+      }
+    }
+    return opts;
+  };
 
   let titleRef!: HTMLInputElement;
   onMount(() => titleRef?.focus());
@@ -52,6 +84,8 @@ export default function EventCreatorModal(props: Props) {
           : `${endDate()}T${endTime()}:00Z`
         : undefined;
 
+      const selectedCal = calendarOptions()[selectedCalIdx()];
+
       await createEvent({
         title: title().trim(),
         description: description().trim() || undefined,
@@ -60,6 +94,8 @@ export default function EventCreatorModal(props: Props) {
         end: endIso,
         allDay: allDay(),
         nofinish: nofinish(),
+        calendarId: selectedCal?.calendarId,
+        calendarInstanceId: selectedCal?.calendarInstanceId,
       });
 
       props.onCreated?.();
@@ -100,6 +136,36 @@ export default function EventCreatorModal(props: Props) {
 
         {/* Form */}
         <form onSubmit={handleSubmit} class="p-5 flex flex-col gap-4 overflow-y-auto">
+
+          {/* Calendar picker — only shown when there are multiple options */}
+          <Show when={calendarOptions().length > 1}>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-medium text-muted">{t("calendar.calendar_label")}</label>
+              <div class="relative">
+                <select
+                  value={selectedCalIdx()}
+                  onChange={(e) => setSelectedCalIdx(parseInt(e.currentTarget.value))}
+                  class={inputClass + " appearance-none pr-8 cursor-pointer"}
+                >
+                  <For each={calendarOptions()}>
+                    {(opt, i) => (
+                      <option value={i()}>{opt.label}</option>
+                    )}
+                  </For>
+                </select>
+                {/* Color dot overlay */}
+                <span
+                  class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full"
+                  style={{ background: calendarOptions()[selectedCalIdx()]?.color ?? "#3a87ad" }}
+                />
+                <span class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-muted">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
+              </div>
+            </div>
+          </Show>
 
           {/* Title */}
           <div class="flex flex-col gap-1">

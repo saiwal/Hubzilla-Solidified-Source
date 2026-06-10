@@ -1,6 +1,6 @@
 import { createSignal, createMemo, createEffect } from "solid-js";
 import { createStore } from "solid-js/store";
-import { uploadFile, davDirPath, listFolder, updatePermissions } from "@/modules/files/api";
+import { wallAttach, updatePermissions } from "@/modules/files/api";
 import type { FileMeta, FileAcl } from "@/modules/files/api";
 import type { Photo } from "@/modules/photos/api/api";
 import type { Attachment, AttachmentStore } from "./types";
@@ -127,21 +127,28 @@ export function createAttachmentStore(nick: string, scope: string): AttachmentSt
 
     for (const item of newItems) {
       void (async () => {
-        const dirPath = davDirPath(nick, "");
         try {
-          await uploadFile(dirPath, item.file!, (pct) => update(item.id, { progress: pct }));
-          // Fetch the file hash so we can include it as attachment[] in the item POST.
-          const files = await listFolder(nick, "");
-          const match = files.find((f) => f.filename === item.file!.name);
-          update(item.id, {
-            status: "ready",
-            progress: 100,
-            hash: match?.hash,
-            insertUrl: match
-              ? `/cloud/${nick}/${encodeURIComponent(match.filename)}`
-              : undefined,
-          });
-          if (match?.hash) applyAcl(match.hash);
+          const res = await wallAttach(nick, item.file!, (pct) => update(item.id, { progress: pct }));
+          if (res.isPhoto) {
+            // Photos: resourceId = attach hash (= photo resource_id); insertUrl for [img] inline embed.
+            // Hubzilla's fix_attached_permissions() uses the attach record (flags=1) to update
+            // photo permissions to match the post ACL when the post is submitted.
+            update(item.id, {
+              status: "ready",
+              progress: 100,
+              resourceId: res.hash,
+              insertUrl: res.src ? toRelativePath(res.src) : undefined,
+            });
+          } else {
+            // Files: insertUrl stored as "hash,revision" → insertBBCode produces [attachment]hash,revision[/attachment]
+            update(item.id, {
+              status: "ready",
+              progress: 100,
+              hash: res.hash,
+              insertUrl: `${res.hash},${res.revision}`,
+            });
+          }
+          applyAcl(res.hash);
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : "Upload failed";
           update(item.id, { status: "error", error: msg });

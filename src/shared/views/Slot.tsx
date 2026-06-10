@@ -6,6 +6,7 @@ import {
   getLazy,
   getGlobalVersion,
   isModuleActive,
+  moduleIdForPath,
 } from "@/shared/lib/module-registry";
 import { useInstalledApps } from "@/shared/store/nav-store";
 import type { SlotsDef } from "../types/module.types";
@@ -21,7 +22,7 @@ const Slot: Component<SlotProps> = (props) => {
 
   const activeModuleId = () => {
     if (props.moduleId) return props.moduleId;
-    return location.pathname.split("/").filter(Boolean)[0] ?? "";
+    return moduleIdForPath(location.pathname);
   };
 
   const globalVersion = getGlobalVersion();

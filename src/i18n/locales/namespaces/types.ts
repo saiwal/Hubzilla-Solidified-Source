@@ -760,6 +760,7 @@ export type RawDictionary = {
     view_source:      string;
     no_title:         string;
     new_event:        string;
+    calendar_label:   string;
     title_label:      string;
     title_placeholder: string;
     title_required:   string;
@@ -775,6 +776,42 @@ export type RawDictionary = {
     creating:         string;
     create_event:     string;
     failed_create:    string;
+    // day modal
+    add_event_here:   string;
+    // actions widget / header toolbar
+    calendar_actions: string;
+    export_ical:      string;
+    import_ical:      string;
+    importing:        string;
+    import_success:   string;
+    import_failed:    string;
+    export_failed:    string;
+    // cdav widget
+    channel_calendar:       string;
+    my_calendars:           string;
+    shared_calendars:       string;
+    calendar_tools:         string;
+    create_calendar:        string;
+    calendar_name:          string;
+    calendar_color:         string;
+    create:                 string;
+    creating_calendar:      string;
+    edit_calendar:          string;
+    save:                   string;
+    saving:                 string;
+    delete_calendar:        string;
+    delete_confirm:         string;
+    deleting:               string;
+    share_calendar:         string;
+    select_channel:         string;
+    access_read_write:      string;
+    access_read_only:       string;
+    share:                  string;
+    sharing:                string;
+    remove_sharee:          string;
+    no_cdav:                string;
+    read_badge:             string;
+    rw_badge:               string;
   };
   chat: {
     chatrooms:        string;

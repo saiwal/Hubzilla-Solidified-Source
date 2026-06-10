@@ -3,6 +3,7 @@ import { For } from "solid-js";
 import { A, useLocation } from "@solidjs/router";
 import NavItem, { getNavIcon } from "./shared/views/NavItem";
 import { useNav, useNavActionItems } from "./shared/lib/useNav";
+import { moduleIdForPath } from "./shared/lib/module-registry";
 import Slot from "./shared/views/Slot";
 import RemoteAuthBanner from "./shared/views/RemoteAuthBanner";
 import { useViewerRole, useSubjectNick } from "./shared/store/site-config";
@@ -96,10 +97,7 @@ const Layout: ParentComponent = (props) => {
     if (prevOpen && !isOpen) moreButtonRef?.focus();
   }, { defer: true }));
 
-  const activeModuleId = createMemo(() => {
-    const segment = location.pathname.split("/").filter(Boolean)[0];
-    return segment ?? "";
-  });
+  const activeModuleId = createMemo(() => moduleIdForPath(location.pathname));
 
   const closeAll = () => {
     setRightOpen(false);

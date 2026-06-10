@@ -4,12 +4,12 @@ import { registerModule } from "@/shared/lib/module-registry";
 import { useI18n } from "@/i18n";
 import { usePageNick } from "@/shared/store/site-config";
 
+const cdavWidgetLoader = () => import("./widgets/CdavCalendarWidget");
+
 registerModule({
   id: "cal",
   routes: [
-    // /cal            → redirect or empty (no nick yet)
     { path: "/cdav/calendar", component: () => import("./views/CalView") },
-    // /cal/:nick      → channel calendar
     { path: "/cal/:nick", component: () => import("./views/CalView") },
   ],
   navItem: {
@@ -20,7 +20,9 @@ registerModule({
     context: "all",
     hidden: false,
   },
-  slots: {},
+  slots: {
+    right: [cdavWidgetLoader],
+  },
   permissions: [],
   appName: "Calendar",
 });

@@ -15,6 +15,10 @@ export interface CalEvent {
   rw: boolean;
   plink: string;
   html: string;       // only populated for ?id= requests
+  /** Set for CalDAV events — used to color-code calendar pills */
+  calendarColor?: string;
+  calendarName?: string;
+  calendarId?: number;
   author: {
     name: string;
     avatar: string;
@@ -57,6 +61,9 @@ export interface CreateEventInput {
   end?: string;
   allDay?: boolean;
   nofinish?: boolean;
+  /** CalDAV calendar target. Omit (or use "channel_calendar") for the channel event table. */
+  calendarId?: number;
+  calendarInstanceId?: number;
 }
 
 export async function createEvent(
@@ -78,6 +85,30 @@ export async function createEvent(
   }
   const json = await res.json();
   return json.data as { id: number; uri: string };
+}
+
+export interface ImportResult {
+  imported: number;
+  failed: number;
+}
+
+export async function importCalendar(icalContent: string): Promise<ImportResult> {
+  const token = await getCsrfToken();
+  const res = await fetch("/api/cal/import", {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRF-Token": token,
+    },
+    body: JSON.stringify({ ical: icalContent }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as { error?: { message?: string } };
+    throw new Error(err?.error?.message ?? `HTTP ${res.status}`);
+  }
+  const json = await res.json();
+  return json.data as ImportResult;
 }
 
 /**

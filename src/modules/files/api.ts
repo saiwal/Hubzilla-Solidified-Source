@@ -60,6 +60,109 @@ export async function updatePermissions(
   return json.data;
 }
 
+// ── wall_upload / wall_attach (post-attachment upload) ────────────────────────
+
+export interface WallUploadResult {
+  resource_id: string;
+  src: string;   // relative photo URL, e.g. /photo/HASH-1
+  body: string;  // original BBCode body from server
+}
+
+export interface WallAttachResult {
+  hash: string;         // attach table hash (= photo resource_id for images)
+  revision: number;     // 0 for photos, actual revision for files
+  isPhoto: boolean;
+  src?: string;         // photo URL from [zmg=URL] (images only, absolute)
+  message: string;      // full BBCode from server
+}
+
+function xhrRaw(url: string, file: File, onProgress?: (pct: number) => void): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const fd = new FormData();
+    fd.append("userfile", file, file.name);
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", url);
+    xhr.withCredentials = true;
+    if (onProgress)
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+      };
+    xhr.onload = () => {
+      if (xhr.status < 300) resolve(xhr.responseText);
+      else reject(new Error(`Upload failed: ${xhr.status}`));
+    };
+    xhr.onerror = () => reject(new Error("Upload network error"));
+    xhr.send(fd);
+  });
+}
+
+/**
+ * Upload a photo via wall_upload.
+ * Core responds with plain-text BBCode:
+ *   \n\n[zrl=.../photos/nick/image/HASH][zmg=URL]filename[/zmg][/zrl]\n\n
+ */
+export async function wallUpload(
+  nick: string,
+  file: File,
+  onProgress?: (pct: number) => void,
+): Promise<WallUploadResult> {
+  const body = (await xhrRaw(`/wall_upload/${encodeURIComponent(nick)}`, file, onProgress)).trim();
+  if (!body) throw new Error("Empty response from wall_upload");
+
+  const hashMatch = body.match(/\/image\/([a-f0-9]+)/i);
+  if (!hashMatch) throw new Error("Could not parse photo hash from wall_upload response");
+  const resource_id = hashMatch[1];
+
+  // Prefer the explicit [zmg=URL] value; fall back to constructing /photo/HASH-1
+  const zmgMatch = body.match(/\[zmg=([^\]]+)\]/i);
+  const src = zmgMatch ? zmgMatch[1] : `/photo/${resource_id}-1`;
+
+  return { resource_id, src, body };
+}
+
+/**
+ * Upload any file (image or non-image) via wall_attach.
+ *
+ * Core always responds with JSON: {"message": "...bbcode..."}
+ *
+ * For images (is_photo): message = [zrl=.../image/HASH][zmg=URL]filename[/zmg][/zrl]
+ *   — hash extracted from /image/HASH, photo URL from [zmg=URL]
+ *
+ * For files: message = (optional audio/video bbcode)[attachment]hash,revision[/attachment]
+ *   — hash and revision extracted from [attachment] tag
+ *
+ * wall_attach sets flags=1 on the attach record so Hubzilla's item_store()
+ * automatically corrects permissions to match the post ACL when the post is submitted.
+ * wall_upload does NOT create an attach record, so permissions never get fixed — always use wall_attach.
+ */
+export async function wallAttach(
+  nick: string,
+  file: File,
+  onProgress?: (pct: number) => void,
+): Promise<WallAttachResult> {
+  const text = await xhrRaw(`/wall_attach/${encodeURIComponent(nick)}`, file, onProgress);
+  let json: { message?: string };
+  try { json = JSON.parse(text); }
+  catch { throw new Error("Invalid JSON from wall_attach"); }
+
+  const message = json.message ?? "";
+  if (!message) throw new Error("Empty message from wall_attach");
+
+  // Photo response: [zrl=.../photos/nick/image/HASH][zmg=URL]filename[/zmg][/zrl]
+  const photoHashMatch = message.match(/\/image\/([a-f0-9]+)/i);
+  if (photoHashMatch) {
+    const hash = photoHashMatch[1];
+    const zmgMatch = message.match(/\[zmg=([^\]]+)\]/i);
+    const src = zmgMatch ? zmgMatch[1] : undefined;
+    return { hash, revision: 0, isPhoto: true, src, message };
+  }
+
+  // File response: [attachment]hash,revision[/attachment]
+  const attachMatch = message.match(/\[attachment\]([^,\]]+),(\d+)/i);
+  if (!attachMatch) throw new Error("Could not parse attachment from wall_attach response");
+  return { hash: attachMatch[1], revision: parseInt(attachMatch[2], 10), isPhoto: false, message };
+}
+
 // ── WebDAV helpers (upload, delete, mkdir) ────────────────────────────────────
 
 /** Build the WebDAV path for a file/folder from its display_path. */

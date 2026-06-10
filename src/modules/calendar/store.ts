@@ -28,6 +28,15 @@ export { range };
 const [selectedEvent, setSelectedEvent] = createSignal<CalEvent | null>(null);
 export { selectedEvent, setSelectedEvent };
 
+// ── refresh trigger ───────────────────────────────────────────────────────────
+// Increment this from the widget after toggling a calendar; CalView tracks it
+// and forces a re-fetch so the toggled calendar appears / disappears.
+const [calendarRefreshVersion, setCalendarRefreshVersion] = createSignal(0);
+export { calendarRefreshVersion };
+export function bumpCalendarRefresh() {
+  setCalendarRefreshVersion((v) => v + 1);
+}
+
 // ── actions ───────────────────────────────────────────────────────────────────
 
 export function resetCal() {
@@ -44,11 +53,13 @@ export function resetCal() {
 export async function loadCalendar(
   nickname: string,
   newRange?: CalRange,
+  force = false,
 ): Promise<void> {
   const nickChanged = nickname !== nick();
 
   // Avoid re-fetching the same nick + range pair
   if (
+    !force &&
     !nickChanged &&
     events().length > 0 &&
     rangesEqual(newRange, range())

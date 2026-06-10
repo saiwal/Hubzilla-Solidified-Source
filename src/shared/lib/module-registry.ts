@@ -97,3 +97,17 @@ export function resolveSlot(slot: keyof SlotsDef, moduleId?: string) {
   }
   return null;
 }
+
+// Resolve the module ID for a given pathname by matching against registered
+// route patterns. Falls back to the first URL segment so existing behaviour
+// is preserved for modules whose route root matches their module ID.
+export function moduleIdForPath(pathname: string): string {
+  for (const route of getRoutes()()) {
+    // Strip dynamic and wildcard tails: "/cal/:nick" → "/cal", "/cdav/calendar" → "/cdav/calendar"
+    const staticPrefix = route.path.replace(/\/:[^/].*/, "").replace(/\/\*.*/, "");
+    if (pathname === staticPrefix || pathname.startsWith(staticPrefix + "/")) {
+      return route.moduleId ?? "";
+    }
+  }
+  return pathname.split("/").filter(Boolean)[0] ?? "";
+}
