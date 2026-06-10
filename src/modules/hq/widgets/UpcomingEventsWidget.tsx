@@ -128,13 +128,24 @@ export default function UpcomingEventsWidget() {
                 class={`px-4 py-3 flex items-center gap-3 hover:bg-elevated transition-colors
                   ${i() < events().length - 1 ? "border-b border-rim" : ""}`}
               >
-                {/* Date badge */}
-                <div class="shrink-0 flex flex-col items-center justify-center w-9 h-10
-                            bg-accent-muted rounded-lg">
-                  <span class="text-[9px] font-bold uppercase tracking-wide text-accent leading-none">
+                {/* Date badge — colored when from a CalDAV calendar */}
+                <div
+                  class="shrink-0 flex flex-col items-center justify-center w-9 h-10 rounded-lg"
+                  style={ev.calendarColor
+                    ? { background: ev.calendarColor + "22", color: ev.calendarColor }
+                    : undefined}
+                  classList={{ "bg-accent-muted": !ev.calendarColor }}
+                >
+                  <span
+                    class="text-[9px] font-bold uppercase tracking-wide leading-none"
+                    classList={{ "text-accent": !ev.calendarColor }}
+                  >
                     {fmtMonth(ev.start)}
                   </span>
-                  <span class="text-base font-bold text-accent leading-tight">
+                  <span
+                    class="text-base font-bold leading-tight"
+                    classList={{ "text-accent": !ev.calendarColor }}
+                  >
                     {fmtDay(ev.start)}
                   </span>
                 </div>
