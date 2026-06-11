@@ -1,64 +1,35 @@
-// src/modules/cal/views/CalView.tsx
-//
-// Month-grid calendar.
-// - Month navigation drives loadCalendar() with monthRange()
-// - Clicking a day cell opens DayDetailModal
-// - createEffect (not onMount) re-fetches on :nick param changes
-
 import {
-  createEffect,
-  createSignal,
-  createMemo,
-  Show,
-  For,
+  createEffect, createSignal, createMemo, Show,
 } from "solid-js";
 import { useParams } from "@solidjs/router";
 import { usePageNick } from "@/shared/store/site-config";
 import { useI18n } from "@/i18n";
+import { MdFillChevron_left, MdFillChevron_right } from "solid-icons/md";
 import {
-  MdFillChevron_left,
-  MdFillChevron_right,
-} from "solid-icons/md";
-import {
-  events,
-  loading,
-  loadCalendar,
-  monthRange,
-  calendarRefreshVersion,
+  events, loading, loadCalendar, monthRange, calendarRefreshVersion,
 } from "../store";
-import type { CalEvent } from "../api";
+import type { CalEvent, CalRange } from "../api";
 import DayDetailModal from "./DayDetailModal";
 import EventCreatorModal from "../widgets/EventCreatorModal";
+import MonthView from "./MonthView";
+import WeekView from "./WeekView";
+import DayView from "./DayView";
 import { importCalendar } from "../api";
 import { toast } from "@/shared/store/toast";
+import { isoDateStr, startOfWeek, addDays } from "./calUtils";
 
-// ── date helpers ──────────────────────────────────────────────────────────────
+type ViewType = "month" | "week" | "day";
 
-function today() {
-  const d = new Date();
-  return { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() };
+function rangeForView(view: ViewType, anchor: Date): CalRange {
+  if (view === "month") {
+    return monthRange(anchor.getFullYear(), anchor.getMonth() + 1);
+  }
+  if (view === "week") {
+    const s = startOfWeek(anchor);
+    return { start: isoDateStr(s), end: isoDateStr(addDays(s, 7)) };
+  }
+  return { start: isoDateStr(anchor), end: isoDateStr(addDays(anchor, 1)) };
 }
-
-function daysInMonth(year: number, month: number) {
-  return new Date(year, month, 0).getDate();
-}
-
-/** 0=Sun … 6=Sat */
-function firstWeekday(year: number, month: number) {
-  return new Date(year, month - 1, 1).getDay();
-}
-
-function isoDate(year: number, month: number, day: number) {
-  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-}
-
-function eventDateKey(iso: string) {
-  return iso.slice(0, 10);
-}
-
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-// ── component ─────────────────────────────────────────────────────────────────
 
 export default function CalView() {
   const params = useParams<{ nick?: string }>();
@@ -67,57 +38,56 @@ export default function CalView() {
 
   const resolvedNick = () => params.nick || pageNick();
 
-  const todayDate = today();
-  const [year, setYear] = createSignal(todayDate.year);
-  const [month, setMonth] = createSignal(todayDate.month);
+  const today = new Date();
+  const [viewType, setViewType] = createSignal<ViewType>("month");
+  const [anchor, setAnchor] = createSignal(today);
   const [activeDay, setActiveDay] = createSignal<string | null>(null);
   const [showModal, setShowModal] = createSignal(false);
   const [showCreator, setShowCreator] = createSignal(false);
   const [importing, setImporting] = createSignal(false);
 
-  // ── load on nick / month / calendar toggle change ────────────────────────
+  const fetchRange = createMemo(() => rangeForView(viewType(), anchor()));
+
   createEffect(() => {
-    const version = calendarRefreshVersion(); // track — re-runs when a calendar is toggled
+    const version = calendarRefreshVersion();
     const nick = resolvedNick();
-    const y = year();
-    const m = month();
+    const r = fetchRange();
     if (!nick) return;
-    loadCalendar(nick, monthRange(y, m), version > 0);
+    loadCalendar(nick, r, version > 0);
   });
 
-  // ── index events by date key ──────────────────────────────────────────────
-  const eventsByDay = createMemo(() => {
-    const map = new Map<string, CalEvent[]>();
-    for (const ev of events()) {
-      const key = eventDateKey(ev.start);
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(ev);
+  function navigate(dir: -1 | 1) {
+    setAnchor(d => {
+      const nd = new Date(d);
+      if (viewType() === "month") nd.setMonth(nd.getMonth() + dir);
+      else if (viewType() === "week") nd.setDate(nd.getDate() + dir * 7);
+      else nd.setDate(nd.getDate() + dir);
+      return nd;
+    });
+  }
+
+  const periodLabel = createMemo(() => {
+    const d = anchor();
+    const v = viewType();
+    if (v === "month")
+      return new Date(d.getFullYear(), d.getMonth(), 1)
+        .toLocaleDateString(undefined, { month: "long", year: "numeric" });
+    if (v === "week") {
+      const s = startOfWeek(d);
+      const e = addDays(s, 6);
+      return `${s.toLocaleDateString(undefined, { month: "short", day: "numeric" })} – ${e.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`;
     }
-    return map;
+    return d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
   });
 
-  const activeDayEvents = createMemo(() => {
-    const d = activeDay();
-    return d ? (eventsByDay().get(d) ?? []) : [];
-  });
-
-  // ── month navigation ──────────────────────────────────────────────────────
-  function prevMonth() {
-    if (month() === 1) { setMonth(12); setYear((y) => y - 1); }
-    else setMonth((m) => m - 1);
-    setActiveDay(null);
-    setShowModal(false);
-  }
-  function nextMonth() {
-    if (month() === 12) { setMonth(1); setYear((y) => y + 1); }
-    else setMonth((m) => m + 1);
-    setActiveDay(null);
-    setShowModal(false);
+  function handleDayClick(date: string) {
+    setActiveDay(date);
+    setShowModal(true);
   }
 
-  function refreshCurrentMonth() {
+  function refreshCurrent() {
     const nick = resolvedNick();
-    if (nick) loadCalendar(nick, monthRange(year(), month()), true);
+    if (nick) loadCalendar(nick, fetchRange(), true);
   }
 
   function handleExport() {
@@ -138,42 +108,56 @@ export default function CalView() {
       const text = await file.text();
       const result = await importCalendar(text);
       toast.success(`${t("calendar.import_success")} (${result.imported} events)`);
-      refreshCurrentMonth();
+      refreshCurrent();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("calendar.import_failed"));
     } finally {
       setImporting(false);
-      input.value = "";
+      (e.currentTarget as HTMLInputElement).value = "";
     }
   }
 
-  // ── grid cells ────────────────────────────────────────────────────────────
-  const cells = createMemo(() => {
-    const y = year();
-    const m = month();
-    const days = daysInMonth(y, m);
-    const offset = firstWeekday(y, m);
-    return [...Array(offset).fill(null), ...Array.from({ length: days }, (_, i) => i + 1)];
+  const activeDayEvs = createMemo<CalEvent[]>(() => {
+    const d = activeDay();
+    if (!d) return [];
+    return events().filter(ev =>
+      ev.start.slice(0, 10) <= d && (ev.end ?? ev.start).slice(0, 10) >= d
+    );
   });
 
-  const todayKey = isoDate(todayDate.year, todayDate.month, todayDate.day);
-
-  const monthLabel = () =>
-    new Date(year(), month() - 1, 1).toLocaleDateString(undefined, {
-      month: "long",
-      year: "numeric",
-    });
+  const VIEWS: { key: ViewType; label: () => string }[] = [
+    { key: "month", label: () => t("calendar.view_month") as string },
+    { key: "week",  label: () => t("calendar.view_week")  as string },
+    { key: "day",   label: () => t("calendar.view_day")   as string },
+  ];
 
   return (
     <div class="flex flex-col gap-3 h-full min-h-0">
-      {/* Header row */}
+      {/* Header */}
       <div class="flex items-center gap-2 flex-wrap">
-        <h1 class="text-lg font-semibold text-txt mr-auto">{monthLabel()}</h1>
+        <h1 class="text-lg font-semibold text-txt mr-auto">{periodLabel()}</h1>
         <Show when={loading()}>
           <span class="text-xs text-muted">{t("calendar.loading")}</span>
         </Show>
 
-        {/* New Event */}
+        {/* View switcher */}
+        <div class="flex rounded-lg border border-rim overflow-hidden shrink-0">
+          {VIEWS.map(v => (
+            <button
+              type="button"
+              onClick={() => setViewType(v.key)}
+              class={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                viewType() === v.key
+                  ? "bg-accent text-accent-fg"
+                  : "text-muted hover:bg-elevated hover:text-txt"
+              }`}
+            >
+              {v.label()}
+            </button>
+          ))}
+        </div>
+
+        {/* New event */}
         <button
           type="button"
           onClick={() => setShowCreator(true)}
@@ -204,7 +188,8 @@ export default function CalView() {
         {/* Import */}
         <label
           class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                 border border-rim text-muted hover:bg-elevated hover:text-txt transition-colors cursor-pointer
+                 border border-rim text-muted hover:bg-elevated hover:text-txt
+                 transition-colors cursor-pointer
                  ${importing() ? "opacity-60 pointer-events-none" : ""}`}
           title={t("calendar.import_ical") as string}
         >
@@ -224,112 +209,70 @@ export default function CalView() {
           />
         </label>
 
-        {/* Month nav */}
+        {/* Navigation */}
         <div class="flex items-center gap-1">
           <button
-            onClick={prevMonth}
+            onClick={() => navigate(-1)}
             class="p-1.5 rounded-lg border border-rim text-muted hover:bg-elevated hover:text-txt transition-colors"
-            aria-label="Previous month"
+            aria-label="Previous"
           >
             <MdFillChevron_left size={18} />
           </button>
           <button
-            onClick={nextMonth}
+            onClick={() => setAnchor(new Date())}
+            class="px-2 py-1 text-xs rounded-lg border border-rim text-muted hover:bg-elevated hover:text-txt transition-colors"
+          >
+            {t("calendar.today") as string}
+          </button>
+          <button
+            onClick={() => navigate(1)}
             class="p-1.5 rounded-lg border border-rim text-muted hover:bg-elevated hover:text-txt transition-colors"
-            aria-label="Next month"
+            aria-label="Next"
           >
             <MdFillChevron_right size={18} />
           </button>
         </div>
       </div>
 
-      {/* Weekday labels */}
-      <div class="grid grid-cols-7 gap-px text-center">
-        <For each={WEEKDAYS}>
-          {(wd) => (
-            <div class="text-xs font-medium text-muted py-1">{wd}</div>
-          )}
-        </For>
+      {/* View content */}
+      <div class="flex-1 min-h-0 overflow-auto">
+        <Show when={viewType() === "month"}>
+          <MonthView
+            year={anchor().getFullYear()}
+            month={anchor().getMonth() + 1}
+            events={events()}
+            onDayClick={handleDayClick}
+          />
+        </Show>
+        <Show when={viewType() === "week"}>
+          <WeekView
+            anchor={anchor()}
+            events={events()}
+            onDayClick={handleDayClick}
+          />
+        </Show>
+        <Show when={viewType() === "day"}>
+          <DayView
+            date={anchor()}
+            events={events()}
+            onDayClick={handleDayClick}
+          />
+        </Show>
       </div>
 
-      {/* Day cells */}
-      <div class="grid grid-cols-7 gap-px flex-1 auto-rows-fr">
-        <For each={cells()}>
-          {(day) => {
-            if (day === null) {
-              return <div class="bg-base rounded-lg" />;
-            }
-            const key = () => isoDate(year(), month(), day);
-            const dayEvs = () => eventsByDay().get(key()) ?? [];
-            const isToday = () => key() === todayKey;
-            const isActive = () => activeDay() === key() && showModal();
-
-            return (
-              <button
-                onClick={() => {
-                  setActiveDay(key());
-                  setShowModal(true);
-                }}
-                class={`
-                  relative flex flex-col gap-0.5 p-1 rounded-lg text-left
-                  border transition-colors min-h-[64px]
-                  ${isActive()
-                    ? "border-accent bg-accent-muted"
-                    : "border-rim bg-surface hover:bg-elevated hover:border-rim-strong"}
-                `}
-              >
-                {/* Day number */}
-                <span
-                  class={`
-                    text-xs font-semibold w-5 h-5 flex items-center justify-center rounded-full
-                    ${isToday()
-                      ? "bg-accent text-accent-fg"
-                      : "text-txt"}
-                  `}
-                >
-                  {day}
-                </span>
-
-                {/* Event pills — show up to 2, then "+N more" */}
-                <For each={dayEvs().slice(0, 2)}>
-                  {(ev) => (
-                    <span
-                      class="block truncate text-[10px] leading-tight px-1 py-0.5 rounded font-medium"
-                      style={ev.calendarColor
-                        ? { background: ev.calendarColor + "33", color: ev.calendarColor }
-                        : undefined}
-                      classList={{ "bg-accent-muted text-accent": !ev.calendarColor }}
-                    >
-                      {ev.title || t("calendar.no_title")}
-                    </span>
-                  )}
-                </For>
-                <Show when={dayEvs().length > 2}>
-                  <span class="text-[10px] text-muted pl-1">
-                    +{dayEvs().length - 2} more
-                  </span>
-                </Show>
-              </button>
-            );
-          }}
-        </For>
-      </div>
-
-      {/* Day detail modal */}
-      <Show when={showModal() && activeDay() !== null}>
+      <Show when={showModal() && activeDay()}>
         <DayDetailModal
           date={activeDay()!}
-          events={activeDayEvents()}
+          events={activeDayEvs()}
           onClose={() => { setShowModal(false); setActiveDay(null); }}
-          onEventCreated={refreshCurrentMonth}
+          onEventCreated={refreshCurrent}
         />
       </Show>
 
-      {/* New event modal (from header button) */}
       <Show when={showCreator()}>
         <EventCreatorModal
           onClose={() => setShowCreator(false)}
-          onCreated={() => { setShowCreator(false); refreshCurrentMonth(); }}
+          onCreated={() => { setShowCreator(false); refreshCurrent(); }}
         />
       </Show>
     </div>

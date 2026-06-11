@@ -841,6 +841,10 @@ export const dict: RawDictionary = {
     no_cdav:                "आपके खाते के लिए CalDAV सेट नहीं है।",
     read_badge:             "R",
     rw_badge:               "RW",
+    view_month:             "महीना",
+    view_week:              "सप्ताह",
+    view_day:               "दिन",
+    today:                  "आज",
   },
   chat: {
     chatrooms:        "चैटरूम",

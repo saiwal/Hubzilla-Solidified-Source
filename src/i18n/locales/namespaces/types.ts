@@ -812,6 +812,10 @@ export type RawDictionary = {
     no_cdav:                string;
     read_badge:             string;
     rw_badge:               string;
+    view_month:             string;
+    view_week:              string;
+    view_day:               string;
+    today:                  string;
   };
   chat: {
     chatrooms:        string;

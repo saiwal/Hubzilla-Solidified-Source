@@ -60,4 +60,8 @@ export const calendar: RawDictionary["calendar"] = {
   no_cdav:                "CalDAV is not set up for your account.",
   read_badge:             "R",
   rw_badge:               "RW",
+  view_month:             "Month",
+  view_week:              "Week",
+  view_day:               "Day",
+  today:                  "Today",
 };
