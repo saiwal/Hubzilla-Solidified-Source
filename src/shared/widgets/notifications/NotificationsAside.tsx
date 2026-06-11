@@ -746,6 +746,7 @@ export default function NotificationsAside() {
         />
       </Show>
 
+      <Show when={!booted() || hasAnyCount() || notices().length > 0}>
       <div class="space-y-3">
         {/* Header */}
         <div class="flex items-center justify-between">
@@ -835,17 +836,8 @@ export default function NotificationsAside() {
           </div>
         </Show>
 
-        <Show
-          when={
-            booted() && activeBuckets().length === 0 && notices().length === 0
-          }
-        >
-          <div class="text-center py-2">
-            <p class="text-2xl mb-1">✓</p>
-            <p class="text-xs text-muted">{t("ui.all_caught_up")}</p>
-          </div>
-        </Show>
       </div>
+      </Show>
     </>
   );
 }
