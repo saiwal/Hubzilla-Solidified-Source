@@ -27,6 +27,7 @@ import {
   MdFillWifi_off,
   MdFillCircle,
 } from "solid-icons/md";
+import DOMPurify from "dompurify";
 import { setNotifCount } from "@/shared/lib/notificationCount";
 import { markNotifySeen } from "@/shared/lib/markSeen";
 const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
@@ -272,7 +273,7 @@ function NotifRow(props: {
             <Show when={props.n.name}>
               <span class="font-semibold">{props.n.name} </span>
             </Show>
-            {props.n.message}
+            <span innerHTML={DOMPurify.sanitize(props.n.message ?? "")} />
           </p>
           <div class="flex items-center gap-1.5 mt-0.5">
             <Show when={props.n.when}>
