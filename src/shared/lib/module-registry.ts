@@ -45,7 +45,7 @@ export function registerModule(def: ModuleDef) {
     }
   }
 
-  setNavItems((prev) => [...prev, def.navItem]);
+  if (def.navItem) setNavItems((prev) => [...prev, def.navItem!]);
   const taggedRoutes = def.routes.map((r) => ({ ...r, moduleId: def.id }));
   setRoutes((prev) => [...prev, ...taggedRoutes]);
 }

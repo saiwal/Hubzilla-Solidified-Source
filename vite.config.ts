@@ -43,6 +43,7 @@ export default defineConfig({
   build: {
     outDir: OUT_DIR,
     emptyOutDir: true,
+    cssCodeSplit: false,
     // removed watch: {} — use vite build --watch from CLI
     rollupOptions: {
       output: {
@@ -50,6 +51,18 @@ export default defineConfig({
         chunkFileNames: "app-[name].js",
         assetFileNames: (info) =>
           info.name?.endsWith(".css") ? "app.css" : "[name][extname]",
+        manualChunks(id) {
+          // React + Filerobot image editor land in a single vendor chunk so
+          // the browser can cache them across deploys independently of app code.
+          if (
+            id.includes("node_modules/react/") ||
+            id.includes("node_modules/react-dom/") ||
+            id.includes("node_modules/react-filerobot-image-editor/") ||
+            id.includes("node_modules/filerobot-image-editor/")
+          ) {
+            return "vendor-image-editor";
+          }
+        },
       },
     },
   },

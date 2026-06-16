@@ -33,6 +33,7 @@ export type RawDictionary = {
     pubsites:      string;
     pubstream:     string;
     bookmarks:     string;
+    profiles:      string;
   };
   layout: {
     title:              string;
@@ -338,6 +339,82 @@ export type RawDictionary = {
     hq_hashtag: string;
     open_full_composer: string;
   };
+  profiles: {
+    title:             string;
+    desc:              string;
+    default_badge:     string;
+    edit:              string;
+    delete:            string;
+    new_profile:       string;
+    new_profile_name:  string;
+    creating:          string;
+    delete_confirm:    string;
+    deleted:           string;
+    create_error:      string;
+    delete_error:      string;
+    load_error:        string;
+    no_profiles:       string;
+    toggle_error:      string;
+    feature_title:     string;
+    feature_desc:      string;
+    enable_in_settings: string;
+    // edit view
+    edit_title:        string;
+    back:              string;
+    save:              string;
+    saving:            string;
+    saved:             string;
+    save_error:        string;
+    profile_name_label: string;
+    profile_name_hint:  string;
+    // field group labels
+    group_basic:       string;
+    group_personal:    string;
+    group_interests:   string;
+    group_culture:     string;
+    group_work:        string;
+    group_contact:     string;
+    // fields (reuse existing labels where possible)
+    fullname:          string;
+    pdesc:             string;
+    pdesc_placeholder: string;
+    gender:            string;
+    dob:               string;
+    dob_hint:          string;
+    homepage:          string;
+    hometown:          string;
+    about:             string;
+    about_hint:        string;
+    keywords:          string;
+    keywords_hint:     string;
+    hide_friends:      string;
+    marital:           string;
+    sexual:            string;
+    politic:           string;
+    religion:          string;
+    music:             string;
+    book:              string;
+    tv:                string;
+    film:              string;
+    interest:          string;
+    romance:           string;
+    employment:        string;
+    education:         string;
+    likes:             string;
+    dislikes:          string;
+    contact:           string;
+    channels:          string;
+    // photo uploaders
+    avatar_editor_title: string;
+    cover_editor_title:  string;
+    change_avatar:       string;
+    change_cover:        string;
+    uploading:           string;
+    avatar_saved:        string;
+    avatar_error:        string;
+    cover_saved:         string;
+    cover_error:         string;
+  };
   settings: {
     // Section titles and descriptions
     title_account:       string;
@@ -352,8 +429,16 @@ export type RawDictionary = {
     desc_notifications:  string;
     title_integrations:  string;
     desc_integrations:   string;
+    title_features:      string;
+    desc_features:       string;
     title_danger:        string;
     desc_danger:         string;
+    // Features section
+    feat_toggle_on:      string;
+    feat_toggle_off:     string;
+    feat_load_error:     string;
+    feat_no_features:    string;
+    manage_profiles:     string;
     // Common actions
     save:       string;
     saving:     string;
@@ -730,6 +815,10 @@ export type RawDictionary = {
     see_all:          string;
     albums:           string;
     photos_count:     string;
+    edit_photo:       string;
+    editing:          string;
+    photo_saved:      string;
+    photo_error:      string;
   };
   articles: {
     title:            string;

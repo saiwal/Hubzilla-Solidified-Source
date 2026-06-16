@@ -1,5 +1,5 @@
 import { A } from "@solidjs/router";
-import { createEffect, createMemo, createSignal, Show, For } from "solid-js";
+import { createEffect, createMemo, createSignal, lazy, Show, For } from "solid-js";
 import { useParams, useNavigate, useLocation } from "@solidjs/router";
 import { useI18n } from "@/i18n";
 import { useAuth } from "@/shared/store/auth-store";
@@ -13,6 +13,7 @@ import {
   MdOutlineThumb_down, MdOutlineThumb_up,
   MdFillKeyboard_arrow_down, MdFillKeyboard_arrow_up,
   MdFillAccount_tree, MdFillFormat_list_bulleted,
+  MdOutlineEdit,
 } from "solid-icons/md";
 import CommentComposer from "@/shared/editor/composers/CommentComposer";
 import CommentThread from "@/shared/views/CommentThread";
@@ -20,6 +21,10 @@ import { buildThreadTree } from "@/shared/lib/thread";
 import type { ThreadNode } from "@/shared/lib/thread";
 import type { StreamHandlers } from "@/shared/stream/types";
 import type { PhotoComment } from "../api/api";
+import { uploadPhotoEdit } from "../api/api";
+import { toast } from "@/shared/store/toast";
+
+const ImageEditor = lazy(() => import("@/shared/views/ImageEditor"));
 
 export default function Photos() {
   const params   = useParams<{ nick?: string; datum?: string }>();
@@ -165,9 +170,43 @@ function ImageView() {
   const auth      = useAuth();
   const { t }     = useI18n();
   const d         = detail;
-  const [showTopReply, setShowTopReply] = createSignal(false);
-  const [showComments, setShowComments] = createSignal(true);
-  const [threaded, setThreaded]         = createSignal(true);
+  const [showTopReply, setShowTopReply]   = createSignal(false);
+  const [showComments, setShowComments]   = createSignal(true);
+  const [threaded, setThreaded]           = createSignal(true);
+  const [editFile, setEditFile]           = createSignal<File | null>(null);
+  const [editUploading, setEditUploading] = createSignal(false);
+
+  const isOwner = () => !!auth()?.nick && auth()!.nick === params.nick;
+
+  async function startEdit() {
+    const photo = d();
+    if (!photo) return;
+    try {
+      const res  = await fetch(photo.src_full, { credentials: "include" });
+      const blob = await res.blob();
+      const file = new File([blob], photo.filename || "photo.jpg", {
+        type: blob.type || "image/jpeg",
+      });
+      setEditFile(file);
+    } catch {
+      toast.error(t("photos.photo_error"));
+    }
+  }
+
+  async function handleEditConfirm(blob: Blob) {
+    setEditFile(null);
+    const photo = d();
+    if (!photo) return;
+    setEditUploading(true);
+    try {
+      await uploadPhotoEdit(params.nick ?? "", photo.resource_id, blob);
+      toast.success(t("photos.photo_saved"));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("photos.photo_error"));
+    } finally {
+      setEditUploading(false);
+    }
+  }
 
   const prevPath = () => d()?.prevlink?.replace(window.location.origin, '') ?? null;
   const nextPath = () => d()?.nextlink?.replace(window.location.origin, '') ?? null;
@@ -206,6 +245,17 @@ function ImageView() {
 
   return (
     <div class="flex flex-col gap-4">
+      {/* Image editor overlay */}
+      <Show when={editFile()}>
+        {(file) => (
+          <ImageEditor
+            file={file()}
+            onConfirm={handleEditConfirm}
+            onCancel={() => setEditFile(null)}
+          />
+        )}
+      </Show>
+
       {/* Breadcrumb */}
       <div class="flex items-center gap-2">
         <button
@@ -275,16 +325,35 @@ function ImageView() {
             <MdOutlineThumb_down size={17} />
             <span>{d()?.dislike_count ?? 0}</span>
           </button>
-          <Show when={d()?.item_id}>
-            <button
-              onClick={() => setShowTopReply(v => !v)}
-              class={`ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm
-                     font-medium transition-colors hover:bg-surface
-                     ${showTopReply() ? 'text-accent' : 'text-muted'}`}
-            >
-              <MdFillChat size={17} /> {t("photos.comment")}
-            </button>
-          </Show>
+          <div class="ml-auto flex items-center gap-1">
+            <Show when={isOwner()}>
+              <button
+                onClick={startEdit}
+                disabled={editUploading()}
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm
+                       font-medium transition-colors hover:bg-surface text-muted
+                       disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Show
+                  when={editUploading()}
+                  fallback={<MdOutlineEdit size={17} />}
+                >
+                  <div class="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                </Show>
+                {editUploading() ? t("photos.editing") : t("photos.edit_photo")}
+              </button>
+            </Show>
+            <Show when={d()?.item_id}>
+              <button
+                onClick={() => setShowTopReply(v => !v)}
+                class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm
+                       font-medium transition-colors hover:bg-surface
+                       ${showTopReply() ? 'text-accent' : 'text-muted'}`}
+              >
+                <MdFillChat size={17} /> {t("photos.comment")}
+              </button>
+            </Show>
+          </div>
         </div>
 
         <Show when={showTopReply() && d()?.item_id}>

@@ -31,4 +31,5 @@ export const nav: RawDictionary["nav"] = {
   pubsites:      "Pubsites",
   pubstream:     "Pubstream",
   bookmarks:     "Bookmarks",
+  profiles:      "Profiles",
 };

@@ -1,0 +1,95 @@
+import Plyr from 'plyr';
+import { createEffect, onCleanup } from 'solid-js';
+
+const PLYR_OPTIONS: Plyr.Options = {
+  controls: [
+    'play', 'progress', 'current-time', 'mute', 'volume',
+    'captions', 'settings', 'pip', 'download', 'fullscreen',
+  ],
+  youtube: { noCookie: true, rel: 0, showinfo: 0, iv_load_policy: 3 },
+  vimeo: { byline: false, portrait: false, title: false, speed: true },
+  resetOnEnd: true,
+  tooltips: { controls: false, seek: true },
+};
+
+// Chrome ignores the `download` attribute on cross-origin anchors.
+// After Plyr creates its download button, intercept clicks: fetch the file as
+// a blob and trigger a save via an object URL. Falls back to window.open if
+// the server blocks CORS or the fetch fails for any other reason.
+function patchDownloadButton(plyrContainer: Element): void {
+  const btn = plyrContainer.querySelector<HTMLAnchorElement>('[data-plyr="download"]');
+  if (!btn) return;
+
+  btn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+
+    const url = btn.href;
+    if (!url) return;
+
+    try {
+      const res = await fetch(url, { mode: 'cors', credentials: 'omit' });
+      if (!res.ok) throw new Error(res.statusText);
+      const blob = await res.blob();
+      const objUrl = URL.createObjectURL(blob);
+      const filename = new URL(url).pathname.split('/').pop() || 'download';
+      const a = Object.assign(document.createElement('a'), {
+        href: objUrl,
+        download: filename,
+        style: 'display:none',
+      });
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(objUrl), 10_000);
+    } catch {
+      // Server blocks CORS or fetch failed — open in new tab as last resort
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  });
+}
+
+function initPlayer(target: HTMLMediaElement | HTMLElement): Plyr | null {
+  try {
+    const player = new Plyr(target, PLYR_OPTIONS);
+    player.on('error', () => {});
+    player.on('ready', () => {
+      const container = target.closest('.plyr');
+      if (container) patchDownloadButton(container);
+    });
+    return player;
+  } catch (_) {
+    return null;
+  }
+}
+
+export function usePlyr(
+  containerRef: () => HTMLElement | undefined,
+  body: () => string,
+) {
+  let instances: Plyr[] = [];
+
+  createEffect(() => {
+    body();
+    const el = containerRef();
+    if (!el) return;
+
+    instances.forEach(p => { try { p.destroy(); } catch (_) {} });
+    instances = [];
+
+    el.querySelectorAll<HTMLMediaElement>('video, audio').forEach(media => {
+      const p = initPlayer(media);
+      if (p) instances.push(p);
+    });
+
+    el.querySelectorAll<HTMLElement>('[data-plyr-provider]').forEach(embed => {
+      const p = initPlayer(embed);
+      if (p) instances.push(p);
+    });
+
+    onCleanup(() => {
+      instances.forEach(p => { try { p.destroy(); } catch (_) {} });
+      instances = [];
+    });
+  });
+}

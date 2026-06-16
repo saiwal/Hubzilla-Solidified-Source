@@ -3,18 +3,20 @@ import { useI18n } from "@/i18n";
 import type { SubPageItem } from "@/shared/views/SubPageLayout";
 
 export const SETTINGS_ITEMS: SubPageItem[] = [
+  // "profile" links to /settings/profile which is owned by the profiles module.
+  // It is listed here for sidebar display only — excluded from settingsRoutes below.
   { path: "profile",       label: () => useI18n().t("settings.title_profile") },
   { path: "account",       label: () => useI18n().t("settings.title_account") },
   { path: "privacy",       label: () => useI18n().t("settings.title_privacy") },
   { path: "notifications", label: () => useI18n().t("settings.title_notifications") },
   { path: "display",       label: () => useI18n().t("settings.title_display") },
   { path: "integrations",  label: () => useI18n().t("settings.title_integrations") },
+  { path: "features",      label: () => useI18n().t("settings.title_features") },
   { path: "danger",        label: () => useI18n().t("settings.title_danger") },
 ];
 
-// Derive all sub-routes from SETTINGS_ITEMS so the list is always in sync.
-// Every path points to the same SettingsView — it does the section switching.
-const settingsRoutes = SETTINGS_ITEMS.map((item) => ({
+// /settings/profile is served by the profiles module — don't register it here.
+const settingsRoutes = SETTINGS_ITEMS.filter((item) => item.path !== "profile").map((item) => ({
   path: `/settings/${item.path}`,
   component: () => import("./views/SettingsView"),
 }));
@@ -22,8 +24,6 @@ const settingsRoutes = SETTINGS_ITEMS.map((item) => ({
 registerModule({
   id: "settings",
   routes: [
-    // Base path: on desktop defaults to the first section;
-    // on mobile shows the nav list (atBase() === true in SubPageLayout).
     { path: "/settings", component: () => import("./views/SettingsView") },
     ...settingsRoutes,
   ],

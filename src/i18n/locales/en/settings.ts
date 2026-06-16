@@ -14,8 +14,16 @@ export const settings: RawDictionary["settings"] = {
   desc_notifications:  "Email and visual notification preferences.",
   title_integrations:  "Integrations",
   desc_integrations:   "Install apps and pin them to your nav or app tray.",
+  title_features:      "Features",
+  desc_features:       "Enable or disable optional channel features.",
   title_danger:        "Danger zone",
   desc_danger:         "Irreversible actions. Proceed with care.",
+  // Features section
+  feat_toggle_on:      "On",
+  feat_toggle_off:     "Off",
+  feat_load_error:     "Failed to load features.",
+  feat_no_features:    "No configurable features available.",
+  manage_profiles:     "Manage multiple profiles",
   // Common actions
   save:       "Save changes",
   saving:     "Saving…",

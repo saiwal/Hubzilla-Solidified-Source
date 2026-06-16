@@ -14,4 +14,9 @@ export const photos: RawDictionary["photos"] = {
   see_all:          "See all",
   albums:           "Albums",
   photos_count:     "photos",
+  // Photo editor
+  edit_photo:       "Edit",
+  editing:          "Saving…",
+  photo_saved:      "Photo saved.",
+  photo_error:      "Could not save photo.",
 };

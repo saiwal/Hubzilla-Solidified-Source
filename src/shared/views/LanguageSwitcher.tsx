@@ -8,8 +8,6 @@ const LanguageSwitcher = () => {
   const { open, setOpen, toggle, floatStyle, setTriggerRef, setPanelRef } =
     useDropdown({ placement: "top-start" });
 
-  const current = () => LOCALES.find((l) => l.value === locale());
-
   const handleSelect = (value: Locale) => {
     setLocale(value);
     setOpen(false);

@@ -30,7 +30,7 @@ export interface SlotsDef {
 export interface ModuleDef {
   id: string;
   routes: RouteDef[];
-  navItem: NavItemDef;
+  navItem?: NavItemDef;
   slots?: SlotsDef;
   permissions?: string[];
   /** Hubzilla app name (e.g. "Photos"). If set, module only renders when this app is installed. */

@@ -209,16 +209,18 @@ function bbShareAttributes(
   content: string,
   _opts: BbcodeOptions
 ): string {
-  const attr = (name: string) => {
+  const attr = (name: string, keepPlus = false) => {
     const m = attributes.match(new RegExp(`${name}='(.*?)'`, "i"));
-    return m ? decodeURIComponent(m[1].replace(/\+/g, " ")) : "";
+    if (!m) return "";
+    const val = keepPlus ? m[1] : m[1].replace(/\+/g, " ");
+    return decodeURIComponent(val);
   };
 
   const author = attr("author");
   const link = attr("link");
   const avatar = attr("avatar");
   const profile = attr("profile");
-  const posted = attr("posted");
+  const posted = attr("posted", true);
 
   const type = link.includes("/cards/")
     ? "card"
@@ -1137,12 +1139,6 @@ export function bbcode(text: string, options: BbcodeOptions = {}): string {
   text = applyUnspacefy("pre", text);
 
   // ------------------------------------------------------------------
-  // Restore protected code blocks
-  // ------------------------------------------------------------------
-  text = text.replace(/%eY9-!/g, "http");
-  text = codeUnprotect(text);
-
-  // ------------------------------------------------------------------
   // Unescape entity references inside BBCode (e.g. [&amp;nbsp;] → &nbsp;)
   // ------------------------------------------------------------------
   text = text.replace(/\[&amp;([#a-z0-9]+);\]/gi, "&$1;");
@@ -1167,6 +1163,13 @@ export function bbcode(text: string, options: BbcodeOptions = {}): string {
   // ------------------------------------------------------------------
   text = text.replace(/\r\n/g, "\n");
   text = text.replace(/[\r\n]/g, "<br />");
+
+  // ------------------------------------------------------------------
+  // Restore protected code blocks (after <br /> conversion so that
+  // newlines inside <pre><code> are preserved, not converted to <br>)
+  // ------------------------------------------------------------------
+  text = text.replace(/%eY9-!/g, "http");
+  text = codeUnprotect(text);
 
   return text;
 }

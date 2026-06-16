@@ -42,6 +42,7 @@ import EventCard from "./EventCard";
 import { parseEventData } from "@/shared/lib/activity.mapper";
 import AttachmentList from "./AttachmentList";
 import { apiFetch } from "@/shared/lib/fetch";
+import { usePlyr } from "@/shared/lib/usePlyr";
 const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
 
 export type { StreamHandlers as PostActions };
@@ -80,6 +81,7 @@ export default function PostCard(props: {
   highlightUuid?: string;
   postAuthorAddress?: string;
   initiallyExpanded?: boolean;
+  seamless?: boolean;
 }) {
   const threadMode = useThreadMode();
   const [replyOpen, setReplyOpen] = createSignal(false);
@@ -119,6 +121,8 @@ export default function PostCard(props: {
   const { locale, t } = useI18n();
   const auth = useAuth();
   let cardRef!: HTMLDivElement;
+  const [bodyRef, setBodyRef] = createSignal<HTMLElement>();
+  usePlyr(bodyRef, () => props.post.body);
 
   // Detect event posts: prefer pre-parsed eventData from mapper, fall back to
   // parsing the body directly (handles cases where obj_type wasn't "Event").
@@ -420,6 +424,7 @@ export default function PostCard(props: {
         {/* Body — no title rendered for comments */}
         <Show when={!eventData()}>
           <div
+            ref={setBodyRef}
             class="mt-1.5 prose prose-sm dark:prose-invert max-w-none text-muted
                    prose-a:text-accent prose-a:no-underline hover:prose-a:underline
                    prose-blockquote:not-italic prose-blockquote:border-accent
@@ -660,7 +665,9 @@ export default function PostCard(props: {
   return (
     <div
       ref={cardRef}
-      class="relative bg-surface border border-rim rounded-2xl p-3 md:p-5 mb-4 shadow-sm hover:shadow-md transition-shadow duration-200"
+      class={props.seamless
+        ? "relative bg-surface p-3 md:p-5"
+        : "relative bg-surface border border-rim rounded-2xl p-3 md:p-5 mb-4 shadow-sm hover:shadow-md transition-shadow duration-200"}
     >
       {/* Header */}
       <div class="flex items-start gap-3">
@@ -751,6 +758,7 @@ export default function PostCard(props: {
       {/* Body — hidden for pure event posts (body is just BBCode tags) */}
       <Show when={!eventData()}>
         <div
+          ref={setBodyRef}
           class="mt-4 prose-code:break-all prose prose-sm dark:prose-invert max-w-none
                  prose-a:text-accent prose-a:no-underline hover:prose-a:underline
                  prose-blockquote:not-italic prose-blockquote:border-accent

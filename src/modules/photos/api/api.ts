@@ -99,6 +99,45 @@ export async function fetchPhotoImage(nick: string, resourceId: string): Promise
   return data as PhotoDetail;
 }
 
+export interface PhotoEditResult {
+  resource_id: string;
+  src: string;
+  src_full: string;
+}
+
+export function uploadPhotoEdit(
+  nick: string,
+  resourceId: string,
+  blob: Blob,
+  onProgress?: (pct: number) => void,
+): Promise<PhotoEditResult> {
+  return new Promise(async (resolve, reject) => {
+    const { getCsrfToken } = await import("@/shared/lib/csrf");
+    const token = await getCsrfToken().catch(() => "");
+    const fd = new FormData();
+    fd.append("file", blob, "edited.jpg");
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `/api/photos/${nick}/image/${resourceId}/edit`);
+    xhr.withCredentials = true;
+    xhr.setRequestHeader("X-CSRF-Token", token);
+    if (onProgress) {
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+      };
+    }
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(JSON.parse(xhr.responseText).data as PhotoEditResult);
+      } else {
+        try { reject(new Error(JSON.parse(xhr.responseText).error?.message ?? "Upload failed")); }
+        catch { reject(new Error("Upload failed")); }
+      }
+    };
+    xhr.onerror = () => reject(new Error("Network error"));
+    xhr.send(fd);
+  });
+}
+
 export async function togglePhotoReaction(itemId: number, verb: 'like' | 'dislike'): Promise<void> {
   const url = `/like/${itemId}?verb=${verb}&conv_mode=&page_mode=client&reload=0`;
   const res = await fetch(url, { method: 'GET', credentials: 'include' });

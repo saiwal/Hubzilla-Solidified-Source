@@ -1,6 +1,6 @@
 // src/modules/channel/views/ChannelView.tsx
 import { createEffect, onCleanup, Show, For, Switch, Match } from "solid-js";
-import { useParams, useSearchParams } from "@solidjs/router";
+import { useParams, useSearchParams, useNavigate } from "@solidjs/router";
 import { useI18n } from "@/i18n";
 import {
   posts,
@@ -30,7 +30,6 @@ import type { ChannelParams } from "../api";
 import ProfileView from "./ProfileView";
 import { ViewSwitcher } from "@/shared/stream/filters";
 import { viewMode, changeView } from "../store";
-import { useViewerRole } from "@/shared/store/site-config";
 
 const handlers: StreamHandlers = {
   onLike:          handleLike,
@@ -46,9 +45,19 @@ const handlers: StreamHandlers = {
 export default function ChannelView() {
   const params = useParams<{ nick: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { t } = useI18n();
 
-const role = useViewerRole();
+  const mid = () => {
+    const v = searchParams.mid;
+    return v ? (Array.isArray(v) ? v[0] : v) : null;
+  };
+
+  createEffect(() => {
+    const uuid = mid();
+    if (uuid) { navigate(`/display/${uuid}`, { replace: true }); return; }
+  });
+
   createEffect(() => {
     const str = (key: string): string | undefined => {
       const v = searchParams[key];
@@ -87,11 +96,7 @@ const role = useViewerRole();
       <ViewSwitcher
         viewMode={viewMode()}
         onChange={changeView}
-        available={
-          role() === "owner"
-            ? ["feed", "masonry", "list", "inbox"]
-            : ["feed", "masonry"]
-        }
+        available={["feed", "masonry", "list", "inbox"]}
       />
       <Show when={searchParams.cat || searchParams.tag}>
         <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/10 border border-accent/25 text-sm mb-3">
@@ -164,6 +169,7 @@ const role = useViewerRole();
       <Show when={!hasMore() && posts().length > 0}>
         <p class="text-center text-xs text-muted py-6">{t("channel.all_caught_up")}</p>
       </Show>
+
     </>
   );
 }

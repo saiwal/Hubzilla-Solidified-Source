@@ -43,13 +43,17 @@ const FONT_FAMILIES: Record<FontFamily, string> = {
   opendyslexic:       `"OpenDyslexic", ${D}, sans-serif`,
 };
 
-export function applyTypography(size: FontSize, family: FontFamily): void {
-  document.documentElement.style.fontSize =
-    FONT_SIZES[size] ?? FONT_SIZES.medium;
+/** Apply font settings to CSS only — does NOT touch localStorage. */
+export function applyTypographyCSS(size: FontSize, family: FontFamily): void {
+  document.documentElement.style.fontSize = FONT_SIZES[size] ?? FONT_SIZES.medium;
   document.documentElement.style.setProperty(
     "--hz-font-family",
     FONT_FAMILIES[family] ?? FONT_FAMILIES.system,
   );
+}
+
+export function applyTypography(size: FontSize, family: FontFamily): void {
+  applyTypographyCSS(size, family);
   localStorage.setItem("hz-font-size", size);
   localStorage.setItem("hz-font-family", family);
 }

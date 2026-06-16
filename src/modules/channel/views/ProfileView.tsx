@@ -114,7 +114,7 @@ function ProfileCard(props: {
         </div>
         <Show when={props.isOwner}>
 					<a
-            href="/settings/channel"
+            href="/settings/profile"
             class="absolute top-3 right-3 px-3 py-1.5 text-xs font-medium rounded-lg bg-black/40 hover:bg-black/60 text-white backdrop-blur-sm transition-colors"
           >
             {t("channel.edit_profile")}

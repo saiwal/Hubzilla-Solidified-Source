@@ -1,6 +1,7 @@
 // mappers/activity.mapper.ts
 import { sanitizeHtml } from "@/shared/lib/sanitize";
 import { bbcodeToHtml } from "@/shared/lib/bbcode";
+import { oembedResolver } from "@/shared/lib/oembedResolver";
 import type { Post, EventData } from "@/shared/types/post.types";
 
 export function parseEventData(raw: string): EventData | undefined {
@@ -30,7 +31,7 @@ export function mapActivityToPost(activity: any): Post {
   let body = "";
 
   try {
-    const converted = bbcodeToHtml(rawBody);
+    const converted = bbcodeToHtml(rawBody, { oembedResolver });
     body = sanitizeHtml(typeof converted === "string" ? converted : "");
   } catch (err) {
     console.error("Body parse failed", rawBody, err);

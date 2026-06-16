@@ -322,200 +322,184 @@ export default function StreamFilters() {
   return (
     <div class="space-y-1.5 pb-2" use:helpable="network/index.activity-filters">
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          Row 1 — always visible: refresh, order, toggles, utility icons
-          On desktop the view switcher sits at the end of this row.
-          On mobile it moves to row 2 so row 1 stays within ~380px.
-      ══════════════════════════════════════════════════════════════════════ */}
-      <div class="flex items-center gap-1 min-w-0">
+      {/* Single row: left=refresh+order · center=ViewSwitcher · right=utility icons */}
+      <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-1 min-w-0">
 
-        {/* Refresh */}
-        <button
-          onClick={() => { resetPosts(); loadNetwork(); }}
-          disabled={loading()}
-          title={t("network.refresh")}
-          class="p-1.5 rounded-lg hover:bg-elevated transition-colors
-                 disabled:opacity-40 text-muted hover:text-txt shrink-0
-                 flex items-center justify-center"
-        >
-          <MdFillRefresh
-            size={17}
-            class={loading() ? "animate-spin" : ""}
-          />
-        </button>
+        {/* ── Left: refresh + order ── */}
+        <div class="flex items-center gap-1 min-w-0">
+          <button
+            onClick={() => { resetPosts(); loadNetwork(); }}
+            disabled={loading()}
+            title={t("network.refresh")}
+            class="p-1.5 rounded-lg hover:bg-elevated transition-colors
+                   disabled:opacity-40 text-muted hover:text-txt shrink-0
+                   flex items-center justify-center"
+          >
+            <MdFillRefresh size={17} class={loading() ? "animate-spin" : ""} />
+          </button>
 
-        {/* Order — text labels on desktop, icon-only on mobile */}
-        <div class="flex rounded-lg border border-rim overflow-hidden shrink-0">
-          {ORDER_OPTS.map((opt) => (
-            <button
-              title={t(`network.${opt.key}` as any)}
-              onClick={() => setOrderAndApply(opt.value)}
-              class={`flex items-center gap-1 py-1.5 transition-colors
-                px-1.5 sm:px-2.5
-                ${order() === opt.value
-                  ? "bg-accent text-accent-fg"
-                  : "bg-surface text-muted hover:bg-elevated"
-                }`}
-            >
-              {/* Icon always shown */}
-              <opt.Icon size={14} />
-              {/* Label hidden on mobile */}
-              <span class="hidden sm:inline text-xs font-medium">{t(`network.${opt.key}` as any)}</span>
-            </button>
-          ))}
+          <div class="flex rounded-lg border border-rim overflow-hidden shrink-0">
+            {ORDER_OPTS.map((opt) => (
+              <button
+                title={t(`network.${opt.key}` as any)}
+                onClick={() => setOrderAndApply(opt.value)}
+                class={`flex items-center gap-1 py-1.5 transition-colors
+                  px-1.5 sm:px-2.5
+                  ${order() === opt.value
+                    ? "bg-accent text-accent-fg"
+                    : "bg-surface text-muted hover:bg-elevated"
+                  }`}
+              >
+                <opt.Icon size={14} />
+                <span class="hidden sm:inline text-xs font-medium">{t(`network.${opt.key}` as any)}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Spacer */}
-        <div class="flex-1 min-w-0" />
+        {/* ── Center: view switcher ── */}
+        <ViewSwitcher />
 
-        {/* ── Connection filter ── */}
-        <Show
-          when={!!(cid() || gid())}
-          fallback={
-            <Show
-              when={connOpen()}
-              fallback={
-                <button onClick={openConn} title={t("network.filter_by_connection")} class={ICON_BTN}>
-                  <MdFillPerson size={15} />
-                </button>
-              }
-            >
-              <div class="shrink-0">
-                <input
-                  ref={connInputRef}
-                  type="text"
-                  placeholder={t("network.connection_placeholder")}
-                  value={connInput()}
-                  onInput={(e) => { setConnInput(e.currentTarget.value); setConnSuggestOpen(true); }}
-                  onFocus={() => connInput() && setConnSuggestOpen(true)}
-                  onBlur={onConnBlur}
-                  class={`${INPUT_CLS} w-28 sm:w-36`}
-                />
-                <Show when={connSuggestOpen() && suggestions().length > 0}>
-                  <ul
-                    ref={(el) => { suggPanelEl = el; }}
-                    use:motion={{
-                      initial: { opacity: 0, y: -4 },
-                      animate: { opacity: 1, y: 0 },
-                      transition: { duration: 0.12 },
-                    }}
-                    style={{ position: "fixed", top: `${suggY()}px`, left: `${suggX()}px` }}
-                    class="z-50 w-60 max-h-56 overflow-y-auto rounded-lg border border-rim
-                           bg-surface shadow-lg py-1"
-                  >
-                    <For each={suggestions()}>
-                      {(c) => (
-                        <li>
-                          <button
-                            onMouseDown={() => selectConnection(c)}
-                            class="w-full flex items-center gap-2 px-3 py-1.5
-                                   text-sm text-left hover:bg-elevated transition-colors text-txt"
-                          >
-                            <Show when={c.photo}>
-                              <img src={c.photo} alt=""
-                                class="w-6 h-6 rounded-full shrink-0 object-cover bg-elevated" />
-                            </Show>
-                            <span class="flex flex-col min-w-0">
-                              <span class="truncate font-medium text-txt">{c.name}</span>
-                              <span class="truncate text-xs text-muted">{c.link || c.nick}</span>
-                            </span>
-                          </button>
-                        </li>
-                      )}
-                    </For>
-                  </ul>
-                </Show>
-              </div>
-            </Show>
-          }
-        >
-          {/* Active connection chip */}
-          <span class="flex items-center gap-1 px-2 py-1 text-xs rounded-lg
-                       border border-accent bg-accent-muted text-accent
-                       max-w-[110px] sm:max-w-[140px] shrink-0">
-            <MdFillPerson size={13} class="shrink-0" />
-            <span class="truncate">{xchanLabel() || cid() || gid()}</span>
-            <button onClick={clearConnection} title={t("network.remove")}
-              class="shrink-0 hover:opacity-70 transition-opacity">
-              <MdFillClose size={12} />
-            </button>
-          </span>
-        </Show>
+        {/* ── Right: utility icons ── */}
+        <div class="flex items-center gap-1 justify-end min-w-0">
 
-        {/* ── Search ── */}
-        <Show
-          when={searchOpen() || !!search()}
-          fallback={
-            <button onClick={openSearch} title={t("network.search")} class={ICON_BTN}>
-              <MdFillSearch size={15} />
-            </button>
-          }
-        >
+          {/* Connection filter */}
           <Show
-            when={!importing()}
+            when={!!(cid() || gid())}
             fallback={
-              <span class="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-lg
-                           border border-accent bg-accent-muted text-accent shrink-0">
-                <MdFillRefresh size={13} class="animate-spin shrink-0" />
-                {t("network.fetching_post")}
-              </span>
+              <Show
+                when={connOpen()}
+                fallback={
+                  <button onClick={openConn} title={t("network.filter_by_connection")} class={ICON_BTN}>
+                    <MdFillPerson size={15} />
+                  </button>
+                }
+              >
+                <div class="shrink-0">
+                  <input
+                    ref={connInputRef}
+                    type="text"
+                    placeholder={t("network.connection_placeholder")}
+                    value={connInput()}
+                    onInput={(e) => { setConnInput(e.currentTarget.value); setConnSuggestOpen(true); }}
+                    onFocus={() => connInput() && setConnSuggestOpen(true)}
+                    onBlur={onConnBlur}
+                    class={`${INPUT_CLS} w-28 sm:w-36`}
+                  />
+                  <Show when={connSuggestOpen() && suggestions().length > 0}>
+                    <ul
+                      ref={(el) => { suggPanelEl = el; }}
+                      use:motion={{
+                        initial: { opacity: 0, y: -4 },
+                        animate: { opacity: 1, y: 0 },
+                        transition: { duration: 0.12 },
+                      }}
+                      style={{ position: "fixed", top: `${suggY()}px`, left: `${suggX()}px` }}
+                      class="z-50 w-60 max-h-56 overflow-y-auto rounded-lg border border-rim
+                             bg-surface shadow-lg py-1"
+                    >
+                      <For each={suggestions()}>
+                        {(c) => (
+                          <li>
+                            <button
+                              onMouseDown={() => selectConnection(c)}
+                              class="w-full flex items-center gap-2 px-3 py-1.5
+                                     text-sm text-left hover:bg-elevated transition-colors text-txt"
+                            >
+                              <Show when={c.photo}>
+                                <img src={c.photo} alt=""
+                                  class="w-6 h-6 rounded-full shrink-0 object-cover bg-elevated" />
+                              </Show>
+                              <span class="flex flex-col min-w-0">
+                                <span class="truncate font-medium text-txt">{c.name}</span>
+                                <span class="truncate text-xs text-muted">{c.link || c.nick}</span>
+                              </span>
+                            </button>
+                          </li>
+                        )}
+                      </For>
+                    </ul>
+                  </Show>
+                </div>
+              </Show>
             }
           >
-            <div class="relative shrink-0">
-              <span class="absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none"
-                classList={{ "text-green-500": isUrl(search()), "text-muted": !isUrl(search()) }}>
-                <MdFillSearch size={13} />
-              </span>
-              <input
-                ref={searchInputRef}
-                type="search"
-                placeholder={t("network.search_placeholder")}
-                value={search()}
-                onInput={(e) => onSearchInput(e.currentTarget.value)}
-                onBlur={onSearchBlur}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && isUrl(search())) {
-                    e.preventDefault();
-                    handleUrlImport(search());
-                  }
-                }}
-                classList={{
-                  "border-green-500 focus:ring-green-500": isUrl(search()),
-                }}
-                class={`${INPUT_CLS} w-36 sm:w-48 pl-6 pr-2`}
-              />
-            </div>
+            {/* Active connection chip */}
+            <span class="flex items-center gap-1 px-2 py-1 text-xs rounded-lg
+                         border border-accent bg-accent-muted text-accent
+                         max-w-[110px] sm:max-w-[140px] shrink-0">
+              <MdFillPerson size={13} class="shrink-0" />
+              <span class="truncate">{xchanLabel() || cid() || gid()}</span>
+              <button onClick={clearConnection} title={t("network.remove")}
+                class="shrink-0 hover:opacity-70 transition-opacity">
+                <MdFillClose size={12} />
+              </button>
+            </span>
           </Show>
-        </Show>
 
-        {/* Save search */}
-        <Show when={hasSaveableSearch()}>
-          <button onClick={() => void saveSearch()} title={t("network.save_search")} class={ICON_BTN}>
-            <MdFillBookmark_add size={15} />
-          </button>
-        </Show>
+          {/* Search */}
+          <Show
+            when={searchOpen() || !!search()}
+            fallback={
+              <button onClick={openSearch} title={t("network.search")} class={ICON_BTN}>
+                <MdFillSearch size={15} />
+              </button>
+            }
+          >
+            <Show
+              when={!importing()}
+              fallback={
+                <span class="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-lg
+                             border border-accent bg-accent-muted text-accent shrink-0">
+                  <MdFillRefresh size={13} class="animate-spin shrink-0" />
+                  {t("network.fetching_post")}
+                </span>
+              }
+            >
+              <div class="relative shrink-0">
+                <span class="absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none"
+                  classList={{ "text-green-500": isUrl(search()), "text-muted": !isUrl(search()) }}>
+                  <MdFillSearch size={13} />
+                </span>
+                <input
+                  ref={searchInputRef}
+                  type="search"
+                  placeholder={t("network.search_placeholder")}
+                  value={search()}
+                  onInput={(e) => onSearchInput(e.currentTarget.value)}
+                  onBlur={onSearchBlur}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && isUrl(search())) {
+                      e.preventDefault();
+                      handleUrlImport(search());
+                    }
+                  }}
+                  classList={{
+                    "border-green-500 focus:ring-green-500": isUrl(search()),
+                  }}
+                  class={`${INPUT_CLS} w-36 sm:w-48 pl-6 pr-2`}
+                />
+              </div>
+            </Show>
+          </Show>
 
-        {/* Clear all */}
-        <Show when={hasAnyFilter()}>
-          <button onClick={clearAll} title={t("network.clear_filters")}
-            class="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs text-muted
-                   hover:text-accent hover:bg-elevated transition-colors shrink-0">
-            <MdFillClose size={13} />
-            <span>{t("network.clear_filters")}</span>
-          </button>
-        </Show>
+          {/* Save search */}
+          <Show when={hasSaveableSearch()}>
+            <button onClick={() => void saveSearch()} title={t("network.save_search")} class={ICON_BTN}>
+              <MdFillBookmark_add size={15} />
+            </button>
+          </Show>
 
-        {/* View switcher — desktop only (row 1) */}
-        <div class="hidden sm:flex ml-1">
-          <ViewSwitcher />
+          {/* Clear all */}
+          <Show when={hasAnyFilter()}>
+            <button onClick={clearAll} title={t("network.clear_filters")}
+              class="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs text-muted
+                     hover:text-accent hover:bg-elevated transition-colors shrink-0">
+              <MdFillClose size={13} />
+              <span class="hidden sm:inline">{t("network.clear_filters")}</span>
+            </button>
+          </Show>
         </div>
-      </div>
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          Row 2 — mobile only: view switcher centred below filters
-      ══════════════════════════════════════════════════════════════════════ */}
-      <div class="flex sm:hidden justify-center">
-        <ViewSwitcher />
       </div>
 
       <Show when={importedUuid()}>

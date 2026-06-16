@@ -1,10 +1,17 @@
 import { createResource, createEffect } from "solid-js";
 import { applyBackgroundCSS, loadBackground, type BgFit } from "./background";
-import { applyTheme } from "./useTheme";
-import { THEMES, type ThemeId } from "../types/theme.types";
+import { applyTheme, applyCustomThemeColors } from "./useTheme";
+import { applyTypographyCSS, loadTypography, type FontSize, type FontFamily } from "./typography";
+import { THEMES, type ThemeId, type CustomThemeColors } from "../types/theme.types";
 
-const VALID_FITS  = new Set<string>(["tile", "cover"]);
-const VALID_THEMES = new Set(THEMES.map((t) => t.id));
+const VALID_FITS    = new Set<string>(["tile", "cover"]);
+const VALID_THEMES  = new Set(THEMES.map((t) => t.id));
+const VALID_SIZES   = new Set<string>(["small", "medium", "large", "xl"]);
+const VALID_FAMILIES = new Set<string>([
+  "system","serif","monospace","nunito","saira","share-tech",
+  "playfair","libre-baskerville","comfortaa","space-mono","iosevka",
+  "righteous","playwrite-england","comic","opendyslexic",
+]);
 
 async function fetchChannelSpa(nick: string): Promise<Record<string, string> | null> {
   if (!nick) return null;
@@ -19,9 +26,10 @@ async function fetchChannelSpa(nick: string): Promise<Record<string, string> | n
 }
 
 /**
- * Reactively applies the visited channel's color scheme and background image.
- * Pass the result of useSubjectNick() — reacts whenever the channel changes.
- * When nick becomes "" (non-channel pages), reverts to the user's own saved settings.
+ * Reactively applies the visited channel's color scheme, background image, and
+ * typography. Pass the result of useSubjectNick() — reacts whenever the channel
+ * changes. When nick becomes "" (non-channel pages), reverts to the user's own
+ * saved settings.
  */
 export function useChannelTheme(channelNick: () => string) {
   const [channelSpa] = createResource(channelNick, fetchChannelSpa);
@@ -33,6 +41,7 @@ export function useChannelTheme(channelNick: () => string) {
     if (spa === null) {
       // Left channel pages — restore user's own settings from localStorage
       loadBackground();
+      loadTypography();
       applyTheme(((localStorage.getItem("hz-theme") ?? "light") as ThemeId));
       return;
     }
@@ -45,7 +54,20 @@ export function useChannelTheme(channelNick: () => string) {
     // Apply the channel's color scheme (CSS only — do not overwrite user's localStorage)
     const scheme = spa.color_scheme ?? "";
     if (VALID_THEMES.has(scheme as ThemeId)) {
-      applyTheme(scheme as ThemeId);
+      if (scheme === "custom" && spa.custom_theme_colors) {
+        try {
+          applyCustomThemeColors(JSON.parse(spa.custom_theme_colors) as CustomThemeColors);
+        } catch {
+          applyTheme("custom");
+        }
+      } else {
+        applyTheme(scheme as ThemeId);
+      }
     }
+
+    // Apply the channel's typography (CSS only — do not overwrite user's localStorage)
+    const fontSize = (VALID_SIZES.has(spa.font_size ?? "") ? spa.font_size : "medium") as FontSize;
+    const fontFamily = (VALID_FAMILIES.has(spa.font_family ?? "") ? spa.font_family : "system") as FontFamily;
+    applyTypographyCSS(fontSize, fontFamily);
   });
 }
