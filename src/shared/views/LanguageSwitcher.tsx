@@ -24,7 +24,7 @@ const LanguageSwitcher = () => {
         class={`p-2 rounded-lg transition-colors text-muted hover:bg-elevated hover:text-txt
                 ${open() ? "bg-elevated text-txt" : ""}`}
       >
-        <span class="text-base leading-none">{current()?.flag ?? "🌐"}</span>
+        <span class="text-xs font-semibold uppercase tracking-wide">{locale()}</span>
       </button>
 
       <Presence>
@@ -48,7 +48,7 @@ const LanguageSwitcher = () => {
                               ? "bg-elevated text-txt font-medium"
                               : "text-muted hover:bg-elevated hover:text-txt"}`}
                   >
-                    <span class="text-base leading-none">{l.flag}</span>
+                    <span class="text-xs font-semibold uppercase tracking-wide w-6 shrink-0">{l.value}</span>
                     <span>{l.label}</span>
                     <Show when={locale() === l.value}>
                       <svg class="w-3.5 h-3.5 ml-auto shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
