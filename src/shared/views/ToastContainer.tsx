@@ -120,7 +120,7 @@ const ToastContainer: Component = () => {
         aria-label={t("ui.notifications")}
         class="fixed z-[9999] flex flex-col gap-2 pointer-events-none
                bottom-21 right-4
-               md:bottom-6 md:right-6"
+               xl:bottom-6 xl:right-6"
       >
         <For each={toasts()}>
           {(toast) => (
