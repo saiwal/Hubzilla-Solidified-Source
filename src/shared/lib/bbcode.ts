@@ -211,7 +211,7 @@ function bbShareAttributes(
 ): string {
   const attr = (name: string) => {
     const m = attributes.match(new RegExp(`${name}='(.*?)'`, "i"));
-    return m ? decodeURIComponent(m[1]) : "";
+    return m ? decodeURIComponent(m[1].replace(/\+/g, " ")) : "";
   };
 
   const author = attr("author");
