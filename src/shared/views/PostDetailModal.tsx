@@ -9,7 +9,8 @@ import type { Post } from "../types/post.types";
 import { mapActivityToPost } from "../lib/activity.mapper";
 import { BiRegularX } from "solid-icons/bi";
 import { useI18n } from "@/i18n";
-import { apiDeleteItem } from "@/shared/lib/item-api";
+import { apiDeleteItem, apiToggleStar, apiCreateComment } from "@/shared/lib/item-api";
+import { toggleVerb, repeatItem } from "@/shared/stream/store/actions-store";
 
 async function fetchDisplay(uuid: string): Promise<ThreadNode> {
   const res = await fetch(`/api/display/${uuid}`);
@@ -96,6 +97,59 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
       };
     });
   }
+
+  const selfHandlers: StreamHandlers = {
+    onLike(mid) {
+      const found = findInTree(node(), mid);
+      if (!found?.iid) return;
+      toggleReaction(mid, "viewerLiked", "likeCount");
+      toggleVerb(found.iid, "like").catch(() => toggleReaction(mid, "viewerLiked", "likeCount"));
+    },
+    onDislike(mid) {
+      const found = findInTree(node(), mid);
+      if (!found?.iid) return;
+      toggleReaction(mid, "viewerDisliked", "dislikeCount");
+      toggleVerb(found.iid, "dislike").catch(() => toggleReaction(mid, "viewerDisliked", "dislikeCount"));
+    },
+    onRepeat(mid) {
+      const o = localReactions()[mid];
+      const treeNode = findInTree(node(), mid);
+      const alreadyRepeated = o?.viewerRepeated ?? treeNode?.viewerRepeated ?? false;
+      if (alreadyRepeated || !treeNode?.iid) return;
+      setLocalReactions(prev => {
+        const existing = prev[mid] ?? {};
+        return { ...prev, [mid]: { ...existing, viewerRepeated: true, repeatCount: (existing.repeatCount ?? treeNode.repeatCount ?? 0) + 1 } };
+      });
+      repeatItem(treeNode.iid).catch(() => {
+        setLocalReactions(prev => {
+          const existing = prev[mid] ?? {};
+          return { ...prev, [mid]: { ...existing, viewerRepeated: false, repeatCount: (existing.repeatCount ?? 1) - 1 } };
+        });
+      });
+    },
+    async onComment(parentMid, body) {
+      const found = findInTree(node(), parentMid);
+      if (!found) return;
+      await apiCreateComment(found.uuid, body);
+      refetch();
+    },
+    onLoadComments: () => Promise.resolve(),
+    onStar(mid) {
+      const found = findInTree(node(), mid);
+      if (!found?.iid) return;
+      const o = localReactions()[mid];
+      const current = o?.viewerStarred ?? found.viewerStarred ?? false;
+      setLocalReactions(prev => ({ ...prev, [mid]: { ...(prev[mid] ?? {}), viewerStarred: !current } }));
+      apiToggleStar(found.iid).catch(() => {
+        setLocalReactions(prev => ({ ...prev, [mid]: { ...(prev[mid] ?? {}), viewerStarred: current } }));
+      });
+    },
+    async onDelete(mid) {
+      const found = findInTree(node(), mid);
+      if (found?.uuid) await apiDeleteItem(found.uuid);
+      props.onClose();
+    },
+  };
 
   function handleBodyClick(e: MouseEvent) {
     const anchor = (e.target as HTMLElement).closest("a");
@@ -247,15 +301,7 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
                   post={n()}
                   highlightUuid={highlightUuid()}
                   initiallyExpanded
-                  handlers={
-                    wrappedHandlers ?? {
-                      onLike: () => {},
-                      onDislike: () => {},
-                      onRepeat: () => {},
-                      onComment: () => {},
-                      onLoadComments: () => Promise.resolve(),
-                    }
-                  }
+                  handlers={wrappedHandlers ?? selfHandlers}
                 />
               )}
             </Show>

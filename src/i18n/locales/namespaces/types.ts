@@ -414,6 +414,7 @@ export type RawDictionary = {
     font_group_editorial:    string;
     font_group_retro:        string;
     font_group_rounded:      string;
+    font_group_display:      string;
     font_group_fun:          string;
     font_group_accessibility: string;
     // Privacy section

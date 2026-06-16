@@ -8,7 +8,7 @@ export interface DisplaySettings {
   itemspage: number;
   start_menu: number;        // 0 | 1
   font_size: "small" | "medium" | "large" | "xl";
-  font_family: "system" | "serif" | "monospace" | "nunito" | "playfair" | "comfortaa" | "space-mono" | "pacifico" | "righteous" | "comic" | "opendyslexic";
+  font_family: "system" | "serif" | "monospace" | "nunito" | "saira" | "share-tech" | "playfair" | "libre-baskerville" | "comfortaa" | "space-mono" | "iosevka" | "righteous" | "playwrite-england" | "comic" | "opendyslexic";
   bg_url: string;
   bg_fit: "tile" | "cover";
 }

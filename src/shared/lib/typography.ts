@@ -4,11 +4,15 @@ export type FontFamily =
   | "serif"
   | "monospace"
   | "nunito"
+  | "saira"
+  | "share-tech"
   | "playfair"
+  | "libre-baskerville"
   | "comfortaa"
   | "space-mono"
-  | "pacifico"
+  | "iosevka"
   | "righteous"
+  | "playwrite-england"
   | "comic"
   | "opendyslexic";
 
@@ -19,18 +23,24 @@ const FONT_SIZES: Record<FontSize, string> = {
   xl: "21px",
 };
 
+const D = '"Noto Sans Devanagari"';
+
 const FONT_FAMILIES: Record<FontFamily, string> = {
-  system:        "ui-sans-serif, system-ui, -apple-system, sans-serif",
-  serif:         "ui-serif, Georgia, Cambria, serif",
-  monospace:     'ui-monospace, "Cascadia Code", "Fira Code", monospace',
-  nunito:        '"Nunito", ui-rounded, sans-serif',
-  playfair:      '"Playfair Display", Georgia, serif',
-  comfortaa:     '"Comfortaa", ui-rounded, sans-serif',
-  "space-mono":  '"Space Mono", ui-monospace, monospace',
-  pacifico:      '"Pacifico", cursive',
-  righteous:     '"Righteous", "Impact", sans-serif',
-  comic:         '"Comic Neue", "Comic Sans MS", "Comic Sans", cursive',
-  opendyslexic:  '"OpenDyslexic", sans-serif',
+  system:             `ui-sans-serif, system-ui, -apple-system, ${D}, sans-serif`,
+  serif:              `ui-serif, Georgia, Cambria, ${D}, serif`,
+  monospace:          `ui-monospace, "Cascadia Code", "Fira Code", ${D}, monospace`,
+  nunito:             `"Nunito", ${D}, ui-rounded, sans-serif`,
+  saira:              `"Saira", ${D}, ui-sans-serif, sans-serif`,
+  "share-tech":       `"Share Tech", ${D}, ui-sans-serif, sans-serif`,
+  playfair:           `"Playfair Display", ${D}, Georgia, serif`,
+  "libre-baskerville":`"Libre Baskerville", ${D}, Georgia, serif`,
+  comfortaa:          `"Comfortaa", ${D}, ui-rounded, sans-serif`,
+  "space-mono":       `"Space Mono", ${D}, ui-monospace, monospace`,
+  iosevka:            `"Iosevka", ${D}, ui-monospace, monospace`,
+  righteous:          `"Righteous", ${D}, "Impact", sans-serif`,
+  "playwrite-england":`"Playwrite England Joined", ${D}, cursive`,
+  comic:              `"Comic Neue", "Comic Sans MS", "Comic Sans", ${D}, cursive`,
+  opendyslexic:       `"OpenDyslexic", ${D}, sans-serif`,
 };
 
 export function applyTypography(size: FontSize, family: FontFamily): void {

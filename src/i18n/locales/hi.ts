@@ -447,6 +447,7 @@ export const dict: RawDictionary = {
     font_group_editorial:     "संपादकीय",
     font_group_retro:         "रेट्रो और तकनीकी",
     font_group_rounded:       "गोल और मज़ेदार",
+    font_group_display:       "डिस्प्ले और स्क्रिप्ट",
     font_group_fun:           "मनोरंजन के लिए",
     font_group_accessibility: "पहुँच",
     // Privacy section

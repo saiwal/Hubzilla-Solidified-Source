@@ -223,18 +223,24 @@ export default function DisplaySection() {
                 <option value="monospace" selected={previewFamily() === "monospace"}>Monospace</option>
               </optgroup>
               <optgroup label={t("settings.font_group_clean")}>
-                <option value="nunito"    selected={previewFamily() === "nunito"}>Nunito — rounded, approachable</option>
+                <option value="nunito"       selected={previewFamily() === "nunito"}>Nunito — rounded, approachable</option>
+                <option value="saira"        selected={previewFamily() === "saira"}>Saira — condensed, versatile</option>
+                <option value="share-tech"   selected={previewFamily() === "share-tech"}>Share Tech — sharp geometric</option>
               </optgroup>
               <optgroup label={t("settings.font_group_editorial")}>
-                <option value="playfair"  selected={previewFamily() === "playfair"}>Playfair Display — elegant serif</option>
+                <option value="playfair"          selected={previewFamily() === "playfair"}>Playfair Display — elegant serif</option>
+                <option value="libre-baskerville" selected={previewFamily() === "libre-baskerville"}>Libre Baskerville — classic bookface</option>
               </optgroup>
               <optgroup label={t("settings.font_group_retro")}>
                 <option value="space-mono" selected={previewFamily() === "space-mono"}>Space Mono — terminal vibes</option>
+                <option value="iosevka"    selected={previewFamily() === "iosevka"}>Iosevka — programmer's mono</option>
                 <option value="righteous"  selected={previewFamily() === "righteous"}>Righteous — bold &amp; retro</option>
               </optgroup>
               <optgroup label={t("settings.font_group_rounded")}>
                 <option value="comfortaa" selected={previewFamily() === "comfortaa"}>Comfortaa — rounded geometric</option>
-                <option value="pacifico"  selected={previewFamily() === "pacifico"}>Pacifico — friendly display</option>
+              </optgroup>
+              <optgroup label={t("settings.font_group_display")}>
+                <option value="playwrite-england" selected={previewFamily() === "playwrite-england"}>Playwrite England Joined — handwritten</option>
               </optgroup>
               <optgroup label={t("settings.font_group_fun")}>
                 <option value="comic"     selected={previewFamily() === "comic"}>Comic Neue — the friendly classic</option>

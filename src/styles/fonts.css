@@ -97,14 +97,6 @@
 }
 
 @font-face {
-  font-family: 'Pacifico';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('/view/theme/solidified/assets/fonts/Pacifico-Regular.woff2') format('woff2');
-}
-
-@font-face {
   font-family: 'Righteous';
   font-style: normal;
   font-weight: 400;
@@ -140,4 +132,84 @@
   font-weight: 400;
   font-display: swap;
   src: url('/view/theme/solidified/assets/fonts/OpenDyslexic-Regular.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Iosevka';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/Iosevka-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Iosevka';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/Iosevka-Italic.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Iosevka';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/Iosevka-Bold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Saira';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/Saira.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Share Tech';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/ShareTech-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Libre Baskerville';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/LibreBaskerville-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Libre Baskerville';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/LibreBaskerville-Italic.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Playwrite England Joined';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/view/theme/solidified/assets/fonts/PlaywriteEnglandJoined-Regular.woff2') format('woff2');
+}
+
+/* Noto Sans Devanagari — Hindi locale companion. unicode-range means browsers only
+   download this file when Devanagari characters are present on screen. */
+@font-face {
+  font-family: 'Noto Sans Devanagari';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  unicode-range: U+0900-097F, U+1CD0-1CFF, U+A8E0-A8FF;
+  src: url('/view/theme/solidified/assets/fonts/NotoSansDevanagari.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Noto Sans Devanagari';
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+  unicode-range: U+0900-097F, U+1CD0-1CFF, U+A8E0-A8FF;
+  src: url('/view/theme/solidified/assets/fonts/NotoSansDevanagari.woff2') format('woff2');
 }

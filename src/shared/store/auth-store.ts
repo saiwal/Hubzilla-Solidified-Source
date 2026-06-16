@@ -48,8 +48,9 @@ async function fetchAuthState(): Promise<AuthState> {
     const validSizes   = new Set(["small", "medium", "large", "xl"]);
     const validFits    = new Set(["tile", "cover"]);
     const validFamilies = new Set([
-      "system","serif","monospace","nunito","playfair","comfortaa",
-      "space-mono","pacifico","righteous","comic","opendyslexic",
+      "system","serif","monospace","nunito","saira","share-tech",
+      "playfair","libre-baskerville","comfortaa","space-mono","iosevka",
+      "righteous","playwrite-england","comic","opendyslexic",
     ]);
 
     const sz  = data.spa.font_size   ?? "";

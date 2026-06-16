@@ -76,6 +76,7 @@ export const settings: RawDictionary["settings"] = {
   font_group_editorial:     "Editorial",
   font_group_retro:         "Retro & Techy",
   font_group_rounded:       "Rounded & Playful",
+  font_group_display:       "Display & Script",
   font_group_fun:           "Just for Fun",
   font_group_accessibility: "Accessibility",
   // Privacy section
