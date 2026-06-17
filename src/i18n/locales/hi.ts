@@ -254,6 +254,7 @@ export const dict: RawDictionary = {
     modal_title:          "पोस्ट",
     modal_close:          "बंद करें",
     load_error:           "पोस्ट लोड करने में विफल",
+    deleted_comment:      "[टिप्पणी हटाई गई]",
   },
   editor: {
     // PostComposer

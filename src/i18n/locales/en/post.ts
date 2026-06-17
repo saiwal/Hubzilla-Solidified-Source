@@ -57,4 +57,5 @@ export const post: RawDictionary["post"] = {
   modal_title:          "Post",
   modal_close:          "Close",
   load_error:           "Failed to load post",
+  deleted_comment:      "[Comment deleted]",
 };

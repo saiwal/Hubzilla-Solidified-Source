@@ -221,6 +221,7 @@ export type RawDictionary = {
     likes: string; dislikes: string; repeats: string; no_activity: string;
     cached: string; generated: string; unknown: string;
     modal_title: string; modal_close: string; load_error: string;
+    deleted_comment: string;
   };
   editor: {
     // PostComposer
