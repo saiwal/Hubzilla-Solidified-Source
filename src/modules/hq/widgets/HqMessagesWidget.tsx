@@ -97,6 +97,19 @@ function decodeHtmlEntities(str: string): string {
   return ta.value;
 }
 
+function parseFolderNames(html: string): string[] {
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  const spans = div.querySelectorAll("span");
+  if (spans.length > 0) {
+    return Array.from(spans)
+      .map((s) => s.textContent?.trim() ?? "")
+      .filter(Boolean);
+  }
+  const text = (div.textContent ?? div.innerText ?? "").trim();
+  return text ? [text] : [];
+}
+
 function initials(name: string): string {
   return name
     .split(" ")
@@ -113,7 +126,7 @@ function avatarHue(name: string): number {
 
 async function fetchMessages(params: {
   offset: number;
-  type: MessageType;
+  type: MessageType | "filed";
   author: string;
   file: string;
   signal?: AbortSignal;
@@ -278,7 +291,18 @@ const MessageItem: Component<{ entry: MessageEntry; activeTab: TabMode }> = (pro
           </p>
 
           <Show when={e.info}>
-            <p class="text-[11px] text-muted mt-1 truncate">{e.info}</p>
+            <div class="flex flex-wrap gap-1 mt-1">
+              <For each={parseFolderNames(e.info)}>
+                {(name) => (
+                  <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-overlay text-[10px] text-muted font-medium">
+                    <svg class="w-2.5 h-2.5 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
+                    </svg>
+                    <span class="truncate max-w-[80px]">{name}</span>
+                  </span>
+                )}
+              </For>
+            </div>
           </Show>
         </div>
 
