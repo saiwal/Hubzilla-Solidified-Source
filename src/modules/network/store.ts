@@ -19,8 +19,8 @@ export { viewMode };
 // ── store instance ────────────────────────────────────────────────────────────
 const store = createStreamStore<NetworkParams>(fetchNetworkStream);
 export const {
-  posts, loading, loadingMore, hasMore, newPosts, profileUid,
-  loadMore, flushNewPosts, stopPolling,
+  posts, loading, loadingMore, refreshing, hasMore, newPosts, profileUid,
+  loadMore, flushNewPosts, stopPolling, softRefresh,
 } = store;
 
 export function resetPosts() { store.reset(); }

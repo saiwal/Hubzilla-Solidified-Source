@@ -14,14 +14,13 @@ import EventCreatorModal from "../widgets/EventCreatorModal";
 import MonthView from "./MonthView";
 import WeekView from "./WeekView";
 import DayView from "./DayView";
-import { importCalendar } from "../api";
-import { toast } from "@/shared/store/toast";
+import ListView from "./ListView";
 import { isoDateStr, startOfWeek, addDays } from "./calUtils";
 
-type ViewType = "month" | "week" | "day";
+type ViewType = "month" | "week" | "day" | "list";
 
 function rangeForView(view: ViewType, anchor: Date): CalRange {
-  if (view === "month") {
+  if (view === "month" || view === "list") {
     return monthRange(anchor.getFullYear(), anchor.getMonth() + 1);
   }
   if (view === "week") {
@@ -44,7 +43,6 @@ export default function CalView() {
   const [activeDay, setActiveDay] = createSignal<string | null>(null);
   const [showModal, setShowModal] = createSignal(false);
   const [showCreator, setShowCreator] = createSignal(false);
-  const [importing, setImporting] = createSignal(false);
 
   const fetchRange = createMemo(() => rangeForView(viewType(), anchor()));
 
@@ -59,7 +57,7 @@ export default function CalView() {
   function navigate(dir: -1 | 1) {
     setAnchor(d => {
       const nd = new Date(d);
-      if (viewType() === "month") nd.setMonth(nd.getMonth() + dir);
+      if (viewType() === "month" || viewType() === "list") nd.setMonth(nd.getMonth() + dir);
       else if (viewType() === "week") nd.setDate(nd.getDate() + dir * 7);
       else nd.setDate(nd.getDate() + dir);
       return nd;
@@ -90,33 +88,6 @@ export default function CalView() {
     if (nick) loadCalendar(nick, fetchRange(), true);
   }
 
-  function handleExport() {
-    const nick = resolvedNick();
-    if (!nick) return;
-    const a = document.createElement("a");
-    a.href = `/api/cal/${encodeURIComponent(nick)}?export=ical`;
-    a.download = `${nick}-calendar.ics`;
-    a.click();
-  }
-
-  async function handleImport(e: Event) {
-    const input = e.currentTarget as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-    setImporting(true);
-    try {
-      const text = await file.text();
-      const result = await importCalendar(text);
-      toast.success(`${t("calendar.import_success")} (${result.imported} events)`);
-      refreshCurrent();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("calendar.import_failed"));
-    } finally {
-      setImporting(false);
-      (e.currentTarget as HTMLInputElement).value = "";
-    }
-  }
-
   const activeDayEvs = createMemo<CalEvent[]>(() => {
     const d = activeDay();
     if (!d) return [];
@@ -129,6 +100,7 @@ export default function CalView() {
     { key: "month", label: () => t("calendar.view_month") as string },
     { key: "week",  label: () => t("calendar.view_week")  as string },
     { key: "day",   label: () => t("calendar.view_day")   as string },
+    { key: "list",  label: () => t("calendar.view_list")  as string },
   ];
 
   return (
@@ -169,45 +141,6 @@ export default function CalView() {
           </svg>
           {t("calendar.new_event")}
         </button>
-
-        {/* Export */}
-        <button
-          type="button"
-          onClick={handleExport}
-          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                 border border-rim text-muted hover:bg-elevated hover:text-txt transition-colors"
-          title={t("calendar.export_ical") as string}
-        >
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          <span class="hidden sm:inline">{t("calendar.export_ical")}</span>
-        </button>
-
-        {/* Import */}
-        <label
-          class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                 border border-rim text-muted hover:bg-elevated hover:text-txt
-                 transition-colors cursor-pointer
-                 ${importing() ? "opacity-60 pointer-events-none" : ""}`}
-          title={t("calendar.import_ical") as string}
-        >
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l4-4m0 0l4 4m-4-4v12" />
-          </svg>
-          <span class="hidden sm:inline">
-            {importing() ? t("calendar.importing") : t("calendar.import_ical")}
-          </span>
-          <input
-            type="file"
-            accept=".ics,.ical,text/calendar"
-            class="hidden"
-            onChange={handleImport}
-            disabled={importing()}
-          />
-        </label>
 
         {/* Navigation */}
         <div class="flex items-center gap-1">
@@ -257,6 +190,9 @@ export default function CalView() {
             events={events()}
             onDayClick={handleDayClick}
           />
+        </Show>
+        <Show when={viewType() === "list"}>
+          <ListView events={events()} />
         </Show>
       </div>
 

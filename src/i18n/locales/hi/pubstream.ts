@@ -1,0 +1,13 @@
+import type { RawDictionary } from "../namespaces/types";
+
+export const pubstream: RawDictionary["pubstream"] = {
+  title:            "पब्लिक स्ट्रीम",
+  unavailable:      "पब्लिक स्ट्रीम अनुपलब्ध",
+  unavailable_desc: "इस साइट पर पब्लिक स्ट्रीम सक्षम नहीं है।",
+  firehose:         "साइट फ़ायरहोज़",
+  filter_by_tag:    "टैग से फ़िल्टर करें…",
+  clear:            "साफ़ करें",
+  filter:           "फ़िल्टर करें",
+  load_more:        "और लोड करें",
+  end_of_stream:    "आप पब्लिक स्ट्रीम के अंत तक पहुँच गए।",
+};

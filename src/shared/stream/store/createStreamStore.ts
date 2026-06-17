@@ -54,6 +54,7 @@ export function createStreamStore<P extends StreamParams>(
   const [posts, setPosts] = createSignal<ThreadNode[]>([]);
   const [loading, setLoading] = createSignal(false);
   const [loadingMore, setLoadingMore] = createSignal(false);
+  const [refreshing, setRefreshing] = createSignal(false);
   const [hasMore, setHasMore] = createSignal(true);
   const [newPosts, setNewPosts] = createSignal<ThreadNode[]>([]);
   const [profileUid, setProfileUid] = createSignal<number>(0);
@@ -203,6 +204,32 @@ export function createStreamStore<P extends StreamParams>(
     setNewPosts([]);
   }
 
+  async function softRefresh() {
+    if (refreshing()) return;
+    if (posts().length === 0 && newPosts().length === 0) return load();
+    setRefreshing(true);
+    try {
+      const result = await fetcher({ ...params(), start: 0 } as P);
+      const threads = result.nouveau
+        ? result.items.map(postToThreadNode)
+        : buildThreadTree(result.items);
+      const existingMids = new Set([
+        ...posts().map((t) => t.mid),
+        ...newPosts().map((t) => t.mid),
+      ]);
+      const fresh = threads.filter((t) => !existingMids.has(t.mid));
+      if (fresh.length) {
+        setPosts((prev) => [...fresh, ...prev]);
+        registerActivated(activated, result.items);
+      }
+    } catch (err) {
+      console.error("Refresh failed", err);
+      toast.error("Failed to refresh. Check your connection and try again.");
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
   function reset() {
     setPosts([]);
     setNewPosts([]);
@@ -215,11 +242,13 @@ export function createStreamStore<P extends StreamParams>(
     posts,
     loading,
     loadingMore,
+    refreshing,
     hasMore,
     newPosts,
     profileUid,
     load,
     loadMore,
+    softRefresh,
     flushNewPosts,
     reset,
     stopPolling,

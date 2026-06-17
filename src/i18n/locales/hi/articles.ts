@@ -1,0 +1,25 @@
+import type { RawDictionary } from "../namespaces/types";
+
+export const articles: RawDictionary["articles"] = {
+  title:            "लेख",
+  new_article:      "नया लेख",
+  no_articles:      "अभी तक कोई लेख नहीं।",
+  filtered_by:      "फ़िल्टर किया गया:",
+  clear:            "साफ़ करें",
+  load_more:        "और लोड करें",
+  all_loaded:       "सभी लेख लोड हो गए",
+  untitled:         "(शीर्षक रहित)",
+  all_articles:     "← सभी लेख",
+  edit_article:     "लेख संपादित करें",
+  delete_article:   "लेख हटाएँ",
+  by:               "द्वारा",
+  on_this_page:     "इस पृष्ठ पर",
+  comments:         "टिप्पणियाँ",
+  no_comments:      "अभी तक कोई टिप्पणी नहीं।",
+  comment:          "टिप्पणी",
+  delete_confirm:   "यह लेख हटाएँ? यह वापस नहीं किया जा सकता।",
+  cancel:           "रद्द करें",
+  delete:           "हटाएँ",
+  deleting:         "हटाया जा रहा है…",
+  delete_failed:    "हटाने में विफल",
+};

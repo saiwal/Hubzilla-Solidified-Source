@@ -19,7 +19,7 @@ void motion;
 import { useSearchParams } from "@solidjs/router";
 import { apiFetch } from "@/shared/lib/fetch";
 const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
-import { loadNetwork, loading, resetPosts, viewMode, changeView } from "../store";
+import { loadNetwork, loading, refreshing, resetPosts, softRefresh, viewMode, changeView } from "../store";
 import {
   MdFillPerson,
   MdFillRefresh,
@@ -330,14 +330,14 @@ export default function StreamFilters() {
         {/* ── Left: refresh + order ── */}
         <div class="flex items-center gap-1 min-w-0">
           <button
-            onClick={() => { resetPosts(); loadNetwork(); }}
-            disabled={loading()}
+            onClick={softRefresh}
+            disabled={loading() || refreshing()}
             title={t("network.refresh")}
             class="p-1.5 rounded-lg hover:bg-elevated transition-colors
                    disabled:opacity-40 text-muted hover:text-txt shrink-0
                    flex items-center justify-center"
           >
-            <MdFillRefresh size={17} class={loading() ? "animate-spin" : ""} />
+            <MdFillRefresh size={17} class={(loading() || refreshing()) ? "animate-spin" : ""} />
           </button>
 
           <div class="flex rounded-lg border border-rim overflow-hidden shrink-0">

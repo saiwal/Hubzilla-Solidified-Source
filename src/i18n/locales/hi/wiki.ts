@@ -1,0 +1,26 @@
+import type { RawDictionary } from "../namespaces/types";
+
+export const wiki: RawDictionary["wiki"] = {
+  wikis:            "विकी",
+  new_wiki:         "नई विकी",
+  cancel:           "रद्द करें",
+  wiki_name_label:  "विकी का नाम",
+  wiki_name_placeholder: "मेरी विकी",
+  content_type_label: "सामग्री प्रकार",
+  creating:         "बनाया जा रहा है…",
+  create_wiki:      "विकी बनाएँ",
+  no_permission:    "आपको ये विकी देखने की अनुमति नहीं है।",
+  no_wikis:         "अभी तक कोई विकी नहीं।",
+  error_creating:   "विकी बनाने में त्रुटि",
+  all_wikis:        "← सभी विकी",
+  edit:             "संपादित करें",
+  cancel_edit:      "रद्द करें",
+  save:             "सहेजें",
+  saving:           "सहेजा जा रहा है…",
+  delete:           "हटाएँ",
+  deleting:         "हटाया जा रहा है…",
+  changes_placeholder: "अपने परिवर्तनों का संक्षिप्त विवरण (वैकल्पिक)",
+  delete_confirm:   "? यह वापस नहीं किया जा सकता।",
+  error_saving:     "सहेजने में त्रुटि",
+  error_deleting:   "हटाने में त्रुटि",
+};

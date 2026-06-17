@@ -913,7 +913,9 @@ export type RawDictionary = {
     view_month:             string;
     view_week:              string;
     view_day:               string;
+    view_list:              string;
     today:                  string;
+    no_upcoming_events:     string;
   };
   chat: {
     chatrooms:        string;

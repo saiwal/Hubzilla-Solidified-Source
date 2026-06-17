@@ -1,0 +1,24 @@
+import type { RawDictionary } from "../namespaces/types";
+
+export const webpages: RawDictionary["webpages"] = {
+  title:            "वेबपेज",
+  new_page:         "+ नया पेज",
+  col_title:        "शीर्षक",
+  col_page_link:    "पेज लिंक",
+  col_last_edited:  "अंतिम संपादन",
+  col_visibility:   "दृश्यता",
+  col_actions:      "क्रियाएँ",
+  private_label:    "🔒 निजी",
+  public_label:     "🌐 सार्वजनिक",
+  view:             "देखें",
+  edit:             "संपादित करें",
+  delete:           "हटाएँ",
+  delete_confirm:   "हटाएँ?",
+  yes:              "हाँ",
+  no:               "नहीं",
+  no_webpages:      "अभी तक कोई वेबपेज नहीं।",
+  create_first:     "अपना पहला पेज बनाएँ",
+  untitled:         "(शीर्षक रहित)",
+  back:             "← वेबपेज",
+  load_failed:      "पेज लोड करने में विफल",
+};

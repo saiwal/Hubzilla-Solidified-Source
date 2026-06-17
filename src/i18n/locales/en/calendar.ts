@@ -63,5 +63,7 @@ export const calendar: RawDictionary["calendar"] = {
   view_month:             "Month",
   view_week:              "Week",
   view_day:               "Day",
+  view_list:              "List",
   today:                  "Today",
+  no_upcoming_events:     "No events in this period",
 };

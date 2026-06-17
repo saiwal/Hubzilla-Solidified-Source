@@ -1,0 +1,48 @@
+import type { RawDictionary } from "../namespaces/types";
+
+export const tools: RawDictionary["tools"] = {
+  label:            "टूल्स",
+  calc:             "कैलकुलेटर",
+  qr:               "QR कोड",
+  unit:             "इकाई परिवर्तक",
+  base64:           "Base64",
+  password:         "पासवर्ड",
+  // QR Generator
+  qr_text_label:    "पाठ या URL",
+  qr_placeholder:   "पाठ या URL दर्ज करें…",
+  qr_size:          "आकार",
+  qr_download:      "PNG डाउनलोड करें",
+  // Unit Converter
+  unit_from:        "से",
+  unit_to:          "में",
+  unit_swap:        "इकाइयाँ बदलें",
+  // Base64 Tool
+  base64_encode:    "एन्कोड करें",
+  base64_decode:    "डीकोड करें",
+  base64_plain:     "सामान्य पाठ",
+  base64_input:     "Base64 इनपुट",
+  base64_output:    "Base64 आउटपुट",
+  base64_decoded:   "डीकोड किया गया पाठ",
+  base64_use_input: "इनपुट के रूप में उपयोग करें ⇅",
+  base64_copy:      "कॉपी करें",
+  base64_copied:    "कॉपी हो गया ✓",
+  base64_encode_file: "या फ़ाइल एन्कोड करें",
+  base64_file_note: "फ़ाइल की सामग्री आपके ब्राउज़र में Base64-एन्कोड की जाती है — कुछ अपलोड नहीं होता।",
+  // Password Generator
+  pw_length:        "लंबाई",
+  pw_copy:          "कॉपी करें",
+  pw_copied:        "कॉपी हो गया ✓",
+  pw_generate:      "नया पासवर्ड बनाएँ",
+  pw_recent:        "हाल के (केवल सत्र)",
+  pw_select_charset: "कम से कम एक वर्ण सेट चुनें",
+  pw_bits:          "बिट्स की एन्ट्रॉपी",
+  pw_lowercase:     "छोटे अक्षर (a-z)",
+  pw_uppercase:     "बड़े अक्षर (A-Z)",
+  pw_digits:        "अंक (0-9)",
+  pw_symbols:       "प्रतीक (!@#…)",
+  pw_no_ambiguous:  "अस्पष्ट वर्ण हटाएँ (0, O, l, 1, I)",
+  pw_weak:          "कमज़ोर",
+  pw_fair:          "ठीक",
+  pw_strong:        "मज़बूत",
+  pw_very_strong:   "बहुत मज़बूत",
+};
