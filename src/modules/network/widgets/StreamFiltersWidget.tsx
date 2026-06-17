@@ -6,11 +6,12 @@ import {
   MdFillMail,
   MdFillEvent,
   MdFillClose,
+  MdFillFolder,
 } from "solid-icons/md";
-import { For, Show } from "solid-js";
+import { createResource, For, Show } from "solid-js";
 import { useI18n } from "@/i18n";
 import { loadNetwork, resetPosts } from "../store";
-import type { NetworkParams } from "../api";
+import { fetchFolders, type NetworkParams } from "../api";
 
 const CHIPS = [
   { key: "star",  labelKey: "network.starred",         Icon: MdFillStar          },
@@ -33,6 +34,7 @@ function buildParams(params: Record<string, string | string[] | undefined>): Net
   if (params.order && params.order !== "created") p.order = params.order as NetworkParams["order"];
   if (params.search) p.search = String(params.search);
   if (params.tag)    p.tag    = String(params.tag);
+  if (params.file)   p.file   = String(params.file);
   if (params.star  === "1") p.star  = 1;
   if (params.pf    === "1") p.pf    = 1;
   if (params.conv  === "1") p.conv  = 1;
@@ -50,8 +52,10 @@ function buildParams(params: Record<string, string | string[] | undefined>): Net
 export default function StreamFiltersWidget() {
   const { t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [folders] = createResource(fetchFolders);
 
   const tag    = () => str(searchParams.tag);
+  const file   = () => str(searchParams.file);
   const dbegin = () => str(searchParams.dbegin);
   const dend   = () => str(searchParams.dend);
   const cmin   = () => str(searchParams.cmin);
@@ -65,7 +69,7 @@ export default function StreamFiltersWidget() {
     (str(searchParams.order) || "created") !== "created" || !!searchParams.search ||
     searchParams.star === "1" || searchParams.pf === "1" ||
     searchParams.conv === "1" || searchParams.dm === "1" || searchParams.event === "1" ||
-    !!(tag() || dbegin() || dend() || cmin() || cmax()) ||
+    !!(tag() || file() || dbegin() || dend() || cmin() || cmax()) ||
     !!(searchParams.cid || searchParams.gid);
 
   function applyNow() {
@@ -76,7 +80,7 @@ export default function StreamFiltersWidget() {
   function clearAll() {
     setSearchParams(
       {
-        order: undefined, search: undefined, tag: undefined,
+        order: undefined, search: undefined, tag: undefined, file: undefined,
         star: undefined, pf: undefined, conv: undefined, dm: undefined, event: undefined,
         dbegin: undefined, dend: undefined,
         cmin: undefined, cmax: undefined,
@@ -127,6 +131,38 @@ export default function StreamFiltersWidget() {
           }}
         </For>
       </div>
+      <Show when={!folders.loading && (folders() ?? []).length > 0}>
+        <div class="px-3 pb-2 pt-2 border-t border-rim">
+          <span class="text-xs text-muted font-medium block mb-1.5">{t("network.folder")}</span>
+          <div class="flex flex-wrap gap-1.5">
+            <button
+              onClick={() => { sp({ file: undefined }); setTimeout(applyNow, 0); }}
+              class="flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-colors"
+              classList={{
+                "bg-accent text-accent-fg font-medium": !file(),
+                "bg-elevated text-muted hover:text-txt": !!file(),
+              }}
+            >
+              {t("network.folder_all")}
+            </button>
+            <For each={folders() ?? []}>
+              {(folder) => (
+                <button
+                  onClick={() => { sp({ file: folder }); setTimeout(applyNow, 0); }}
+                  class="flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-colors"
+                  classList={{
+                    "bg-accent text-accent-fg font-medium": file() === folder,
+                    "bg-elevated text-muted hover:text-txt": file() !== folder,
+                  }}
+                >
+                  <MdFillFolder size={11} class="shrink-0" />
+                  <span class="truncate max-w-[120px]">{folder}</span>
+                </button>
+              )}
+            </For>
+          </div>
+        </div>
+      </Show>
       <div class="px-3 pb-3 pt-1 border-t border-rim space-y-2.5">
         <label class="flex flex-col gap-1">
           <span class="text-xs text-muted font-medium">{t("network.tag")}</span>

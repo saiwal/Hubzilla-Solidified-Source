@@ -115,6 +115,7 @@ export default function StreamFilters() {
   const order      = (): Order => (str(searchParams.order) as Order) || "created";
   const search     = ()        => str(searchParams.search);
   const tag        = ()        => str(searchParams.tag);
+  const file       = ()        => str(searchParams.file);
   const star       = ()        => searchParams.star  === "1";
   const pf         = ()        => searchParams.pf    === "1";
   const conv       = ()        => searchParams.conv  === "1";
@@ -128,7 +129,7 @@ export default function StreamFilters() {
   const gid        = ()        => str(searchParams.gid);
   const xchanLabel = ()        => str(searchParams.xchan_label);
 
-  const hasAdvanced   = () => !!(tag() || dbegin() || dend() || cmin() || cmax());
+  const hasAdvanced   = () => !!(tag() || file() || dbegin() || dend() || cmin() || cmax());
   const hasAnyFilter  = () =>
     order() !== "created" || !!search() || star() || pf() || conv() || dm() || event() ||
     hasAdvanced() || !!(cid() || gid());
@@ -144,6 +145,7 @@ export default function StreamFilters() {
     const p: NetworkParams = { order: order() };
     if (search())  p.search = search();
     if (tag())     p.tag    = tag();
+    if (file())    p.file   = file();
     if (star())    p.star   = 1;
     if (pf())      p.pf     = 1;
     if (conv())    p.conv   = 1;
@@ -168,7 +170,7 @@ export default function StreamFilters() {
   const [importedUuid, setImportedUuid] = createSignal<string | null>(null);
 
   function captureParams(): Record<string, string> {
-    const keys = ["order","search","tag","star","pf","conv","dm","event","dbegin","dend","cmin","cmax","cid","gid","xchan_label"];
+    const keys = ["order","search","tag","file","star","pf","conv","dm","event","dbegin","dend","cmin","cmax","cid","gid","xchan_label"];
     const p: Record<string, string> = {};
     for (const k of keys) {
       const v = str(searchParams[k]);
@@ -225,7 +227,7 @@ export default function StreamFilters() {
   function clearAll() {
     setSearchParams(
       {
-        order: undefined, search: undefined, tag: undefined,
+        order: undefined, search: undefined, tag: undefined, file: undefined,
         star: undefined, pf: undefined, conv: undefined, dm: undefined, event: undefined,
         dbegin: undefined, dend: undefined,
         cmin: undefined, cmax: undefined,

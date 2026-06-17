@@ -97,6 +97,15 @@ export const apiEditItem = (uuid: string, content: string, title = '') =>
 export const apiDeleteItem = (uuid: string) =>
   post<{ success: boolean }>(`${BASE}/${encodeId(uuid)}/delete`);
 
+export const apiFetchItemFolders = (uuid: string): Promise<string[]> =>
+  apiFetch(`${BASE}/${encodeId(uuid)}/folders`)
+    .then(r => r.json())
+    .then(d => Array.isArray(d?.data) ? d.data : []);
+
+export const apiSaveToFolder = (uuid: string, name: string, remove = false): Promise<string[]> =>
+  post<{ data: { folders: string[] } }>(`${BASE}/${encodeId(uuid)}/saveto`, { name, remove })
+    .then(d => d.data.folders);
+
 export const apiFollowPost = (iid: number): Promise<void> =>
   fetch(`/subthread/sub/${iid}`, { credentials: 'include' }).then(() => undefined);
 

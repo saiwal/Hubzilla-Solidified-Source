@@ -67,6 +67,7 @@ export type NetworkParams = {
   tag?: string;
   cat?: string;
   verb?: string;
+  file?: string;
   gid?: number;
   cid?: number;
   xchan?: string;
@@ -109,6 +110,13 @@ export async function fetchConnections(): Promise<AclConnection[]> {
   if (!res.ok) return [];
   const data = await res.json();
   return (data.items ?? []);
+}
+
+export async function fetchFolders(): Promise<string[]> {
+  const res = await fetch('/api/folders');
+  if (!res.ok) return [];
+  const { data } = await res.json();
+  return Array.isArray(data) ? data : [];
 }
 
 export type NetworkStreamResult = {

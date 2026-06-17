@@ -58,4 +58,9 @@ export const post: RawDictionary["post"] = {
   modal_close:          "Close",
   load_error:           "Failed to load post",
   deleted_comment:      "[Comment deleted]",
+  // Folder save
+  save_to_folder:        "Save to folder",
+  new_folder_placeholder: "New folder name…",
+  add_folder:            "Add",
+  no_folders_yet:        "No folders yet — type a name below to create one",
 };

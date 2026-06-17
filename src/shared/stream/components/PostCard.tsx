@@ -30,6 +30,9 @@ import {
   MdOutlineNotifications_none,
   MdOutlineCode,
   MdOutlineReply,
+  MdFillFolder,
+  MdFillFolder_open,
+  MdFillAdd,
 } from "solid-icons/md";
 import { useI18n } from "@/i18n";
 import { BiRegularLinkExternal, BiSolidShareAlt } from "solid-icons/bi";
@@ -37,7 +40,8 @@ import CommentComposer from "@/shared/editor/composers/CommentComposer";
 import ReshareComposer from "@/shared/editor/composers/ReshareComposer";
 import DOMPurify from "dompurify";
 import { useAuth } from "@/shared/store/auth-store";
-import { apiFollowPost, apiUnfollowPost } from "@/shared/lib/item-api";
+import { apiFollowPost, apiUnfollowPost, apiFetchItemFolders, apiSaveToFolder } from "@/shared/lib/item-api";
+import { fetchFolders } from "@/modules/network/api";
 import EventCard from "./EventCard";
 import { parseEventData } from "@/shared/lib/activity.mapper";
 import AttachmentList from "./AttachmentList";
@@ -114,6 +118,12 @@ export default function PostCard(props: {
   const [sourceData, setSourceData] = createSignal<unknown>(null);
   const [rssImporting, setRssImporting] = createSignal(false);
   const [rssImportedUuid, setRssImportedUuid] = createSignal<string | null>(null);
+  const [showFolderPicker, setShowFolderPicker] = createSignal(false);
+  const [itemFolders, setItemFolders] = createSignal<string[]>([]);
+  const [allFolders, setAllFolders] = createSignal<string[]>([]);
+  const [folderPickerLoading, setFolderPickerLoading] = createSignal(false);
+  const [folderSaving, setFolderSaving] = createSignal<string | null>(null);
+  const [newFolderInput, setNewFolderInput] = createSignal("");
   let repeatDropdownRef!: HTMLDivElement;
   let repeatDropdownPortalRef!: HTMLDivElement;
   let moreDropdownRef!: HTMLDivElement;
@@ -137,6 +147,10 @@ export default function PostCard(props: {
     props.post.children.length > 0
       ? countAllComments(props.post.children)
       : (props.post.commentCount ?? 0);
+
+  // Folder: local users only, post must be in their stream (iid present)
+  const canFolder = () => auth()?.isLocal === true && !!props.post.iid;
+  const hasFolders = () => itemFolders().length > 0;
 
   // Star: only meaningful for local authenticated users
   const canStar = () =>
@@ -251,6 +265,46 @@ export default function PostCard(props: {
     } finally {
       setRssImporting(false);
     }
+  }
+
+  async function toggleFolderPicker() {
+    const next = !showFolderPicker();
+    setShowFolderPicker(next);
+    if (!next) return;
+    setFolderPickerLoading(true);
+    try {
+      const [item, all] = await Promise.all([
+        apiFetchItemFolders(props.post.uuid),
+        fetchFolders(),
+      ]);
+      setItemFolders(item);
+      setAllFolders(all);
+    } finally {
+      setFolderPickerLoading(false);
+    }
+  }
+
+  async function toggleFolder(name: string) {
+    if (folderSaving()) return;
+    const isIn = itemFolders().includes(name);
+    setFolderSaving(name);
+    try {
+      const updated = await apiSaveToFolder(props.post.uuid, name, isIn);
+      setItemFolders(updated);
+      // Add newly created folder to the all-folders list if not present
+      if (!isIn && !allFolders().includes(name)) {
+        setAllFolders(prev => [...prev, name].sort());
+      }
+    } finally {
+      setFolderSaving(null);
+    }
+  }
+
+  async function addNewFolder() {
+    const name = newFolderInput().trim();
+    if (!name) return;
+    setNewFolderInput("");
+    await toggleFolder(name);
   }
 
   function onLike() { props.handlers.onLike(props.post.mid); }
@@ -504,6 +558,20 @@ export default function PostCard(props: {
             </button>
           </Show>
 
+          <Show when={canFolder()}>
+            <button
+              onClick={toggleFolderPicker}
+              title={t("post.save_to_folder")}
+              class={`flex items-center gap-1 px-2 py-1 rounded-md text-xs
+                     transition-colors select-none hover:bg-overlay
+                     ${showFolderPicker() || hasFolders() ? "text-accent" : "text-subtle hover:text-txt"}`}
+            >
+              <Show when={hasFolders()} fallback={<MdFillFolder_open size={14} />}>
+                <MdFillFolder size={14} />
+              </Show>
+            </button>
+          </Show>
+
           <Show when={canFollow()}>
             <button
               onClick={onFollowToggle}
@@ -646,6 +714,18 @@ export default function PostCard(props: {
         </Show>
         <Show when={showSource()}>
           <PostSource loading={sourceLoading()} data={sourceData()} />
+        </Show>
+        <Show when={showFolderPicker()}>
+          <FolderPicker
+            loading={folderPickerLoading()}
+            itemFolders={itemFolders()}
+            allFolders={allFolders()}
+            saving={folderSaving()}
+            newInput={newFolderInput()}
+            onSetInput={setNewFolderInput}
+            onToggle={toggleFolder}
+            onAdd={addNewFolder}
+          />
         </Show>
         <Show when={commentsLoading()}>
           <div class="mt-2 ml-2 text-xs text-muted animate-pulse">{t("post.loading_comments")}</div>
@@ -838,6 +918,20 @@ export default function PostCard(props: {
           >
             <Show when={props.post.viewerStarred} fallback={<MdFillStar_border size={17} />}>
               <MdFillStar size={17} />
+            </Show>
+          </button>
+        </Show>
+
+        <Show when={canFolder()}>
+          <button
+            onClick={toggleFolderPicker}
+            title={t("post.save_to_folder")}
+            class={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                   transition-colors select-none hover:bg-overlay
+                   ${showFolderPicker() || hasFolders() ? "text-accent" : "text-muted hover:text-txt"}`}
+          >
+            <Show when={hasFolders()} fallback={<MdFillFolder_open size={17} />}>
+              <MdFillFolder size={17} />
             </Show>
           </button>
         </Show>
@@ -1043,6 +1137,18 @@ export default function PostCard(props: {
                   <span>{t("post.refresh")}</span>
                 </button>
               </Show>
+              <Show when={canFolder()}>
+                <button
+                  onClick={() => { toggleFolderPicker(); setMoreDropdownOpen(false); }}
+                  class={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-overlay transition-colors text-left
+                         ${showFolderPicker() || hasFolders() ? "text-accent" : "text-txt"}`}
+                >
+                  <Show when={hasFolders()} fallback={<MdFillFolder_open size={15} />}>
+                    <MdFillFolder size={15} />
+                  </Show>
+                  <span>{t("post.save_to_folder")}</span>
+                </button>
+              </Show>
               <Show when={canDelete()}>
                 <button
                   onClick={onDeleteClick}
@@ -1110,6 +1216,18 @@ export default function PostCard(props: {
       </Show>
       <Show when={showSource()}>
         <PostSource loading={sourceLoading()} data={sourceData()} />
+      </Show>
+      <Show when={showFolderPicker()}>
+        <FolderPicker
+          loading={folderPickerLoading()}
+          itemFolders={itemFolders()}
+          allFolders={allFolders()}
+          saving={folderSaving()}
+          newInput={newFolderInput()}
+          onSetInput={setNewFolderInput}
+          onToggle={toggleFolder}
+          onAdd={addNewFolder}
+        />
       </Show>
 
       <Show when={replyOpen() && props.post.iid && props.post.profileUid}>
@@ -1288,6 +1406,97 @@ function PostSource(props: { loading: boolean; data: unknown }) {
         <pre class="bg-overlay rounded-lg p-3 overflow-x-auto max-h-96 text-txt font-mono whitespace-pre-wrap break-all leading-relaxed">
           {JSON.stringify(typed()!.source, null, 2)}
         </pre>
+      </Show>
+    </div>
+  );
+}
+
+function FolderPicker(props: {
+  loading: boolean;
+  itemFolders: string[];
+  allFolders: string[];
+  saving: string | null;
+  newInput: string;
+  onSetInput: (v: string) => void;
+  onToggle: (name: string) => void;
+  onAdd: () => void;
+}) {
+  const { t } = useI18n();
+  const mergedFolders = () => {
+    const all = new Set([...props.allFolders, ...props.itemFolders]);
+    return [...all].sort();
+  };
+
+  return (
+    <div class="mt-3 pt-3 border-t border-rim">
+      <Show when={props.loading}>
+        <div class="flex gap-1.5 flex-wrap">
+          <For each={Array(3)}>{() =>
+            <div class="h-7 w-20 rounded-lg bg-overlay animate-pulse" />
+          }</For>
+        </div>
+      </Show>
+      <Show when={!props.loading}>
+        <Show
+          when={mergedFolders().length > 0}
+          fallback={
+            <p class="text-xs text-muted mb-2">{t("post.no_folders_yet")}</p>
+          }
+        >
+          <div class="flex flex-wrap gap-1.5 mb-2">
+            <For each={mergedFolders()}>
+              {(folder) => {
+                const inFolder = () => props.itemFolders.includes(folder);
+                const saving = () => props.saving === folder;
+                return (
+                  <button
+                    onClick={() => props.onToggle(folder)}
+                    disabled={!!props.saving}
+                    class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs
+                           transition-colors disabled:opacity-60 select-none"
+                    classList={{
+                      "bg-accent text-accent-fg font-medium": inFolder(),
+                      "bg-overlay text-muted hover:bg-elevated hover:text-txt": !inFolder(),
+                    }}
+                    title={inFolder() ? `Remove from "${folder}"` : `Save to "${folder}"`}
+                  >
+                    <Show when={saving()} fallback={
+                      <Show when={inFolder()} fallback={<MdFillFolder_open size={12} />}>
+                        <MdFillFolder size={12} class="shrink-0" />
+                      </Show>
+                    }>
+                      <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                      </svg>
+                    </Show>
+                    <span class="truncate max-w-[100px]">{folder}</span>
+                  </button>
+                );
+              }}
+            </For>
+          </div>
+        </Show>
+        <div class="flex gap-1.5">
+          <input
+            type="text"
+            placeholder={t("post.new_folder_placeholder")}
+            value={props.newInput}
+            onInput={(e) => props.onSetInput(e.currentTarget.value)}
+            onKeyDown={(e) => e.key === "Enter" && props.onAdd()}
+            class="flex-1 h-7 text-xs border border-rim rounded-lg bg-surface text-txt
+                   placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent px-2"
+          />
+          <button
+            onClick={props.onAdd}
+            disabled={!props.newInput.trim() || !!props.saving}
+            class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium
+                   bg-accent text-accent-fg disabled:opacity-40 transition-colors"
+          >
+            <MdFillAdd size={13} />
+            <span>{t("post.add_folder")}</span>
+          </button>
+        </div>
       </Show>
     </div>
   );

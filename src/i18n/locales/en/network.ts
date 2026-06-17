@@ -46,6 +46,9 @@ export const network: RawDictionary["network"] = {
   // Stream end
   load_more:            "Load more",
   all_caught_up:        "You're all caught up",
+  // Folders
+  folder:                  "Folder",
+  folder_all:              "All",
   // Saved searches
   saved_searches:          "Saved searches",
   save_search:             "Save search",

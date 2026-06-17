@@ -222,6 +222,8 @@ export type RawDictionary = {
     cached: string; generated: string; unknown: string;
     modal_title: string; modal_close: string; load_error: string;
     deleted_comment: string;
+    // Folder save
+    save_to_folder: string; new_folder_placeholder: string; add_folder: string; no_folders_yet: string;
   };
   editor: {
     // PostComposer
@@ -613,6 +615,9 @@ export type RawDictionary = {
     new_posts:            string;
     load_more:            string;
     all_caught_up:        string;
+    // Folders
+    folder:                    string;
+    folder_all:                string;
     // Saved searches
     saved_searches:            string;
     save_search:               string;
@@ -749,6 +754,8 @@ export type RawDictionary = {
     msg_tab_direct:       string;
     msg_tab_starred:      string;
     msg_tab_notices:      string;
+    msg_tab_folders:      string;
+    no_folders:           string;
     filter_placeholder:   string;
     draft_new_post:       string;
     draft_new_article:    string;

@@ -1,10 +1,12 @@
 import PostDetailModal from '@/shared/views/PostDetailModal';
 import { markItemSeen } from '@/shared/lib/markSeen';
 import { useI18n } from "@/i18n";
+import { fetchFolders } from "@/modules/network/api";
 import {
   createSignal,
   createEffect,
   createMemo,
+  createResource,
   onCleanup,
   For,
   Show,
@@ -33,6 +35,7 @@ interface HqResponse {
 }
 
 type MessageType = "" | "direct" | "starred" | "notification";
+type TabMode = MessageType | "folder";
 
 // ── Time grouping ──────────────────────────────────────────────────────────
 
@@ -51,8 +54,8 @@ function getTimeGroup(dateStr: string): TimeGroup {
 // ── Type color rail ────────────────────────────────────────────────────────
 
 // Infer per-entry type from active tab; fall back to icon string hints for "All"
-function inferEntryType(entry: MessageEntry, activeTab: MessageType): MessageType {
-  if (activeTab !== "") return activeTab;
+function inferEntryType(entry: MessageEntry, activeTab: TabMode): MessageType {
+  if (activeTab !== "" && activeTab !== "folder") return activeTab;
   const icon = entry.icon?.toLowerCase() ?? "";
   if (icon.includes("mail") || icon.includes("envelope") || icon.includes("direct")) return "direct";
   if (icon.includes("star")) return "starred";
@@ -137,7 +140,7 @@ async function fetchMessages(params: {
 
 // ── Tab config ────────────────────────────────────────────────────────────
 
-const TAB_PATHS: { type: MessageType; key: string; path: string }[] = [
+const TAB_PATHS: { type: TabMode; key: string; path: string }[] = [
   {
     type: "",
     key: "hq.msg_tab_all",
@@ -157,6 +160,11 @@ const TAB_PATHS: { type: MessageType; key: string; path: string }[] = [
     type: "notification",
     key: "hq.msg_tab_notices",
     path: "M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9",
+  },
+  {
+    type: "folder",
+    key: "hq.msg_tab_folders",
+    path: "M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z",
   },
 ];
 
@@ -189,7 +197,7 @@ const Avatar: Component<{ src?: string; name: string; size?: string }> = (props)
 
 // ── Message item ──────────────────────────────────────────────────────────
 
-const MessageItem: Component<{ entry: MessageEntry; activeTab: MessageType }> = (props) => {
+const MessageItem: Component<{ entry: MessageEntry; activeTab: TabMode }> = (props) => {
   const e = props.entry;
   const [showModal, setShowModal] = createSignal(false);
   const [locallyRead, setLocallyRead] = createSignal(false);
@@ -323,7 +331,9 @@ const GroupHeader: Component<{ label: string; count: number }> = (props) => (
 
 export default function HqMessagesWidget() {
   const { t } = useI18n();
-  const [activeTab, setActiveTab] = createSignal<MessageType>("");
+  const [activeTab, setActiveTab] = createSignal<TabMode>("");
+  const [activeFolder, setActiveFolder] = createSignal("");
+  const [folders] = createResource(fetchFolders);
   const [refreshKey, setRefreshKey] = createSignal(0);
   const [entries, setEntries] = createSignal<MessageEntry[]>([]);
   const [offset, setOffset] = createSignal(0);
@@ -370,11 +380,12 @@ export default function HqMessagesWidget() {
     setLoading(true);
 
     try {
+      const tab = activeTab();
       const data = await fetchMessages({
         offset: currentOffset,
-        type: activeTab(),
+        type: tab === "folder" ? "filed" : tab,
         author: authorFilter(),
-        file: "",
+        file: tab === "folder" ? activeFolder() : "",
         signal,
       });
 
@@ -400,6 +411,7 @@ export default function HqMessagesWidget() {
 
   createEffect(() => {
     activeTab();
+    activeFolder();
     authorFilter();
     refreshKey();
     setOffset(0);
@@ -424,12 +436,18 @@ export default function HqMessagesWidget() {
     resetController?.abort();
   });
 
-  function handleTabClick(type: MessageType) {
+  function handleTabClick(type: TabMode) {
     if (activeTab() === type) {
+      if (type === "folder") return; // folder selection handles reload
       setRefreshKey((k) => k + 1);
     } else {
       setActiveTab(type);
+      if (type !== "folder") setActiveFolder("");
     }
+  }
+
+  function selectFolder(name: string) {
+    setActiveFolder(name);
   }
 
   return (
@@ -499,6 +517,52 @@ export default function HqMessagesWidget() {
         </div>
 
         <div class="mt-3 h-px bg-rim" />
+
+        {/* Folder picker — only visible when folder tab is active */}
+        <Show when={activeTab() === "folder"}>
+          <div class="pt-2 pb-1">
+            <Show
+              when={!folders.loading}
+              fallback={
+                <div class="flex gap-1.5 flex-wrap px-1">
+                  <For each={Array(3)}>
+                    {() => <div class="h-6 w-16 rounded-lg bg-overlay animate-pulse" />}
+                  </For>
+                </div>
+              }
+            >
+              <Show
+                when={(folders() ?? []).length > 0}
+                fallback={
+                  <p class="text-xs text-muted px-1 py-1">{t("hq.no_folders")}</p>
+                }
+              >
+                <div class="flex gap-1.5 flex-wrap">
+                  <For each={folders() ?? []}>
+                    {(folder) => (
+                      <button
+                        type="button"
+                        onClick={() => selectFolder(folder)}
+                        class="flex items-center gap-1 px-2 py-1 rounded-lg text-xs
+                               transition-colors select-none"
+                        classList={{
+                          "bg-txt text-surface font-medium": activeFolder() === folder,
+                          "bg-overlay text-muted hover:bg-overlay hover:text-txt": activeFolder() !== folder,
+                        }}
+                      >
+                        <svg class="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
+                        </svg>
+                        <span class="truncate max-w-[100px]">{folder}</span>
+                      </button>
+                    )}
+                  </For>
+                </div>
+              </Show>
+            </Show>
+          </div>
+          <div class="h-px bg-rim" />
+        </Show>
       </div>
 
       {/* ── Scrollable list ── */}

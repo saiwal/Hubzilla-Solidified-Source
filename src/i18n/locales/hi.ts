@@ -255,6 +255,10 @@ export const dict: RawDictionary = {
     modal_close:          "बंद करें",
     load_error:           "पोस्ट लोड करने में विफल",
     deleted_comment:      "[टिप्पणी हटाई गई]",
+    save_to_folder:        "फ़ोल्डर में सहेजें",
+    new_folder_placeholder: "नए फ़ोल्डर का नाम…",
+    add_folder:            "जोड़ें",
+    no_folders_yet:        "अभी कोई फ़ोल्डर नहीं — नीचे नाम टाइप करके बनाएँ",
   },
   editor: {
     // PostComposer
@@ -569,6 +573,8 @@ export const dict: RawDictionary = {
     new_posts:            "पोस्ट",
     load_more:            "और लोड करें",
     all_caught_up:        "आप सब देख चुके हैं",
+    folder:                  "फ़ोल्डर",
+    folder_all:              "सभी",
     saved_searches:          "सहेजी गई खोजें",
     save_search:             "खोज सहेजें",
     save_search_placeholder: "खोज का नाम…",
@@ -704,6 +710,8 @@ export const dict: RawDictionary = {
     msg_tab_direct:       "सीधे",
     msg_tab_starred:      "स्टार किए गए",
     msg_tab_notices:      "सूचनाएँ",
+    msg_tab_folders:      "फ़ोल्डर",
+    no_folders:           "कोई सहेजा गया फ़ोल्डर नहीं",
     filter_placeholder:   "फ़िल्टर…",
     draft_new_post:       "नई पोस्ट",
     draft_new_article:    "नया लेख",
