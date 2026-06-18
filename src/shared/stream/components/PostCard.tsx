@@ -417,6 +417,7 @@ export default function PostCard(props: {
             avatar={props.post.authorAvatar}
             url={props.post.authorUrl}
             address={props.post.authorAddress}
+            network={props.post.authorNetwork}
           >
             <Show
               when={props.post.authorAvatar}
@@ -756,6 +757,7 @@ export default function PostCard(props: {
           avatar={props.post.authorAvatar}
           url={props.post.authorUrl}
           address={props.post.authorAddress}
+          network={props.post.authorNetwork}
         >
           <Show
             when={props.post.authorAvatar}

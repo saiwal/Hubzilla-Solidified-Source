@@ -98,6 +98,9 @@ export type RawDictionary = {
     connect:                 string;
     connected_check:         string;
     edit_connection:         string;
+    connected_since:         string;
+    view_channel:            string;
+    back:                    string;
     // EventCard
     upcoming:                string;
     until:                   string;
@@ -130,6 +133,8 @@ export type RawDictionary = {
   connection: {
     close:          string;
     role:           string;
+    role_loading:   string;
+    no_role:        string;
     closeness:      string;
     distant:        string;
     close_label:    string;
@@ -140,6 +145,31 @@ export type RawDictionary = {
     cancel:         string;
     saving:         string;
     save:           string;
+    // Tabs
+    tab_settings:   string;
+    tab_permissions: string;
+    tab_filters:    string;
+    // Status flags
+    flag_blocked:   string;
+    flag_ignored:   string;
+    flag_archived:  string;
+    flag_hidden:    string;
+    // Permissions table
+    perms_their:    string;
+    perms_my:       string;
+    perms_loading:  string;
+    perms_error:    string;
+    // Affinity slider labels
+    aff_me:             string;
+    aff_family:         string;
+    aff_friends:        string;
+    aff_acquaintances:  string;
+    aff_all:            string;
+    // Content filters
+    filter_incl:        string;
+    filter_incl_hint:   string;
+    filter_excl:        string;
+    filter_excl_hint:   string;
   };
   auth: {
     sign_in:           string;

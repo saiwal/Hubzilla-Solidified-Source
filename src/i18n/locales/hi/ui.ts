@@ -53,6 +53,9 @@ export const ui: RawDictionary["ui"] = {
   connect:                "जुड़ें",
   connected_check:        "✓ जुड़े हुए",
   edit_connection:        "कनेक्शन संपादित करें",
+  connected_since:        "से जुड़े हैं",
+  view_channel:           "चैनल देखें",
+  back:                   "वापस",
   // EventCard
   upcoming:               "· आगामी",
   until:                  "तक",

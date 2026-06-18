@@ -13,18 +13,36 @@ interface Props {
   avatar?: string;
   url?: string;
   address?: string;
+  network?: string;
   children: JSX.Element;
 }
 
+// conn is fetched lazily after the xchan check confirms is_connected
 type ConnState =
   | { tag: "idle" }
   | { tag: "loading" }
-  | { tag: "connected"; conn: Connection }
+  | { tag: "connected"; conn: Connection | null }
   | { tag: "not_connected" }
   | { tag: "just_connected" };
 
+interface NetworkBadge {
+  label: string;
+  cls: string;
+}
+
+function networkBadge(network?: string): NetworkBadge | null {
+  if (!network) return null;
+  switch (network.toLowerCase()) {
+    case "zot6":      return { label: "Hubzilla",    cls: "bg-violet-500/20 text-violet-400" };
+    case "activitypub": return { label: "ActivityPub", cls: "bg-indigo-500/20 text-indigo-400" };
+    case "rss":       return { label: "RSS",          cls: "bg-orange-500/20 text-orange-400" };
+    case "diaspora":  return { label: "Diaspora",     cls: "bg-emerald-500/20 text-emerald-400" };
+    default:          return null;
+  }
+}
+
 export default function AuthorPopover(props: Props) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [open, setOpen] = createSignal(false);
   const [connState, setConnState] = createSignal<ConnState>({ tag: "idle" });
   const [editOpen, setEditOpen] = createSignal(false);
@@ -40,13 +58,34 @@ export default function AuthorPopover(props: Props) {
 
   const isLocal = () => auth()?.isLocal ?? false;
 
-  // Look up connection status the first time the popover opens
+  // Use /api/xchan for reliable is_connected check (works in dev + prod,
+  // avoids the fuzzy /connections-api search that can miss by address).
+  // Once confirmed connected, fetch the full Connection in the background
+  // so the edit modal has data ready.
   createEffect(() => {
-    if (!open() || !isLocal() || isSelf() || !props.address) return;
+    if (!open() || !isLocal() || isSelf() || !props.url) return;
     if (connState().tag !== "idle") return;
     setConnState({ tag: "loading" });
-    fetchConnectionByAddress(props.address)
-      .then((conn: Connection | null) => setConnState(conn ? { tag: "connected", conn } : { tag: "not_connected" }))
+
+    fetch(`/api/xchan?hash=${encodeURIComponent(props.url)}`, { credentials: "include" })
+      .then(r => (r.ok ? r.json() : null))
+      .then((body: { data?: { is_connected?: boolean } } | null) => {
+        if (body?.data?.is_connected) {
+          setConnState({ tag: "connected", conn: null });
+          // Eagerly fetch full Connection for the edit modal
+          if (props.address) {
+            fetchConnectionByAddress(props.address)
+              .then(conn => {
+                setConnState(prev =>
+                  prev.tag === "connected" ? { tag: "connected", conn } : prev,
+                );
+              })
+              .catch(() => { /* conn stays null — edit button stays disabled */ });
+          }
+        } else {
+          setConnState({ tag: "not_connected" });
+        }
+      })
       .catch(() => setConnState({ tag: "not_connected" }));
   });
 
@@ -61,8 +100,7 @@ export default function AuthorPopover(props: Props) {
   async function handleConnect(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    const cs = connState();
-    if (cs.tag !== "not_connected" || !props.address) return;
+    if (connState().tag !== "not_connected" || !props.address) return;
     setConnState({ tag: "loading" });
     try {
       await addConnection(props.address);
@@ -75,6 +113,8 @@ export default function AuthorPopover(props: Props) {
   function handleEditClick(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
+    const s = connState();
+    if (s.tag !== "connected" || !s.conn) return;
     setOpen(false);
     setEditOpen(true);
   }
@@ -82,6 +122,19 @@ export default function AuthorPopover(props: Props) {
   onCleanup(() => { if (closeTimer) clearTimeout(closeTimer); });
 
   const cs = () => connState();
+
+  const badge = (): NetworkBadge | null => {
+    const state = connState();
+    const net = state.tag === "connected" ? (state.conn?.network ?? props.network) : props.network;
+    return networkBadge(net);
+  };
+
+  const chanviewUrl = () =>
+    props.url ? `/chanview?f=&hash=${encodeURIComponent(props.url)}` : undefined;
+
+  // The edit button is visible as soon as tag === "connected", but disabled
+  // until conn is populated (the background fetch).
+  const editReady = () => cs().tag === "connected" && (cs() as { tag: "connected"; conn: Connection | null }).conn !== null;
 
   return (
     <>
@@ -94,43 +147,71 @@ export default function AuthorPopover(props: Props) {
         {props.children}
         <Show when={open()}>
           <div
-            class="absolute left-0 top-full mt-2 z-50 w-60 bg-surface border border-rim
-                   rounded-xl shadow-xl p-3"
+            class="absolute left-0 top-full mt-2 z-50 w-64 bg-surface border border-rim
+                   rounded-xl shadow-xl overflow-hidden"
             onMouseEnter={cancelClose}
             onMouseLeave={scheduleClose}
           >
             {/* Identity */}
-            <div class="flex items-center gap-3">
-              <Show
-                when={props.avatar}
-                fallback={
-                  <div class="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-accent-txt
-                              shrink-0 flex items-center justify-center text-accent-fg text-sm font-bold">
-                    {props.name?.[0]?.toUpperCase() ?? "?"}
-                  </div>
-                }
-              >
-                <img
-                  src={props.avatar}
-                  width="40"
-                  height="40"
-                  class="w-10 h-10 rounded-full object-cover ring-1 ring-rim shrink-0"
-                />
-              </Show>
-              <div class="min-w-0 flex-1">
-                <div class="font-semibold text-sm text-txt truncate">{props.name}</div>
-                <Show when={props.address}>
-                  <div class="text-xs text-muted truncate mt-0.5">{props.address}</div>
+            <div class="p-3">
+              <div class="flex items-start gap-3">
+                <Show
+                  when={props.avatar}
+                  fallback={
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-accent-txt
+                                shrink-0 flex items-center justify-center text-accent-fg text-sm font-bold">
+                      {props.name?.[0]?.toUpperCase() ?? "?"}
+                    </div>
+                  }
+                >
+                  <img
+                    src={props.avatar}
+                    width="48"
+                    height="48"
+                    class="w-12 h-12 rounded-full object-cover ring-2 ring-rim shrink-0"
+                  />
                 </Show>
+                <div class="min-w-0 flex-1 pt-0.5">
+                  <div class="font-semibold text-sm text-txt truncate leading-tight">{props.name}</div>
+                  <Show when={props.address}>
+                    <div class="text-xs text-muted truncate mt-0.5">{props.address}</div>
+                  </Show>
+                  <Show when={badge()}>
+                    {(b) => (
+                      <span class={`inline-block mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold leading-none ${b().cls}`}>
+                        {b().label}
+                      </span>
+                    )}
+                  </Show>
+                </div>
               </div>
+
+              {/* Connection details — only once the full Connection is loaded */}
+              <Show when={cs().tag === "connected" && (cs() as { tag: "connected"; conn: Connection | null }).conn}>
+                {(_) => {
+                  const conn = (cs() as { tag: "connected"; conn: Connection }).conn;
+                  return (
+                    <div class="mt-2 pt-2 border-t border-rim/50 flex flex-wrap gap-x-3 gap-y-0.5">
+                      <Show when={conn.connected}>
+                        <span class="text-[10px] text-muted">
+                          {t("ui.connected_since")} {new Date(conn.connected + "Z").toLocaleDateString(locale(), { year: "numeric", month: "short" })}
+                        </span>
+                      </Show>
+                      <Show when={conn.role}>
+                        <span class="text-[10px] text-muted capitalize">{conn.role}</span>
+                      </Show>
+                    </div>
+                  );
+                }}
+              </Show>
             </div>
 
             {/* Actions */}
-            <Show when={props.url || (isLocal() && !isSelf())}>
-              <div class="mt-3 flex gap-2">
-                <Show when={props.url}>
+            <Show when={chanviewUrl() || (isLocal() && !isSelf())}>
+              <div class="px-3 pb-3 flex gap-2">
+                <Show when={chanviewUrl()}>
                   <a
-                    href={props.url}
+                    href={chanviewUrl()}
                     class="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5
                            border border-rim rounded-lg text-xs text-muted
                            hover:border-accent hover:text-accent transition-colors"
@@ -141,7 +222,7 @@ export default function AuthorPopover(props: Props) {
                 </Show>
 
                 <Show when={isLocal() && !isSelf()}>
-                  {/* Loading */}
+                  {/* Checking connection status */}
                   <Show when={cs().tag === "loading"}>
                     <button disabled class="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5
                                            border border-rim rounded-lg text-xs text-muted cursor-default">
@@ -154,15 +235,15 @@ export default function AuthorPopover(props: Props) {
                     <button
                       onClick={handleConnect}
                       class="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5
-                             border border-rim rounded-lg text-xs text-muted
-                             hover:border-accent hover:text-accent transition-colors"
+                             bg-accent text-accent-fg rounded-lg text-xs font-medium
+                             hover:opacity-90 transition-opacity"
                     >
                       <MdOutlinePerson_add size={14} />
                       <span>{t("ui.connect")}</span>
                     </button>
                   </Show>
 
-                  {/* Just connected (optimistic, no conn object yet) */}
+                  {/* Just connected (optimistic) */}
                   <Show when={cs().tag === "just_connected"}>
                     <button disabled class="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5
                                            border border-rim rounded-lg text-xs text-muted cursor-default">
@@ -170,15 +251,23 @@ export default function AuthorPopover(props: Props) {
                     </button>
                   </Show>
 
-                  {/* Connected — edit button */}
+                  {/* Connected — edit (disabled until conn data arrives) */}
                   <Show when={cs().tag === "connected"}>
                     <button
                       onClick={handleEditClick}
+                      disabled={!editReady()}
+                      title={!editReady() ? undefined : t("ui.edit_connection")}
                       class="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5
                              border border-rim rounded-lg text-xs text-muted
-                             hover:border-accent hover:text-accent transition-colors"
+                             hover:border-accent hover:text-accent transition-colors
+                             disabled:opacity-50 disabled:cursor-default disabled:hover:border-rim disabled:hover:text-muted"
                     >
-                      <MdOutlineEdit size={14} />
+                      <Show
+                        when={editReady()}
+                        fallback={<span class="w-3.5 h-3.5 border border-current border-t-transparent rounded-full animate-spin" />}
+                      >
+                        <MdOutlineEdit size={14} />
+                      </Show>
                       <span>{t("ui.edit_connection")}</span>
                     </button>
                   </Show>
@@ -190,7 +279,7 @@ export default function AuthorPopover(props: Props) {
       </div>
 
       {/* Connection editor modal */}
-      <Show when={editOpen() && cs().tag === "connected"}>
+      <Show when={editOpen() && cs().tag === "connected" && (cs() as { tag: "connected"; conn: Connection | null }).conn}>
         <ConnectionEditorModal
           connection={(cs() as { tag: "connected"; conn: Connection }).conn}
           authorName={props.name}

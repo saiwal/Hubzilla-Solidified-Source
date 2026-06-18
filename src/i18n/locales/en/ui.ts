@@ -53,6 +53,9 @@ export const ui: RawDictionary["ui"] = {
   connect:                "Connect",
   connected_check:        "✓ Connected",
   edit_connection:        "Edit Connection",
+  connected_since:        "Connected since",
+  view_channel:           "View Channel",
+  back:                   "Back",
   // EventCard
   upcoming:               "· Upcoming",
   until:                  "until",

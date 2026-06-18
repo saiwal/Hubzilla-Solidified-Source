@@ -1,4 +1,3 @@
-import { moduleGet } from "@/shared/lib/api";
 import type { Post } from "@/shared/types/post.types.ts";
 import { mapActivityToPost } from "@/shared/lib/activity.mapper.ts";
 const HIDDEN_VERBS = new Set(['Like', 'Dislike', 'Announce', 'Accept', 'Reject', 'TentativeAccept']);
@@ -150,11 +149,6 @@ export async function fetchNetworkStream(params: NetworkParams = {}): Promise<Ne
   const items = activities.filter(shouldDisplay).map(mapActivityToPost);
   return { items, rootCount, limit, nouveau };
 }
-export async function fetchThread(rootIid: number): Promise<Post[]> {
-  const activities = await moduleGet<any[]>(`network?format=json&thread=${rootIid}`);
-  return activities.map(mapActivityToPost);
-}
-
 // Re-export shared item API helpers for use within this module
 
 export {

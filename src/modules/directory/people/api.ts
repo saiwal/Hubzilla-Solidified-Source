@@ -52,7 +52,7 @@ export interface DirectoryParams {
 export async function fetchDirectory(
   params: DirectoryParams = {},
 ): Promise<DirectoryResponse> {
-  const q = new URLSearchParams({ format: "json" });
+  const q = new URLSearchParams();
   if (params.search)    q.set("search",    params.search);
   if (params.keywords)  q.set("keywords",  params.keywords);
   if (params.order)     q.set("order",     params.order);
@@ -62,11 +62,11 @@ export async function fetchDirectory(
   if (params.suggest !== undefined)   q.set("suggest",   String(params.suggest));
   if (params.start)     q.set("start",    String(params.start));
 
-  const res = await fetch(`/directory_api?${q}`, { credentials: "include" });
+  const res = await fetch(`/api/directory?${q}`, { credentials: "include" });
   if (!res.ok) throw new Error(`Directory fetch failed: ${res.status}`);
-  const data = await res.json();
-  if (data.error) throw new Error(data.error);
-  return data as DirectoryResponse;
+  const body = await res.json();
+  if (body.error) throw new Error(body.error.message ?? body.error);
+  return { entries: body.data, meta: body.meta } as DirectoryResponse;
 }
 
 export async function addConnection(addr: string): Promise<void> {

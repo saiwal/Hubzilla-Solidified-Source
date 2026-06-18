@@ -1,4 +1,5 @@
 import { createResource, For, Show } from "solid-js";
+import { fetchConnections } from "@/modules/directory/connections/api";
 import { useI18n } from "@/i18n";
 
 type Contact = {
@@ -8,12 +9,12 @@ type Contact = {
 };
 
 async function fetchRecentContacts(): Promise<Contact[]> {
-  const res = await fetch(
-    "/connections-api?format=json&filter=recent&order=recent&limit=10"
-  );
-  if (!res.ok) return [];
-  const data = await res.json();
-  return data.connections ?? [];
+  try {
+    const { connections } = await fetchConnections({ filter: "recent", order: "recent", limit: 10 });
+    return connections.map(c => ({ name: c.name, photo: c.photo, last_seen: "" }));
+  } catch {
+    return [];
+  }
 }
 
 function initials(name: string) {

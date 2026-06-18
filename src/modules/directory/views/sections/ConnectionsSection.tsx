@@ -1,11 +1,12 @@
 import { For, Show, createSignal } from "solid-js";
-import { A } from "@solidjs/router";
 import {
   connectionsData, refetch, setFilter, setOrder, setSearch, setPage,
   filter, order, search, page, LIMIT,
 } from "../../connections/store";
 import type { ConnectionFilter, ConnectionOrder, Connection } from "../../connections/api";
 import { deleteConnection, approveConnection } from "../../connections/api";
+import ConnectionEditorModal from "@/shared/views/ConnectionEditorModal";
+import { MdOutlineEdit } from "solid-icons/md";
 import { useI18n } from "@/i18n";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -36,6 +37,7 @@ function formatDate(iso: string): string {
 function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
   const [busy, setBusy] = createSignal(false);
   const [expanded, setExpanded] = createSignal(false);
+  const [editOpen, setEditOpen] = createSignal(false);
   const { t } = useI18n();
   const networkLabel = () => NETWORK_LABELS[props.conn.network] ?? props.conn.network;
 
@@ -121,16 +123,13 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
-          <A
-            href={`/abook/${props.conn.id}`}
+          <button
+            onClick={() => setEditOpen(true)}
             class="p-1.5 rounded text-muted hover:text-txt hover:bg-overlay transition-colors"
             title={t("directory.edit")}
           >
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a2 2 0 00-2.828-2.828l-8.586 8.586V15h2.828z" />
-            </svg>
-          </A>
+            <MdOutlineEdit size={14} />
+          </button>
           <button
             onClick={handleDelete}
             disabled={busy()}
@@ -155,6 +154,20 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
             <DetailField label={t("directory.field_address")} value={props.conn.address} />
           </Show>
         </div>
+      </Show>
+
+      <Show when={editOpen()}>
+        <ConnectionEditorModal
+          connection={props.conn}
+          authorName={props.conn.name}
+          authorAvatar={props.conn.photo}
+          onSaved={() => props.onDeleted()}
+          onClose={() => setEditOpen(false)}
+          onDeleted={() => {
+            setEditOpen(false);
+            props.onDeleted();
+          }}
+        />
       </Show>
     </div>
   );
