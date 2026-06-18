@@ -170,6 +170,8 @@ export type RawDictionary = {
     filter_incl_hint:   string;
     filter_excl:        string;
     filter_excl_hint:   string;
+    // Privacy groups
+    privacy_groups:     string;
   };
   auth: {
     sign_in:           string;

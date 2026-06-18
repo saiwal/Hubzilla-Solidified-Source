@@ -14,6 +14,7 @@ export interface DirectoryEntry {
   homepage: string;
   hometown: string;
   keywords: string[];
+  updated: string;
   public_forum: boolean;
   is_connected: boolean;
   connect_url: string;

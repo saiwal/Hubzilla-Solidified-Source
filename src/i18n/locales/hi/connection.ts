@@ -40,4 +40,6 @@ export const connection: RawDictionary["connection"] = {
   filter_incl_hint: "शब्द, #टैग, /पैटर्न/, या lang=xx — प्रति पंक्ति एक। सभी आयात करने के लिए खाली छोड़ें।",
   filter_excl:      "इन पोस्ट को आयात न करें",
   filter_excl_hint: "शब्द, #टैग, /पैटर्न/, या lang=xx — प्रति पंक्ति एक। कुछ भी न छोड़ने के लिए खाली छोड़ें।",
+  // Privacy groups
+  privacy_groups:   "गोपनीयता समूह",
 };

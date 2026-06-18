@@ -40,4 +40,6 @@ export const connection: RawDictionary["connection"] = {
   filter_incl_hint: "Words, #tags, /patterns/, or lang=xx — one per line. Leave blank to import all.",
   filter_excl:      "Do not import posts with",
   filter_excl_hint: "Words, #tags, /patterns/, or lang=xx — one per line. Leave blank to skip nothing.",
+  // Privacy groups
+  privacy_groups:   "Privacy Groups",
 };

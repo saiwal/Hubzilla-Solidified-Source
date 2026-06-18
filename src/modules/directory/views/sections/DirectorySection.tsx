@@ -1,7 +1,7 @@
-import { createEffect, createSignal, Show, For, onMount } from "solid-js";
+import { createEffect, createSignal, Show, For } from "solid-js";
 import {
   entries, loading, loadingMore, hasMore, total,
-  loadDirectory, loadMoreDirectory, resetDirectory,
+  loadDirectory, loadMoreDirectory,
 } from "../../people/store";
 import DirectoryCard from "../DirectoryCard";
 import DirectoryEntryModal from "../DirectoryEntryModal";
@@ -12,32 +12,22 @@ type Order = DirectoryParams["order"];
 
 export default function DirectorySection() {
   const { t } = useI18n();
-  const [search, setSearch] = createSignal("");
+  const [searchInput, setSearchInput] = createSignal("");
+  const [appliedSearch, setAppliedSearch] = createSignal("");
   const [order, setOrder] = createSignal<Order>("date");
   const [globalDir, setGlobalDir] = createSignal<0 | 1>(1);
   const [selected, setSelected] = createSignal<DirectoryEntry | null>(null);
 
-  let initialized = false;
-  onMount(() => {
-    if (initialized) return;
-    initialized = true;
-    resetDirectory();
-    loadDirectory({ order: order(), global: globalDir() });
+  // Runs on mount and whenever order, globalDir, or committed search changes.
+  // appliedSearch only updates on form submit, so typing does not re-fetch.
+  createEffect(() => {
+    loadDirectory({ search: appliedSearch(), order: order(), global: globalDir() });
   });
 
-  let effectRan = false;
-  createEffect(() => {
-    const o = order();
-    const g = globalDir();
-    if (!effectRan) { effectRan = true; return; }
-    resetDirectory();
-    loadDirectory({ order: o, global: g });
-  });
 
   function handleSearch(e: Event) {
     e.preventDefault();
-    resetDirectory();
-    loadDirectory({ search: search(), order: order(), global: globalDir() });
+    setAppliedSearch(searchInput());
   }
 
   return (
@@ -48,8 +38,8 @@ export default function DirectorySection() {
         <form onSubmit={handleSearch} class="flex gap-2 flex-1">
           <input
             type="text"
-            value={search()}
-            onInput={(e) => setSearch(e.currentTarget.value)}
+            value={searchInput()}
+            onInput={(e) => setSearchInput(e.currentTarget.value)}
             placeholder="Name, address, or keyword…"
             class="flex-1 border border-rim rounded-lg px-3 py-1.5 text-sm bg-surface text-txt
                    placeholder:text-muted focus:outline-none hover:border-rim-strong

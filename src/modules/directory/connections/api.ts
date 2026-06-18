@@ -126,6 +126,13 @@ export async function fetchConnectionPerms(abookId: number): Promise<ConnectionP
   return body.data as ConnectionPerms;
 }
 
+export async function fetchConnectionGroups(abookId: number): Promise<number[]> {
+  const res = await apiFetch(`/api/connections/${abookId}/groups`);
+  if (!res.ok) throw new Error(`groups HTTP ${res.status}`);
+  const body = await res.json();
+  return body.data as number[];
+}
+
 export async function updateConnection(
   abookId: number,
   fields: {

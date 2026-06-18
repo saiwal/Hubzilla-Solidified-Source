@@ -1,10 +1,12 @@
-import { createSignal, createResource, For, Show } from "solid-js";
+import { createSignal, createResource, createEffect, For, Show } from "solid-js";
 import { Portal } from "solid-js/web";
 import type { Connection } from "@/modules/directory/connections/api";
 import {
   updateConnection, deleteConnection,
-  fetchPermcats, fetchConnectionPerms,
+  fetchPermcats, fetchConnectionPerms, fetchConnectionGroups,
 } from "@/modules/directory/connections/api";
+import { fetchGroups } from "@/modules/directory/groups/api";
+import { toggleMember } from "@/modules/directory/groups/api";
 import { useI18n } from "@/i18n";
 
 interface Props {
@@ -68,6 +70,30 @@ export default function ConnectionEditorModal(props: Props) {
   const [deleting, setDeleting] = createSignal(false);
   const [confirmDelete, setConfirmDelete] = createSignal(false);
 
+  const [checkedGroupIds, setCheckedGroupIds] = createSignal<Set<number>>(new Set());
+  let initialGroupIds = new Set<number>();
+
+  const [privacyGroups] = createResource(async () => {
+    try { return await fetchGroups(); }
+    catch { return []; }
+  });
+
+  const [connectionGroupIds] = createResource(
+    () => props.connection.id,
+    async (id) => {
+      try { return await fetchConnectionGroups(id); }
+      catch { return []; }
+    },
+  );
+
+  createEffect(() => {
+    const ids = connectionGroupIds();
+    if (ids !== undefined) {
+      initialGroupIds = new Set(ids);
+      setCheckedGroupIds(new Set(ids));
+    }
+  });
+
   const [permcats] = createResource(() => fetchPermcats().catch(() => []));
   const [permsData] = createResource(
     () => props.connection.id,
@@ -99,6 +125,17 @@ export default function ConnectionEditorModal(props: Props) {
         incl: incl(),
         excl: excl(),
       });
+
+      const current = checkedGroupIds();
+      const allGroups = privacyGroups() ?? [];
+      for (const group of allGroups) {
+        const wasIn = initialGroupIds.has(group.id);
+        const isIn = current.has(group.id);
+        if (wasIn !== isIn) {
+          await toggleMember(group.id, props.connection.xchan_hash);
+        }
+      }
+
       props.onSaved?.();
       props.onClose();
     } finally {
@@ -246,6 +283,33 @@ export default function ConnectionEditorModal(props: Props) {
                     <FlagToggle label={t("connection.flag_hidden")}   active={hidden()}   onChange={setHidden} />
                   </div>
                 </div>
+
+                {/* Privacy Groups */}
+                <Show when={(privacyGroups() ?? []).length > 0}>
+                  <div>
+                    <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
+                      {t("connection.privacy_groups")}
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                      <For each={privacyGroups()}>
+                        {(group) => (
+                          <FlagToggle
+                            label={group.name}
+                            active={checkedGroupIds().has(group.id)}
+                            onChange={(v) =>
+                              setCheckedGroupIds((prev) => {
+                                const next = new Set(prev);
+                                if (v) next.add(group.id);
+                                else next.delete(group.id);
+                                return next;
+                              })
+                            }
+                          />
+                        )}
+                      </For>
+                    </div>
+                  </div>
+                </Show>
 
                 {/* Meta */}
                 <div class="flex flex-wrap gap-x-4 gap-y-1">
