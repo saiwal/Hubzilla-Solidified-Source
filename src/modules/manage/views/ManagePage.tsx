@@ -1,4 +1,4 @@
-import { type Component, For, Show, createSignal } from "solid-js";
+import { type Component, For, Show } from "solid-js";
 import {
   useManageData,
   useActionState,
@@ -143,15 +143,8 @@ const ManagePage: Component = () => {
   const { t } = useI18n();
   const data = useManageData();
   const actionState = useActionState();
-  const [confirmSwitch, setConfirmSwitch] = createSignal<number | null>(null);
 
   const isPending = () => actionState().status === "pending";
-
-  const channelToConfirm = () => {
-    const id = confirmSwitch();
-    if (id === null) return null;
-    return data()?.channels.find((c) => c.channel_id === id) ?? null;
-  };
 
   const usageMessage = () => {
     const d = data();
@@ -159,20 +152,12 @@ const ManagePage: Component = () => {
     return `${d.total_channels} ${t("manage.channels_of")} ${d.limit} ${t("manage.channels_used")}`;
   };
 
-  const handleSwitch = (channelId: number) => setConfirmSwitch(channelId);
+  const handleSwitch = async (channelId: number) => {
+    const redirectTo = await doSwitchChannel(channelId);
+    if (redirectTo) window.location.href = redirectTo;
+  };
 
   const handleSetDefault = (channelId: number) => doSetDefault(channelId);
-
-  const confirmSwitchAction = async () => {
-    const id = confirmSwitch();
-    if (id === null) return;
-    setConfirmSwitch(null);
-    const redirectTo = await doSwitchChannel(id);
-    if (redirectTo) {
-      // Full page reload — server session has changed
-      window.location.href = redirectTo;
-    }
-  };
 
   return (
     <div class="max-w-lg mx-auto space-y-6">
@@ -229,37 +214,6 @@ const ManagePage: Component = () => {
             </For>
           </div>
         </Show>
-      </Show>
-
-      {/* Switch confirmation modal */}
-      <Show when={confirmSwitch() !== null}>
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div class="bg-surface rounded-xl shadow-xl p-6 max-w-sm w-full mx-4 space-y-4">
-            <h2 class="font-semibold text-lg">{t("manage.switch_confirm_title")}</h2>
-            <p class="text-sm text-muted">
-              {t("manage.switch_confirm_body")}{" "}
-              <strong>{channelToConfirm()?.channel_name}</strong>. {t("manage.page_reload")}
-            </p>
-            <div class="flex gap-2 justify-end">
-              <button
-                onClick={() => setConfirmSwitch(null)}
-                class="px-3 py-1.5 text-sm rounded-md border border-rim hover:bg-elevated
-                       transition-colors"
-              >
-                {t("manage.cancel")}
-              </button>
-              <button
-                onClick={confirmSwitchAction}
-                disabled={isPending()}
-                class="px-3 py-1.5 text-sm rounded-md font-medium
-                       bg-accent hover:opacity-90 text-accent-fg
-                       disabled:opacity-40 transition-opacity"
-              >
-                {t("manage.switch")}
-              </button>
-            </div>
-          </div>
-        </div>
       </Show>
 
     </div>
