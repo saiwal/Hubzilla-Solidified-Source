@@ -101,6 +101,8 @@ export type RawDictionary = {
     connected_since:         string;
     view_channel:            string;
     back:                    string;
+    send_dm:                 string;
+    start_chatroom:          string;
     // EventCard
     upcoming:                string;
     until:                   string;

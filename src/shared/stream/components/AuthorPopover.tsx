@@ -1,11 +1,14 @@
 import { createSignal, createEffect, Show, onCleanup, type JSX } from "solid-js";
 import { createMediaQuery } from "@solid-primitives/media";
-import { MdOutlinePerson, MdOutlinePerson_add, MdOutlineEdit } from "solid-icons/md";
+import { MdOutlinePerson, MdOutlinePerson_add, MdOutlineEdit, MdOutlineMessage, MdOutlineChat } from "solid-icons/md";
 import { useAuth } from "@/shared/store/auth-store";
 import { addConnection } from "@/modules/directory/people/api";
 import { fetchConnectionByAddress } from "@/modules/directory/connections/api";
 import type { Connection } from "@/modules/directory/connections/api";
 import ConnectionEditorModal from "@/shared/views/ConnectionEditorModal";
+import PostComposer from "@/shared/editor/composers/PostComposer";
+import { createRoom } from "@/modules/chat/api";
+import { useNavigate } from "@solidjs/router";
 import { useI18n } from "@/i18n";
 
 interface Props {
@@ -46,8 +49,12 @@ export default function AuthorPopover(props: Props) {
   const [open, setOpen] = createSignal(false);
   const [connState, setConnState] = createSignal<ConnState>({ tag: "idle" });
   const [editOpen, setEditOpen] = createSignal(false);
+  const [dmOpen, setDmOpen] = createSignal(false);
+  const [xchanHash, setXchanHash] = createSignal<string | null>(null);
+  const [chatCreating, setChatCreating] = createSignal(false);
   const canHover = createMediaQuery("(hover: hover) and (pointer: fine)");
   const auth = useAuth();
+  const navigate = useNavigate();
   let closeTimer: ReturnType<typeof setTimeout> | null = null;
 
   const isSelf = () => {
@@ -69,7 +76,8 @@ export default function AuthorPopover(props: Props) {
 
     fetch(`/api/xchan?hash=${encodeURIComponent(props.url)}`, { credentials: "include" })
       .then(r => (r.ok ? r.json() : null))
-      .then((body: { data?: { is_connected?: boolean } } | null) => {
+      .then((body: { data?: { is_connected?: boolean; xchan_hash?: string } } | null) => {
+        if (body?.data?.xchan_hash) setXchanHash(body.data.xchan_hash);
         if (body?.data?.is_connected) {
           setConnState({ tag: "connected", conn: null });
           // Eagerly fetch full Connection for the edit modal
@@ -117,6 +125,36 @@ export default function AuthorPopover(props: Props) {
     if (s.tag !== "connected" || !s.conn) return;
     setOpen(false);
     setEditOpen(true);
+  }
+
+  function handleDm(e: MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setOpen(false);
+    setDmOpen(true);
+  }
+
+  async function handleStartChat(e: MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    const hash = xchanHash();
+    const nick = auth()?.nick;
+    if (!hash || !nick) return;
+    setOpen(false);
+    setChatCreating(true);
+    try {
+      const room = await createRoom(nick, {
+        name: props.name,
+        expire: 0,
+        visibility: "private",
+        allow_cid: [hash],
+      });
+      navigate(`/chat/${nick}/${room.id}`);
+    } catch {
+      // ignore — chat app may not be installed
+    } finally {
+      setChatCreating(false);
+    }
   }
 
   onCleanup(() => { if (closeTimer) clearTimeout(closeTimer); });
@@ -274,6 +312,39 @@ export default function AuthorPopover(props: Props) {
                 </Show>
               </div>
             </Show>
+
+            {/* Message actions */}
+            <Show when={isLocal() && !isSelf() && xchanHash()}>
+              <div class="px-3 pb-3 flex gap-2 border-t border-rim/40 pt-2">
+                <button
+                  onClick={handleDm}
+                  title={t("ui.send_dm")}
+                  class="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5
+                         border border-rim rounded-lg text-xs text-muted
+                         hover:border-accent hover:text-accent transition-colors"
+                >
+                  <MdOutlineMessage size={14} />
+                  <span>{t("ui.send_dm")}</span>
+                </button>
+                <button
+                  onClick={handleStartChat}
+                  disabled={chatCreating()}
+                  title={t("ui.start_chatroom")}
+                  class="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5
+                         border border-rim rounded-lg text-xs text-muted
+                         hover:border-accent hover:text-accent transition-colors
+                         disabled:opacity-50 disabled:cursor-default disabled:hover:border-rim disabled:hover:text-muted"
+                >
+                  <Show
+                    when={!chatCreating()}
+                    fallback={<span class="w-3.5 h-3.5 border border-current border-t-transparent rounded-full animate-spin" />}
+                  >
+                    <MdOutlineChat size={14} />
+                  </Show>
+                  <span>{t("ui.start_chatroom")}</span>
+                </button>
+              </div>
+            </Show>
           </div>
         </Show>
       </div>
@@ -289,6 +360,17 @@ export default function AuthorPopover(props: Props) {
             setConnState({ tag: "not_connected" });
             setEditOpen(false);
           }}
+        />
+      </Show>
+
+      {/* DM composer */}
+      <Show when={dmOpen() && auth() && xchanHash()}>
+        <PostComposer
+          open={dmOpen()}
+          onClose={() => setDmOpen(false)}
+          profileUid={auth()!.uid}
+          initialAclMode="custom"
+          initialAllowEntries={new Set([`c:${xchanHash()!}`])}
         />
       </Show>
     </>

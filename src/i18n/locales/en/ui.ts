@@ -56,6 +56,8 @@ export const ui: RawDictionary["ui"] = {
   connected_since:        "Connected since",
   view_channel:           "View Channel",
   back:                   "Back",
+  send_dm:                "Direct message",
+  start_chatroom:         "Start chatroom",
   // EventCard
   upcoming:               "· Upcoming",
   until:                  "until",
