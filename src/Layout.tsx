@@ -19,10 +19,11 @@ import { useOnlineStatus } from "./shared/lib/useOnlineStatus";
 import NavUtilities from "./shared/views/NavUtilities";
 import { notifCount } from "@/shared/lib/notificationCount";
 import { createMediaQuery } from "@solid-primitives/media";
-import { useNavActions, useNavViewer, setNavNick } from "./shared/store/nav-store";
+import { useNavActions, useNavViewer, useNavData, setNavNick } from "./shared/store/nav-store";
 import { motion } from "solid-motionone";
 import ToastContainer from "@/shared/views/ToastContainer";
 import { useI18n } from "@/i18n";
+import DOMPurify from "dompurify";
 void motion;
 
 // ── Mobile bottom tab ─────────────────────────────────────────────────────────
@@ -70,6 +71,7 @@ const Layout: ParentComponent = (props) => {
   const online = useOnlineStatus();
   const navViewer = useNavViewer();
   const navActions = useNavActions();
+  const navData = useNavData();
 
   const isXl = createMediaQuery("(min-width: 1280px)");
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -167,17 +169,30 @@ const Layout: ParentComponent = (props) => {
                    bg-surface border-r border-rim py-3 px-2"
           >
             {/* Brand */}
-            <div class="flex items-center gap-3 px-1 mb-5 h-9">
-              <span
-                class="shrink-0 w-8 h-8 rounded-xl bg-txt
-                       flex items-center justify-center
-                       text-base text-[11px] font-bold select-none"
+            <div class="flex items-center justify-center px-2 pb-4 mb-2 border-b border-rim">
+              <Show
+                when={navData()?.banner}
+                fallback={
+                  <div class="flex items-center gap-2.5">
+                    <span
+                      class="shrink-0 w-8 h-8 rounded-xl bg-txt
+                             flex items-center justify-center
+                             text-[11px] font-bold select-none text-surface"
+                    >
+                      Hz
+                    </span>
+                    <span class="text-sm font-semibold tracking-tight text-txt">
+                      Hubzilla
+                    </span>
+                  </div>
+                }
               >
-                Hz
-              </span>
-              <span class="text-sm font-semibold tracking-tight text-txt">
-                Hubzilla
-              </span>
+                <div
+                  class="w-full text-center text-sm font-semibold text-txt
+                         [&_img]:mx-auto [&_img]:max-h-12 [&_img]:max-w-full [&_img]:object-contain"
+                  innerHTML={DOMPurify.sanitize(navData()!.banner, { FORBID_TAGS: ["style", "script"] })}
+                />
+              </Show>
             </div>
 
             {/* Primary nav */}
