@@ -140,6 +140,7 @@ export default function StreamFiltersWidget() {
 
   const installedApps = useInstalledApps();
   const privacyGroupsInstalled = () => installedApps().has("Privacy Groups");
+  const affinityInstalled = () => installedApps().has("Affinity Tool");
   const [privacyGroups] = createResource(privacyGroupsInstalled, (installed) =>
     installed ? fetchGroups() : Promise.resolve([] as PrivacyGroup[]),
   );
@@ -406,39 +407,41 @@ export default function StreamFiltersWidget() {
           </Show>
         </div>
 
-        {/* Closeness / Affinity */}
-        <div>
-          <button
-            onClick={() => setAffinityOpen((o) => !o)}
-            class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm
-                   transition-colors text-left text-muted hover:bg-elevated hover:text-txt"
-          >
-            <MdFillPeople size={15} class="shrink-0" />
-            <span class="flex-1">{t("connection.closeness")}</span>
-            <Show when={!!(cmin() || cmax())}>
-              <span class="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
+        {/* Closeness / Affinity — only when the Affinity Tool app is installed */}
+        <Show when={affinityInstalled()}>
+          <div>
+            <button
+              onClick={() => setAffinityOpen((o) => !o)}
+              class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm
+                     transition-colors text-left text-muted hover:bg-elevated hover:text-txt"
+            >
+              <MdFillPeople size={15} class="shrink-0" />
+              <span class="flex-1">{t("connection.closeness")}</span>
+              <Show when={!!(cmin() || cmax())}>
+                <span class="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
+              </Show>
+              <Show when={affinityOpen()} fallback={<MdFillKeyboard_arrow_right size={15} class="shrink-0" />}>
+                <MdFillKeyboard_arrow_down size={15} class="shrink-0" />
+              </Show>
+            </button>
+            <Show when={affinityOpen()}>
+              <div class="pl-4 pr-2 pt-2 pb-2">
+                <AffinitySlider
+                  min={cmin() ? Number(cmin()) : 0}
+                  max={cmax() ? Number(cmax()) : AFFINITY_MAX}
+                  onChange={(min, max) => {
+                    const isDefault = min === 0 && max === AFFINITY_MAX;
+                    sp({
+                      cmin: isDefault ? undefined : String(min),
+                      cmax: isDefault ? undefined : String(max),
+                    });
+                    setTimeout(applyNow, 0);
+                  }}
+                />
+              </div>
             </Show>
-            <Show when={affinityOpen()} fallback={<MdFillKeyboard_arrow_right size={15} class="shrink-0" />}>
-              <MdFillKeyboard_arrow_down size={15} class="shrink-0" />
-            </Show>
-          </button>
-          <Show when={affinityOpen()}>
-            <div class="pl-4 pr-2 pt-2 pb-2">
-              <AffinitySlider
-                min={cmin() ? Number(cmin()) : 0}
-                max={cmax() ? Number(cmax()) : AFFINITY_MAX}
-                onChange={(min, max) => {
-                  const isDefault = min === 0 && max === AFFINITY_MAX;
-                  sp({
-                    cmin: isDefault ? undefined : String(min),
-                    cmax: isDefault ? undefined : String(max),
-                  });
-                  setTimeout(applyNow, 0);
-                }}
-              />
-            </div>
-          </Show>
-        </div>
+          </div>
+        </Show>
       </div>
     </div>
   );

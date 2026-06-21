@@ -94,7 +94,15 @@ export function mapActivityToPost(activity: any): Post {
     repeatCount: activity.announce_count ?? 0,
     commentCount: activity.comment_count ?? 0,
     eventData,
-    attachments: Array.isArray(activity.attach) ? activity.attach : [],
+    attachments: Array.isArray(activity.attach)
+      ? activity.attach.map((a: any) => ({
+          href: a.href ?? "",
+          type: a.type ?? "application/octet-stream",
+          title: a.title ?? (a.href ? decodeURIComponent(a.href.split("/").pop() ?? "") : ""),
+          length: a.length != null ? String(a.length) : "0",
+          revision: a.revision != null ? String(a.revision) : "0",
+        }))
+      : [],
     categories: activity.categories ?? [],
     tags: activity.tags ?? [],
     children: [],

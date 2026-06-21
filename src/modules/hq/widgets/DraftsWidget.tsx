@@ -101,10 +101,12 @@ export default function DraftsWidget() {
     setLoading(true);
     try {
       const serverDrafts = await listServerDrafts();
-      const results = serverDrafts.map((sd) => ({
-        scope: sd.scope,
-        draft: { ...sd, id: sd.serverMid },
-      }));
+      const results = serverDrafts
+        .filter((sd) => scopeParts(sd.scope).type === "post")
+        .map((sd) => ({
+          scope: sd.scope,
+          draft: { ...sd, id: sd.serverMid },
+        }));
       results.sort((a, b) => b.draft.updated - a.draft.updated);
       setEntries(results);
     } finally {

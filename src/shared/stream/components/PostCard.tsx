@@ -403,6 +403,7 @@ export default function PostCard(props: {
     return (
       <div
         ref={cardRef}
+        style="overflow-anchor: none"
         class={`rounded-tl-lg rounded-bl-lg pl-2 md:pl-3 py-2 md:py-2.5 mb-1 border transition-colors duration-500
                ${props.highlighted ? "border-accent bg-accent/5 ring-1 ring-accent/30" : "border-rim"}`}
       >
@@ -737,6 +738,7 @@ export default function PostCard(props: {
   return (
     <div
       ref={cardRef}
+      style="overflow-anchor: none"
       class={props.seamless
         ? "relative bg-surface p-3 md:p-5"
         : "relative bg-surface border border-rim rounded-2xl p-3 md:p-5 mb-4 shadow-sm hover:shadow-md transition-shadow duration-200"}
@@ -1002,9 +1004,8 @@ export default function PostCard(props: {
             >
               <MdFillKeyboard_arrow_up size={17} />
             </Show>
-            <MdFillChat size={15} class="md:hidden" />
-            <span class="hidden md:inline">{totalComments()} {totalComments() !== 1 ? t("post.comments_plural") : t("post.comments_singular")}</span>
-            <span class="md:hidden">{totalComments()}</span>
+            <MdFillChat size={15} />
+            <span>{totalComments()}</span>
           </button>
         </Show>
 
