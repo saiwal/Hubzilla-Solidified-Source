@@ -32,6 +32,7 @@ export const network: RawDictionary["network"] = {
   clear_filters:        "Clear filters",
   tag:                  "Tag",
   tag_placeholder:      "e.g. solidjs",
+  date_range:           "Date range",
   date_from:            "From",
   date_to:              "To",
   affinity_min:         "Affinity min",
@@ -55,4 +56,6 @@ export const network: RawDictionary["network"] = {
   save_search_placeholder: "Search name…",
   search_saved:            "Search saved",
   delete_saved_search:     "Delete saved search",
+  // Privacy group filter
+  privacy_groups:          "Privacy Groups",
 };

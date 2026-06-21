@@ -641,6 +641,7 @@ export type RawDictionary = {
     clear_filters:        string;
     tag:                  string;
     tag_placeholder:      string;
+    date_range:           string;
     date_from:            string;
     date_to:              string;
     affinity_min:         string;
@@ -662,6 +663,8 @@ export type RawDictionary = {
     save_search_placeholder:   string;
     search_saved:              string;
     delete_saved_search:       string;
+    // Privacy group filter
+    privacy_groups:            string;
   };
   directory: {
     connections:          string;
@@ -800,8 +803,15 @@ export type RawDictionary = {
     filter_placeholder:   string;
     draft_new_post:       string;
     draft_new_article:    string;
+    draft_new_webpage:    string;
+    draft_new_wiki:       string;
+    draft_new_event:      string;
     draft_reply:          string;
+    draft_comment:        string;
     draft_article:        string;
+    draft_webpage:        string;
+    draft_wiki:           string;
+    draft_event:          string;
     draft_label:          string;
     just_now:             string;
     empty_draft:          string;

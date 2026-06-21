@@ -342,18 +342,17 @@ export default function PostCard(props: {
     if (statsData()) return;
     setStatsLoading(true);
     try {
-      const mid = encodeURIComponent(props.post.mid);
-      const parent = props.post.iid;
-      const base = `/request?mid=${mid}${parent != null ? `&parent=${parent}` : ""}`;
+      const uuid = encodeURIComponent(props.post.uuid);
+      const base = `/api/item/${uuid}`;
       const [likesRes, dislikesRes, repeatsRes] = await Promise.all([
-        fetch(`${base}&verb=like`, { credentials: "include" }),
-        fetch(`${base}&verb=dislike`, { credentials: "include" }),
-        fetch(`${base}&verb=announce`, { credentials: "include" }),
+        fetch(`${base}/likes`, { credentials: "include" }),
+        fetch(`${base}/dislikes`, { credentials: "include" }),
+        fetch(`${base}/repeats`, { credentials: "include" }),
       ]);
       const parse = async (res: Response): Promise<StatActor[]> => {
         if (!res.ok) return [];
         const data = await res.json();
-        const arr = Array.isArray(data) ? data : (data?.result ?? []);
+        const arr = Array.isArray(data) ? data : (data?.reactions ?? data?.result ?? []);
         return arr.map((a: any) => ({
           name: a.name ?? t("post.unknown"),
           avatar: a.photo ?? undefined,

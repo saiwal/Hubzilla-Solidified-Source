@@ -7,11 +7,19 @@ import {
   MdFillEvent,
   MdFillClose,
   MdFillFolder,
+  MdFillGroup,
+  MdFillKeyboard_arrow_down,
+  MdFillKeyboard_arrow_right,
+  MdFillLabel,
+  MdFillDate_range,
+  MdFillPeople,
 } from "solid-icons/md";
 import { createSignal, createEffect, createResource, For, Show } from "solid-js";
 import { useI18n } from "@/i18n";
 import { loadNetwork, resetPosts } from "../store";
 import { fetchFolders, type NetworkParams } from "../api";
+import { useInstalledApps } from "@/shared/store/nav-store";
+import { fetchGroups, type PrivacyGroup } from "@/modules/directory/groups/api";
 
 const CHIPS = [
   { key: "star",  labelKey: "network.starred",         Icon: MdFillStar          },
@@ -130,12 +138,30 @@ export default function StreamFiltersWidget() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [folders] = createResource(fetchFolders);
 
+  const installedApps = useInstalledApps();
+  const privacyGroupsInstalled = () => installedApps().has("Privacy Groups");
+  const [privacyGroups] = createResource(privacyGroupsInstalled, (installed) =>
+    installed ? fetchGroups() : Promise.resolve([] as PrivacyGroup[]),
+  );
+
   const tag    = () => str(searchParams.tag);
   const file   = () => str(searchParams.file);
   const dbegin = () => str(searchParams.dbegin);
   const dend   = () => str(searchParams.dend);
   const cmin   = () => str(searchParams.cmin);
   const cmax   = () => str(searchParams.cmax);
+
+  const [folderOpen,    setFolderOpen]    = createSignal(!!str(searchParams.file));
+  const [groupsOpen,    setGroupsOpen]    = createSignal(!!str(searchParams.gid));
+  const [tagOpen,       setTagOpen]       = createSignal(!!str(searchParams.tag));
+  const [dateOpen,      setDateOpen]      = createSignal(!!(str(searchParams.dbegin) || str(searchParams.dend)));
+  const [affinityOpen,  setAffinityOpen]  = createSignal(!!(str(searchParams.cmin) || str(searchParams.cmax)));
+
+  createEffect(() => { if (file())                                    setFolderOpen(true); });
+  createEffect(() => { if (str(searchParams.gid))                     setGroupsOpen(true); });
+  createEffect(() => { if (tag())                                      setTagOpen(true); });
+  createEffect(() => { if (dbegin() || dend())                         setDateOpen(true); });
+  createEffect(() => { if (cmin() || cmax())                           setAffinityOpen(true); });
 
   function sp(overrides: Record<string, string | undefined>) {
     setSearchParams({ ...overrides }, { replace: true });
@@ -206,76 +232,213 @@ export default function StreamFiltersWidget() {
             );
           }}
         </For>
-      </div>
-      <Show when={!folders.loading && (folders() ?? []).length > 0}>
-        <div class="px-3 pb-2 pt-2 border-t border-rim">
-          <span class="text-xs text-muted font-medium block mb-1.5">{t("network.folder")}</span>
-          <div class="flex flex-wrap gap-1.5">
+
+        <Show when={!folders.loading && (folders() ?? []).length > 0}>
+          <div>
             <button
-              onClick={() => { sp({ file: undefined }); setTimeout(applyNow, 0); }}
-              class="flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-colors"
-              classList={{
-                "bg-accent text-accent-fg font-medium": !file(),
-                "bg-elevated text-muted hover:text-txt": !!file(),
-              }}
+              onClick={() => setFolderOpen((o) => !o)}
+              class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm
+                     transition-colors text-left text-muted hover:bg-elevated hover:text-txt"
             >
-              {t("network.folder_all")}
+              <MdFillFolder size={15} class="shrink-0" />
+              <span class="flex-1">{t("network.folder")}</span>
+              <Show when={!!file()}>
+                <span class="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
+              </Show>
+              <Show
+                when={folderOpen()}
+                fallback={<MdFillKeyboard_arrow_right size={15} class="shrink-0" />}
+              >
+                <MdFillKeyboard_arrow_down size={15} class="shrink-0" />
+              </Show>
             </button>
-            <For each={folders() ?? []}>
-              {(folder) => (
+            <Show when={folderOpen()}>
+              <div class="pl-6 pt-1 pb-0.5 flex flex-wrap gap-1.5">
                 <button
-                  onClick={() => { sp({ file: folder }); setTimeout(applyNow, 0); }}
+                  onClick={() => { sp({ file: undefined }); setTimeout(applyNow, 0); }}
                   class="flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-colors"
                   classList={{
-                    "bg-accent text-accent-fg font-medium": file() === folder,
-                    "bg-elevated text-muted hover:text-txt": file() !== folder,
+                    "bg-accent text-accent-fg font-medium": !file(),
+                    "bg-elevated text-muted hover:text-txt": !!file(),
                   }}
                 >
-                  <MdFillFolder size={11} class="shrink-0" />
-                  <span class="truncate max-w-[120px]">{folder}</span>
+                  {t("network.folder_all")}
                 </button>
-              )}
-            </For>
+                <For each={folders() ?? []}>
+                  {(folder) => (
+                    <button
+                      onClick={() => { sp({ file: folder }); setTimeout(applyNow, 0); }}
+                      class="flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-colors"
+                      classList={{
+                        "bg-accent text-accent-fg font-medium": file() === folder,
+                        "bg-elevated text-muted hover:text-txt": file() !== folder,
+                      }}
+                    >
+                      <MdFillFolder size={11} class="shrink-0" />
+                      <span class="truncate max-w-[120px]">{folder}</span>
+                    </button>
+                  )}
+                </For>
+              </div>
+            </Show>
           </div>
+        </Show>
+
+        <Show when={privacyGroupsInstalled() && !privacyGroups.loading && (privacyGroups() ?? []).length > 0}>
+          <div>
+            <button
+              onClick={() => setGroupsOpen((o) => !o)}
+              class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm
+                     transition-colors text-left text-muted hover:bg-elevated hover:text-txt"
+            >
+              <MdFillGroup size={15} class="shrink-0" />
+              <span class="flex-1">{t("network.privacy_groups")}</span>
+              <Show when={!!str(searchParams.gid)}>
+                <span class="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
+              </Show>
+              <Show
+                when={groupsOpen()}
+                fallback={<MdFillKeyboard_arrow_right size={15} class="shrink-0" />}
+              >
+                <MdFillKeyboard_arrow_down size={15} class="shrink-0" />
+              </Show>
+            </button>
+            <Show when={groupsOpen()}>
+              <div class="pl-6 pt-1 pb-0.5 space-y-0.5">
+                <button
+                  onClick={() => { sp({ gid: undefined, xchan_label: undefined }); setTimeout(applyNow, 0); }}
+                  class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors text-left"
+                  classList={{
+                    "bg-accent text-accent-fg font-medium": !str(searchParams.gid),
+                    "text-muted hover:bg-elevated hover:text-txt": !!str(searchParams.gid),
+                  }}
+                >
+                  {t("network.folder_all")}
+                </button>
+                <For each={privacyGroups() ?? []}>
+                  {(group) => {
+                    const active = () => str(searchParams.gid) === String(group.id);
+                    return (
+                      <button
+                        onClick={() => {
+                          sp({ gid: String(group.id), xchan_label: group.name, cid: undefined });
+                          setTimeout(applyNow, 0);
+                        }}
+                        class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors text-left"
+                        classList={{
+                          "bg-accent-muted text-accent font-medium": active(),
+                          "text-muted hover:bg-elevated hover:text-txt": !active(),
+                        }}
+                      >
+                        <MdFillGroup size={13} class="shrink-0" />
+                        <span class="truncate">{group.name}</span>
+                      </button>
+                    );
+                  }}
+                </For>
+              </div>
+            </Show>
+          </div>
+        </Show>
+
+        {/* Tag */}
+        <div>
+          <button
+            onClick={() => setTagOpen((o) => !o)}
+            class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm
+                   transition-colors text-left text-muted hover:bg-elevated hover:text-txt"
+          >
+            <MdFillLabel size={15} class="shrink-0" />
+            <span class="flex-1">{t("network.tag")}</span>
+            <Show when={!!tag()}>
+              <span class="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
+            </Show>
+            <Show when={tagOpen()} fallback={<MdFillKeyboard_arrow_right size={15} class="shrink-0" />}>
+              <MdFillKeyboard_arrow_down size={15} class="shrink-0" />
+            </Show>
+          </button>
+          <Show when={tagOpen()}>
+            <div class="pl-6 pr-2 pt-1 pb-1">
+              <input
+                type="text"
+                placeholder={t("network.tag_placeholder")}
+                value={tag()}
+                onInput={(e) => sp({ tag: e.currentTarget.value || undefined })}
+                onBlur={applyNow}
+                onKeyDown={(e) => e.key === "Enter" && applyNow()}
+                class={INPUT_CLS}
+              />
+            </div>
+          </Show>
         </div>
-      </Show>
-      <div class="px-3 pb-3 pt-1 border-t border-rim space-y-2.5">
-        <label class="flex flex-col gap-1">
-          <span class="text-xs text-muted font-medium">{t("network.tag")}</span>
-          <input
-            type="text"
-            placeholder={t("network.tag_placeholder")}
-            value={tag()}
-            onInput={(e) => sp({ tag: e.currentTarget.value || undefined })}
-            onBlur={applyNow}
-            onKeyDown={(e) => e.key === "Enter" && applyNow()}
-            class={INPUT_CLS}
-          />
-        </label>
-        <label class="flex flex-col gap-1">
-          <span class="text-xs text-muted font-medium">{t("network.date_from")}</span>
-          <input type="date" value={dbegin()}
-            onChange={(e) => { sp({ dbegin: e.currentTarget.value || undefined }); setTimeout(applyNow, 0); }}
-            class={INPUT_CLS} />
-        </label>
-        <label class="flex flex-col gap-1">
-          <span class="text-xs text-muted font-medium">{t("network.date_to")}</span>
-          <input type="date" value={dend()}
-            onChange={(e) => { sp({ dend: e.currentTarget.value || undefined }); setTimeout(applyNow, 0); }}
-            class={INPUT_CLS} />
-        </label>
-        <AffinitySlider
-          min={cmin() ? Number(cmin()) : 0}
-          max={cmax() ? Number(cmax()) : AFFINITY_MAX}
-          onChange={(min, max) => {
-            const isDefault = min === 0 && max === AFFINITY_MAX;
-            sp({
-              cmin: isDefault ? undefined : String(min),
-              cmax: isDefault ? undefined : String(max),
-            });
-            setTimeout(applyNow, 0);
-          }}
-        />
+
+        {/* Date range */}
+        <div>
+          <button
+            onClick={() => setDateOpen((o) => !o)}
+            class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm
+                   transition-colors text-left text-muted hover:bg-elevated hover:text-txt"
+          >
+            <MdFillDate_range size={15} class="shrink-0" />
+            <span class="flex-1">{t("network.date_range")}</span>
+            <Show when={!!(dbegin() || dend())}>
+              <span class="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
+            </Show>
+            <Show when={dateOpen()} fallback={<MdFillKeyboard_arrow_right size={15} class="shrink-0" />}>
+              <MdFillKeyboard_arrow_down size={15} class="shrink-0" />
+            </Show>
+          </button>
+          <Show when={dateOpen()}>
+            <div class="pl-6 pr-2 pt-1 pb-1 space-y-2">
+              <label class="flex flex-col gap-1">
+                <span class="text-xs text-muted">{t("network.date_from")}</span>
+                <input type="date" value={dbegin()}
+                  onChange={(e) => { sp({ dbegin: e.currentTarget.value || undefined }); setTimeout(applyNow, 0); }}
+                  class={INPUT_CLS} />
+              </label>
+              <label class="flex flex-col gap-1">
+                <span class="text-xs text-muted">{t("network.date_to")}</span>
+                <input type="date" value={dend()}
+                  onChange={(e) => { sp({ dend: e.currentTarget.value || undefined }); setTimeout(applyNow, 0); }}
+                  class={INPUT_CLS} />
+              </label>
+            </div>
+          </Show>
+        </div>
+
+        {/* Closeness / Affinity */}
+        <div>
+          <button
+            onClick={() => setAffinityOpen((o) => !o)}
+            class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm
+                   transition-colors text-left text-muted hover:bg-elevated hover:text-txt"
+          >
+            <MdFillPeople size={15} class="shrink-0" />
+            <span class="flex-1">{t("connection.closeness")}</span>
+            <Show when={!!(cmin() || cmax())}>
+              <span class="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
+            </Show>
+            <Show when={affinityOpen()} fallback={<MdFillKeyboard_arrow_right size={15} class="shrink-0" />}>
+              <MdFillKeyboard_arrow_down size={15} class="shrink-0" />
+            </Show>
+          </button>
+          <Show when={affinityOpen()}>
+            <div class="pl-4 pr-2 pt-2 pb-2">
+              <AffinitySlider
+                min={cmin() ? Number(cmin()) : 0}
+                max={cmax() ? Number(cmax()) : AFFINITY_MAX}
+                onChange={(min, max) => {
+                  const isDefault = min === 0 && max === AFFINITY_MAX;
+                  sp({
+                    cmin: isDefault ? undefined : String(min),
+                    cmax: isDefault ? undefined : String(max),
+                  });
+                  setTimeout(applyNow, 0);
+                }}
+              />
+            </div>
+          </Show>
+        </div>
       </div>
     </div>
   );

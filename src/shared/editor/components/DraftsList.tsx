@@ -78,18 +78,11 @@ export function DraftsList(props: DraftsListProps) {
                   </button>
                   <button
                     type="button"
-                    title={t("editor.delete_draft")}
                     onClick={() => props.onDelete(draft.id)}
-                    class="p-1 rounded text-muted hover:text-red-500 transition-colors"
+                    class="px-2 py-0.5 text-[10px] rounded border border-rim text-muted
+                           hover:text-red-500 hover:border-red-400/50 transition-colors"
                   >
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
+                    {t("editor.delete_draft")}
                   </button>
                 </div>
               </div>

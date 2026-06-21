@@ -1,6 +1,7 @@
 import { createSignal, createEffect } from "solid-js";
 import { toast } from "@/shared/store/toast";
 import { storageGet, storageSet, storageDel } from "@/shared/lib/storage";
+import { listServerDrafts, saveServerDraft, deleteServerDraft } from "../api/drafts";
 import type { MimeType, ComposerMeta } from "../types/editor.types";
 
 export type SubmitFn = (body: string, meta: ComposerMeta) => Promise<void>;
@@ -9,6 +10,7 @@ export type ComposerStore = ReturnType<typeof createComposerStore>;
 
 export type SavedDraft = {
   id: string;
+  serverMid?: string;
   created: number;
   updated: number;
   preview: string;
@@ -35,7 +37,6 @@ export function createComposerStore(
   options?: { initialBody?: string },
 ) {
   const DRAFT_KEY = `draft:${scope}`;
-  const DRAFTS_KEY = `drafts-list:${scope}`;
 
   const [body, setBody]         = createSignal(options?.initialBody ?? "");
   const [title, setTitle]       = createSignal("");
@@ -47,9 +48,15 @@ export function createComposerStore(
   const [error, setError]       = createSignal<string | null>(null);
   const [tab, setTab]           = createSignal<"wysiwyg" | "source" | "preview">("wysiwyg");
   const [savedDrafts, setSavedDrafts] = createSignal<SavedDraft[]>([]);
+  const [loadedDraftId, setLoadedDraftId] = createSignal<string | null>(null);
 
-  // Load the saved-drafts list
-  storageGet<SavedDraft[]>(DRAFTS_KEY, []).then(setSavedDrafts);
+  // Load saved drafts from server, filtered to this scope
+  listServerDrafts().then((serverDrafts) => {
+    const forScope = serverDrafts
+      .filter((sd) => sd.scope === scope)
+      .map((sd) => ({ ...sd, id: sd.serverMid }));
+    setSavedDrafts(forScope);
+  });
 
   // On init, a pending-draft (written cross-navigation by the HQ DraftsWidget) takes
   // priority over the regular auto-save; fall back to auto-save if none present.
@@ -62,6 +69,7 @@ export function createComposerStore(
       setSlug(pending.slug);
       setCategory(pending.category);
       setMimetype(pending.mimetype);
+      setLoadedDraftId(pending.id);
       await storageDel(PENDING_KEY);
       return;
     }
@@ -96,6 +104,11 @@ export function createComposerStore(
       setSlug("");
       setCategory("");
       storageDel(DRAFT_KEY);
+      const draftId = loadedDraftId();
+      if (draftId) {
+        setLoadedDraftId(null);
+        void deleteSavedDraft(draftId);
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Submit failed";
       setError(msg);
@@ -112,6 +125,7 @@ export function createComposerStore(
     setSlug("");
     setCategory("");
     setError(null);
+    setLoadedDraftId(null);
     storageDel(DRAFT_KEY);
   }
 
@@ -125,10 +139,9 @@ export function createComposerStore(
   }
 
   async function saveAsDraft(): Promise<void> {
-    const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
     const now = Date.now();
-    const draft: SavedDraft = {
-      id,
+    const tempDraft = {
+      id: "",
       created: now,
       updated: now,
       preview: makeDraftPreview(body()),
@@ -139,9 +152,13 @@ export function createComposerStore(
       category: category(),
       mimetype: mimetype(),
     };
-    const updated = [draft, ...savedDrafts()];
-    setSavedDrafts(updated);
-    await storageSet(DRAFTS_KEY, updated);
+    const serverMid = await saveServerDraft(tempDraft, scope);
+    if (!serverMid) {
+      toast.error("Failed to save draft");
+      return;
+    }
+    const draft: SavedDraft = { ...tempDraft, id: serverMid, serverMid };
+    setSavedDrafts([draft, ...savedDrafts()]);
   }
 
   function loadSavedDraft(draft: SavedDraft): void {
@@ -151,13 +168,12 @@ export function createComposerStore(
     setSlug(draft.slug);
     setCategory(draft.category);
     setMimetype(draft.mimetype);
+    setLoadedDraftId(draft.id);
   }
 
   async function deleteSavedDraft(id: string): Promise<void> {
-    const updated = savedDrafts().filter((d) => d.id !== id);
-    setSavedDrafts(updated);
-    if (updated.length > 0) await storageSet(DRAFTS_KEY, updated);
-    else await storageDel(DRAFTS_KEY);
+    setSavedDrafts(savedDrafts().filter((d) => d.id !== id));
+    void deleteServerDraft(id); // id === serverMid for server-only drafts
   }
 
   return {

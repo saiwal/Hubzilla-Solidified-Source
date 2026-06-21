@@ -25,6 +25,7 @@ export const network: RawDictionary["network"] = {
   clear_filters:        "फ़िल्टर साफ़ करें",
   tag:                  "टैग",
   tag_placeholder:      "जैसे solidjs",
+  date_range:           "तिथि सीमा",
   date_from:            "से",
   date_to:              "तक",
   affinity_min:         "आत्मीयता न्यूनतम",
@@ -45,4 +46,6 @@ export const network: RawDictionary["network"] = {
   save_search_placeholder: "खोज का नाम…",
   search_saved:            "खोज सहेजी गई",
   delete_saved_search:     "सहेजी गई खोज हटाएँ",
+  // Privacy group filter
+  privacy_groups:          "गोपनीयता समूह",
 };

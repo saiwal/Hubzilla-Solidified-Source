@@ -422,14 +422,14 @@ export default function ArticleComposer(props: Props) {
           <Show when={store.body().trim()}>
             <button
               type="button"
-              title={t("editor.save_draft")}
               onClick={() => void store.saveAsDraft()}
-              class="p-1.5 rounded-lg border border-rim text-muted hover:text-txt hover:bg-elevated transition-colors"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rim text-sm text-muted hover:text-txt hover:bg-elevated transition-colors"
             >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V5z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 3v5H9V3m0 14h6" />
               </svg>
+              {t("editor.save_draft")}
             </button>
           </Show>
           <Show when={store.savedDrafts().length > 0}>
