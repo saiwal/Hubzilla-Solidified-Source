@@ -15,8 +15,9 @@ import type { ThreadNode } from "@/shared/lib/thread";
 import { buildThreadTree } from "@/shared/lib/thread";
 import type { createStreamStore } from "./createStreamStore";
 import { updateNode } from "./createStreamStore";
-import { fetchComments, fetchItemDetail, apiDeleteItem, apiToggleStar, postComment } from "@/shared/lib/item-api";
+import { fetchComments, fetchItemDetail, apiDeleteItem, apiToggleStar } from "@/shared/lib/item-api";
 import { mapActivityToPost } from "@/shared/lib/activity.mapper";
+import { currentNick } from "@/shared/store/auth-store";
 
 type StreamStore = ReturnType<typeof createStreamStore>;
 
@@ -125,20 +126,19 @@ export function createActionHandlers(store: StreamStore) {
       store.setPosts((prev) => prev.filter((p) => p.mid !== mid));
     },
 
-    async handleComment(
+    handleComment(
       parentMid: string,
       body: string,
-      authorName: string,
-      authorAvatar: string,
-    ): Promise<void> {
-      const parentIid = iidFor(parentMid);
+      _authorName: string,
+      _authorAvatar: string,
+    ): void {
       const tempMid = crypto.randomUUID();
 
       const tempComment: ThreadNode = {
         uuid: tempMid, id: tempMid, mid: tempMid,
         parent_mid: parentMid, thr_parent: parentMid,
         top_mid: parentMid, parent: parentMid,
-        body, title: "", authorName, authorAvatar, authorUrl: "",
+        body, title: "", authorName: currentNick(), authorAvatar: "", authorUrl: "",
         created: new Date().toISOString().replace("T", " ").slice(0, 19),
         verb: "Create", obj_type: "Note", flags: [], permalink: "",
         likeCount: 0, dislikeCount: 0, repeatCount: 0,
@@ -151,18 +151,6 @@ export function createActionHandlers(store: StreamStore) {
           ...n, children: [...n.children, tempComment],
         })),
       );
-
-      postComment({
-        body,
-        parent_iid: parentIid,
-        profile_uid: store.profileUid(),
-      }).catch(() => {
-        store.setPosts((prev) =>
-          updateNode(prev, parentMid, (n) => ({
-            ...n, children: n.children.filter((c) => c.mid !== tempMid),
-          })),
-        );
-      });
     },
 
     async loadComments(mid: string, uuid: string): Promise<void> {

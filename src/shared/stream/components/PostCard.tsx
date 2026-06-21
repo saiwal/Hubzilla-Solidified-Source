@@ -414,6 +414,7 @@ export default function PostCard(props: {
           </Show>
           <AuthorPopover
             name={props.post.authorName}
+
             avatar={props.post.authorAvatar}
             url={props.post.authorUrl}
             address={props.post.authorAddress}
@@ -442,15 +443,6 @@ export default function PostCard(props: {
           <a href={props.post.authorUrl} class="font-medium text-sm text-txt hover:underline truncate">
             {props.post.authorName}
           </a>
-          <Show when={props.post.via}>
-            <div class="flex items-center gap-1 shrink-0">
-              <MdFillShare size={11} class="text-muted" />
-              <span class="text-xs text-muted">via</span>
-              <a href={props.post.via!.url} class="text-xs text-muted hover:underline font-medium">
-                {props.post.via!.name}
-              </a>
-            </div>
-          </Show>
           <Show when={props.post.verb && props.post.verb !== "Create" && !isRepeat()}>
             <span class="text-xs text-muted italic shrink-0">
               {props.post.verb?.toLowerCase()}

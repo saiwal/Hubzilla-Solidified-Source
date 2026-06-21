@@ -524,6 +524,10 @@ export type RawDictionary = {
     font_family:             string;
     comment_view:            string;
     comment_view_hint:       string;
+    scroll_style:            string;
+    scroll_style_hint:       string;
+    scroll_style_endless:    string;
+    scroll_style_load_more:  string;
     bg_image_url:            string;
     bg_image_url_hint:       string;
     bg_clear:                string;
@@ -682,6 +686,9 @@ export type RawDictionary = {
     channels_found:       string;
     no_suggestions:       string;
     suggestions_count:    string;
+    add_connection_placeholder: string;
+    add_connection_connecting:  string;
+    add_connection_error:       string;
     search_connections:   string;
     no_connections:       string;
     connection_singular:  string;
@@ -808,6 +815,7 @@ export type RawDictionary = {
   channel: {
     no_posts:         string;
     all_caught_up:    string;
+    load_more:        string;
     filtered_by:      string;
     clear:            string;
     new_post:         string;

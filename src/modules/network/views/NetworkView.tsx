@@ -1,7 +1,8 @@
 // src/modules/network/views/NetworkView.tsx
-import { createEffect, Show, For, Switch, Match } from "solid-js";
+import { createEffect, onCleanup, Show, For, Switch, Match } from "solid-js";
 import { useAuth } from "@/shared/store/auth-store";
 import { useI18n } from "@/i18n";
+import { useScrollStyle } from "@/shared/store/scroll-style";
 import StreamList from "@/shared/stream/feedviews/StreamList";
 import type { StreamHandlers } from "@/shared/stream/types";
 import { ListPlaceholder } from "@/shared/stream/feedviews/ListView";
@@ -29,7 +30,9 @@ const handlers: StreamHandlers = {
 export default function NetworkView() {
   const auth = useAuth();
   const { t } = useI18n();
+  const scrollStyle = useScrollStyle();
   let initialized = false;
+  let sentinel!: HTMLDivElement;
 
   createEffect(() => {
     if (auth.loading) return;
@@ -37,6 +40,17 @@ export default function NetworkView() {
     initialized = true;
     resetPosts();
     loadNetwork({ order: "created" });
+  });
+
+  createEffect(() => {
+    if (scrollStyle() !== "endless") return;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => { if (entries[0].isIntersecting) loadMore(); },
+      { rootMargin: "200px" },
+    );
+    observer.observe(sentinel);
+    onCleanup(() => observer.disconnect());
   });
 
   return (
@@ -86,7 +100,7 @@ export default function NetworkView() {
           </Switch>
         </Show>
 
-        <Show when={hasMore() && !loadingMore()}>
+        <Show when={hasMore() && !loadingMore() && scrollStyle() === "load_more"}>
           <div class="flex justify-center py-4">
             <button
               onClick={loadMore}
@@ -102,6 +116,8 @@ export default function NetworkView() {
           <p class="text-center py-4 text-sm text-muted">{t("network.all_caught_up")}</p>
         </Show>
       </Show>
+
+      <div ref={sentinel} class="h-1" />
     </div>
   );
 }

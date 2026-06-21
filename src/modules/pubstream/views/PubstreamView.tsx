@@ -1,5 +1,5 @@
 // src/modules/pubstream/views/PubstreamView.tsx
-import { Show, createEffect, onMount, createSignal } from "solid-js";
+import { Show, createEffect, onCleanup, onMount, createSignal } from "solid-js";
 import { useI18n } from "@/i18n";
 import {
   threads,
@@ -19,6 +19,7 @@ import MasonryView, {
 import type { StreamHandlers } from "@/shared/stream/types";
 import { toggleVerb, repeatItem } from "@/shared/stream/store/actions-store";
 import { MdFillPublic, MdFillWhatshot } from "solid-icons/md";
+import { useScrollStyle } from "@/shared/store/scroll-style";
 
 // ── iid lookup from the pubstream flat posts signal ────────────────────────
 function iidForMid(mid: string): number {
@@ -102,6 +103,8 @@ export default function PubstreamView() {
   const { t } = useI18n();
   const [tag, setTag] = createSignal("");
   const handlers = usePubstreamHandlers(tag);
+  const scrollStyle = useScrollStyle();
+  let sentinel!: HTMLDivElement;
 
   // Load on mount; fast back-nav guard
   onMount(() => {
@@ -119,6 +122,17 @@ export default function PubstreamView() {
       return;
     }
     loadPubstream(currentTag || undefined);
+  });
+
+  createEffect(() => {
+    if (scrollStyle() !== "endless") return;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => { if (entries[0].isIntersecting) loadMore(tag() || undefined); },
+      { rootMargin: "200px" },
+    );
+    observer.observe(sentinel);
+    onCleanup(() => observer.disconnect());
   });
 
   return (
@@ -162,8 +176,10 @@ export default function PubstreamView() {
           <MasonryPlaceholder count={3} />
         </Show>
 
-        {/* Load more */}
-        <Show when={!loading() && hasMore() && threads().length > 0}>
+        <div ref={sentinel} class="h-1" />
+
+        {/* Load more button (only in load_more mode) */}
+        <Show when={!loading() && hasMore() && threads().length > 0 && scrollStyle() === "load_more"}>
           <div class="flex justify-center mt-6 mb-2">
             <button
               onClick={() => loadMore(tag() || undefined)}

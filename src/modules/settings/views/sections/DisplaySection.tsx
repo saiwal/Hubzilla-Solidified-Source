@@ -4,6 +4,7 @@ import { fetchDisplaySettings, saveDisplaySettings } from "../../api/api";
 import { useSectionForm } from "../../store/useSectionForm";
 import { applyTypography, type FontSize, type FontFamily } from "@/shared/lib/typography";
 import { useThreadMode, setThreadMode } from "@/shared/store/thread-mode";
+import { useScrollStyle, setScrollStyle, type ScrollStyle } from "@/shared/store/scroll-style";
 import { useBgUrl, useBgFit, setBgUrl, setBgFit } from "@/shared/lib/background";
 import PATTERN_PRESETS from "virtual:public-listing/patterns";
 import BG_PRESETS from "virtual:public-listing/bg";
@@ -14,6 +15,7 @@ import { useI18n } from "@/i18n";
 export default function DisplaySection() {
   const { t } = useI18n();
   const threadMode = useThreadMode();
+  const scrollStyle = useScrollStyle();
   const { customColors, updateCustomColors } = useTheme();
 
   const [previewSize, setPreviewSize] = createSignal<FontSize>("medium");
@@ -43,6 +45,7 @@ export default function DisplaySection() {
       setPreviewScheme(d.color_scheme as ThemeId);
       initTheme(d.color_scheme as ThemeId, d.custom_theme_colors);
     }
+    if (d.scroll_style) setScrollStyle(d.scroll_style as ScrollStyle);
   });
 
   return (
@@ -266,6 +269,27 @@ export default function DisplaySection() {
                     class="accent-accent cursor-pointer"
                   />
                   <span class="text-sm text-txt capitalize">{mode}</span>
+                </label>
+              ))}
+            </div>
+          </Field>
+
+          {/* Scroll style */}
+          <Field label={t("settings.scroll_style")} hint={t("settings.scroll_style_hint")}>
+            <div class="flex gap-4">
+              {(["endless", "load_more"] as const).map((mode) => (
+                <label class="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="scroll_style"
+                    value={mode}
+                    checked={scrollStyle() === mode}
+                    onChange={() => setScrollStyle(mode)}
+                    class="accent-accent cursor-pointer"
+                  />
+                  <span class="text-sm text-txt">
+                    {mode === "endless" ? t("settings.scroll_style_endless") : t("settings.scroll_style_load_more")}
+                  </span>
                 </label>
               ))}
             </div>

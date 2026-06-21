@@ -3,6 +3,7 @@ import type { RawDictionary } from "../namespaces/types";
 export const channel: RawDictionary["channel"] = {
   no_posts:         "अभी तक कोई पोस्ट नहीं।",
   all_caught_up:    "आप सब देख चुके हैं।",
+  load_more:        "और लोड करें",
   filtered_by:      "फ़िल्टर किया गया:",
   clear:            "साफ़ करें",
   new_post:         "पोस्ट",

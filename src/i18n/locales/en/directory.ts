@@ -28,6 +28,9 @@ export const directory: RawDictionary["directory"] = {
   no_suggestions:       "No suggestions available.",
   suggestions_count:    "suggestions",
   // ConnectionsSection
+  add_connection_placeholder: "Channel address or URL…",
+  add_connection_connecting:  "Connecting…",
+  add_connection_error:       "Failed to connect. Check the address and try again.",
   search_connections:   "Search connections…",
   no_connections:       "No connections found.",
   connection_singular:  "connection",

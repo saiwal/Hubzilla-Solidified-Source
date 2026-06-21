@@ -4,7 +4,8 @@ import {
   filter, order, search, page, LIMIT,
 } from "../../connections/store";
 import type { ConnectionFilter, ConnectionOrder, Connection } from "../../connections/api";
-import { deleteConnection, approveConnection } from "../../connections/api";
+import { deleteConnection, approveConnection, fetchConnectionByAddress } from "../../connections/api";
+import { addConnection } from "../../people/api";
 import ConnectionEditorModal from "@/shared/views/ConnectionEditorModal";
 import { MdOutlineEdit } from "solid-icons/md";
 import { useI18n } from "@/i18n";
@@ -205,6 +206,10 @@ function ConnectionsSkeleton() {
 export default function ConnectionsSection() {
   const { t } = useI18n();
   const [searchInput, setSearchInput] = createSignal("");
+  const [addAddr, setAddAddr] = createSignal("");
+  const [addBusy, setAddBusy] = createSignal(false);
+  const [addError, setAddError] = createSignal<string | null>(null);
+  const [newConn, setNewConn] = createSignal<Connection | null>(null);
 
   const meta        = () => connectionsData()?.meta;
   const connections = () => connectionsData()?.connections ?? [];
@@ -225,8 +230,55 @@ export default function ConnectionsSection() {
     setPage(0);
   }
 
+  async function handleAdd(e: Event) {
+    e.preventDefault();
+    const addr = addAddr().trim();
+    if (!addr) return;
+    setAddBusy(true);
+    setAddError(null);
+    try {
+      await addConnection(addr);
+      const conn = await fetchConnectionByAddress(addr);
+      if (conn) setNewConn(conn);
+      refetch();
+      setAddAddr("");
+    } catch {
+      setAddError(t("directory.add_connection_error"));
+    } finally {
+      setAddBusy(false);
+    }
+  }
+
   return (
     <div class="px-4 md:px-6 py-6 space-y-4">
+
+      {/* ── Add connection ── */}
+      <form onSubmit={handleAdd} class="flex gap-2">
+        <input
+          type="text"
+          value={addAddr()}
+          onInput={(e) => setAddAddr(e.currentTarget.value)}
+          placeholder={t("directory.add_connection_placeholder")}
+          disabled={addBusy()}
+          class="flex-1 px-3 py-2 rounded-lg border border-rim bg-surface text-sm text-txt
+                 placeholder:text-muted focus:outline-none hover:border-rim-strong
+                 focus:border-rim-strong disabled:opacity-50 transition-colors"
+        />
+        <button
+          type="submit"
+          disabled={addBusy() || !addAddr().trim()}
+          class="shrink-0 px-4 py-2 rounded-lg bg-accent text-accent-fg text-sm font-medium
+                 hover:opacity-80 disabled:opacity-50 transition-opacity flex items-center gap-1.5"
+        >
+          <Show when={addBusy()}>
+            <span class="w-3 h-3 border-2 border-accent-fg/40 border-t-accent-fg rounded-full animate-spin" />
+          </Show>
+          {addBusy() ? t("directory.add_connection_connecting") : t("directory.connect")}
+        </button>
+      </form>
+      <Show when={addError()}>
+        <p class="text-xs text-red-500 -mt-2">{addError()}</p>
+      </Show>
 
       {/* ── Filter tabs ── */}
       <div class="flex flex-wrap gap-1.5">
@@ -315,6 +367,18 @@ export default function ConnectionsSection() {
             </div>
           </Show>
         </Show>
+      </Show>
+
+      {/* ── Editor modal for newly added connection ── */}
+      <Show when={newConn()}>
+        <ConnectionEditorModal
+          connection={newConn()!}
+          authorName={newConn()!.name}
+          authorAvatar={newConn()!.photo}
+          onSaved={() => { setNewConn(null); refetch(); }}
+          onClose={() => setNewConn(null)}
+          onDeleted={() => { setNewConn(null); refetch(); }}
+        />
       </Show>
     </div>
   );

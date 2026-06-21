@@ -1,6 +1,6 @@
 import { createSignal, createEffect, Show, onCleanup, type JSX } from "solid-js";
 import { createMediaQuery } from "@solid-primitives/media";
-import { MdOutlinePerson, MdOutlinePerson_add, MdOutlineEdit, MdOutlineMessage, MdOutlineChat } from "solid-icons/md";
+import { MdOutlinePerson, MdOutlinePerson_add, MdOutlineEdit, MdOutlineEmail, MdOutlineChat_bubble, MdOutlineCheck } from "solid-icons/md";
 import { useAuth } from "@/shared/store/auth-store";
 import { addConnection } from "@/modules/directory/people/api";
 import { fetchConnectionByAddress } from "@/modules/directory/connections/api";
@@ -51,6 +51,7 @@ export default function AuthorPopover(props: Props) {
   const [editOpen, setEditOpen] = createSignal(false);
   const [dmOpen, setDmOpen] = createSignal(false);
   const [xchanHash, setXchanHash] = createSignal<string | null>(null);
+  const [pdesc, setPdesc] = createSignal<string>("");
   const [chatCreating, setChatCreating] = createSignal(false);
   const canHover = createMediaQuery("(hover: hover) and (pointer: fine)");
   const auth = useAuth();
@@ -76,8 +77,9 @@ export default function AuthorPopover(props: Props) {
 
     fetch(`/api/xchan?hash=${encodeURIComponent(props.url)}`, { credentials: "include" })
       .then(r => (r.ok ? r.json() : null))
-      .then((body: { data?: { is_connected?: boolean; xchan_hash?: string } } | null) => {
+      .then((body: { data?: { is_connected?: boolean; xchan_hash?: string; pdesc?: string } } | null) => {
         if (body?.data?.xchan_hash) setXchanHash(body.data.xchan_hash);
+        if (body?.data?.pdesc) setPdesc(body.data.pdesc);
         if (body?.data?.is_connected) {
           setConnState({ tag: "connected", conn: null });
           // Eagerly fetch full Connection for the edit modal
@@ -185,7 +187,7 @@ export default function AuthorPopover(props: Props) {
         {props.children}
         <Show when={open()}>
           <div
-            class="absolute left-0 top-full mt-2 z-50 w-64 bg-surface border border-rim
+            class="absolute left-0 top-full mt-2 z-50 w-80 bg-surface border border-rim
                    rounded-xl shadow-xl overflow-hidden"
             onMouseEnter={cancelClose}
             onMouseLeave={scheduleClose}
@@ -224,6 +226,10 @@ export default function AuthorPopover(props: Props) {
                 </div>
               </div>
 
+              <Show when={pdesc()}>
+                <p class="text-xs text-txt/70 line-clamp-3 mt-2 leading-snug">{pdesc()}</p>
+              </Show>
+
               {/* Connection details — only once the full Connection is loaded */}
               <Show when={cs().tag === "connected" && (cs() as { tag: "connected"; conn: Connection | null }).conn}>
                 {(_) => {
@@ -244,105 +250,83 @@ export default function AuthorPopover(props: Props) {
               </Show>
             </div>
 
-            {/* Actions */}
+            {/* Actions — single icon-only row */}
             <Show when={chanviewUrl() || (isLocal() && !isSelf())}>
-              <div class="px-3 pb-3 flex gap-2">
+              <div class="px-3 pb-3 flex gap-1.5 items-center">
                 <Show when={chanviewUrl()}>
                   <a
                     href={chanviewUrl()}
-                    class="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5
-                           border border-rim rounded-lg text-xs text-muted
+                    title={t("ui.view_profile")}
+                    class="w-8 h-8 flex items-center justify-center rounded-lg border border-rim text-muted
                            hover:border-accent hover:text-accent transition-colors"
                   >
-                    <MdOutlinePerson size={14} />
-                    <span>{t("ui.view_profile")}</span>
+                    <MdOutlinePerson size={16} />
                   </a>
                 </Show>
 
                 <Show when={isLocal() && !isSelf()}>
-                  {/* Checking connection status */}
                   <Show when={cs().tag === "loading"}>
-                    <button disabled class="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5
-                                           border border-rim rounded-lg text-xs text-muted cursor-default">
+                    <button disabled class="w-8 h-8 flex items-center justify-center rounded-lg border border-rim text-muted cursor-default">
                       <span class="w-3.5 h-3.5 border border-current border-t-transparent rounded-full animate-spin" />
                     </button>
                   </Show>
 
-                  {/* Not connected */}
                   <Show when={cs().tag === "not_connected"}>
                     <button
                       onClick={handleConnect}
-                      class="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5
-                             bg-accent text-accent-fg rounded-lg text-xs font-medium
+                      title={t("ui.connect")}
+                      class="w-8 h-8 flex items-center justify-center rounded-lg bg-accent text-accent-fg
                              hover:opacity-90 transition-opacity"
                     >
-                      <MdOutlinePerson_add size={14} />
-                      <span>{t("ui.connect")}</span>
+                      <MdOutlinePerson_add size={16} />
                     </button>
                   </Show>
 
-                  {/* Just connected (optimistic) */}
                   <Show when={cs().tag === "just_connected"}>
-                    <button disabled class="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5
-                                           border border-rim rounded-lg text-xs text-muted cursor-default">
-                      <span>{t("ui.connected_check")}</span>
+                    <button disabled title={t("ui.connected_check")}
+                      class="w-8 h-8 flex items-center justify-center rounded-lg border border-rim text-muted cursor-default">
+                      <MdOutlineCheck size={16} />
                     </button>
                   </Show>
 
-                  {/* Connected — edit (disabled until conn data arrives) */}
                   <Show when={cs().tag === "connected"}>
                     <button
                       onClick={handleEditClick}
                       disabled={!editReady()}
-                      title={!editReady() ? undefined : t("ui.edit_connection")}
-                      class="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5
-                             border border-rim rounded-lg text-xs text-muted
+                      title={t("ui.edit_connection")}
+                      class="w-8 h-8 flex items-center justify-center rounded-lg border border-rim text-muted
                              hover:border-accent hover:text-accent transition-colors
                              disabled:opacity-50 disabled:cursor-default disabled:hover:border-rim disabled:hover:text-muted"
                     >
-                      <Show
-                        when={editReady()}
-                        fallback={<span class="w-3.5 h-3.5 border border-current border-t-transparent rounded-full animate-spin" />}
-                      >
-                        <MdOutlineEdit size={14} />
+                      <Show when={editReady()} fallback={<span class="w-3.5 h-3.5 border border-current border-t-transparent rounded-full animate-spin" />}>
+                        <MdOutlineEdit size={16} />
                       </Show>
-                      <span>{t("ui.edit_connection")}</span>
+                    </button>
+                  </Show>
+
+                  <Show when={xchanHash()}>
+                    <button
+                      onClick={handleDm}
+                      title={t("ui.send_dm")}
+                      class="w-8 h-8 flex items-center justify-center rounded-lg border border-rim text-muted
+                             hover:border-accent hover:text-accent transition-colors"
+                    >
+                      <MdOutlineEmail size={16} />
+                    </button>
+                    <button
+                      onClick={handleStartChat}
+                      disabled={chatCreating()}
+                      title={t("ui.start_chatroom")}
+                      class="w-8 h-8 flex items-center justify-center rounded-lg border border-rim text-muted
+                             hover:border-accent hover:text-accent transition-colors
+                             disabled:opacity-50 disabled:cursor-default disabled:hover:border-rim disabled:hover:text-muted"
+                    >
+                      <Show when={!chatCreating()} fallback={<span class="w-3.5 h-3.5 border border-current border-t-transparent rounded-full animate-spin" />}>
+                        <MdOutlineChat_bubble size={16} />
+                      </Show>
                     </button>
                   </Show>
                 </Show>
-              </div>
-            </Show>
-
-            {/* Message actions */}
-            <Show when={isLocal() && !isSelf() && xchanHash()}>
-              <div class="px-3 pb-3 flex gap-2 border-t border-rim/40 pt-2">
-                <button
-                  onClick={handleDm}
-                  title={t("ui.send_dm")}
-                  class="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5
-                         border border-rim rounded-lg text-xs text-muted
-                         hover:border-accent hover:text-accent transition-colors"
-                >
-                  <MdOutlineMessage size={14} />
-                  <span>{t("ui.send_dm")}</span>
-                </button>
-                <button
-                  onClick={handleStartChat}
-                  disabled={chatCreating()}
-                  title={t("ui.start_chatroom")}
-                  class="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5
-                         border border-rim rounded-lg text-xs text-muted
-                         hover:border-accent hover:text-accent transition-colors
-                         disabled:opacity-50 disabled:cursor-default disabled:hover:border-rim disabled:hover:text-muted"
-                >
-                  <Show
-                    when={!chatCreating()}
-                    fallback={<span class="w-3.5 h-3.5 border border-current border-t-transparent rounded-full animate-spin" />}
-                  >
-                    <MdOutlineChat size={14} />
-                  </Show>
-                  <span>{t("ui.start_chatroom")}</span>
-                </button>
               </div>
             </Show>
           </div>

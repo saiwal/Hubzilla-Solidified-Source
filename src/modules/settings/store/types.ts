@@ -11,6 +11,7 @@ export interface DisplaySettings {
   font_family: "system" | "serif" | "monospace" | "nunito" | "saira" | "share-tech" | "playfair" | "libre-baskerville" | "comfortaa" | "space-mono" | "iosevka" | "righteous" | "playwrite-england" | "comic" | "opendyslexic";
   bg_url: string;
   bg_fit: "tile" | "cover";
+  scroll_style: "endless" | "load_more";
 }
 
 // ── Privacy ──────────────────────────────────────────────────────────────────

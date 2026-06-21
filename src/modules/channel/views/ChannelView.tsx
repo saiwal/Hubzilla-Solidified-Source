@@ -2,6 +2,7 @@
 import { createEffect, onCleanup, Show, For, Switch, Match } from "solid-js";
 import { useParams, useSearchParams, useNavigate } from "@solidjs/router";
 import { useI18n } from "@/i18n";
+import { useScrollStyle } from "@/shared/store/scroll-style";
 import {
   posts,
   loading,
@@ -47,6 +48,7 @@ export default function ChannelView() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { t } = useI18n();
+  const scrollStyle = useScrollStyle();
 
   const mid = () => {
     const v = searchParams.mid;
@@ -79,6 +81,7 @@ export default function ChannelView() {
 
   let sentinel!: HTMLDivElement;
   createEffect(() => {
+    if (scrollStyle() !== "endless") return;
     if (!sentinel) return;
     const observer = new IntersectionObserver(
       (entries) => {
@@ -161,6 +164,18 @@ export default function ChannelView() {
               <For each={Array(3).fill(0)}>{() => <FeedPlaceholder />}</For>
             </Match>
           </Switch>
+        </Show>
+
+        <Show when={hasMore() && !loadingMore() && scrollStyle() === "load_more"}>
+          <div class="flex justify-center py-4">
+            <button
+              onClick={loadMore}
+              class="px-4 py-2 text-sm font-medium rounded-lg border border-rim
+                     bg-surface text-muted hover:bg-overlay transition-colors"
+            >
+              {t("channel.load_more")}
+            </button>
+          </div>
         </Show>
       </Show>
 

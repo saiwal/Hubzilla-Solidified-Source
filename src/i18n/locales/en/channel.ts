@@ -3,6 +3,7 @@ import type { RawDictionary } from "../namespaces/types";
 export const channel: RawDictionary["channel"] = {
   no_posts:         "No posts yet.",
   all_caught_up:    "You're all caught up.",
+  load_more:        "Load more",
   filtered_by:      "Filtered by:",
   clear:            "Clear",
   new_post:         "post",

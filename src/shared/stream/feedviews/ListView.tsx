@@ -136,25 +136,27 @@ function ListRow(props: {
             onClick={() => props.onOpenModal()}
             class="flex-1 min-w-0 px-3 pt-2.5 pb-1.5 cursor-pointer space-y-0.5"
           >
-            <Show when={p.flags.includes("unseen")}>
-              <span class="inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-accent text-accent-fg leading-none">
-                New
-              </span>
-            </Show>
-            {/* title */}
-            <Show
-              when={p.title}
-              fallback={
-                <p class="text-sm font-semibold text-txt leading-snug line-clamp-1">
-                  {preview()}
-                </p>
-              }
-            >
-              <p
-                class="text-sm font-semibold text-txt leading-snug line-clamp-1"
-                innerHTML={DOMPurify.sanitize(p.title!)}
-              />
-            </Show>
+            {/* title + new badge on same line */}
+            <div class="flex items-center gap-1.5 min-w-0">
+              <Show when={p.flags.includes("unseen")}>
+                <span class="shrink-0 inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-accent text-accent-fg leading-none">
+                  New
+                </span>
+              </Show>
+              <Show
+                when={p.title}
+                fallback={
+                  <p class="text-sm font-semibold text-txt leading-snug line-clamp-1 min-w-0">
+                    {preview()}
+                  </p>
+                }
+              >
+                <p
+                  class="text-sm font-semibold text-txt leading-snug line-clamp-1 min-w-0"
+                  innerHTML={DOMPurify.sanitize(p.title!)}
+                />
+              </Show>
+            </div>
 
             {/* preview — only shown when there's a title */}
             <Show when={p.title && preview()}>
