@@ -654,7 +654,7 @@ export default function PostCard(props: {
           </Show>
 
           <button
-            onClick={() => { setReplyOpen((v) => !v); if (!showComments()) toggleComments(); }}
+            onClick={() => setReplyOpen((v) => !v)}
             class="ml-auto flex items-center gap-1 px-2 py-1 rounded-md text-xs
                    text-subtle hover:bg-overlay hover:text-txt transition-colors"
           >
@@ -1159,7 +1159,7 @@ export default function PostCard(props: {
 
         {/* ── Reply: always visible ── */}
         <button
-          onClick={() => { setReplyOpen((v) => !v); if (!showComments()) toggleComments(); }}
+          onClick={() => setReplyOpen((v) => !v)}
           class="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
                  text-muted hover:bg-overlay hover:text-txt transition-colors"
           title={t("post.reply")}
