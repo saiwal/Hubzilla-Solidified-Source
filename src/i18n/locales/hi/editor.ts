@@ -116,4 +116,20 @@ export const editor: RawDictionary["editor"] = {
   hq_mention: "उल्लेख",
   hq_hashtag: "हैशटैग",
   open_full_composer: "पूरा कंपोज़र खोलें",
+
+  // CameraCapture
+  cam_title:        "कैमरा",
+  cam_photo:        "फ़ोटो",
+  cam_video:        "वीडियो",
+  cam_capture:      "खींचें",
+  cam_record:       "रिकॉर्ड शुरू करें",
+  cam_stop:         "रिकॉर्ड रोकें",
+  cam_retake:       "दोबारा लें",
+  cam_attach:       "पोस्ट में जोड़ें",
+  cam_edit:         "संपादित करें",
+  cam_starting:     "कैमरा शुरू हो रहा है…",
+  cam_recording:    "रिकॉर्ड",
+  cam_error_access: "कैमरे की अनुमति नहीं मिली या यह उपकरण पर उपलब्ध नहीं है।",
+  cam_retry:        "दोबारा कोशिश करें",
+  cam_btn_title:    "फ़ोटो या वीडियो कैप्चर करें",
 };

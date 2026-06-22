@@ -125,4 +125,20 @@ export const editor = {
   hq_mention: "Mention",
   hq_hashtag: "Hashtag",
   open_full_composer: "Open full composer",
+
+  // CameraCapture
+  cam_title:        "Camera",
+  cam_photo:        "Photo",
+  cam_video:        "Video",
+  cam_capture:      "Capture",
+  cam_record:       "Start recording",
+  cam_stop:         "Stop recording",
+  cam_retake:       "Retake",
+  cam_attach:       "Attach to post",
+  cam_edit:         "Edit",
+  cam_starting:     "Starting camera…",
+  cam_recording:    "REC",
+  cam_error_access: "Camera access was denied or is unavailable on this device.",
+  cam_retry:        "Try again",
+  cam_btn_title:    "Capture photo or video",
 } as const;

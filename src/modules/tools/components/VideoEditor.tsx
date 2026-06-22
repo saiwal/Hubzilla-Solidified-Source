@@ -1,4 +1,4 @@
-import { createSignal, onCleanup, Show, For } from "solid-js";
+import { createSignal, onCleanup, onMount, Show, For } from "solid-js";
 import { useI18n } from "@/i18n";
 import { currentNick } from "@/shared/store/auth-store";
 import { davDirPath, uploadFile, listFolder, type FileMeta } from "@/modules/files/api";
@@ -117,7 +117,12 @@ const ROTATE_KEY: Record<Rotate, "tools.vid_rot_none" | "tools.vid_rot_90cw" | "
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export function VideoEditor() {
+interface VideoEditorProps {
+  initialFile?: File;
+  onAttach?: (file: File) => void;
+}
+
+export function VideoEditor(props: VideoEditorProps = {}) {
   const { t } = useI18n();
   const s = (key: Parameters<typeof t>[0]) => String(t(key));
 
@@ -165,6 +170,10 @@ export function VideoEditor() {
   onCleanup(() => {
     const src = videoSrc(); if (src) URL.revokeObjectURL(src);
     const res = resultUrl(); if (res) URL.revokeObjectURL(res);
+  });
+
+  onMount(() => {
+    if (props.initialFile) openFile(props.initialFile);
   });
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -584,9 +593,24 @@ export function VideoEditor() {
                     </Show>
                     <div class="flex items-center justify-between flex-wrap gap-3">
                       <span class="text-xs text-muted">{s("tools.vid_result_size")}: {fmtBytes(resultBlob()!.size)}</span>
-                      <button onClick={download} class={btnPrimary}>
-                        {resultIsAudio() ? s("tools.vid_download_mp3") : s("tools.vid_download")}
-                      </button>
+                      <div class="flex gap-2 flex-wrap">
+                        <Show when={props.onAttach}>
+                          <button
+                            onClick={() => {
+                              const blob = resultBlob();
+                              if (!blob || !props.onAttach) return;
+                              const ext = resultIsAudio() ? "mp3" : "mp4";
+                              props.onAttach(new File([blob], saveFileName() || `video-edited.${ext}`, { type: blob.type }));
+                            }}
+                            class={btnPrimary}
+                          >
+                            {s("editor.cam_attach")}
+                          </button>
+                        </Show>
+                        <button onClick={download} class={props.onAttach ? btnOutline : btnPrimary}>
+                          {resultIsAudio() ? s("tools.vid_download_mp3") : s("tools.vid_download")}
+                        </button>
+                      </div>
                     </div>
 
                     {/* Save to cloud files */}

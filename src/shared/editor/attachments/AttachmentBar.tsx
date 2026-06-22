@@ -13,6 +13,8 @@ import { useI18n } from "@/i18n";
 
 // Lazy-load the picker — only fetched when user clicks "Browse existing"
 const FilePickerModal = lazy(() => import("./picker/FilePickerModal"));
+// Lazy-load the camera capture modal
+const CameraCapture = lazy(() => import("./CameraCapture"));
 
 export type AttachmentAccept = "files" | "photos" | "both";
 
@@ -27,6 +29,7 @@ interface Props {
 const AttachmentBar: Component<Props> = (props) => {
   const { t } = useI18n();
   const [pickerOpen, setPickerOpen] = createSignal(false);
+  const [cameraOpen, setCameraOpen] = createSignal(false);
   const [dragging, setDragging] = createSignal(false);
   let fileInputRef: HTMLInputElement | undefined;
 
@@ -109,6 +112,23 @@ const AttachmentBar: Component<Props> = (props) => {
           {t("editor.attach_browse")}
         </button>
 
+        {/* Camera capture */}
+        <button
+          type="button"
+          title={t("editor.cam_btn_title")}
+          onClick={() => setCameraOpen(true)}
+          class="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs text-muted
+                 hover:text-txt hover:bg-elevated border border-rim transition-colors"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          {t("editor.cam_title")}
+        </button>
+
         {/* Drag hint */}
         <Show when={dragging()}>
           <span class="text-xs text-accent ml-1">{t("editor.drop_files")}</span>
@@ -160,6 +180,16 @@ const AttachmentBar: Component<Props> = (props) => {
           onSelectPhotos={(photos: Photo[]) => {
             props.store.addPhotos(photos);
             setPickerOpen(false);
+          }}
+        />
+      </Show>
+
+      {/* Camera capture modal (lazy) */}
+      <Show when={cameraOpen()}>
+        <CameraCapture
+          onClose={() => setCameraOpen(false)}
+          onCapture={(files) => {
+            props.store.addUploads(files);
           }}
         />
       </Show>

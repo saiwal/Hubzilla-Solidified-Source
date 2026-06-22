@@ -436,6 +436,21 @@ export type RawDictionary = {
     hq_mention: string;
     hq_hashtag: string;
     open_full_composer: string;
+    // CameraCapture
+    cam_title:        string;
+    cam_photo:        string;
+    cam_video:        string;
+    cam_capture:      string;
+    cam_record:       string;
+    cam_stop:         string;
+    cam_retake:       string;
+    cam_attach:       string;
+    cam_edit:         string;
+    cam_starting:     string;
+    cam_recording:    string;
+    cam_error_access: string;
+    cam_retry:        string;
+    cam_btn_title:    string;
   };
   profiles: {
     title:             string;

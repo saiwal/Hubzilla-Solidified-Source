@@ -1,3 +1,4 @@
+import { Show } from "solid-js";
 import { MdOutlineLink, MdOutlineVpn_key, MdOutlineImage } from "solid-icons/md";
 
 interface Props {
@@ -173,20 +174,22 @@ export default function BBCodeToolbar(props: Props) {
 
   return (
     <div class="flex flex-wrap items-center gap-0.5 px-2 py-1 bg-surface border-b border-rim border-dashed">
-      <span class="text-[10px] text-muted mr-1 select-none font-mono">BBCode</span>
 
-      {/* Basic formatting */}
-      <Btn title="Bold [b]" onPress={bold}><strong class="text-xs">B</strong></Btn>
-      <Btn title="Italic [i]" onPress={italic}><em class="text-xs">I</em></Btn>
-      <Btn title="Underline [u]" onPress={underline}><span class="underline text-xs">U</span></Btn>
-      <Btn title="Strikethrough [s]" onPress={strike}><span class="line-through text-xs">S</span></Btn>
-      <Btn title="Highlight [hl]" onPress={highlight}>
-        <span class="text-xs bg-yellow-300 text-yellow-900 px-0.5 rounded-sm leading-tight">HL</span>
-      </Btn>
+      {/* Basic formatting — source mode only; wysiwyg gets these from EditorToolbar */}
+      <Show when={isSource()}>
+        <Btn title="Bold [b]" onPress={bold}><strong class="text-xs">B</strong></Btn>
+        <Btn title="Italic [i]" onPress={italic}><em class="text-xs">I</em></Btn>
+        <Btn title="Underline [u]" onPress={underline}><span class="underline text-xs">U</span></Btn>
+        <Btn title="Strikethrough [s]" onPress={strike}><span class="line-through text-xs">S</span></Btn>
+        <Btn title="Highlight [hl]" onPress={highlight}>
+          <span class="text-xs bg-yellow-300 text-yellow-900 px-0.5 rounded-sm leading-tight">HL</span>
+        </Btn>
+        <Sep />
+        <Btn title="Link [url=X]" onPress={link}><MdOutlineLink class="w-4 h-4" /></Btn>
+        <Sep />
+      </Show>
 
-      <Sep />
-
-      {/* Text styling */}
+      {/* Text styling — BBCode-specific */}
       <Btn title="Text color [color=X]" onPress={color}>
         <span class="text-xs font-bold" style="color:#e74c3c;">A</span>
       </Btn>
@@ -207,8 +210,7 @@ export default function BBCodeToolbar(props: Props) {
 
       <Sep />
 
-      {/* Links */}
-      <Btn title="Link [url=X]" onPress={link}><MdOutlineLink class="w-4 h-4" /></Btn>
+      {/* Magic-auth links — BBCode-specific */}
       <Btn title="Magic-auth link [zrl=X]" onPress={zrl}><MdOutlineVpn_key class="w-4 h-4" /></Btn>
 
       <Sep />
@@ -224,6 +226,8 @@ export default function BBCodeToolbar(props: Props) {
       {/* Structure */}
       <Btn title="Insert table [table]" onPress={table}><span class="text-xs">⊞</span></Btn>
       <Btn title="Spoiler [spoiler]" onPress={spoiler}><span class="text-xs">◢</span></Btn>
+
+      <span class="text-[10px] text-muted ml-auto select-none font-mono">BBCode</span>
     </div>
   );
 }
