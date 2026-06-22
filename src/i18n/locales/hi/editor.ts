@@ -118,6 +118,8 @@ export const editor: RawDictionary["editor"] = {
   open_full_composer: "पूरा कंपोज़र खोलें",
 
   // CameraCapture
+  cam_audio:        "ऑडियो",
+  cam_audio_ready:  "रिकॉर्ड करने के लिए टैप करें",
   cam_title:        "कैमरा",
   cam_photo:        "फ़ोटो",
   cam_video:        "वीडियो",

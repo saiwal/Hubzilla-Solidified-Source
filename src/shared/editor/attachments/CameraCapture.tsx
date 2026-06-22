@@ -9,7 +9,7 @@ import { useI18n } from "@/i18n";
 import SharedImageEditor from "@/shared/views/ImageEditor";
 import { VideoEditor } from "@/modules/tools/components/VideoEditor";
 
-type Mode  = "photo" | "video";
+type Mode  = "photo" | "video" | "audio";
 type Stage = "initializing" | "streaming" | "captured" | "editing" | "editing-video" | "error";
 
 interface Props {
@@ -33,20 +33,24 @@ const CameraCapture: Component<Props> = (props) => {
   let recorder: MediaRecorder | null = null;
   let chunks: Blob[] = [];
 
-  // ── Camera lifecycle ─────────────────────────────────────────────────────────
+  // ── Camera / mic lifecycle ───────────────────────────────────────────────────
 
   async function startCamera(m: Mode) {
     stopCamera();
     setStage("initializing");
     setErrorMsg("");
     try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-        audio: m === "video",
-      });
-      if (videoRef) {
-        videoRef.srcObject = stream;
-        await videoRef.play();
+      if (m === "audio") {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } else {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" },
+          audio: m === "video",
+        });
+        if (videoRef) {
+          videoRef.srcObject = stream;
+          await videoRef.play();
+        }
       }
       setStage("streaming");
     } catch (err) {
@@ -110,26 +114,34 @@ const CameraCapture: Component<Props> = (props) => {
     }, "image/jpeg", 0.92);
   }
 
-  // ── Video recording ──────────────────────────────────────────────────────────
+  // ── Recording (video + audio) ────────────────────────────────────────────────
 
   function startRecording() {
     if (!stream) return;
     chunks = [];
 
-    let mime = "video/webm";
-    for (const m of ["video/mp4;codecs=avc1,mp4a.40.2", "video/mp4", "video/webm;codecs=vp9", "video/webm"]) {
-      if (MediaRecorder.isTypeSupported(m)) { mime = m; break; }
+    let mime: string;
+    if (mode() === "audio") {
+      mime =
+        MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" :
+        MediaRecorder.isTypeSupported("audio/ogg;codecs=opus")  ? "audio/ogg;codecs=opus"  :
+        "audio/webm";
+    } else {
+      mime = "video/webm";
+      for (const m of ["video/mp4;codecs=avc1,mp4a.40.2", "video/mp4", "video/webm;codecs=vp9", "video/webm"]) {
+        if (MediaRecorder.isTypeSupported(m)) { mime = m; break; }
+      }
     }
 
     try {
       recorder = new MediaRecorder(stream, { mimeType: mime });
     } catch {
       recorder = new MediaRecorder(stream);
-      mime = recorder.mimeType || "video/webm";
+      mime = recorder.mimeType || (mode() === "audio" ? "audio/webm" : "video/webm");
     }
 
     recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
-    recorder.onstop = () => finishRecording(mime);
+    recorder.onstop  = () => finishRecording(mime);
     recorder.onerror = () => { if (chunks.length > 0) finishRecording(mime); else startCamera(mode()); };
     recorder.start(100);
     setRecording(true);
@@ -142,8 +154,12 @@ const CameraCapture: Component<Props> = (props) => {
 
   function finishRecording(mime: string) {
     const blob = new Blob(chunks, { type: mime });
-    const ext  = mime.includes("webm") ? "webm" : "mp4";
-    const file = new File([blob], `video-${Date.now()}.${ext}`, { type: mime });
+    const isAudio = mode() === "audio" || mime.startsWith("audio/");
+    const ext = isAudio
+      ? (mime.includes("ogg") ? "ogg" : "webm")
+      : (mime.includes("webm") ? "webm" : "mp4");
+    const prefix = isAudio ? "audio" : "video";
+    const file = new File([blob], `${prefix}-${Date.now()}.${ext}`, { type: mime });
     stopCamera();
     setCapturedFile(file);
     setCapturedUrl(URL.createObjectURL(blob));
@@ -210,7 +226,6 @@ const CameraCapture: Component<Props> = (props) => {
       <Show when={stage() === "editing-video" && capturedFile()}>
         <Portal mount={document.body}>
           <div class="fixed inset-0 z-[1000] flex flex-col bg-surface overflow-y-auto">
-            {/* Header with back button */}
             <div class="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 border-b border-rim bg-surface">
               <button
                 type="button"
@@ -261,7 +276,7 @@ const CameraCapture: Component<Props> = (props) => {
               {/* Mode switcher */}
               <Show when={stage() !== "captured"}>
                 <div class="flex border-b border-rim">
-                  {(["photo", "video"] as Mode[]).map((m) => (
+                  {(["photo", "video", "audio"] as Mode[]).map((m) => (
                     <button
                       type="button"
                       onClick={() => switchMode(m)}
@@ -272,16 +287,20 @@ const CameraCapture: Component<Props> = (props) => {
                           : "text-muted hover:text-txt hover:bg-elevated")
                       }
                     >
-                      {m === "photo" ? String(t("editor.cam_photo")) : String(t("editor.cam_video"))}
+                      {m === "photo"
+                        ? String(t("editor.cam_photo"))
+                        : m === "video"
+                          ? String(t("editor.cam_video"))
+                          : String(t("editor.cam_audio"))}
                     </button>
                   ))}
                 </div>
               </Show>
 
-              {/* Camera view / preview */}
+              {/* Camera view / audio UI / preview */}
               <div class="relative bg-black aspect-[4/3] w-full flex items-center justify-center">
 
-                {/* Live video (hidden while captured) */}
+                {/* Live video (hidden in audio mode or when captured) */}
                 <video
                   ref={videoRef}
                   autoplay
@@ -289,28 +308,60 @@ const CameraCapture: Component<Props> = (props) => {
                   muted
                   class={
                     "w-full h-full object-cover " +
-                    (stage() === "captured" ? "hidden" : "")
+                    (stage() === "captured" || mode() === "audio" ? "hidden" : "")
                   }
                 />
 
-                {/* Captured preview */}
-                <Show when={stage() === "captured" && capturedUrl()}>
-                  <Show
-                    when={mode() === "photo"}
-                    fallback={
-                      <video
-                        src={capturedUrl()!}
-                        controls
-                        class="w-full h-full object-contain"
-                      />
-                    }
-                  >
-                    <img
-                      src={capturedUrl()!}
-                      alt="Captured photo"
-                      class="w-full h-full object-contain"
-                    />
-                  </Show>
+                {/* Audio mode: mic UI (streaming state) */}
+                <Show when={mode() === "audio" && stage() === "streaming"}>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center gap-5">
+                    <div class="relative flex items-center justify-center">
+                      <Show when={recording()}>
+                        <div class="absolute w-24 h-24 rounded-full bg-red-500/20 animate-ping" />
+                      </Show>
+                      <div class={
+                        "w-20 h-20 rounded-full flex items-center justify-center transition-colors " +
+                        (recording() ? "bg-red-500/30" : "bg-white/10")
+                      }>
+                        <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                          <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <Show when={!recording()}>
+                      <p class="text-sm text-white/50">{String(t("editor.cam_audio_ready"))}</p>
+                    </Show>
+                  </div>
+                </Show>
+
+                {/* Captured photo preview */}
+                <Show when={stage() === "captured" && capturedUrl() && mode() === "photo"}>
+                  <img
+                    src={capturedUrl()!}
+                    alt="Captured photo"
+                    class="w-full h-full object-contain"
+                  />
+                </Show>
+
+                {/* Captured video preview */}
+                <Show when={stage() === "captured" && capturedUrl() && mode() === "video"}>
+                  <video
+                    src={capturedUrl()!}
+                    controls
+                    class="w-full h-full object-contain"
+                  />
+                </Show>
+
+                {/* Captured audio preview */}
+                <Show when={stage() === "captured" && capturedUrl() && mode() === "audio"}>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center gap-5 px-6">
+                    <svg class="w-12 h-12 text-green-400 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                      <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
+                    <audio src={capturedUrl()!} controls class="w-full" />
+                  </div>
                 </Show>
 
                 {/* Initializing overlay */}
@@ -342,7 +393,7 @@ const CameraCapture: Component<Props> = (props) => {
                 </Show>
 
                 {/* Recording indicator */}
-                <Show when={recording()}>
+                <Show when={recording() && mode() !== "audio"}>
                   <div class="absolute top-3 left-3 flex items-center gap-1.5 bg-black/60 rounded-full px-2 py-0.5">
                     <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                     <span class="text-xs text-white font-medium">{String(t("editor.cam_recording"))}</span>
@@ -389,13 +440,15 @@ const CameraCapture: Component<Props> = (props) => {
                     <button type="button" onClick={attach} class={btnPrimary}>
                       {String(t("editor.cam_attach"))}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => mode() === "photo" ? openEditor() : openVideoEditor()}
-                      class={btnOutline}
-                    >
-                      {String(t("editor.cam_edit"))}
-                    </button>
+                    <Show when={mode() !== "audio"}>
+                      <button
+                        type="button"
+                        onClick={() => mode() === "photo" ? openEditor() : openVideoEditor()}
+                        class={btnOutline}
+                      >
+                        {String(t("editor.cam_edit"))}
+                      </button>
+                    </Show>
                     <button type="button" onClick={retake} class={btnOutline}>
                       {String(t("editor.cam_retake"))}
                     </button>

@@ -15,6 +15,8 @@ type DraftAttachment = {
   source: Attachment["source"];
   filename: string;
   isImage: boolean;
+  isVideo: boolean;
+  isAudio: boolean;
   hash?: string;
   resourceId?: string;
   insertUrl?: string;
@@ -28,6 +30,8 @@ function toSerializable(a: Attachment): DraftAttachment {
     source: a.source,
     filename: a.filename,
     isImage: a.isImage,
+    isVideo: a.isVideo,
+    isAudio: a.isAudio,
     hash: a.hash,
     resourceId: a.resourceId,
     insertUrl: a.insertUrl,
@@ -53,6 +57,22 @@ function isImageMime(mime: string): boolean {
 
 function isImageFilename(name: string): boolean {
   return /\.(jpe?g|png|gif|webp|avif|svg)$/i.test(name);
+}
+
+function isVideoMime(mime: string): boolean {
+  return mime.startsWith("video/");
+}
+
+function isVideoFilename(name: string): boolean {
+  return /\.(mp4|webm|ogv?|mov|avi|mkv|m4v|ts|mts|wmv|flv)$/i.test(name);
+}
+
+function isAudioMime(mime: string): boolean {
+  return mime.startsWith("audio/");
+}
+
+function isAudioFilename(name: string): boolean {
+  return /\.(mp3|ogg|oga|wav|flac|aac|m4a|opus)$/i.test(name);
 }
 
 function uid(): string {
@@ -119,6 +139,8 @@ export function createAttachmentStore(nick: string, scope: string): AttachmentSt
       progress: 0,
       filename: file.name,
       isImage: isImageMime(file.type) || isImageFilename(file.name),
+      isVideo: isVideoMime(file.type) || isVideoFilename(file.name),
+      isAudio: isAudioMime(file.type) || isAudioFilename(file.name),
       thumbUrl: isImageMime(file.type) ? URL.createObjectURL(file) : undefined,
       file,
     }));
@@ -166,6 +188,8 @@ export function createAttachmentStore(nick: string, scope: string): AttachmentSt
       progress: 100,
       filename: f.filename,
       isImage: f.is_photo || isImageFilename(f.filename),
+      isVideo: isVideoFilename(f.filename),
+      isAudio: isAudioFilename(f.filename),
       hash: f.hash,
       insertUrl: `/cloud/${nick}/${f.display_path
         .split("/")
@@ -186,6 +210,8 @@ export function createAttachmentStore(nick: string, scope: string): AttachmentSt
       progress: 100,
       filename: p.filename,
       isImage: true,
+      isVideo: false,
+      isAudio: false,
       thumbUrl: p.src,
       insertUrl: toRelativePath(p.src),
       resourceId: p.resource_id,
@@ -217,6 +243,8 @@ export function createAttachmentStore(nick: string, scope: string): AttachmentSt
         ? `[img alt="${alt}"]${item.insertUrl}[/img]`
         : `[img]${item.insertUrl}[/img]`;
     }
+    if (item.isVideo) return `[video]${item.insertUrl}[/video]`;
+    if (item.isAudio) return `[audio]${item.insertUrl}[/audio]`;
     return `[attachment]${item.insertUrl}[/attachment]`;
   }
 

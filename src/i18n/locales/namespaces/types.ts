@@ -440,6 +440,8 @@ export type RawDictionary = {
     cam_title:        string;
     cam_photo:        string;
     cam_video:        string;
+    cam_audio:        string;
+    cam_audio_ready:  string;
     cam_capture:      string;
     cam_record:       string;
     cam_stop:         string;

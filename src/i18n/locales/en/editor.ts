@@ -130,6 +130,8 @@ export const editor = {
   cam_title:        "Camera",
   cam_photo:        "Photo",
   cam_video:        "Video",
+  cam_audio:        "Audio",
+  cam_audio_ready:  "Tap record to start",
   cam_capture:      "Capture",
   cam_record:       "Start recording",
   cam_stop:         "Stop recording",

@@ -117,8 +117,8 @@ const AttachmentPreview: Component<Props> = (props) => {
         </button>
       </Show>
 
-      {/* Insert button — only for ready images */}
-      <Show when={!isUploading() && !isError() && a().isImage && props.onInsert}>
+      {/* Insert button — for ready images, videos, and audio */}
+      <Show when={!isUploading() && !isError() && (a().isImage || a().isVideo || a().isAudio) && props.onInsert}>
         <button
           type="button"
           title={t("editor.insert_into_editor")}

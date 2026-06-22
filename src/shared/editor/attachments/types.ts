@@ -11,6 +11,8 @@ export interface Attachment {
   progress: number;
   filename: string;
   isImage: boolean;
+  isVideo: boolean;
+  isAudio: boolean;
   thumbUrl?: string;
   insertUrl?: string;
   hash?: string;
