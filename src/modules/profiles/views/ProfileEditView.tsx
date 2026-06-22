@@ -231,22 +231,20 @@ export default function ProfileEditView() {
             {/* Profile identity */}
             <Section title={t("profiles.group_basic")}>
               <Field label={t("profiles.profile_name_label")} hint={t("profiles.profile_name_hint")}>
-                <input type="text" name="profile_name" value={p().profile_name} class={inputClass} />
+                <input type="text" name="profile_name" value={p().profile_name ?? ""} class={inputClass} />
               </Field>
               <Field label={t("profiles.fullname")}>
-                <input type="text" name="fullname" value={p().fullname} class={inputClass} />
+                <input type="text" name="fullname" value={p().fullname ?? ""} class={inputClass} />
               </Field>
               <Field label={t("profiles.pdesc")}>
-                <input type="text" name="pdesc" value={p().pdesc}
+                <input type="text" name="pdesc" value={p().pdesc ?? ""}
                   placeholder={t("profiles.pdesc_placeholder")} class={inputClass} />
               </Field>
               <Field label={t("profiles.about")} hint={t("profiles.about_hint")}>
-                <textarea name="about" rows="4" class={`${inputClass} resize-y`}>
-                  {p().about}
-                </textarea>
+                <textarea name="about" rows="4" class={`${inputClass} resize-y`} value={p().about ?? ""} />
               </Field>
               <Field label={t("profiles.keywords")} hint={t("profiles.keywords_hint")}>
-                <input type="text" name="keywords" value={p().keywords} class={inputClass} />
+                <input type="text" name="keywords" value={p().keywords ?? ""} class={inputClass} />
               </Field>
               <Toggle
                 name="hide_friends"
@@ -259,28 +257,28 @@ export default function ProfileEditView() {
             <Section title={t("profiles.group_personal")}>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label={t("profiles.gender")}>
-                  <input type="text" name="gender" value={p().gender} class={inputClass} />
+                  <input type="text" name="gender" value={p().gender ?? ""} class={inputClass} />
                 </Field>
                 <Field label={t("profiles.dob")} hint={t("profiles.dob_hint")}>
-                  <input type="text" name="dob" value={p().dob} class={inputClass} />
+                  <input type="text" name="dob" value={p().dob === "0000-00-00" ? "" : (p().dob ?? "")} class={inputClass} />
                 </Field>
                 <Field label={t("profiles.hometown")}>
-                  <input type="text" name="hometown" value={p().hometown} class={inputClass} />
+                  <input type="text" name="hometown" value={p().hometown ?? ""} class={inputClass} />
                 </Field>
                 <Field label={t("profiles.homepage")}>
-                  <input type="url" name="homepage" value={p().homepage} class={inputClass} />
+                  <input type="url" name="homepage" value={p().homepage ?? ""} class={inputClass} />
                 </Field>
                 <Field label={t("profiles.marital")}>
-                  <input type="text" name="marital" value={p().marital} class={inputClass} />
+                  <input type="text" name="marital" value={p().marital ?? ""} class={inputClass} />
                 </Field>
                 <Field label={t("profiles.sexual")}>
-                  <input type="text" name="sexual" value={p().sexual} class={inputClass} />
+                  <input type="text" name="sexual" value={p().sexual ?? ""} class={inputClass} />
                 </Field>
                 <Field label={t("profiles.politic")}>
-                  <input type="text" name="politic" value={p().politic} class={inputClass} />
+                  <input type="text" name="politic" value={p().politic ?? ""} class={inputClass} />
                 </Field>
                 <Field label={t("profiles.religion")}>
-                  <input type="text" name="religion" value={p().religion} class={inputClass} />
+                  <input type="text" name="religion" value={p().religion ?? ""} class={inputClass} />
                 </Field>
               </div>
             </Section>
@@ -289,16 +287,16 @@ export default function ProfileEditView() {
             <Section title={t("profiles.group_interests")}>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label={t("profiles.interest")}>
-                  <input type="text" name="interest" value={p().interest} class={inputClass} />
+                  <input type="text" name="interest" value={p().interest ?? ""} class={inputClass} />
                 </Field>
                 <Field label={t("profiles.romance")}>
-                  <input type="text" name="romance" value={p().romance} class={inputClass} />
+                  <input type="text" name="romance" value={p().romance ?? ""} class={inputClass} />
                 </Field>
                 <Field label={t("profiles.likes")}>
-                  <input type="text" name="likes" value={p().likes} class={inputClass} />
+                  <input type="text" name="likes" value={p().likes ?? ""} class={inputClass} />
                 </Field>
                 <Field label={t("profiles.dislikes")}>
-                  <input type="text" name="dislikes" value={p().dislikes} class={inputClass} />
+                  <input type="text" name="dislikes" value={p().dislikes ?? ""} class={inputClass} />
                 </Field>
               </div>
             </Section>
@@ -307,16 +305,16 @@ export default function ProfileEditView() {
             <Section title={t("profiles.group_culture")}>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label={t("profiles.music")}>
-                  <input type="text" name="music" value={p().music} class={inputClass} />
+                  <input type="text" name="music" value={p().music ?? ""} class={inputClass} />
                 </Field>
                 <Field label={t("profiles.book")}>
-                  <input type="text" name="book" value={p().book} class={inputClass} />
+                  <input type="text" name="book" value={p().book ?? ""} class={inputClass} />
                 </Field>
                 <Field label={t("profiles.tv")}>
-                  <input type="text" name="tv" value={p().tv} class={inputClass} />
+                  <input type="text" name="tv" value={p().tv ?? ""} class={inputClass} />
                 </Field>
                 <Field label={t("profiles.film")}>
-                  <input type="text" name="film" value={p().film} class={inputClass} />
+                  <input type="text" name="film" value={p().film ?? ""} class={inputClass} />
                 </Field>
               </div>
             </Section>
@@ -325,10 +323,10 @@ export default function ProfileEditView() {
             <Section title={t("profiles.group_work")}>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label={t("profiles.employment")}>
-                  <input type="text" name="employment" value={p().employment} class={inputClass} />
+                  <input type="text" name="employment" value={p().employment ?? ""} class={inputClass} />
                 </Field>
                 <Field label={t("profiles.education")}>
-                  <input type="text" name="education" value={p().education} class={inputClass} />
+                  <input type="text" name="education" value={p().education ?? ""} class={inputClass} />
                 </Field>
               </div>
             </Section>
@@ -336,10 +334,10 @@ export default function ProfileEditView() {
             {/* Contact */}
             <Section title={t("profiles.group_contact")}>
               <Field label={t("profiles.contact")}>
-                <input type="text" name="contact" value={p().contact} class={inputClass} />
+                <input type="text" name="contact" value={p().contact ?? ""} class={inputClass} />
               </Field>
               <Field label={t("profiles.channels")}>
-                <input type="text" name="channels" value={p().channels} class={inputClass} />
+                <input type="text" name="channels" value={p().channels ?? ""} class={inputClass} />
               </Field>
             </Section>
 

@@ -72,7 +72,7 @@ export default function NoteComposer(props: Props) {
         onTabChange={store.setTab}
         mimetype={store.mimetype()}
         onCtrlEnter={() => void store.submit()}
-        placeholder={t("notes.placeholder")}
+        placeholder={t("notepad.placeholder")}
         minHeight="120px"
       />
 
@@ -94,7 +94,7 @@ export default function NoteComposer(props: Props) {
             class="px-3 py-1.5 text-sm rounded-lg border border-rim text-muted
                    hover:bg-elevated transition-colors"
           >
-            {t("notes.cancel")}
+            {t("notepad.cancel")}
           </button>
         </Show>
 
@@ -105,7 +105,7 @@ export default function NoteComposer(props: Props) {
           class="px-4 py-1.5 text-sm font-medium rounded-lg bg-accent text-accent-fg
                  hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
         >
-          {store.submitting() ? t("notes.saving") : t("notes.save_btn")}
+          {store.submitting() ? t("notepad.saving") : t("notepad.save_btn")}
         </button>
       </div>
     </div>

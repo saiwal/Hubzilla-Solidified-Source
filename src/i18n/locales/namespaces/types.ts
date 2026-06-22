@@ -19,7 +19,7 @@ export type RawDictionary = {
     admin:         string;
     webpages:      string;
     wiki:          string;
-    notes:         string;
+    notepad:       string;
     tools:         string;
     // action items
     profile:       string;
@@ -241,6 +241,23 @@ export type RawDictionary = {
     pw_fair:          string;
     pw_strong:        string;
     pw_very_strong:   string;
+    // Image Editor
+    img:              string;
+    img_drop:         string;
+    img_download:     string;
+    img_edit_another: string;
+    img_edit_again:   string;
+    img_from_photos:  string;
+    img_loading:      string;
+    img_no_photos:    string;
+    img_pick_album:   string;
+    img_new_album:    string;
+    img_new_album_ph: string;
+    img_save_to_photos: string;
+    img_saving:       string;
+    img_saved:        string;
+    img_save_error:   string;
+    img_photos:       string;
   };
   post: {
     like: string; dislike: string; repeat: string; reshare_with_comment: string;
@@ -1090,7 +1107,7 @@ export type RawDictionary = {
     title_placeholder: string;
     saving_failed:    string;
   };
-  notes: {
+  notepad: {
     title:            string;
     no_notes:         string;
     create_first:     string;

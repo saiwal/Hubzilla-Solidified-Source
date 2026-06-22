@@ -37,7 +37,7 @@ registerModule({
     path: "/admin",
     href: "/admin",
     context: ["admin"],
-		hidden: true,
+    hidden: true,
   },
   slots: {},
 });

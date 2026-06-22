@@ -1,65 +1,35 @@
-import { createMemo, For } from "solid-js";
+import { createMemo } from "solid-js";
 import { Dynamic } from "solid-js/web";
+import { useLocation } from "@solidjs/router";
 import { useI18n } from "@/i18n";
-import { activeTool, setActiveTool } from "../store";
+import SubPageLayout from "@/shared/views/SubPageLayout";
+import type { SubPageItem } from "@/shared/views/SubPageLayout";
 import { TOOLS } from "../tools-registry";
 
-export function ToolsPage() {
+export default function ToolsPage() {
   const { t } = useI18n();
+  const location = useLocation();
 
-  const activeEntry = createMemo(
-    () => TOOLS.find((tool) => tool.id === activeTool()) ?? TOOLS[0]
+  const items: SubPageItem[] = TOOLS.map((tool) => ({
+    path: tool.id,
+    label: () => String(t(tool.labelKey)),
+    icon: tool.icon,
+  }));
+
+  const activeKey = createMemo<string>(() => {
+    const seg = location.pathname.replace(/^\/tools\/?/, "").split("/")[0];
+    return TOOLS.some((tool) => tool.id === seg) ? seg : TOOLS[0].id;
+  });
+
+  const activeComponent = createMemo(
+    () => TOOLS.find((tool) => tool.id === activeKey())?.component ?? TOOLS[0].component,
   );
-
-  // t() return type includes nested objects for top-level namespace keys.
-  // Our keys are all leaf keys (e.g. "tools.calc") so the value is always a
-  // string — String() narrows the type without a cast that could lie.
-  const label = (key: Parameters<typeof t>[0]) => String(t(key));
 
   return (
-    <div class="flex flex-col gap-6 px-4 py-6 max-w-2xl mx-auto w-full">
-      {/* Tool picker tabs */}
-      <nav
-        class="flex flex-wrap gap-2"
-        role="tablist"
-        aria-label={label("tools.label")}
-      >
-        <For each={TOOLS}>
-          {(tool) => (
-            <button
-              role="tab"
-              aria-selected={activeTool() === tool.id}
-              onClick={() => setActiveTool(tool.id)}
-              class={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium transition-colors ${
-                activeTool() === tool.id
-                  ? "bg-elevated text-txt border-rim-strong"
-                  : "text-muted border-rim hover:bg-elevated hover:text-txt"
-              }`}
-            >
-              <span aria-hidden="true">{tool.icon}</span>
-              {label(tool.labelKey)}
-            </button>
-          )}
-        </For>
-      </nav>
-
-      {/* Active tool panel */}
-      <div
-        class="bg-surface border border-rim rounded-xl p-6"
-        role="tabpanel"
-        aria-label={label(activeEntry().labelKey)}
-      >
-        <h2 class="text-txt font-medium text-lg mb-6">
-          <span aria-hidden="true">{activeEntry().icon}</span>{" "}
-          {label(activeEntry().labelKey)}
-        </h2>
-        <Dynamic component={activeEntry().component} />
+    <SubPageLayout base="/tools" items={items} activeKey={activeKey()}>
+      <div class="px-4 md:px-6 py-6">
+        <Dynamic component={activeComponent()} />
       </div>
-    </div>
+    </SubPageLayout>
   );
 }
-
-// Default export is required when the route uses a lazy import:
-//   component: () => import("./views/ToolsPage")
-// The named export above is kept for direct (non-lazy) imports.
-export default ToolsPage;

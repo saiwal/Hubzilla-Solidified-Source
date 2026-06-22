@@ -89,6 +89,15 @@ export function isModuleActive(moduleId: string, installedApps: Set<string>): bo
   return installedApps.has(mod.appName);
 }
 
+// Nav items from modules that have no Hubzilla appName (SPA-exclusive features).
+export function getSpaExclusiveNavItems(): NavItemDef[] {
+  const result: NavItemDef[] = [];
+  for (const mod of modules.values()) {
+    if (!mod.appName && mod.navItem) result.push(mod.navItem);
+  }
+  return result;
+}
+
 // Keep for any existing call sites
 export function resolveSlot(slot: keyof SlotsDef, moduleId?: string) {
   if (moduleId) return modules.get(moduleId)?.slots?.[slot] ?? null;

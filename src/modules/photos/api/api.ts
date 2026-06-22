@@ -105,6 +105,31 @@ export interface PhotoEditResult {
   src_full: string;
 }
 
+export async function uploadNewPhoto(
+  nick: string,
+  blob: Blob,
+  album = "",
+): Promise<PhotoEditResult> {
+  const { getCsrfToken } = await import("@/shared/lib/csrf");
+  const token = await getCsrfToken().catch(() => "");
+  const fd = new FormData();
+  fd.append("file", blob, "photo.jpg");
+  if (album) fd.append("album", album);
+  const res = await fetch(`/api/photos/${nick}/image/upload`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "X-CSRF-Token": token },
+    body: fd,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as Record<string, unknown>;
+    const msg = (err?.error as Record<string, unknown>)?.message;
+    throw new Error(typeof msg === "string" ? msg : "Upload failed");
+  }
+  const { data } = await res.json();
+  return data as PhotoEditResult;
+}
+
 export function uploadPhotoEdit(
   nick: string,
   resourceId: string,

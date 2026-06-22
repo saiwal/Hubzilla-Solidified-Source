@@ -1,7 +1,7 @@
 import type { RawDictionary } from "../namespaces/types";
 
-export const notes: RawDictionary["notes"] = {
-  title:          "Notes",
+export const notepad: RawDictionary["notepad"] = {
+  title:          "Notepad",
   no_notes:       "No notes yet.",
   create_first:   "Write your first note above",
   edit:           "Edit",

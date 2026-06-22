@@ -153,26 +153,27 @@ export default function ImageEditor(props: ImageEditorProps) {
       defaultSavedImageName: "",
 
       onSave: async (savedImageData) => {
-        const canvas = savedImageData.imageCanvas;
-        if (canvas) {
-          canvas.toBlob(
-            (blob) => {
-              if (!blob) return;
-              const e = editor;
-              editor = null;
-              e?.terminate();
-              props.onConfirm(blob);
-            },
-            "image/jpeg",
-            0.92,
-          );
+        let blob: Blob | null = null;
+
+        if (savedImageData.imageCanvas) {
+          // Wrap callback in a Promise so onSave waits before resolving.
+          // Without this, the async function resolves with undefined before
+          // toBlob fires, which causes Filerobot to throw an unhandled rejection.
+          blob = await new Promise<Blob | null>((resolve) => {
+            savedImageData.imageCanvas!.toBlob(resolve, "image/jpeg", 0.92);
+          });
         } else if (savedImageData.imageBase64) {
-          const blob = await fetch(savedImageData.imageBase64).then((r) => r.blob());
-          const e = editor;
-          editor = null;
-          e?.terminate();
-          props.onConfirm(blob);
+          blob = await fetch(savedImageData.imageBase64)
+            .then((r) => r.blob())
+            .catch(() => null);
         }
+
+        if (!blob) return;
+
+        const e = editor;
+        editor = null;
+        e?.terminate();
+        props.onConfirm(blob);
       },
 
       onClose: () => {

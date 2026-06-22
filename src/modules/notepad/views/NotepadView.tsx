@@ -1,5 +1,4 @@
 import { createEffect, createSignal, Show, For } from "solid-js";
-import { useParams } from "@solidjs/router";
 import { useAuth } from "@/shared/store/auth-store";
 import { useViewerRole } from "@/shared/store/site-config";
 import { useI18n } from "@/i18n";
@@ -50,18 +49,18 @@ function NoteCard(props: {
           when={!props.confirmingDelete}
           fallback={
             <span class="inline-flex gap-2 items-center">
-              <span>{t("notes.delete_confirm")}</span>
+              <span>{t("notepad.delete_confirm")}</span>
               <button
                 onClick={props.onDelete}
                 class="px-2 py-0.5 rounded bg-red-600 text-white text-xs hover:bg-red-700 transition-colors"
               >
-                {t("notes.delete")}
+                {t("notepad.delete")}
               </button>
               <button
                 onClick={props.onCancelDelete}
                 class="px-2 py-0.5 rounded border border-rim text-muted hover:bg-elevated transition-colors"
               >
-                {t("notes.cancel")}
+                {t("notepad.cancel")}
               </button>
             </span>
           }
@@ -71,13 +70,13 @@ function NoteCard(props: {
               onClick={props.onEdit}
               class="px-2 py-0.5 rounded border border-rim text-muted hover:bg-elevated transition-colors"
             >
-              {t("notes.edit")}
+              {t("notepad.edit")}
             </button>
             <button
               onClick={props.onDelete}
               class="px-2 py-0.5 rounded border border-red-300 text-red-500 hover:bg-red-50 transition-colors"
             >
-              {t("notes.delete")}
+              {t("notepad.delete")}
             </button>
           </span>
         </Show>
@@ -86,16 +85,15 @@ function NoteCard(props: {
   );
 }
 
-export default function NotesView() {
+export default function NotepadView() {
   const { t } = useI18n();
-  const params = useParams<{ nick: string }>();
   const auth = useAuth();
   const role = useViewerRole();
 
   const [editingNote, setEditingNote] = createSignal<Note | null>(null);
   const [confirmMid, setConfirmMid] = createSignal<string | null>(null);
 
-  const nick = () => params.nick || auth()?.nick || "";
+  const nick = () => auth()?.nick || "";
   const isOwner = () => role() === "owner";
 
   createEffect(() => {
@@ -106,9 +104,8 @@ export default function NotesView() {
 
   return (
     <div class="max-w-2xl mx-auto space-y-6">
-      <h1 class="text-xl font-bold text-txt">{t("notes.title")}</h1>
+      <h1 class="text-xl font-bold text-txt">{t("notepad.title")}</h1>
 
-      {/* Compose area — owner only */}
       <Show when={isOwner()}>
         <Show
           when={editingNote() === null}
@@ -136,7 +133,6 @@ export default function NotesView() {
         </Show>
       </Show>
 
-      {/* Loading skeleton */}
       <Show when={loading() && notes().length === 0}>
         <div class="space-y-3">
           <For each={Array(3).fill(0)}>
@@ -154,9 +150,9 @@ export default function NotesView() {
       <Show when={!loading() && notes().length === 0}>
         <div class="text-center py-16 space-y-3 text-muted">
           <p class="text-3xl">📝</p>
-          <p class="text-sm">{t("notes.no_notes")}</p>
+          <p class="text-sm">{t("notepad.no_notes")}</p>
           <Show when={isOwner()}>
-            <p class="text-xs">{t("notes.create_first")}</p>
+            <p class="text-xs">{t("notepad.create_first")}</p>
           </Show>
         </div>
       </Show>
@@ -191,7 +187,7 @@ export default function NotesView() {
               class="px-4 py-2 text-sm rounded-lg border border-rim bg-surface text-muted
                      hover:bg-elevated transition-colors disabled:opacity-40"
             >
-              {loading() ? "…" : t("notes.load_more")}
+              {loading() ? "…" : t("notepad.load_more")}
             </button>
           </div>
         </Show>

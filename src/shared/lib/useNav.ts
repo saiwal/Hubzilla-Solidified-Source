@@ -14,7 +14,7 @@ import { isAdmin } from "../store/auth-store";
 import type { NavItemDef } from "../types/module.types";
 import type { NavActions, NavChannelTab, NavApp } from "../lib/nav-api";
 import { biToNavIcon } from "../lib/nav-api";
-import { getNavItems, getRoutes } from "./module-registry";
+import { getNavItems, getRoutes, getSpaExclusiveNavItems } from "./module-registry";
 import { useI18n } from "@/i18n";
 import { useViewerRole } from "../store/site-config";
 import { applyNavOrder } from "../store/nav-order";
@@ -107,6 +107,18 @@ function isSpaApp(app: NavApp, spaRoots: Set<string>): boolean {
   return spaRoots.has(root);
 }
 
+// Owner sees "owner" and "local" context items (they are a local user too).
+// "admin" items are also included when the viewer is a site admin.
+function visibleForOwner(context: NavItemDef["context"]): boolean {
+  if (!context || context === "all" || context === "owner" || context === "local") return true;
+  if (context === "admin") return isAdmin();
+  if (Array.isArray(context))
+    return (context as string[]).some(
+      (c) => c === "owner" || c === "local" || c === "all" || (c === "admin" && isAdmin()),
+    );
+  return false;
+}
+
 function dedupByHref(items: NavItemDef[]): NavItemDef[] {
   const seen = new Set<string>();
   return items.filter((item) => {
@@ -125,7 +137,6 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
   const systemApps = useSystemApps();
   const installedApps = useInstalledApps();
   const viewerRole = useViewerRole();
-  const { t } = useI18n();
 
   return createMemo((): NavItemDef[] => {
     const role = viewerRole();
@@ -151,7 +162,7 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
       return dedupByHref([...tabs, ...sysApps]);
     }
 
-    // Owner in their own context → pinned + installed featured + admin
+    // Owner in their own context → pinned + installed featured + SPA-exclusive + admin
     if (role === "owner") {
       const installed = installedApps();
       const filteredPinned = pinnedApps().filter((a) => isSpaApp(a, spaRoots));
@@ -165,8 +176,10 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
       const items = applyNavOrder([...filteredPinned, ...filteredFeatured])
         .map((a) => appToNavItem(a, moduleLabelMap));
 
-      if (isAdmin())
-        items.push({ label: t("nav.admin"), icon: "admin", href: "/admin", path: "/admin" });
+      // SPA-exclusive modules (no appName) opt in with hidden: false
+      for (const item of getSpaExclusiveNavItems()) {
+        if (item.hidden === false && visibleForOwner(item.context)) items.push(item);
+      }
 
       return dedupByHref(items);
     }

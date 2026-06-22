@@ -7,6 +7,7 @@ import { SETTINGS_ITEMS } from "../index";
 // ── Lazy section components ──────────────────────────────────────────────────
 
 const SECTIONS: Record<string, ReturnType<typeof lazy>> = {
+	profile:       lazy(() => import("./sections/ProfileSection")),
   account:       lazy(() => import("./sections/AccountSection")),
   privacy:       lazy(() => import("./sections/PrivacySection")),
   notifications: lazy(() => import("./sections/NotificationsSection")),

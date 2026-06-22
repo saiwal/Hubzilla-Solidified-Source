@@ -17,7 +17,7 @@ export const nav: RawDictionary["nav"] = {
   admin:         "Admin",
   webpages:      "Webpages",
   wiki:          "Wiki",
-  notes:         "Notes",
+  notepad:       "Notepad",
   tools:         "Tools",
   // action items
   profile:       "Profile",
