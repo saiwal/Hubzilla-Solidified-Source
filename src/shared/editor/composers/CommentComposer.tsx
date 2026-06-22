@@ -11,6 +11,8 @@ import {
   getCaretRect,
 } from "@/shared/editor/mention/useMention";
 import MentionPopup from "@/shared/editor/mention/MentionPopup";
+import { useEmoji, getWysiwygEmojiQuery, getTextareaEmojiQuery } from "@/shared/editor/emoji/useEmoji";
+import EmojiPopup from "@/shared/editor/emoji/EmojiPopup";
 import AttachmentBar from "../attachments/AttachmentBar";
 import { createAttachmentStore } from "../attachments/useAttachments";
 import { bbcodeToInsert } from "../attachments/insertHelpers";
@@ -63,12 +65,9 @@ export default function CommentComposer(props: Props) {
     scope,
   );
 
-  // ── Mention autocomplete ──────────────────────────────────────────────────
-  // RichEditor renders a contenteditable div for the comment surface
-  // (CAPABILITIES.comment toolbar has no source/BBCode tab by default).
-  // We hook into the same wysiwyg path used by PostComposer.
-
+  // ── Mention + emoji autocomplete ─────────────────────────────────────────
   const mention = useMention();
+  const emoji   = useEmoji();
   let wrapperRef: HTMLDivElement | undefined;
 
   function getEditor(): HTMLDivElement | null {
@@ -79,55 +78,54 @@ export default function CommentComposer(props: Props) {
     return wrapperRef?.querySelector("textarea") ?? null;
   }
 
-  // Drive mention state reactively off store.body().
-  // RichEditor fires props.onInput(innerHTML) on every keystroke, which calls
-  // store.setBody — so this effect runs on every character typed.
   createEffect(() => {
-    void store.body(); // subscribe
-
-    // Check which surface is active and extract the query from the live DOM.
+    void store.body();
     const editor = getEditor();
     if (editor) {
-      // contenteditable — read from Selection API (caret-aware)
-      const q = getWysiwygMentionQuery();
-      if (q !== null) {
-        const rect = getCaretRect();
-        if (rect) mention.openWithQuery(q, rect);
-        return;
-      }
+      const mq = getWysiwygMentionQuery();
+      if (mq !== null) { const r = getCaretRect(); if (r) mention.openWithQuery(mq, r); emoji.close(); return; }
+      const eq = getWysiwygEmojiQuery();
+      if (eq !== null) { const r = getCaretRect(); if (r) emoji.openWithQuery(eq, r); mention.close(); return; }
     }
-
     const ta = getTA();
     if (ta) {
-      const q = getTextareaMentionQuery(ta);
-      if (q !== null) {
-        mention.openWithQuery(q, ta.getBoundingClientRect());
-        return;
-      }
+      const mq = getTextareaMentionQuery(ta);
+      if (mq !== null) { mention.openWithQuery(mq, ta.getBoundingClientRect()); emoji.close(); return; }
+      const eq = getTextareaEmojiQuery(ta);
+      if (eq !== null) { emoji.openWithQuery(eq, ta.getBoundingClientRect()); mention.close(); return; }
     }
-
     mention.close();
+    emoji.close();
   });
 
   function onKeyDown(e: KeyboardEvent) {
-    if (!mention.open()) return;
-    const consumed = mention.onKeyDown(e);
-    if (!consumed) return;
-
-    if (e.key === "Enter" || e.key === "Tab") {
-      const entry = mention.filtered()[mention.activeIdx()];
-      if (!entry) return;
-
-      const editor = getEditor();
-      if (editor) {
-        mention.insertWysiwyg(entry, () => {
-          // Sync innerHTML back to body signal after DOM mutation
-          store.setBody(editor.innerHTML);
-        });
-        return;
+    if (mention.open()) {
+      const consumed = mention.onKeyDown(e);
+      if (consumed) {
+        if (e.key === "Enter" || e.key === "Tab") {
+          const entry = mention.filtered()[mention.activeIdx()];
+          if (!entry) return;
+          const editor = getEditor();
+          if (editor) { mention.insertWysiwyg(entry, () => store.setBody(editor.innerHTML)); return; }
+          const ta = getTA();
+          if (ta) mention.insertTextarea(entry, ta, store.setBody);
+        }
       }
-      const ta = getTA();
-      if (ta) mention.insertTextarea(entry, ta, store.setBody);
+      return;
+    }
+    if (emoji.open()) {
+      const consumed = emoji.onKeyDown(e);
+      if (consumed) {
+        if (e.key === "Enter" || e.key === "Tab") {
+          const entry = emoji.filtered()[emoji.activeIdx()];
+          if (!entry) return;
+          const editor = getEditor();
+          if (editor) { emoji.insertWysiwyg(entry, () => store.setBody(editor.innerHTML)); return; }
+          const ta = getTA();
+          if (ta) emoji.insertTextarea(entry, ta, store.setBody);
+        }
+      }
+      return;
     }
   }
 
@@ -199,12 +197,23 @@ export default function CommentComposer(props: Props) {
           activeIdx={mention.activeIdx()}
           onSelect={(entry) => {
             const editor = getEditor();
-            if (editor) {
-              mention.insertWysiwyg(entry, () => store.setBody(editor.innerHTML));
-              return;
-            }
+            if (editor) { mention.insertWysiwyg(entry, () => store.setBody(editor.innerHTML)); return; }
             const ta = getTA();
             if (ta) mention.insertTextarea(entry, ta, store.setBody);
+          }}
+        />
+      </Show>
+
+      <Show when={emoji.open() && emoji.rect() !== null}>
+        <EmojiPopup
+          entries={emoji.filtered()}
+          anchorRect={emoji.rect()!}
+          activeIdx={emoji.activeIdx()}
+          onSelect={(entry) => {
+            const editor = getEditor();
+            if (editor) { emoji.insertWysiwyg(entry, () => store.setBody(editor.innerHTML)); return; }
+            const ta = getTA();
+            if (ta) emoji.insertTextarea(entry, ta, store.setBody);
           }}
         />
       </Show>

@@ -1,8 +1,11 @@
 // core/utils/sanitize.ts
 import DOMPurify from 'dompurify';
+import { emojify } from './emojify';
+import { shortenUrls } from './shortenUrls';
+import { getEmojiMap } from '../store/emoji-store';
 
 export function sanitizeHtml(html: string): string {
-  return DOMPurify.sanitize(html, {
+  return DOMPurify.sanitize(shortenUrls(emojify(html, getEmojiMap())), {
     ALLOWED_TAGS: [
       'a', 'b', 'i', 'u', 's', 'em', 'strong',
       'p', 'br', 'div', 'span', 'blockquote',
@@ -15,6 +18,7 @@ export function sanitizeHtml(html: string): string {
       'class', 'style', 'target',
       'controls', 'preload', 'poster', 'type',
       'data-plyr-provider', 'data-plyr-embed-id',
+      'loading',
     ],
     ALLOW_DATA_ATTR: false,
   });

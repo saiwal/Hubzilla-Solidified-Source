@@ -2,6 +2,7 @@
 import {
   createEffect, createSignal, Show, For, onCleanup,
 } from "solid-js";
+import WikiComposer from "@/shared/editor/composers/WikiComposer";
 import { toast } from "@/shared/store/toast";
 import { useParams, A, useNavigate } from "@solidjs/router";
 import { useI18n } from "@/i18n";
@@ -9,7 +10,7 @@ import DOMPurify from "dompurify";
 import {
   pageData, pageLoading, editMode, draftContent, canWrite,
   pages, currentWiki, pagesLoading,
-  loadPage, loadWikiPages, toggleEditMode, updateDraft, resetPage,
+  loadPage, loadWikiPages, toggleEditMode, resetPage,
 } from "../store";
 import { savePage, deletePage } from "../api";
 
@@ -19,7 +20,6 @@ export default function WikiPageView() {
   const navigate = useNavigate();
   const [saving, setSaving]         = createSignal(false);
   const [deleting, setDeleting]     = createSignal(false);
-  const [commitMsg, setCommitMsg]   = createSignal("");
   const [confirmDel, setConfirmDel] = createSignal(false);
 
   // Track which wiki was last loaded so we only refetch the page list on wiki change.
@@ -43,16 +43,15 @@ export default function WikiPageView() {
 
   onCleanup(() => resetPage());
 
-  async function handleSave() {
+  async function handleSave(body: string, commitMsg: string) {
     setSaving(true);
     try {
       await savePage(
         params.nick,
         params.wikiName,
         params.pageName,
-        { content: draftContent(), commit_msg: commitMsg(), mime_type: pageData()?.page.mime_type },
+        { content: body, commit_msg: commitMsg, mime_type: pageData()?.page.mime_type },
       );
-      setCommitMsg("");
       toggleEditMode();
       loadPage(params.nick, params.wikiName, params.pageName);
     } catch (e: any) {
@@ -150,24 +149,13 @@ export default function WikiPageView() {
 
             <Show when={canWrite()}>
               <div class="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={toggleEditMode}
-                  class="text-sm border border-rim text-muted hover:bg-elevated px-3 py-1.5 rounded-lg transition-colors"
-                >
-                  {editMode() ? t("wiki.cancel_edit") : t("wiki.edit")}
-                </button>
-
-                <Show when={editMode()}>
+                <Show when={!editMode()}>
                   <button
                     type="button"
-                    onClick={handleSave}
-                    disabled={saving()}
-                    class="text-sm bg-accent-muted text-accent border border-rim
-                           hover:bg-elevated px-3 py-1.5 rounded-lg transition-colors
-                           disabled:opacity-50"
+                    onClick={toggleEditMode}
+                    class="text-sm border border-rim text-muted hover:bg-elevated px-3 py-1.5 rounded-lg transition-colors"
                   >
-                    {saving() ? t("wiki.saving") : t("wiki.save")}
+                    {t("wiki.edit")}
                   </button>
                 </Show>
 
@@ -186,22 +174,13 @@ export default function WikiPageView() {
 
           {/* Edit mode */}
           <Show when={editMode()}>
-            <div class="space-y-2">
-              <textarea
-                class="w-full h-96 bg-surface border border-rim text-txt rounded-xl px-3 py-2
-                       text-sm font-mono resize-y hover:border-rim-strong focus:outline-none"
-                value={draftContent()}
-                onInput={(e) => updateDraft(e.currentTarget.value)}
-              />
-              <input
-                type="text"
-                class="w-full bg-surface border border-rim text-txt rounded-lg px-3 py-2 text-sm
-                       hover:border-rim-strong focus:outline-none"
-                placeholder={t("wiki.changes_placeholder")}
-                value={commitMsg()}
-                onInput={(e) => setCommitMsg(e.currentTarget.value)}
-              />
-            </div>
+            <WikiComposer
+              initialBody={draftContent()}
+              mimeType={pageData()?.page.mime_type ?? "text/markdown"}
+              saving={saving()}
+              onSave={handleSave}
+              onCancel={toggleEditMode}
+            />
           </Show>
 
           {/* Rendered view */}

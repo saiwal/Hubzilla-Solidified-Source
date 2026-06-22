@@ -22,4 +22,9 @@ export const webpages: RawDictionary["webpages"] = {
   // PageView
   back:             "← Webpages",
   load_failed:      "Failed to load page",
+  // Editor
+  new_page_title:   "New Page",
+  edit_page_title:  "Edit Page",
+  title_placeholder: "Page title…",
+  saving_failed:    "Save failed",
 };

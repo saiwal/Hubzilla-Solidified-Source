@@ -19,6 +19,7 @@ export type RawDictionary = {
     admin:         string;
     webpages:      string;
     wiki:          string;
+    notes:         string;
     tools:         string;
     // action items
     profile:       string;
@@ -1084,6 +1085,24 @@ export type RawDictionary = {
     untitled:         string;
     back:             string;
     load_failed:      string;
+    new_page_title:   string;
+    edit_page_title:  string;
+    title_placeholder: string;
+    saving_failed:    string;
+  };
+  notes: {
+    title:            string;
+    no_notes:         string;
+    create_first:     string;
+    edit:             string;
+    delete:           string;
+    delete_confirm:   string;
+    cancel:           string;
+    placeholder:      string;
+    save_btn:         string;
+    saving:           string;
+    load_failed:      string;
+    load_more:        string;
   };
   manage: {
     channels:         string;

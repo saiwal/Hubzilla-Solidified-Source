@@ -73,4 +73,28 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
     aclPicker: false,
     submitOnCtrlEnter: false,
   },
+  // Wiki page — plain source editing, no ACL, no attachments
+  wiki: {
+    toolbar: "minimal",
+    preview: true,
+    title: false,
+    summary: false,
+    slug: false,
+    category: false,
+    attachments: "none",
+    aclPicker: false,
+    submitOnCtrlEnter: false,
+  },
+  // Personal note — always private, minimal toolbar
+  note: {
+    toolbar: "minimal",
+    preview: true,
+    title: false,
+    summary: false,
+    slug: false,
+    category: false,
+    attachments: "photos",
+    aclPicker: false,
+    submitOnCtrlEnter: true,
+  },
 };

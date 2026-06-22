@@ -1,5 +1,5 @@
 import { createEffect, Show, For, createSignal } from 'solid-js';
-import { useParams } from '@solidjs/router';
+import { useParams, A } from '@solidjs/router';
 import { useAuth } from '@/shared/store/auth-store';
 import { pages, loading, loadWebpages, removePage } from '../store';
 import type { WebPage } from '../api';
@@ -30,12 +30,12 @@ export default function WebpagesView() {
       {/* Header */}
       <div class="flex items-center justify-between">
         <h1 class="text-2xl font-bold text-txt">{t("webpages.title")}</h1>
-        <a
+        <A
           href={`/webpages/${nick()}/new`}
           class="px-4 py-2 rounded-lg bg-accent text-accent-fg text-sm font-medium hover:opacity-90 transition-opacity"
         >
           {t("webpages.new_page")}
-        </a>
+        </A>
       </div>
 
       <Show when={!loading()} fallback={<WebpagesPlaceholder />}>
@@ -59,6 +59,7 @@ export default function WebpagesView() {
                   {(page) => (
                     <PageRow
                       page={page}
+                      nick={nick()}
                       confirmingDelete={confirmIid() === page.iid}
                       onDelete={() => handleDelete(page.iid)}
                       onCancelDelete={() => setConfirmIid(null)}
@@ -76,6 +77,7 @@ export default function WebpagesView() {
 
 function PageRow(props: {
   page: WebPage;
+  nick: string;
   confirmingDelete: boolean;
   onDelete: () => void;
   onCancelDelete: () => void;
@@ -147,12 +149,12 @@ function PageRow(props: {
             >
               {t("webpages.view")}
             </a>
-            <a
-              href={props.page.edit_url}
+            <A
+              href={`/webpages/${props.nick}/edit/${props.page.iid}`}
               class="text-xs px-2 py-1 rounded border border-rim text-muted hover:bg-elevated transition-colors"
             >
               {t("webpages.edit")}
-            </a>
+            </A>
             <button
               onClick={props.onDelete}
               class="text-xs px-2 py-1 rounded border border-red-300 text-red-600 hover:bg-red-50 transition-colors"

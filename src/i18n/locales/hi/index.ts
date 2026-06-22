@@ -27,6 +27,7 @@ import { admin }      from "./admin";
 import { cart }       from "./cart";
 import { bookmarks }  from "./bookmarks";
 import { profiles }   from "./profiles";
+import { notes }      from "./notes";
 
 export const dict: RawDictionary = {
   nav,
@@ -57,4 +58,5 @@ export const dict: RawDictionary = {
   cart,
   bookmarks,
   profiles,
+  notes,
 };

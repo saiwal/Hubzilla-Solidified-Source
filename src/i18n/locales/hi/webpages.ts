@@ -21,4 +21,8 @@ export const webpages: RawDictionary["webpages"] = {
   untitled:         "(शीर्षक रहित)",
   back:             "← वेबपेज",
   load_failed:      "पेज लोड करने में विफल",
+  new_page_title:   "नया पेज",
+  edit_page_title:  "पेज संपादित करें",
+  title_placeholder: "पेज शीर्षक…",
+  saving_failed:    "सहेजना विफल",
 };

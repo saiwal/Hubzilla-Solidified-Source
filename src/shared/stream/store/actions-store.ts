@@ -17,6 +17,7 @@ import type { createStreamStore } from "./createStreamStore";
 import { updateNode } from "./createStreamStore";
 import { fetchComments, fetchItemDetail, apiDeleteItem, apiToggleStar } from "@/shared/lib/item-api";
 import { mapActivityToPost } from "@/shared/lib/activity.mapper";
+import { sanitizeHtml } from "@/shared/lib/sanitize";
 import { currentNick } from "@/shared/store/auth-store";
 
 type StreamStore = ReturnType<typeof createStreamStore>;
@@ -138,7 +139,7 @@ export function createActionHandlers(store: StreamStore) {
         uuid: tempMid, id: tempMid, mid: tempMid,
         parent_mid: parentMid, thr_parent: parentMid,
         top_mid: parentMid, parent: parentMid,
-        body, title: "", authorName: currentNick(), authorAvatar: "", authorUrl: "",
+        body: sanitizeHtml(body), title: "", authorName: currentNick(), authorAvatar: "", authorUrl: "",
         created: new Date().toISOString().replace("T", " ").slice(0, 19),
         verb: "Create", obj_type: "Note", flags: [], permalink: "",
         likeCount: 0, dislikeCount: 0, repeatCount: 0,

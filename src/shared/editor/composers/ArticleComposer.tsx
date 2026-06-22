@@ -13,6 +13,8 @@ import {
   getCaretRect,
 } from "../mention/useMention";
 import MentionPopup from "../mention/MentionPopup";
+import { useEmoji, getWysiwygEmojiQuery, getTextareaEmojiQuery } from "../emoji/useEmoji";
+import EmojiPopup from "../emoji/EmojiPopup";
 import AttachmentBar from "../attachments/AttachmentBar";
 import { createAttachmentStore } from "../attachments/useAttachments";
 import { bbcodeToInsert } from "../attachments/insertHelpers";
@@ -72,8 +74,9 @@ export default function ArticleComposer(props: Props) {
     setDenyEntries(new Set<string>());
   }
 
-  // ── Mention autocomplete ─────────────────────────────────────────────────────
+  // ── Mention + emoji autocomplete ─────────────────────────────────────────────
   const mention = useMention();
+  const emoji   = useEmoji();
   let editorWrapRef: HTMLDivElement | undefined;
 
   const getEditor = () =>
@@ -225,22 +228,31 @@ export default function ArticleComposer(props: Props) {
     store.setBody(props.initial.body);
   }
 
-  function insertSelected() {
-    const entry = mention.filtered()[mention.activeIdx()];
-    if (!entry) return;
-    const editor = getEditor();
-    if (editor) {
-      mention.insertWysiwyg(entry, () => store.setBody(editor.innerHTML));
+  function onKeyDown(e: KeyboardEvent) {
+    if (mention.open()) {
+      const consumed = mention.onKeyDown(e);
+      if (consumed && (e.key === "Enter" || e.key === "Tab")) {
+        const entry = mention.filtered()[mention.activeIdx()];
+        if (!entry) return;
+        const editor = getEditor();
+        if (editor) { mention.insertWysiwyg(entry, () => store.setBody(editor.innerHTML)); return; }
+        const ta = getTA();
+        if (ta) mention.insertTextarea(entry, ta, store.setBody);
+      }
       return;
     }
-    const ta = getTA();
-    if (ta) mention.insertTextarea(entry, ta, store.setBody);
-  }
-
-  function onKeyDown(e: KeyboardEvent) {
-    if (!mention.open()) return;
-    const consumed = mention.onKeyDown(e);
-    if (consumed && (e.key === "Enter" || e.key === "Tab")) insertSelected();
+    if (emoji.open()) {
+      const consumed = emoji.onKeyDown(e);
+      if (consumed && (e.key === "Enter" || e.key === "Tab")) {
+        const entry = emoji.filtered()[emoji.activeIdx()];
+        if (!entry) return;
+        const editor = getEditor();
+        if (editor) { emoji.insertWysiwyg(entry, () => store.setBody(editor.innerHTML)); return; }
+        const ta = getTA();
+        if (ta) emoji.insertTextarea(entry, ta, store.setBody);
+      }
+      return;
+    }
   }
 
   window.addEventListener("keydown", onKeyDown);
@@ -251,24 +263,24 @@ export default function ArticleComposer(props: Props) {
     const text = v.replace(/<[^>]*>/g, " ");
     setWordCount(text.trim().split(/\s+/).filter(Boolean).length);
 
-    // Detect @-mention synchronously while still inside the input event
-    // (window.getSelection() is only reliable at this point, not in a deferred effect)
     const editor = getEditor();
     if (editor) {
-      const q = getWysiwygMentionQuery();
-      if (q !== null) {
-        const rect = getCaretRect();
-        if (rect) { mention.openWithQuery(q, rect); return; }
-      }
-      mention.close();
+      const mq = getWysiwygMentionQuery();
+      if (mq !== null) { const r = getCaretRect(); if (r) { mention.openWithQuery(mq, r); emoji.close(); return; } }
+      const eq = getWysiwygEmojiQuery();
+      if (eq !== null) { const r = getCaretRect(); if (r) { emoji.openWithQuery(eq, r); mention.close(); return; } }
+      mention.close(); emoji.close();
       return;
     }
     const ta = getTA();
     if (ta) {
-      const q = getTextareaMentionQuery(ta);
-      if (q !== null) { mention.openWithQuery(q, ta.getBoundingClientRect()); return; }
+      const mq = getTextareaMentionQuery(ta);
+      if (mq !== null) { mention.openWithQuery(mq, ta.getBoundingClientRect()); emoji.close(); return; }
+      const eq = getTextareaEmojiQuery(ta);
+      if (eq !== null) { emoji.openWithQuery(eq, ta.getBoundingClientRect()); mention.close(); return; }
     }
     mention.close();
+    emoji.close();
   };
 
   const onTitleChange = (v: string) => {
@@ -386,12 +398,24 @@ export default function ArticleComposer(props: Props) {
           activeIdx={mention.activeIdx()}
           onSelect={(entry) => {
             const editor = getEditor();
-            if (editor) {
-              mention.insertWysiwyg(entry, () => store.setBody(editor.innerHTML));
-              return;
-            }
+            if (editor) { mention.insertWysiwyg(entry, () => store.setBody(editor.innerHTML)); return; }
             const ta = getTA();
             if (ta) mention.insertTextarea(entry, ta, store.setBody);
+          }}
+        />
+      </Show>
+
+      {/* Emoji popup */}
+      <Show when={emoji.open() && emoji.rect() !== null}>
+        <EmojiPopup
+          entries={emoji.filtered()}
+          anchorRect={emoji.rect()!}
+          activeIdx={emoji.activeIdx()}
+          onSelect={(entry) => {
+            const editor = getEditor();
+            if (editor) { emoji.insertWysiwyg(entry, () => store.setBody(editor.innerHTML)); return; }
+            const ta = getTA();
+            if (ta) emoji.insertTextarea(entry, ta, store.setBody);
           }}
         />
       </Show>

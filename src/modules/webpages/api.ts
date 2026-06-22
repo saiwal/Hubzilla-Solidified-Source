@@ -18,6 +18,7 @@ export type WebPageDetail = {
   title: string;
   body: string;
   mimetype: string;
+  slug: string;
   created: string;
   edited: string;
 };
@@ -73,4 +74,20 @@ export async function deleteWebPage(iid: number): Promise<void> {
     const err = await res.json().catch(() => null);
     throw new Error(err?.error?.message ?? 'Delete failed');
   }
+}
+
+/** Fetch a single page by its item id (used by the SPA editor view) */
+export async function fetchWebPageByIid(
+  nick: string,
+  iid: number,
+): Promise<WebPageDetail> {
+  const res = await apiFetch(
+    `/api/webpages/${nick}?iid=${iid}`,
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(err?.error?.message ?? 'Failed to fetch page');
+  }
+  const json = await res.json();
+  return json.data as WebPageDetail;
 }
