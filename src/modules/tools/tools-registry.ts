@@ -7,6 +7,7 @@ import { UnitConverter } from "./components/UnitConverter";
 import { Base64Tool } from "./components/Base64Tool";
 import { PasswordGenerator } from "./components/PasswordGenerator";
 import { ImageEditor } from "./components/ImageEditor";
+import { VideoEditor } from "./components/VideoEditor";
 
 type TranslatorKey = keyof i18n.Flatten<RawDictionary>;
 
@@ -16,7 +17,8 @@ export type ToolId =
   | "unit-converter"
   | "base64"
   | "password"
-  | "image-editor";
+  | "image-editor"
+  | "video-editor";
 
 export type ToolEntry = {
   id: ToolId;
@@ -32,4 +34,5 @@ export const TOOLS: ToolEntry[] = [
   { id: "base64",         labelKey: "tools.base64",   icon: "🔣", component: Base64Tool },
   { id: "password",       labelKey: "tools.password", icon: "🔑", component: PasswordGenerator },
   { id: "image-editor",   labelKey: "tools.img",      icon: "🖼️", component: ImageEditor },
+  { id: "video-editor",   labelKey: "tools.vid",      icon: "🎬", component: VideoEditor },
 ];

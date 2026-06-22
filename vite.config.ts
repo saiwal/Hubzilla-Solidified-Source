@@ -2,7 +2,7 @@ import { defineConfig, type Plugin } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import solid from "vite-plugin-solid";
 import path from "path";
-import { readdirSync } from "fs";
+import { readdirSync, readFileSync } from "fs";
 
 /** Virtual module `virtual:public-listing/<folder>` → sorted filename array. */
 function publicDirListing(): Plugin {
@@ -26,6 +26,42 @@ function publicDirListing(): Plugin {
 }
 
 const ASSET_WEB_PATH = "/view/theme/solidified/assets";
+const FFMPEG_CORE_DIR = path.resolve(__dirname, "node_modules/@ffmpeg/core/dist/umd");
+
+const FFMPEG_WORKER_SRC = path.resolve(__dirname, "src/ffmpeg-worker.js");
+
+/** Serve @ffmpeg/core WASM files + our custom worker during dev at the same path used in production. */
+function serveFFmpegCore(): Plugin {
+  const FFMPEG_BASE = ASSET_WEB_PATH + "/ffmpeg/";
+  const CORE_FILES: Record<string, string> = {
+    "ffmpeg-core.js":   "text/javascript",
+    "ffmpeg-core.wasm": "application/wasm",
+  };
+  return {
+    name: "serve-ffmpeg-core",
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (!req.url?.startsWith(FFMPEG_BASE)) return next();
+        const file = req.url.slice(FFMPEG_BASE.length).split("?")[0];
+        let filePath: string;
+        let contentType: string;
+        if (file === "ffmpeg-worker.js") {
+          filePath = FFMPEG_WORKER_SRC;
+          contentType = "text/javascript";
+        } else if (CORE_FILES[file]) {
+          filePath = path.join(FFMPEG_CORE_DIR, file);
+          contentType = CORE_FILES[file];
+        } else {
+          return next();
+        }
+        const data = readFileSync(filePath);
+        res.setHeader("Content-Type", contentType);
+        res.setHeader("Cache-Control", "no-store");
+        res.end(data);
+      });
+    },
+  };
+}
 const OUT_DIR = path.resolve(
   __dirname,
   "../hz-ddev/core/extend/theme/utsukta-themes/solidified/assets",
@@ -34,10 +70,16 @@ const OUT_DIR = path.resolve(
 export default defineConfig({
   plugins: [
     publicDirListing(),
+    serveFFmpegCore(),
     solid(),
     viteStaticCopy({
-      targets: [{ src: "src/docs", dest: "../" },
-      { src: "src/Api", dest: "../" }],
+      targets: [
+        { src: "src/docs", dest: "../" },
+        { src: "src/Api", dest: "../" },
+        { src: `${FFMPEG_CORE_DIR}/ffmpeg-core.js`,   dest: "ffmpeg" },
+        { src: `${FFMPEG_CORE_DIR}/ffmpeg-core.wasm`, dest: "ffmpeg" },
+        { src: FFMPEG_WORKER_SRC,                     dest: "ffmpeg" },
+      ],
     }),
   ],
   build: {
