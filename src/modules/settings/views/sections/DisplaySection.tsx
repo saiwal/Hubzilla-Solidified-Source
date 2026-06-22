@@ -11,6 +11,7 @@ import BG_PRESETS from "virtual:public-listing/bg";
 import { initTheme, useTheme } from "@/shared/lib/useTheme";
 import { THEMES, type ThemeId } from "@/shared/types/theme.types";
 import { useI18n } from "@/i18n";
+import { MdFillCheck } from "solid-icons/md";
 
 export default function DisplaySection() {
   const { t } = useI18n();
@@ -413,7 +414,7 @@ function BackgroundPicker() {
                 >
                   <Show when={selected()}>
                     <div class="absolute inset-0 bg-accent/20 flex items-center justify-center">
-                      <div class="w-5 h-5 rounded-full bg-accent text-accent-fg text-xs flex items-center justify-center">✓</div>
+                      <div class="w-5 h-5 rounded-full bg-accent text-accent-fg flex items-center justify-center"><MdFillCheck class="w-3 h-3" /></div>
                     </div>
                   </Show>
                 </button>

@@ -13,7 +13,7 @@ export default function ToolsPage() {
   const items: SubPageItem[] = TOOLS.map((tool) => ({
     path: tool.id,
     label: () => String(t(tool.labelKey)),
-    icon: tool.icon,
+    icon: (() => { const I = tool.icon; return <I class="w-5 h-5 shrink-0" />; })(),
   }));
 
   const activeKey = createMemo<string>(() => {

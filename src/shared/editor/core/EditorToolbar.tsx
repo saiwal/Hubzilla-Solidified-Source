@@ -1,5 +1,6 @@
 import type { ToolbarLevel } from "../types/editor.types";
 import { useI18n } from "@/i18n";
+import { MdOutlineLink, MdOutlineFormat_align_left } from "solid-icons/md";
 
 interface Props {
   level: ToolbarLevel;
@@ -53,7 +54,7 @@ export default function EditorToolbar(props: Props) {
         <>
           <Sep />
           <ToolBtn title={t("editor.link")} onMouseDown={insertLink}>
-            <span class="text-xs">🔗</span>
+            <MdOutlineLink class="w-4 h-4" />
           </ToolBtn>
           <ToolBtn title={t("editor.bullet_list")} onMouseDown={() => exec("insertUnorderedList")}>
             <span class="text-xs">• –</span>
@@ -82,7 +83,7 @@ export default function EditorToolbar(props: Props) {
           </ToolBtn>
           <Sep />
           <ToolBtn title={t("editor.align_left")} onMouseDown={() => exec("justifyLeft")}>
-            <span class="text-xs">⬅</span>
+            <MdOutlineFormat_align_left class="w-4 h-4" />
           </ToolBtn>
           <ToolBtn title={t("editor.align_center")} onMouseDown={() => exec("justifyCenter")}>
             <span class="text-xs">↔</span>

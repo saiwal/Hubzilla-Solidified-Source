@@ -2,6 +2,7 @@
 import { Show, For, type Component } from "solid-js";
 import { addConnection, type DirectoryEntry } from "../people/api";
 import { useI18n } from "@/i18n";
+import { MdFillCheck } from "solid-icons/md";
 
 interface Props {
   entry: DirectoryEntry;
@@ -102,7 +103,7 @@ const DirectoryCard: Component<Props> = (props) => {
           when={!e().is_connected}
           fallback={
             <span class="flex-1 text-center px-3 py-1.5 rounded-lg text-xs font-medium border border-rim text-muted cursor-default">
-              ✓ {t("directory.connected")}
+              <MdFillCheck class="w-3.5 h-3.5 shrink-0" /> {t("directory.connected")}
             </span>
           }
         >

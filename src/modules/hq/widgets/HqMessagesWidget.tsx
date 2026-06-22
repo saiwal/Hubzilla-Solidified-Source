@@ -2,6 +2,7 @@ import PostDetailModal from '@/shared/views/PostDetailModal';
 import { markItemSeen } from '@/shared/lib/markSeen';
 import { useI18n } from "@/i18n";
 import { fetchFolders } from "@/modules/network/api";
+import { MdOutlineWarning } from "solid-icons/md";
 import {
   createSignal,
   createEffect,
@@ -594,7 +595,7 @@ export default function HqMessagesWidget() {
 
         <Show when={error()}>
           <div class="flex flex-col items-center justify-center py-10 gap-2 text-sm">
-            <span class="text-2xl">⚠</span>
+            <MdOutlineWarning class="text-2xl text-muted" />
             <span class="text-accent">{error()}</span>
             <button
               onClick={() => loadPage(true)}

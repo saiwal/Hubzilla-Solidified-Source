@@ -30,6 +30,7 @@ import {
   MdFillLock,
   MdFillGroup,
   MdFillSearch,
+  MdFillCheck,
 } from "solid-icons/md";
 import formatPostDate from "@/shared/lib/date";
 
@@ -129,7 +130,7 @@ function PrivatePicker(props: {
                     }}
                   >
                     <Show when={selected()}>
-                      <span class="text-accent-fg text-[10px] font-bold">✓</span>
+                      <MdFillCheck class="w-3 h-3 text-accent-fg" />
                     </Show>
                   </div>
                   <MdFillGroup class="text-muted text-sm shrink-0" />
@@ -163,7 +164,7 @@ function PrivatePicker(props: {
                     }}
                   >
                     <Show when={selected()}>
-                      <span class="text-accent-fg text-[10px] font-bold">✓</span>
+                      <MdFillCheck class="w-3 h-3 text-accent-fg" />
                     </Show>
                   </div>
                   <Show

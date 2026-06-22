@@ -1,5 +1,6 @@
 // src/modules/articles/views/ArticlesView.tsx
 import { createEffect, createSignal, onMount, onCleanup, Show, For, Index } from "solid-js";
+import { MdOutlineArticle } from "solid-icons/md";
 import { useParams, useNavigate, useSearchParams } from "@solidjs/router";
 import { useI18n } from "@/i18n";
 import { Portal } from "solid-js/web";
@@ -243,7 +244,7 @@ export default function ArticlesView() {
           when={posts().length > 0}
           fallback={
             <div class="text-center py-16 text-muted text-sm space-y-2">
-              <p class="text-2xl">📝</p>
+              <MdOutlineArticle class="text-2xl text-muted mx-auto" />
               <p>{t("articles.no_articles")}</p>
             </div>
           }

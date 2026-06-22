@@ -9,7 +9,20 @@ import {
 import { toast } from "@/shared/store/toast";
 import { useI18n } from "@/i18n";
 import { useParams } from "@solidjs/router";
-import { MdFillFolder, MdFillDelete, MdFillAdd, MdFillLock, MdFillLock_open } from "solid-icons/md";
+import {
+  MdFillFolder,
+  MdFillDelete,
+  MdFillAdd,
+  MdFillLock,
+  MdFillLock_open,
+  MdOutlineImage,
+  MdOutlineMovie,
+  MdOutlineMusic_note,
+  MdOutlineDescription,
+  MdOutlineArchive,
+  MdOutlineEdit_note,
+  MdOutlineAttach_file,
+} from "solid-icons/md";
 import { useAuth } from "@/shared/store/auth-store";
 import { fetchGroups } from "@/modules/directory/groups/api";
 import type { PrivacyGroup } from "@/modules/directory/groups/api";
@@ -45,16 +58,17 @@ function formatDate(s: string): string {
   } catch { return s; }
 }
 
-function fileEmoji(item: FileMeta): string {
-  if (item.is_dir) return "📁";
-  const ct = item.filetype;
-  if (ct.startsWith("image/")) return "🖼";
-  if (ct.startsWith("video/")) return "🎬";
-  if (ct.startsWith("audio/")) return "🎵";
-  if (ct === "application/pdf") return "📄";
-  if (ct.includes("zip") || ct.includes("tar")) return "🗜";
-  if (ct.startsWith("text/")) return "📝";
-  return "📎";
+function FileIcon(props: { item: FileMeta; class?: string }) {
+  const cls = () => props.class ?? "w-5 h-5";
+  if (props.item.is_dir) return <MdFillFolder class={cls()} />;
+  const ct = props.item.filetype;
+  if (ct.startsWith("image/")) return <MdOutlineImage class={cls()} />;
+  if (ct.startsWith("video/")) return <MdOutlineMovie class={cls()} />;
+  if (ct.startsWith("audio/")) return <MdOutlineMusic_note class={cls()} />;
+  if (ct === "application/pdf") return <MdOutlineDescription class={cls()} />;
+  if (ct.includes("zip") || ct.includes("tar")) return <MdOutlineArchive class={cls()} />;
+  if (ct.startsWith("text/")) return <MdOutlineEdit_note class={cls()} />;
+  return <MdOutlineAttach_file class={cls()} />;
 }
 
 function isPrivate(acl: FileAcl): boolean {
@@ -219,7 +233,7 @@ const FileRow: Component<{
   <div class={`flex items-center gap-3 px-3 py-2.5 rounded-lg group transition-colors ${
     props.permOpen ? "bg-elevated" : "hover:bg-elevated"
   }`}>
-    <span class="text-xl shrink-0 select-none">{fileEmoji(props.item)}</span>
+    <FileIcon item={props.item} class="w-5 h-5 shrink-0 select-none" />
 
     <div class="flex-1 min-w-0">
       <button
@@ -372,7 +386,7 @@ const ThumbnailGrid: Component<{
               <Show
                 when={isImage()}
                 fallback={
-                  <span class="text-5xl select-none">{fileEmoji(item)}</span>
+                  <FileIcon item={item} class="w-10 h-10 select-none" />
                 }
               >
                 <img
@@ -386,7 +400,7 @@ const ThumbnailGrid: Component<{
                   }}
                 />
                 {/* fallback shown if img errors */}
-                <span class="text-5xl select-none hidden">{fileEmoji(item)}</span>
+                <FileIcon item={item} class="w-10 h-10 select-none hidden" />
               </Show>
             </div>
 

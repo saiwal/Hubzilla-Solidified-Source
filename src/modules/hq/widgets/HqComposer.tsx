@@ -1,4 +1,5 @@
-import { createSignal, createEffect, onCleanup, Show, For } from "solid-js";
+import { createSignal, createEffect, onCleanup, Show, For, type JSX } from "solid-js";
+import { MdOutlineLink } from "solid-icons/md";
 import { toast } from "@/shared/store/toast";
 import { useAuth } from "@/shared/store/auth-store";
 import { motion } from "solid-motionone";
@@ -190,7 +191,7 @@ function HqComposer() {
   const toolbar = [
     { title: () => t("editor.hq_bold"),    label: "B",  cls: "font-bold", action: () => wrapBb("[b]", "[/b]") },
     { title: () => t("editor.hq_italic"),  label: "I",  cls: "italic",    action: () => wrapBb("[i]", "[/i]") },
-    { title: () => t("editor.hq_link"),    label: "🔗", cls: "",          action: () => {
+    { title: () => t("editor.hq_link"),    label: <MdOutlineLink class="w-4 h-4" /> as JSX.Element, cls: "",          action: () => {
       const url = window.prompt("URL:", "https://");
       if (url) wrapBb(`[url=${url}]`, "[/url]", "Link text");
     }},

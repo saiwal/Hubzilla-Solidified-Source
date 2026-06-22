@@ -1,4 +1,5 @@
 import { createEffect, createSignal, Show, For } from "solid-js";
+import { MdOutlineEdit_note } from "solid-icons/md";
 import { useAuth } from "@/shared/store/auth-store";
 import { useViewerRole } from "@/shared/store/site-config";
 import { useI18n } from "@/i18n";
@@ -149,7 +150,7 @@ export default function NotepadView() {
 
       <Show when={!loading() && notes().length === 0}>
         <div class="text-center py-16 space-y-3 text-muted">
-          <p class="text-3xl">📝</p>
+          <MdOutlineEdit_note class="text-3xl text-muted mx-auto" />
           <p class="text-sm">{t("notepad.no_notes")}</p>
           <Show when={isOwner()}>
             <p class="text-xs">{t("notepad.create_first")}</p>

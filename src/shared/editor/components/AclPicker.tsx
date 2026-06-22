@@ -10,6 +10,7 @@ import {
   Show,
   For,
   type Component,
+  type JSX,
 } from "solid-js";
 import { Portal } from "solid-js/web";
 import { fetchConnections } from "@/modules/network/api";
@@ -17,6 +18,7 @@ import type { AclEntry } from "@/modules/network/api";
 import { useDropdown } from "@/shared/lib/useDropdown";
 import { motion } from "solid-motionone";
 import { useI18n } from "@/i18n";
+import { MdOutlinePublic, MdFillLock, MdOutlineTune, MdFillCheck, MdOutlineGroup } from "solid-icons/md";
 void motion;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -68,17 +70,17 @@ const AclPicker: Component<AclPickerProps> = (props) => {
 
   const totalSelected = () => props.allowEntries.size + props.denyEntries.size;
 
-  const modeLabel: Record<AclMode, string> = {
-    public: "🌐 Public",
-    connections: "🔒 Connections",
-    custom: `🤫 Custom${totalSelected() > 0 ? ` (${totalSelected()})` : ""}`,
-  };
+  const modePills: { mode: AclMode; icon: () => JSX.Element; label: () => string }[] = [
+    { mode: "public",      icon: () => <MdOutlinePublic class="w-3.5 h-3.5" />, label: () => "Public" },
+    { mode: "connections", icon: () => <MdFillLock class="w-3.5 h-3.5" />,      label: () => "Connections" },
+    { mode: "custom",      icon: () => <MdOutlineTune class="w-3.5 h-3.5" />,   label: () => `Custom${totalSelected() > 0 ? ` (${totalSelected()})` : ""}` },
+  ];
 
   return (
     <div class="shrink-0">
       {/* Mode pills */}
       <div ref={setTriggerRef} class="flex items-center gap-1">
-        {(["public", "connections", "custom"] as AclMode[]).map((m) => (
+        {modePills.map(({ mode: m, icon, label }) => (
           <button
             type="button"
             onClick={() => {
@@ -93,7 +95,7 @@ const AclPicker: Component<AclPickerProps> = (props) => {
                 : "border-rim text-muted hover:border-rim-strong hover:text-txt")
             }
           >
-            {modeLabel[m]}
+            {icon()} {label()}
           </button>
         ))}
       </div>
@@ -138,7 +140,7 @@ const AclPicker: Component<AclPickerProps> = (props) => {
                                  bg-green-50 dark:bg-green-500/10 border border-green-300 dark:border-green-600
                                  text-green-700 dark:text-green-300"
                     >
-                      ✓ {conn?.name ?? key.slice(0, 14) + "…"}
+                      <MdFillCheck class="w-3 h-3 shrink-0" /> {conn?.name ?? key.slice(0, 14) + "…"}
                       <button
                         type="button"
                         onClick={() => conn && props.onToggle(conn, "allow")}
@@ -243,7 +245,7 @@ const AclPicker: Component<AclPickerProps> = (props) => {
 
                       <span class="flex flex-col min-w-0 flex-1">
                         <span class="truncate text-xs font-medium text-txt">
-                          {c.type === "g" ? "👥 " : ""}
+                          {c.type === "g" ? <MdOutlineGroup class="w-3.5 h-3.5 inline-block mr-0.5" /> : null}
                           {c.name}
                         </span>
                         <Show when={c.link}>
@@ -254,9 +256,7 @@ const AclPicker: Component<AclPickerProps> = (props) => {
                       </span>
 
                       <Show when={isAllowed()}>
-                        <span class="text-green-500 text-xs shrink-0 font-bold">
-                          ✓
-                        </span>
+                        <MdFillCheck class="text-green-500 w-3.5 h-3.5 shrink-0" />
                       </Show>
                     </button>
 

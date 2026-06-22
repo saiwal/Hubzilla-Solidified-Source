@@ -3,6 +3,7 @@ import { Show, For, type Component, createEffect, on } from "solid-js";
 import { Portal } from "solid-js/web";
 import type { DirectoryEntry } from "../people/api";
 import { useI18n } from "@/i18n";
+import { MdFillCheck } from "solid-icons/md";
 
 interface Props {
   entry: DirectoryEntry | null;
@@ -86,7 +87,7 @@ const DirectoryEntryModal: Component<Props> = (props) => {
                   </Show>
                   <Show when={e()!.is_connected}>
                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-accent-muted text-accent border border-accent/30">
-                      ✓ {t("directory.connected")}
+                      <MdFillCheck class="w-3.5 h-3.5 shrink-0" /> {t("directory.connected")}
                     </span>
                   </Show>
                   <Show when={e()!.common_count !== null && e()!.common_count! > 0}>

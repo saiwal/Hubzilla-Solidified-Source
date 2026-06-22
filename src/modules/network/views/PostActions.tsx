@@ -9,6 +9,13 @@ import {
   handleDelete,
 } from "../store";
 import type { ThreadNode } from "@/shared/lib/thread";
+import {
+  MdOutlineThumb_up,
+  MdOutlineThumb_down,
+  MdOutlineRepeat,
+  MdOutlineStar,
+  MdOutlineDelete,
+} from "solid-icons/md";
 
 interface Props {
   post: ThreadNode;
@@ -25,7 +32,7 @@ export default function PostActions(props: Props) {
         class={`flex items-center gap-1 transition-colors hover:text-accent
           ${props.post.viewerLiked ? "text-accent" : ""}`}
       >
-        <span>👍</span>
+        <MdOutlineThumb_up class="w-4 h-4" />
         <Show when={props.post.likeCount > 0}>
           <span>{props.post.likeCount}</span>
         </Show>
@@ -36,7 +43,7 @@ export default function PostActions(props: Props) {
         class={`flex items-center gap-1 transition-colors hover:text-red-500
           ${props.post.viewerDisliked ? "text-red-500" : ""}`}
       >
-        <span>👎</span>
+        <MdOutlineThumb_down class="w-4 h-4" />
         <Show when={props.post.dislikeCount > 0}>
           <span>{props.post.dislikeCount}</span>
         </Show>
@@ -47,7 +54,7 @@ export default function PostActions(props: Props) {
         class={`flex items-center gap-1 transition-colors hover:text-green-500
           ${props.post.viewerRepeated ? "text-green-500" : ""}`}
       >
-        <span>🔁</span>
+        <MdOutlineRepeat class="w-4 h-4" />
         <Show when={props.post.repeatCount > 0}>
           <span>{props.post.repeatCount}</span>
         </Show>
@@ -59,7 +66,7 @@ export default function PostActions(props: Props) {
           class={`transition-colors hover:text-yellow-500
             ${props.post.flags.includes("starred") ? "text-yellow-500" : ""}`}
         >
-          ⭐
+          <MdOutlineStar class="w-4 h-4" />
         </button>
       </Show>
 
@@ -68,7 +75,7 @@ export default function PostActions(props: Props) {
           onClick={() => handleDelete(props.post.mid)}
           class="transition-colors hover:text-red-600 ml-auto"
         >
-          🗑
+          <MdOutlineDelete class="w-4 h-4" />
         </button>
       </Show>
     </div>

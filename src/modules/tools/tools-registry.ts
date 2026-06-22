@@ -8,6 +8,15 @@ import { Base64Tool } from "./components/Base64Tool";
 import { PasswordGenerator } from "./components/PasswordGenerator";
 import { ImageEditor } from "./components/ImageEditor";
 import { VideoEditor } from "./components/VideoEditor";
+import {
+  MdOutlineCalculate,
+  MdOutlineQr_code_2,
+  MdOutlineStraighten,
+  MdOutlineData_object,
+  MdOutlineKey,
+  MdFillImage,
+  MdOutlineMovie,
+} from "solid-icons/md";
 
 type TranslatorKey = keyof i18n.Flatten<RawDictionary>;
 
@@ -23,16 +32,16 @@ export type ToolId =
 export type ToolEntry = {
   id: ToolId;
   labelKey: TranslatorKey;
-  icon: string;
+  icon: Component<{ class?: string }>;
   component: Component;
 };
 
 export const TOOLS: ToolEntry[] = [
-  { id: "calculator",     labelKey: "tools.calc",     icon: "🧮", component: Calculator },
-  { id: "qr",             labelKey: "tools.qr",       icon: "⬛", component: QRGenerator },
-  { id: "unit-converter", labelKey: "tools.unit",     icon: "📏", component: UnitConverter },
-  { id: "base64",         labelKey: "tools.base64",   icon: "🔣", component: Base64Tool },
-  { id: "password",       labelKey: "tools.password", icon: "🔑", component: PasswordGenerator },
-  { id: "image-editor",   labelKey: "tools.img",      icon: "🖼️", component: ImageEditor },
-  { id: "video-editor",   labelKey: "tools.vid",      icon: "🎬", component: VideoEditor },
+  { id: "calculator",     labelKey: "tools.calc",     icon: MdOutlineCalculate,   component: Calculator },
+  { id: "qr",             labelKey: "tools.qr",       icon: MdOutlineQr_code_2,   component: QRGenerator },
+  { id: "unit-converter", labelKey: "tools.unit",     icon: MdOutlineStraighten,  component: UnitConverter },
+  { id: "base64",         labelKey: "tools.base64",   icon: MdOutlineData_object, component: Base64Tool },
+  { id: "password",       labelKey: "tools.password", icon: MdOutlineKey,         component: PasswordGenerator },
+  { id: "image-editor",   labelKey: "tools.img",      icon: MdFillImage,          component: ImageEditor },
+  { id: "video-editor",   labelKey: "tools.vid",      icon: MdOutlineMovie,       component: VideoEditor },
 ];

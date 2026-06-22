@@ -4,6 +4,7 @@ import { useAuth } from '@/shared/store/auth-store';
 import { pages, loading, loadWebpages, removePage } from '../store';
 import type { WebPage } from '../api';
 import { useI18n } from '@/i18n';
+import { MdOutlineDescription } from "solid-icons/md";
 
 export default function WebpagesView() {
   const { t } = useI18n();
@@ -172,7 +173,7 @@ function EmptyState(props: { nick: string }) {
   const { t } = useI18n();
   return (
     <div class="text-center py-16 space-y-4">
-      <div class="text-5xl">📄</div>
+      <MdOutlineDescription class="w-12 h-12 text-muted mx-auto" />
       <p class="text-muted">{t("webpages.no_webpages")}</p>
       <a
         href={`/webpages/${props.nick}/new`}

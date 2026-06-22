@@ -2,6 +2,7 @@ import { createSignal, onCleanup, Show, For } from "solid-js";
 import { useI18n } from "@/i18n";
 import { currentNick } from "@/shared/store/auth-store";
 import { davDirPath, uploadFile, listFolder, type FileMeta } from "@/modules/files/api";
+import { MdOutlineMovie, MdFillCheck, MdFillFolder } from "solid-icons/md";
 
 const FFMPEG_BASE = import.meta.env.BASE_URL + "ffmpeg/";
 
@@ -386,7 +387,7 @@ export function VideoEditor() {
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer?.files[0]; if (f) openFile(f); }}
           >
-            <span class="text-4xl" aria-hidden="true">🎬</span>
+            <MdOutlineMovie class="text-4xl text-muted" aria-hidden="true" />
             <span class="text-sm">{s("tools.vid_drop")}</span>
             <input
               type="file"
@@ -594,7 +595,7 @@ export function VideoEditor() {
                         when={!savedPath()}
                         fallback={
                           <div class="flex items-center gap-2 text-sm text-txt border border-rim rounded-xl px-4 py-3">
-                            <span class="text-green-500">✓</span>
+                            <MdFillCheck class="text-green-500 shrink-0" />
                             <span>{s("tools.vid_saved")} <strong>{savedPath()}</strong></span>
                           </div>
                         }
@@ -620,14 +621,14 @@ export function VideoEditor() {
                             >
                               <button onClick={() => saveToFolder("")} disabled={saving()}
                                 class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-elevated transition-colors text-left disabled:opacity-50 border-b border-rim">
-                                <span class="text-lg shrink-0">📁</span>
+                                <MdFillFolder class="text-lg shrink-0 text-muted" />
                                 <span class="flex-1 text-sm text-txt">/</span>
                               </button>
                               <For each={folders()}>
                                 {(folder) => (
                                   <button onClick={() => saveToFolder(folder.display_path)} disabled={saving()}
                                     class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-elevated transition-colors text-left disabled:opacity-50 border-b border-rim last:border-0">
-                                    <span class="text-lg shrink-0">📁</span>
+                                    <MdFillFolder class="text-lg shrink-0 text-muted" />
                                     <span class="flex-1 text-sm text-txt truncate">{folder.display_path}</span>
                                   </button>
                                 )}

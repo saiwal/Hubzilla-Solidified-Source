@@ -1,3 +1,5 @@
+import { MdOutlineLink, MdOutlineVpn_key, MdOutlineImage } from "solid-icons/md";
+
 interface Props {
   textareaRef: () => HTMLTextAreaElement | undefined;
   editorRef: () => HTMLDivElement | undefined;
@@ -206,13 +208,13 @@ export default function BBCodeToolbar(props: Props) {
       <Sep />
 
       {/* Links */}
-      <Btn title="Link [url=X]" onPress={link}><span class="text-xs">🔗</span></Btn>
-      <Btn title="Magic-auth link [zrl=X]" onPress={zrl}><span class="text-xs">🔐</span></Btn>
+      <Btn title="Link [url=X]" onPress={link}><MdOutlineLink class="w-4 h-4" /></Btn>
+      <Btn title="Magic-auth link [zrl=X]" onPress={zrl}><MdOutlineVpn_key class="w-4 h-4" /></Btn>
 
       <Sep />
 
       {/* Media */}
-      <Btn title="Image [img]" onPress={img}><span class="text-xs">🖼</span></Btn>
+      <Btn title="Image [img]" onPress={img}><MdOutlineImage class="w-4 h-4" /></Btn>
       <Btn title="Magic-auth image [zmg]" onPress={zmg}><span class="text-[10px] font-mono">zmg</span></Btn>
       <Btn title="Video [video]" onPress={video}><span class="text-xs">▶</span></Btn>
       <Btn title="Audio [audio]" onPress={audio}><span class="text-xs">♪</span></Btn>

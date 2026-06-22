@@ -2,6 +2,7 @@
 import { type Component, Show } from "solid-js";
 import type { ViewerRole } from "../store/site-config.ts";
 import { useI18n } from "@/i18n";
+import { MdOutlinePublic, MdOutlineVisibility } from "solid-icons/md";
 
 interface Props {
   role: ViewerRole;
@@ -32,7 +33,7 @@ const RemoteAuthBanner: Component<Props> = (props) => {
       >
         {/* Remote authenticated */}
         <Show when={props.role === "remote"}>
-          <span class="opacity-70">🌐</span>
+          <MdOutlinePublic class="w-4 h-4 opacity-70 shrink-0" />
           <span class="flex-1">
             <Show
               when={props.subjectNick}
@@ -55,7 +56,7 @@ const RemoteAuthBanner: Component<Props> = (props) => {
 
         {/* Anonymous */}
         <Show when={props.role === "anonymous"}>
-          <span class="opacity-70">👁</span>
+          <MdOutlineVisibility class="w-4 h-4 opacity-70 shrink-0" />
           <span class="flex-1">
             <Show
               when={props.subjectNick}

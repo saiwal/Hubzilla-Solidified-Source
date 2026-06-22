@@ -1,4 +1,5 @@
 import { createSignal, For, onCleanup, Show } from "solid-js";
+import { MdFillImage, MdFillCheck, MdFillFolder } from "solid-icons/md";
 import { useI18n } from "@/i18n";
 import SharedImageEditor from "@/shared/views/ImageEditor";
 import {
@@ -183,7 +184,7 @@ export function ImageEditor() {
                     if (f) openFile(f);
                   }}
                 >
-                  <span class="text-4xl" aria-hidden="true">🖼️</span>
+                  <MdFillImage class="text-4xl text-muted" aria-hidden="true" />
                   <span class="text-sm">{s("tools.img_drop")}</span>
                   {fileInput(openFile)}
                 </label>
@@ -256,7 +257,7 @@ export function ImageEditor() {
                     when={!savedAlbum()}
                     fallback={
                       <div class="flex items-center gap-2 text-sm text-txt border border-rim rounded-xl px-4 py-3">
-                        <span class="text-green-500">✓</span>
+                        <MdFillCheck class="text-green-500 shrink-0" />
                         <span>
                           {s("tools.img_saved")}
                           {" "}
@@ -294,8 +295,8 @@ export function ImageEditor() {
                                   <Show
                                     when={album.thumb}
                                     fallback={
-                                      <div class="w-10 h-10 rounded bg-elevated shrink-0 flex items-center justify-center text-muted text-xs">
-                                        📁
+                                      <div class="w-10 h-10 rounded bg-elevated shrink-0 flex items-center justify-center text-muted">
+                                        <MdFillFolder class="w-5 h-5" />
                                       </div>
                                     }
                                   >
