@@ -308,60 +308,6 @@ export type RawDictionary = {
     vid_thumbnail_hint:   string;
     vid_thumbnail_set:    string;
   };
-  games: {
-    label:            string;
-    ttt:              string;
-    chess:            string;
-    go:               string;
-    // Setup (shared)
-    create_game:      string;
-    enter_code:       string;
-    join:             string;
-    creating:         string;
-    joining:          string;
-    copy_code:        string;
-    copied_code:      string;
-    cancel:           string;
-    or:               string;
-    // Waiting for opponent (shared)
-    waiting_opponent: string;
-    share_code:       string;
-    // In-game status (shared)
-    your_turn:        string;
-    opponent_turn:    string;
-    you:              string;
-    opponent:         string;
-    // Result (shared)
-    you_win:          string;
-    you_lose:         string;
-    draw:             string;
-    play_again:       string;
-    // Errors (shared)
-    invalid_code:     string;
-    join_error:       string;
-    create_error:     string;
-    login_required:   string;
-    // Chess-specific
-    chess_white:      string;
-    chess_black:      string;
-    chess_check:      string;
-    chess_checkmate:  string;
-    chess_stalemate:  string;
-    chess_draw_50:    string;
-    chess_promote:    string;
-    // Go-specific
-    go_pass:          string;
-    go_resign:        string;
-    go_captures:      string;
-    go_territory:     string;
-    go_komi:          string;
-    go_final_score:   string;
-    go_black_score:   string;
-    go_white_score:   string;
-    go_black_wins:    string;
-    go_white_wins:    string;
-    go_resigned:      string;
-  };
   post: {
     like: string; dislike: string; repeat: string; reshare_with_comment: string;
     more_sharing: string; star: string; unstar: string; follow: string; unfollow: string;
