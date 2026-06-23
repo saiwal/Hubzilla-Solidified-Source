@@ -21,7 +21,6 @@ export type RawDictionary = {
     wiki:          string;
     notepad:       string;
     tools:         string;
-    games:         string;
     // action items
     profile:       string;
     edit_profile:  string;
