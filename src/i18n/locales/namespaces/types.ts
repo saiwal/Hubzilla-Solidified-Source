@@ -302,6 +302,11 @@ export type RawDictionary = {
     vid_no_preview:       string;
     vid_download_mp3:     string;
     vid_filename:         string;
+    vid_thumbnail:        string;
+    vid_thumbnail_capture:string;
+    vid_thumbnail_recapture:string;
+    vid_thumbnail_hint:   string;
+    vid_thumbnail_set:    string;
   };
   games: {
     label:            string;
