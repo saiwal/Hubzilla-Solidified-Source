@@ -72,7 +72,7 @@ export interface WallAttachResult {
   hash: string;         // attach table hash (= photo resource_id for images)
   revision: number;     // 0 for photos, actual revision for files
   isPhoto: boolean;
-  src?: string;         // photo URL from [zmg=URL] (images only, absolute)
+  src?: string;         // media URL: photo from [zmg=URL], video/audio from [video]/[audio] tag
   message: string;      // full BBCode from server
 }
 
@@ -158,9 +158,12 @@ export async function wallAttach(
   }
 
   // File response: [attachment]hash,revision[/attachment]
+  // May be preceded by [video]url[/video] or [audio]url[/audio] for media files.
   const attachMatch = message.match(/\[attachment\]([^,\]]+),(\d+)/i);
   if (!attachMatch) throw new Error("Could not parse attachment from wall_attach response");
-  return { hash: attachMatch[1], revision: parseInt(attachMatch[2], 10), isPhoto: false, message };
+  const mediaMatch = message.match(/\[(?:video|audio)\](.*?)\[\/(?:video|audio)\]/i);
+  const src = mediaMatch ? mediaMatch[1].trim() : undefined;
+  return { hash: attachMatch[1], revision: parseInt(attachMatch[2], 10), isPhoto: false, src, message };
 }
 
 // ── WebDAV helpers (upload, delete, mkdir) ────────────────────────────────────

@@ -88,6 +88,11 @@ export const tools: RawDictionary["tools"] = {
   vid_no_preview:       "Format cannot be previewed in the browser — will convert to MP4 on processing",
   vid_download_mp3:     "Download MP3",
   vid_filename:         "File name",
+  vid_thumbnail:        "Thumbnail",
+  vid_thumbnail_capture:"Set thumbnail from current frame",
+  vid_thumbnail_recapture:"Recapture thumbnail",
+  vid_thumbnail_hint:   "Scrub the video to the frame you want, then click the button to set it as the embed thumbnail.",
+  vid_thumbnail_set:    "Thumbnail set — will be used as the video poster when embedded.",
   // Image Editor
   img:              "Image Editor",
   img_drop:         "Drop an image here, or click to browse",

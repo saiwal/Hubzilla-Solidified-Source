@@ -10,6 +10,8 @@ const PLYR_OPTIONS: Plyr.Options = {
   vimeo: { byline: false, portrait: false, title: false, speed: true },
   resetOnEnd: true,
   tooltips: { controls: false, seek: true },
+  iconUrl: import.meta.env.BASE_URL + 'plyr.svg',
+  loadSprite: true,
 };
 
 // Chrome ignores the `download` attribute on cross-origin anchors.

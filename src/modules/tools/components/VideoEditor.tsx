@@ -119,7 +119,7 @@ const ROTATE_KEY: Record<Rotate, "tools.vid_rot_none" | "tools.vid_rot_90cw" | "
 // ── Component ─────────────────────────────────────────────────────────────────
 interface VideoEditorProps {
   initialFile?: File;
-  onAttach?: (file: File) => void;
+  onAttach?: (file: File, thumbnail?: File) => void;
 }
 
 export function VideoEditor(props: VideoEditorProps = {}) {
@@ -127,6 +127,7 @@ export function VideoEditor(props: VideoEditorProps = {}) {
   const s = (key: Parameters<typeof t>[0]) => String(t(key));
 
   let videoEl: HTMLVideoElement | undefined;
+  let resultVideoEl: HTMLVideoElement | undefined;
 
   // Loading
   const [loadingFFmpeg, setLoadingFFmpeg] = createSignal(false);
@@ -158,6 +159,10 @@ export function VideoEditor(props: VideoEditorProps = {}) {
   const [resultUrl,     setResultUrl]     = createSignal<string | null>(null);
   const [resultIsAudio, setResultIsAudio] = createSignal(false);
 
+  // Thumbnail
+  const [thumbnailFile, setThumbnailFile] = createSignal<File | null>(null);
+  const [thumbnailUrl,  setThumbnailUrl]  = createSignal<string | null>(null);
+
   // Save to Files
   const [folders,       setFolders]       = createSignal<FileMeta[]>([]);
   const [foldersLoading,setFoldersLoading]= createSignal(false);
@@ -170,6 +175,7 @@ export function VideoEditor(props: VideoEditorProps = {}) {
   onCleanup(() => {
     const src = videoSrc(); if (src) URL.revokeObjectURL(src);
     const res = resultUrl(); if (res) URL.revokeObjectURL(res);
+    const thumb = thumbnailUrl(); if (thumb) URL.revokeObjectURL(thumb);
   });
 
   onMount(() => {
@@ -202,6 +208,8 @@ export function VideoEditor(props: VideoEditorProps = {}) {
     setVideoSrc(URL.createObjectURL(f));
     setNoPreview(!canBrowserPlay(f));
     setResultUrl(null);  setResultBlob(null);
+    const prevThumb = thumbnailUrl(); if (prevThumb) URL.revokeObjectURL(prevThumb);
+    setThumbnailUrl(null);  setThumbnailFile(null);
     setProcessError(null);
     setSavedPath(null);  setSaveError(null);
     setProgress(0);
@@ -227,6 +235,8 @@ export function VideoEditor(props: VideoEditorProps = {}) {
     setSavedPath(null);  setSaveError(null);
     const prevRes = resultUrl(); if (prevRes) URL.revokeObjectURL(prevRes);
     setResultUrl(null);  setResultBlob(null);
+    const prevThumb = thumbnailUrl(); if (prevThumb) URL.revokeObjectURL(prevThumb);
+    setThumbnailUrl(null);  setThumbnailFile(null);
 
     const worker = new FFmpegWorker(FFMPEG_BASE + "ffmpeg-worker.js");
     worker.onProgress = (ratio) => setProgress(Math.min(99, Math.round(ratio * 100)));
@@ -376,6 +386,26 @@ export function VideoEditor(props: VideoEditorProps = {}) {
     } finally {
       setSaving(false);
     }
+  };
+
+  // ── Thumbnail capture ─────────────────────────────────────────────────────────
+  const captureThumbnail = () => {
+    const vid = resultVideoEl;
+    if (!vid) return;
+    const canvas = document.createElement("canvas");
+    canvas.width  = vid.videoWidth  || 640;
+    canvas.height = vid.videoHeight || 360;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(vid, 0, 0);
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const prev = thumbnailUrl(); if (prev) URL.revokeObjectURL(prev);
+      const base = file()?.name.replace(/\.[^.]+$/, "") ?? "video";
+      const thumbFile = new File([blob], `${base}-thumbnail.jpg`, { type: "image/jpeg" });
+      setThumbnailFile(thumbFile);
+      setThumbnailUrl(URL.createObjectURL(blob));
+    }, "image/jpeg", 0.92);
   };
 
   // ── CSS shortcuts ─────────────────────────────────────────────────────────────
@@ -589,8 +619,33 @@ export function VideoEditor(props: VideoEditorProps = {}) {
                       when={!resultIsAudio()}
                       fallback={<audio src={url()} controls class="w-full" />}
                     >
-                      <video src={url()} controls class="w-full rounded-lg" />
+                      <video ref={(el) => { resultVideoEl = el; }} src={url()} controls class="w-full rounded-lg" />
                     </Show>
+                    {/* Thumbnail picker — video only */}
+                    <Show when={!resultIsAudio()}>
+                      <div class="border border-rim rounded-xl overflow-hidden">
+                        <div class="px-4 py-2.5 border-b border-rim bg-elevated flex items-center justify-between">
+                          <span class="text-xs font-medium text-txt">{s("tools.vid_thumbnail")}</span>
+                          <button onClick={captureThumbnail} class={btnOutline} style="padding:0.25rem 0.75rem;font-size:0.75rem">
+                            {thumbnailUrl() ? s("tools.vid_thumbnail_recapture") : s("tools.vid_thumbnail_capture")}
+                          </button>
+                        </div>
+                        <Show
+                          when={thumbnailUrl()}
+                          fallback={
+                            <p class="px-4 py-3 text-xs text-muted">{s("tools.vid_thumbnail_hint")}</p>
+                          }
+                        >
+                          {(url) => (
+                            <div class="p-3 flex items-center gap-3">
+                              <img src={url()} alt="thumbnail" class="h-16 rounded-lg object-cover shrink-0" />
+                              <p class="text-xs text-muted">{s("tools.vid_thumbnail_set")}</p>
+                            </div>
+                          )}
+                        </Show>
+                      </div>
+                    </Show>
+
                     <div class="flex items-center justify-between flex-wrap gap-3">
                       <span class="text-xs text-muted">{s("tools.vid_result_size")}: {fmtBytes(resultBlob()!.size)}</span>
                       <div class="flex gap-2 flex-wrap">
@@ -600,7 +655,10 @@ export function VideoEditor(props: VideoEditorProps = {}) {
                               const blob = resultBlob();
                               if (!blob || !props.onAttach) return;
                               const ext = resultIsAudio() ? "mp3" : "mp4";
-                              props.onAttach(new File([blob], saveFileName() || `video-edited.${ext}`, { type: blob.type }));
+                              props.onAttach(
+                                new File([blob], saveFileName() || `video-edited.${ext}`, { type: blob.type }),
+                                thumbnailFile() ?? undefined,
+                              );
                             }}
                             class={btnPrimary}
                           >

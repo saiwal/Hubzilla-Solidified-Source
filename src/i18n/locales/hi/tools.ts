@@ -88,6 +88,11 @@ export const tools: RawDictionary["tools"] = {
   vid_no_preview:       "यह फ़ॉर्मेट ब्राउज़र में नहीं चल सकता — प्रोसेसिंग पर MP4 में बदला जाएगा",
   vid_download_mp3:     "MP3 डाउनलोड करें",
   vid_filename:         "फ़ाइल का नाम",
+  vid_thumbnail:        "थंबनेल",
+  vid_thumbnail_capture:"वर्तमान फ़्रेम से थंबनेल सेट करें",
+  vid_thumbnail_recapture:"थंबनेल फिर से कैप्चर करें",
+  vid_thumbnail_hint:   "वीडियो को उस फ़्रेम पर ले जाएँ जो आप चाहते हैं, फिर बटन क्लिक करें।",
+  vid_thumbnail_set:    "थंबनेल सेट हो गया — एम्बेड करते समय इसे पोस्टर के रूप में उपयोग किया जाएगा।",
   // Image Editor
   img:              "इमेज एडिटर",
   img_drop:         "यहाँ इमेज छोड़ें, या ब्राउज़ करने के लिए क्लिक करें",

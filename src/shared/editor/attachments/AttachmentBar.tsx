@@ -188,8 +188,12 @@ const AttachmentBar: Component<Props> = (props) => {
       <Show when={cameraOpen()}>
         <CameraCapture
           onClose={() => setCameraOpen(false)}
-          onCapture={(files) => {
-            props.store.addUploads(files);
+          onCapture={(files, thumbnail) => {
+            if (thumbnail && files.length === 1) {
+              props.store.addVideoWithThumbnail(files[0], thumbnail);
+            } else {
+              props.store.addUploads(files);
+            }
           }}
         />
       </Show>

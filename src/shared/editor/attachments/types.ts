@@ -18,6 +18,7 @@ export interface Attachment {
   hash?: string;
   resourceId?: string;
   altText?: string;
+  posterUrl?: string;
   file?: File;
   error?: string;
 }
@@ -26,6 +27,7 @@ export interface AttachmentStore {
   attachments: () => Attachment[];
   uploading: () => boolean;
   addUploads: (files: FileList | File[]) => void;
+  addVideoWithThumbnail: (video: File, thumbnail: File) => void;
   addCloudFiles: (files: FileMeta[]) => void;
   addPhotos: (photos: Photo[]) => void;
   remove: (id: string) => void;

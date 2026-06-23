@@ -22,6 +22,7 @@ type DraftAttachment = {
   insertUrl?: string;
   thumbUrl?: string;   // only non-blob: URLs
   altText?: string;
+  posterUrl?: string;
 };
 
 function toSerializable(a: Attachment): DraftAttachment {
@@ -37,6 +38,7 @@ function toSerializable(a: Attachment): DraftAttachment {
     insertUrl: a.insertUrl,
     thumbUrl: a.thumbUrl?.startsWith("blob:") ? undefined : a.thumbUrl,
     altText: a.altText,
+    posterUrl: a.posterUrl?.startsWith("blob:") ? undefined : a.posterUrl,
   };
 }
 
@@ -162,12 +164,25 @@ export function createAttachmentStore(nick: string, scope: string): AttachmentSt
               insertUrl: res.src ? toRelativePath(res.src) : undefined,
             });
           } else {
-            // Files: insertUrl stored as "hash,revision" → insertBBCode produces [attachment]hash,revision[/attachment]
+            // For video/audio: build a playable /cloud/nick/filename URL.
+            // wall_attach places the file at the root of the channel's cloud storage,
+            // so /cloud/nick/filename is always reachable. Use server-provided src
+            // when available (some Hubzilla versions include [video]url[/video] in
+            // the message), otherwise construct it from the filename.
+            let insertUrl: string;
+            if (item.isVideo || item.isAudio) {
+              const path = res.src
+                ? toRelativePath(res.src)
+                : `/cloud/${nick}/${encodeURIComponent(item.file!.name)}`;
+              insertUrl = window.location.origin + path;
+            } else {
+              insertUrl = `${res.hash},${res.revision}`;
+            }
             update(item.id, {
               status: "ready",
               progress: 100,
               hash: res.hash,
-              insertUrl: `${res.hash},${res.revision}`,
+              insertUrl,
             });
           }
           applyAcl(res.hash);
@@ -243,9 +258,68 @@ export function createAttachmentStore(nick: string, scope: string): AttachmentSt
         ? `[img alt="${alt}"]${item.insertUrl}[/img]`
         : `[img]${item.insertUrl}[/img]`;
     }
-    if (item.isVideo) return `[video]${item.insertUrl}[/video]`;
+    if (item.isVideo) {
+      return item.posterUrl
+        ? `[video poster='${item.posterUrl}']${item.insertUrl}[/video]`
+        : `[video]${item.insertUrl}[/video]`;
+    }
     if (item.isAudio) return `[audio]${item.insertUrl}[/audio]`;
     return `[attachment]${item.insertUrl}[/attachment]`;
+  }
+
+  function addVideoWithThumbnail(video: File, thumbnail: File) {
+    const id = uid();
+    const item: Attachment = {
+      id,
+      source: "upload",
+      status: "uploading",
+      progress: 0,
+      filename: video.name,
+      isImage: false,
+      isVideo: true,
+      isAudio: false,
+      file: video,
+    };
+    setState("items", (prev) => [...prev, item]);
+
+    void (async () => {
+      try {
+        // Upload thumbnail first (small file) to get its URL for the poster attribute
+        const thumbRes = await wallAttach(nick, thumbnail);
+        const posterUrl = thumbRes.isPhoto && thumbRes.src
+          ? toRelativePath(thumbRes.src)
+          : undefined;
+        if (thumbRes.hash) applyAcl(thumbRes.hash);
+
+        // Now upload the video, tracking progress
+        const videoRes = await wallAttach(nick, video, (pct) => update(id, { progress: pct }));
+        if (videoRes.isPhoto) {
+          update(id, {
+            status: "ready",
+            progress: 100,
+            resourceId: videoRes.hash,
+            insertUrl: videoRes.src ? toRelativePath(videoRes.src) : undefined,
+            posterUrl,
+          });
+        } else {
+          const path = videoRes.src
+            ? toRelativePath(videoRes.src)
+            : `/cloud/${nick}/${encodeURIComponent(video.name)}`;
+          const insertUrl = window.location.origin + path;
+          update(id, {
+            status: "ready",
+            progress: 100,
+            hash: videoRes.hash,
+            insertUrl,
+            posterUrl,
+          });
+        }
+        applyAcl(videoRes.hash);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Upload failed";
+        update(id, { status: "error", error: msg });
+      }
+    })();
   }
 
   function setAcl(acl: FileAcl | null) {
@@ -267,7 +341,7 @@ export function createAttachmentStore(nick: string, scope: string): AttachmentSt
     void storageDel(DRAFT_KEY);
   }
 
-  return { attachments, uploading, addUploads, addCloudFiles, addPhotos, remove, setAltText, insertBBCode, setAcl, clear };
+  return { attachments, uploading, addUploads, addVideoWithThumbnail, addCloudFiles, addPhotos, remove, setAltText, insertBBCode, setAcl, clear };
 }
 
 // Prevent adding the same hash or resourceId twice

@@ -14,7 +14,7 @@ type Stage = "initializing" | "streaming" | "captured" | "editing" | "editing-vi
 
 interface Props {
   onClose: () => void;
-  onCapture: (files: File[]) => void;
+  onCapture: (files: File[], thumbnail?: File) => void;
 }
 
 const CameraCapture: Component<Props> = (props) => {
@@ -201,8 +201,8 @@ const CameraCapture: Component<Props> = (props) => {
     setStage("captured");
   }
 
-  function onVideoAttach(file: File) {
-    props.onCapture([file]);
+  function onVideoAttach(file: File, thumbnail?: File) {
+    props.onCapture([file], thumbnail);
     props.onClose();
   }
 
