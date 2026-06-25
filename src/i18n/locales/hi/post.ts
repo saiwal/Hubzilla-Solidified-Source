@@ -56,4 +56,5 @@ export const post: RawDictionary["post"] = {
   new_folder_placeholder: "नए फ़ोल्डर का नाम…",
   add_folder:            "जोड़ें",
   no_folders_yet:        "अभी कोई फ़ोल्डर नहीं — नीचे नाम टाइप करके बनाएँ",
+  expand_all:            "सभी थ्रेड विस्तृत करें",
 };

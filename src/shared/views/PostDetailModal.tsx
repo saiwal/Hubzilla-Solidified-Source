@@ -302,6 +302,7 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
                   highlightUuid={highlightUuid()}
                   initiallyExpanded
                   seamless
+                  expandAll
                   handlers={wrappedHandlers ?? selfHandlers}
                 />
               )}

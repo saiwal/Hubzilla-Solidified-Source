@@ -328,6 +328,7 @@ export type RawDictionary = {
     deleted_comment: string;
     // Folder save
     save_to_folder: string; new_folder_placeholder: string; add_folder: string; no_folders_yet: string;
+    expand_all: string;
   };
   editor: {
     // PostComposer

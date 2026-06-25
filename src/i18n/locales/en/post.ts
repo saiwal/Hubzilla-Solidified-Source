@@ -64,4 +64,5 @@ export const post: RawDictionary["post"] = {
   new_folder_placeholder: "New folder name…",
   add_folder:            "Add",
   no_folders_yet:        "No folders yet — type a name below to create one",
+  expand_all:            "Expand all threads",
 };
