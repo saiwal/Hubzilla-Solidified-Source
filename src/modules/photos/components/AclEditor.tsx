@@ -1,7 +1,7 @@
-import { createSignal, onMount, Show, For } from "solid-js";
+import { createSignal, onMount, Show } from "solid-js";
 import { useI18n } from "@/i18n";
-import { MdFillLock, MdFillLock_open } from "solid-icons/md";
-import type { AclData } from "../api/api";
+import type { AclEntry } from "@/shared/editor/components/AclPicker";
+import AclPicker, { entryKey, type AclMode } from "@/shared/editor/components/AclPicker";
 import { fetchAcl, saveAcl } from "../api/api";
 
 export default function AclEditor(props: {
@@ -11,19 +11,27 @@ export default function AclEditor(props: {
   onClose: () => void;
 }) {
   const { t } = useI18n();
-  const [loading, setLoading] = createSignal(true);
-  const [saving, setSaving]   = createSignal(false);
-  const [error, setError]     = createSignal("");
-  const [aclData, setAclData] = createSignal<AclData | null>(null);
-  const [mode, setMode]       = createSignal<"public" | "custom">("public");
-  const [allowGids, setAllowGids] = createSignal<string[]>([]);
+  const [loading, setLoading]     = createSignal(true);
+  const [saving, setSaving]       = createSignal(false);
+  const [error, setError]         = createSignal("");
+  const [mode, setMode]           = createSignal<AclMode>("public");
+  const [allowKeys, setAllowKeys] = createSignal<Set<string>>(new Set<string>());
+  const [denyKeys, setDenyKeys]   = createSignal<Set<string>>(new Set<string>());
 
   onMount(async () => {
     try {
       const data = await fetchAcl(props.nick, props.type, props.datum);
-      setAclData(data);
-      setAllowGids(data.allow_gid);
-      setMode(data.allow_gid.length > 0 || data.allow_cid.length > 0 ? "custom" : "public");
+      const allowSet = new Set<string>([
+        ...data.allow_cid.map((h) => `c:${h}`),
+        ...data.allow_gid.map((id) => `g:${id}`),
+      ]);
+      const denySet = new Set<string>([
+        ...data.deny_cid.map((h) => `c:${h}`),
+        ...data.deny_gid.map((id) => `g:${id}`),
+      ]);
+      setAllowKeys(allowSet);
+      setDenyKeys(denySet);
+      setMode(allowSet.size > 0 || denySet.size > 0 ? "custom" : "public");
     } catch {
       setError(t("photos.acl_error"));
     } finally {
@@ -31,21 +39,42 @@ export default function AclEditor(props: {
     }
   });
 
-  function toggleGroup(id: string) {
-    setAllowGids(prev =>
-      prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]
-    );
+  function toggleEntry(entry: AclEntry, list: "allow" | "deny") {
+    const key = entryKey(entry);
+    if (list === "allow") {
+      setAllowKeys((prev) => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
+      setDenyKeys((prev) => { const n = new Set(prev); n.delete(key); return n; });
+    } else {
+      setDenyKeys((prev) => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
+      setAllowKeys((prev) => { const n = new Set(prev); n.delete(key); return n; });
+    }
   }
 
   async function handleSave() {
     setSaving(true);
     setError("");
     try {
+      const m = mode();
+      let allow_cid: string[] = [], allow_gid: string[] = [];
+      let deny_cid: string[]  = [], deny_gid: string[]  = [];
+
+      if (m === "custom") {
+        for (const key of allowKeys()) {
+          const [type, ...rest] = key.split(":");
+          const xid = rest.join(":");
+          if (type === "c") allow_cid.push(xid);
+          else if (type === "g") allow_gid.push(xid);
+        }
+        for (const key of denyKeys()) {
+          const [type, ...rest] = key.split(":");
+          const xid = rest.join(":");
+          if (type === "c") deny_cid.push(xid);
+          else if (type === "g") deny_gid.push(xid);
+        }
+      }
+
       await saveAcl(props.nick, props.type, props.datum, {
-        allow_gid: mode() === "public" ? [] : allowGids(),
-        allow_cid: [],
-        deny_gid:  [],
-        deny_cid:  [],
+        allow_cid, allow_gid, deny_cid, deny_gid,
       });
       props.onClose();
     } catch (err) {
@@ -66,61 +95,14 @@ export default function AclEditor(props: {
       </Show>
 
       <Show when={!loading()}>
-        {/* Public / Restricted toggle */}
-        <div class="flex items-center gap-2">
-          <button
-            onClick={() => setMode("public")}
-            class={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors
-                   ${mode() === "public"
-                     ? "bg-accent text-accent-fg"
-                     : "bg-surface text-muted hover:text-txt"}`}
-          >
-            <MdFillLock_open size={13} />
-            {t("photos.acl_public")}
-          </button>
-          <button
-            onClick={() => setMode("custom")}
-            class={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors
-                   ${mode() === "custom"
-                     ? "bg-accent text-accent-fg"
-                     : "bg-surface text-muted hover:text-txt"}`}
-          >
-            <MdFillLock size={13} />
-            {t("photos.acl_custom")}
-          </button>
-        </div>
-
-        {/* Groups (only when restricted mode) */}
-        <Show when={mode() === "custom"}>
-          <Show
-            when={(aclData()?.groups.length ?? 0) > 0}
-            fallback={
-              <p class="text-xs text-muted">{t("photos.acl_no_groups")}</p>
-            }
-          >
-            <div>
-              <p class="text-xs text-muted mb-2">{t("photos.acl_groups")}:</p>
-              <div class="flex flex-wrap gap-1.5">
-                <For each={aclData()!.groups}>
-                  {(group) => {
-                    const active = () => allowGids().includes(group.id);
-                    return (
-                      <button
-                        onClick={() => toggleGroup(group.id)}
-                        class={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors
-                               ${active()
-                                 ? "bg-accent text-accent-fg"
-                                 : "bg-surface text-muted hover:text-txt"}`}
-                      >
-                        {group.name}
-                      </button>
-                    );
-                  }}
-                </For>
-              </div>
-            </div>
-          </Show>
-        </Show>
+        <AclPicker
+          mode={mode()}
+          onModeChange={setMode}
+          allowEntries={allowKeys()}
+          denyEntries={denyKeys()}
+          onToggle={toggleEntry}
+          onClear={() => { setAllowKeys(new Set<string>()); setDenyKeys(new Set<string>()); }}
+        />
 
         <Show when={error()}>
           <p class="text-xs text-red-500">{error()}</p>

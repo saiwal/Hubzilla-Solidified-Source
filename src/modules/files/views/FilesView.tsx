@@ -266,7 +266,7 @@ const FileRow: Component<{
       {formatDate(props.item.created)}
     </span>
 
-    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+    <div class="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
       {/* Permissions */}
       <button
         onClick={() => props.onPermissions(props.item)}
@@ -417,7 +417,7 @@ const ThumbnailGrid: Component<{
             {/* Hover action overlay — pointer-events-none so clicks pass through to card */}
             <div
               class="absolute inset-0 flex items-start justify-end p-1.5 gap-1
-                     opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+                     opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity pointer-events-none"
             >
               <button
                 onClick={(e) => { e.stopPropagation(); props.onPermissions(item); }}

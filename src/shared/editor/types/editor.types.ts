@@ -66,11 +66,11 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
     toolbar: "full",
     preview: true,
     title: true,
-    summary: false,
+    summary: true,
     slug: true,
     category: false,
     attachments: "files",
-    aclPicker: false,
+    aclPicker: true,
     submitOnCtrlEnter: false,
   },
   // Wiki page — plain source editing, no ACL, no attachments

@@ -31,6 +31,7 @@ export const editor = {
   article_summary_placeholder: "Short summary (shown in article listings)…",
   slug_label:             "Slug",
   slug_placeholder:       "url-slug",
+  generate_slug:          "Generate slug from title",
   category_label:         "Categories",
   category_field_placeholder: "Categories (optional, e.g. tech, personal)",
   format_label:           "Format",

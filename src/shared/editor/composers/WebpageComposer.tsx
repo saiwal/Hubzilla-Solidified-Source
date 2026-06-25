@@ -1,12 +1,13 @@
-import { Show, onCleanup } from "solid-js";
+import { createSignal, Show, onCleanup } from "solid-js";
 import { useI18n } from "@/i18n";
 import { createComposerStore } from "../store/createComposerStore";
 import RichEditor from "../core/RichEditor";
 import { CAPABILITIES } from "../types/editor.types";
-import { apiFetch } from "@/shared/lib/fetch";
+import { getCsrfToken } from "@/shared/lib/csrf";
 import AttachmentBar from "../attachments/AttachmentBar";
 import { createAttachmentStore } from "../attachments/useAttachments";
 import { bbcodeToInsert } from "../attachments/insertHelpers";
+import AclPicker, { entryKey, type AclMode, type AclEntry } from "../components/AclPicker";
 import {
   useMention,
   getWysiwygMentionQuery,
@@ -21,22 +22,34 @@ interface Props {
   profileUid: number;
   nick: string;
   initial?: {
+    uuid: string;
     mid: string;
     title: string;
+    summary: string;
     slug: string;
     body: string;
     mimetype: string;
+    item_private?: number;
+    public_policy?: string;
+    allow_cid?: string[];
+    allow_gid?: string[];
+    deny_cid?: string[];
+    deny_gid?: string[];
   };
   onSaved?: () => void;
   onCancel?: () => void;
 }
 
+function slugify(v: string): string {
+  return v.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 export default function WebpageComposer(props: Props) {
   const { t } = useI18n();
   const caps = CAPABILITIES.webpage;
-  const isEditing = () => !!props.initial?.mid;
-  const scope = props.initial?.mid
-    ? `webpage:edit:${props.initial.mid}`
+  const isEditing = () => !!props.initial?.uuid;
+  const scope = props.initial?.uuid
+    ? `webpage:edit:${props.initial.uuid}`
     : "webpage:new";
 
   const attach = createAttachmentStore(props.nick, scope);
@@ -49,6 +62,75 @@ export default function WebpageComposer(props: Props) {
   const getTA = () =>
     editorWrapRef?.querySelector<HTMLTextAreaElement>("textarea") ?? null;
 
+  // ── ACL state — initialize from existing page data when editing ──────────────
+  const initialAclMode = (): AclMode => {
+    const p = props.initial;
+    if (!p) return "public";
+    if (p.public_policy === "contacts") return "connections";
+    if ((p.allow_cid?.length ?? 0) > 0 || (p.allow_gid?.length ?? 0) > 0) return "custom";
+    return "public";
+  };
+  const initialAllowEntries = (): Set<string> => {
+    const p = props.initial;
+    if (!p) return new Set();
+    return new Set([
+      ...(p.allow_cid ?? []).map((h) => `c:${h}`),
+      ...(p.allow_gid ?? []).map((g) => `g:${g}`),
+    ]);
+  };
+  const initialDenyEntries = (): Set<string> => {
+    const p = props.initial;
+    if (!p) return new Set();
+    return new Set([
+      ...(p.deny_cid ?? []).map((h) => `c:${h}`),
+      ...(p.deny_gid ?? []).map((g) => `g:${g}`),
+    ]);
+  };
+
+  const [aclMode, setAclMode] = createSignal<AclMode>(initialAclMode());
+  const [allowEntries, setAllowEntries] = createSignal<Set<string>>(initialAllowEntries());
+  const [denyEntries, setDenyEntries]   = createSignal<Set<string>>(initialDenyEntries());
+
+  function toggleEntry(entry: AclEntry, list: "allow" | "deny") {
+    const key = entryKey(entry);
+    const [getSet, setSet] = list === "allow"
+      ? [allowEntries, setAllowEntries]
+      : [denyEntries, setDenyEntries];
+    const setOther = list === "allow" ? setDenyEntries : setAllowEntries;
+    void getSet();
+    setSet((prev) => { const next = new Set(prev); next.has(key) ? next.delete(key) : next.add(key); return next; });
+    setOther((prev) => { const next = new Set(prev); next.delete(key); return next; });
+  }
+
+  function clearEntries() {
+    setAllowEntries(new Set<string>());
+    setDenyEntries(new Set<string>());
+  }
+
+  function aclJson(): Record<string, unknown> {
+    const mode = aclMode();
+    if (mode === "public")      return { scope: "public" };
+    if (mode === "connections") return { scope: "connections" };
+
+    const allow_cid: string[] = [];
+    const allow_gid: string[] = [];
+    const deny_cid:  string[] = [];
+    const deny_gid:  string[] = [];
+    for (const key of allowEntries()) {
+      const [type, ...rest] = key.split(":");
+      const xid = rest.join(":");
+      if (type === "c") allow_cid.push(xid);
+      if (type === "g") allow_gid.push(xid);
+    }
+    for (const key of denyEntries()) {
+      const [type, ...rest] = key.split(":");
+      const xid = rest.join(":");
+      if (type === "c") deny_cid.push(xid);
+      if (type === "g") deny_gid.push(xid);
+    }
+    return { scope: "custom", allow_cid, allow_gid, deny_cid, deny_gid };
+  }
+
   function withFileAttachments(body: string): string {
     const tags = attach.attachments()
       .filter((a) => a.status === "ready" && (a.hash || a.resourceId))
@@ -59,41 +141,46 @@ export default function WebpageComposer(props: Props) {
 
   const store = createComposerStore(async (body, meta) => {
     if (isEditing()) {
-      const res = await apiFetch(`/api/item/${props.initial!.mid}/edit`, {
-        method: "POST",
+      const csrf = await getCsrfToken();
+      const res = await fetch("/api/webpages", {
+        method:      "POST",
+        headers:     { "X-CSRF-Token": csrf, "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
-          body: withFileAttachments(body),
-          title:    meta.title ?? "",
-          summary:  "",
-          mimetype: meta.mimetype ?? "text/bbcode",
+          action:    "update",
+          uuid:      props.initial!.uuid,
+          title:     meta.title    ?? "",
+          summary:   meta.summary  ?? "",
+          body:      withFileAttachments(body),
+          mimetype:  meta.mimetype ?? "text/bbcode",
+          pagetitle: meta.slug     ?? "",
+          ...aclJson(),
         }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => null);
-        throw new Error(err?.error ?? "Save failed");
+        throw new Error(err?.error?.message ?? err?.error ?? "Save failed");
       }
     } else {
-      const csrf =
-        document.querySelector<HTMLMetaElement>('meta[name="form_security_token"]')
-          ?.content ?? "";
-      const fd = new FormData();
-      fd.append("mimetype",    meta.mimetype ?? "text/bbcode");
-      fd.append("obj_type",    "");
-      fd.append("profile_uid", String(props.profileUid));
-      fd.append("return",      `webpages/${props.nick}`);
-      fd.append("webpage",     "1");
-      fd.append("preview",     "0");
-      fd.append("title",       meta.title    ?? "");
-      fd.append("pagetitle",   meta.slug     ?? "");
-      fd.append("body",        withFileAttachments(body));
-      if (csrf) fd.append("form_security_token", csrf);
-
-      const res = await fetch("/item", {
+      const csrf = await getCsrfToken();
+      const res = await fetch("/api/webpages", {
         method: "POST",
+        headers: { "X-CSRF-Token": csrf, "Content-Type": "application/json" },
         credentials: "include",
-        body: fd,
+        body: JSON.stringify({
+          action:    "create",
+          title:     meta.title    ?? "",
+          summary:   meta.summary  ?? "",
+          body:      withFileAttachments(body),
+          mimetype:  meta.mimetype ?? "text/bbcode",
+          pagetitle: meta.slug     ?? "",
+          ...aclJson(),
+        }),
       });
-      if (!res.ok) throw new Error("Save failed");
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.error?.message ?? "Save failed");
+      }
     }
 
     attach.clear();
@@ -102,6 +189,7 @@ export default function WebpageComposer(props: Props) {
 
   if (props.initial) {
     store.setTitle(props.initial.title);
+    store.setSummary(props.initial.summary);
     store.setSlug(props.initial.slug);
     if (props.initial.mimetype) store.setMimetype(props.initial.mimetype as any);
   }
@@ -160,7 +248,7 @@ export default function WebpageComposer(props: Props) {
   const onTitleChange = (v: string) => {
     store.setTitle(v);
     if (!isEditing() && !store.slug()) {
-      store.setSlug(v.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""));
+      store.setSlug(slugify(v));
     }
   };
 
@@ -177,24 +265,45 @@ export default function WebpageComposer(props: Props) {
                focus:border-accent transition-colors"
       />
 
+      {/* Summary */}
+      <Show when={caps.summary}>
+        <textarea
+          placeholder={t("editor.article_summary_placeholder")}
+          value={store.summary()}
+          onInput={(e) => store.setSummary(e.currentTarget.value)}
+          rows={2}
+          class="w-full px-0 py-1.5 text-sm bg-transparent text-txt
+                 placeholder:text-muted border-0 border-b border-rim outline-none
+                 focus:border-accent transition-colors resize-none"
+        />
+      </Show>
+
       {/* Slug */}
-      <div class="flex items-center gap-3">
-        <Show when={caps.slug}>
-          <div class="flex-1 min-w-0">
-            <label class="block text-xs text-muted mb-1">{t("editor.slug_label")}</label>
+      <Show when={caps.slug}>
+        <div>
+          <label class="block text-xs text-muted mb-1">{t("editor.slug_label")}</label>
+          <div class="flex items-center gap-1">
             <input
               type="text"
               placeholder={t("editor.slug_placeholder")}
               value={store.slug()}
               onInput={(e) => store.setSlug(e.currentTarget.value)}
-              disabled={isEditing()}
-              class="w-full px-2 py-1.5 text-sm font-mono rounded border border-rim bg-surface
+              class="flex-1 px-2 py-1.5 text-sm font-mono rounded border border-rim bg-surface
                      text-txt outline-none hover:border-rim-strong focus:border-rim-strong
-                     transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                     transition-colors"
             />
+            <button
+              type="button"
+              title={t("editor.generate_slug")}
+              onClick={() => store.setSlug(slugify(store.title()))}
+              class="px-2.5 py-1.5 rounded border border-rim text-muted hover:text-txt
+                     hover:border-rim-strong transition-colors text-sm leading-none"
+            >
+              ↻
+            </button>
           </div>
-        </Show>
-      </div>
+        </div>
+      </Show>
 
       {/* Editor */}
       <div ref={editorWrapRef}>
@@ -250,15 +359,27 @@ export default function WebpageComposer(props: Props) {
       </Show>
 
       {/* Actions */}
-      <div class="flex items-center gap-3 border-t border-rim pt-4">
+      <div class="flex flex-wrap items-center gap-3 border-t border-rim pt-4">
         <button
           type="button"
-          onClick={() => { store.reset(); attach.clear(); props.onCancel?.(); }}
+          onClick={() => { store.reset(); attach.clear(); clearEntries(); setAclMode("public"); props.onCancel?.(); }}
           class="px-3 py-1.5 text-sm rounded-lg border border-rim text-muted
                  hover:bg-elevated transition-colors"
         >
           {isEditing() ? t("editor.cancel_btn") : t("editor.discard")}
         </button>
+
+        {/* ACL picker */}
+        <Show when={caps.aclPicker}>
+          <AclPicker
+            mode={aclMode()}
+            onModeChange={setAclMode}
+            allowEntries={allowEntries()}
+            denyEntries={denyEntries()}
+            onToggle={toggleEntry}
+            onClear={clearEntries}
+          />
+        </Show>
 
         <button
           type="button"

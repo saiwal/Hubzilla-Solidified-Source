@@ -10,6 +10,7 @@ export interface WikiMeta {
   html_name: string;
   mime_type: "text/markdown" | "text/bbcode" | "text/plain";
   type_lock: boolean;
+  is_private?: boolean;
 }
 
 export interface WikiPage {
@@ -38,12 +39,25 @@ export interface WikiPageResponse {
   commit: string;
 }
 
-// ── API calls ─────────────────────────────────────────────────────────────────
+export interface PageHistoryEntry {
+  revision: number;
+  date: string;
+  name: string;
+  title: string;
+}
+
+export interface PageHistoryResponse {
+  history: PageHistoryEntry[];
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function wikiUrl(nick: string, ...segments: string[]): string {
   const parts = ["/api/wiki", nick, ...segments].filter(Boolean);
   return parts.join("/");
 }
+
+// ── API calls ─────────────────────────────────────────────────────────────────
 
 export async function fetchWikis(nick: string): Promise<WikiListResponse> {
   const res = await apiFetch(wikiUrl(nick));
@@ -79,6 +93,10 @@ export async function createWiki(
     name: string;
     mime_type?: string;
     type_lock?: boolean;
+    allow_cid?: string[];
+    allow_gid?: string[];
+    deny_cid?: string[];
+    deny_gid?: string[];
   },
 ): Promise<{ success: boolean; resource_id: string; url_name: string }> {
   const res = await apiFetch(wikiUrl(nick), {
@@ -117,4 +135,93 @@ export async function deletePage(
   if (!res.ok) throw new Error(`deletePage failed: ${res.status}`);
   const json = await res.json();
   return json.data;
+}
+
+export async function fetchPageRevision(
+  nick: string,
+  wikiUrlName: string,
+  pageUrlName: string,
+  revision: number,
+): Promise<WikiPageResponse> {
+  const url = wikiUrl(nick, wikiUrlName, pageUrlName) + `?revision=${revision}`;
+  const res = await apiFetch(url);
+  if (!res.ok) throw new Error(`fetchPageRevision ${res.status}`);
+  const json = await res.json();
+  return json.data as WikiPageResponse;
+}
+
+export async function fetchPageHistory(
+  nick: string,
+  wikiUrlName: string,
+  pageUrlName: string,
+): Promise<PageHistoryResponse> {
+  const res = await apiFetch(wikiUrl(nick, wikiUrlName, pageUrlName, "history"));
+  if (!res.ok) throw new Error(`fetchPageHistory failed: ${res.status}`);
+  const json = await res.json();
+  return json.data as PageHistoryResponse;
+}
+
+export async function revertPage(
+  nick: string,
+  wikiUrlName: string,
+  pageUrlName: string,
+  revision: number,
+): Promise<{ success: boolean }> {
+  const res = await apiFetch(wikiUrl(nick, wikiUrlName, pageUrlName, "revert"), {
+    method: "POST",
+    body: JSON.stringify({ revision }),
+  });
+  if (!res.ok) throw new Error(`revertPage failed: ${res.status}`);
+  const json = await res.json();
+  return json.data;
+}
+
+export async function renamePage(
+  nick: string,
+  wikiUrlName: string,
+  pageUrlName: string,
+  newName: string,
+): Promise<{ success: boolean; url_name: string }> {
+  const res = await apiFetch(wikiUrl(nick, wikiUrlName, pageUrlName, "rename"), {
+    method: "POST",
+    body: JSON.stringify({ new_name: newName }),
+  });
+  if (!res.ok) throw new Error(`renamePage failed: ${res.status}`);
+  const json = await res.json();
+  return json.data;
+}
+
+export async function deleteWiki(
+  nick: string,
+  wikiUrlName: string,
+): Promise<{ success: boolean }> {
+  const res = await apiFetch(wikiUrl(nick, wikiUrlName), {
+    method: "DELETE",
+    body: JSON.stringify({}),
+  });
+  if (!res.ok) throw new Error(`deleteWiki failed: ${res.status}`);
+  const json = await res.json();
+  return json.data;
+}
+
+export interface WikiAclData {
+  allow_cid: string[];
+  allow_gid: string[];
+  deny_cid: string[];
+  deny_gid: string[];
+}
+
+export async function fetchWikiAcl(nick: string, wikiUrlName: string): Promise<WikiAclData> {
+  const res = await apiFetch(wikiUrl(nick, wikiUrlName, "acl"));
+  if (!res.ok) throw new Error(`fetchWikiAcl failed: ${res.status}`);
+  const json = await res.json();
+  return json.data as WikiAclData;
+}
+
+export async function saveWikiAcl(nick: string, wikiUrlName: string, acl: WikiAclData): Promise<void> {
+  const res = await apiFetch(wikiUrl(nick, wikiUrlName, "acl"), {
+    method: "POST",
+    body: JSON.stringify(acl),
+  });
+  if (!res.ok) throw new Error(`saveWikiAcl failed: ${res.status}`);
 }

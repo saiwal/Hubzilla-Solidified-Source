@@ -23,4 +23,43 @@ export const wiki: RawDictionary["wiki"] = {
   delete_confirm:   "? यह वापस नहीं किया जा सकता।",
   error_saving:     "सहेजने में त्रुटि",
   error_deleting:   "हटाने में त्रुटि",
+  // page creation
+  new_page:         "नया पृष्ठ",
+  page_name_placeholder: "पृष्ठ शीर्षक",
+  create_page:      "बनाएँ",
+  page_not_found:   "पृष्ठ नहीं मिला।",
+  page_new_hint:    "यह पृष्ठ अभी तक मौजूद नहीं है। इसे बनाने के लिए नीचे सामग्री जोड़ें।",
+  // history & revert
+  history:          "इतिहास",
+  no_history:       "कोई इतिहास उपलब्ध नहीं।",
+  no_commit_msg:    "(कोई संदेश नहीं)",
+  view_revision:    "देखें",
+  revision_preview: "संस्करण पूर्वावलोकन",
+  revert:           "पूर्ववत करें",
+  reverting:        "पूर्ववत किया जा रहा है…",
+  reverted:         "पृष्ठ पूर्ववत किया गया",
+  error_reverting:  "पृष्ठ पूर्ववत करने में त्रुटि",
+  // rename
+  rename:           "नाम बदलें",
+  rename_save:      "नाम सहेजें",
+  renaming:         "नाम बदला जा रहा है…",
+  error_renaming:   "पृष्ठ का नाम बदलने में त्रुटि",
+  // delete wiki
+  delete_wiki:      "विकी हटाएँ",
+  deleting_wiki:    "हटाया जा रहा है…",
+  delete_wiki_confirm: "? सभी पृष्ठ स्थायी रूप से हटा दिए जाएंगे।",
+  error_deleting_wiki: "विकी हटाने में त्रुटि",
+  // privacy / ACL
+  privacy:          "गोपनीयता",
+  privacy_editor_title: "विकी गोपनीयता",
+  privacy_saved:    "गोपनीयता सेटिंग सहेजी गई",
+  error_saving_privacy: "गोपनीयता सेटिंग सहेजने में त्रुटि",
+  // list columns
+  name_col:         "नाम",
+  format_col:       "प्रारूप",
+  format_markdown:  "मार्कडाउन",
+  format_bbcode:    "बीबीकोड",
+  format_plain:     "सादा पाठ",
+  public_label:     "सार्वजनिक",
+  restricted_label: "प्रतिबंधित",
 };

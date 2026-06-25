@@ -230,13 +230,15 @@ export function uploadPhotoEdit(
   });
 }
 
-export interface AclGroup { id: string; name: string; }
+export interface AclGroup      { id: string; name: string; }
+export interface AclConnection { hash: string; name: string; photo: string; }
 export interface AclData {
-  allow_cid: string[];
-  allow_gid: string[];
-  deny_cid:  string[];
-  deny_gid:  string[];
-  groups:    AclGroup[];
+  allow_cid:   string[];
+  allow_gid:   string[];
+  deny_cid:    string[];
+  deny_gid:    string[];
+  groups:      AclGroup[];
+  connections: AclConnection[];
 }
 
 export async function fetchAcl(nick: string, type: 'image' | 'album', datum: string): Promise<AclData> {

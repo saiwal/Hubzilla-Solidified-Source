@@ -33,6 +33,7 @@ export const editor: RawDictionary["editor"] = {
   article_summary_placeholder: "संक्षिप्त सारांश (लेख सूची में दिखाया जाएगा)…",
   slug_label:             "स्लग",
   slug_placeholder:       "url-slug",
+  generate_slug:          "शीर्षक से स्लग बनाएँ",
   category_label:         "श्रेणियाँ",
   category_field_placeholder: "श्रेणियाँ (वैकल्पिक, जैसे: तकनीक, व्यक्तिगत)",
   format_label:           "प्रारूप",

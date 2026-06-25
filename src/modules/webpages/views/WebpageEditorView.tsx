@@ -4,6 +4,7 @@ import { useAuth } from "@/shared/store/auth-store";
 import { useI18n } from "@/i18n";
 import WebpageComposer from "@/shared/editor/composers/WebpageComposer";
 import { fetchWebPageByIid } from "../api";
+import { loadWebpages } from "../store";
 
 export default function WebpageEditorView() {
   const { t } = useI18n();
@@ -20,7 +21,7 @@ export default function WebpageEditorView() {
     ({ nick, iid }) => fetchWebPageByIid(nick, iid),
   );
 
-  const onSaved = () => navigate(`/webpages/${nick()}`);
+  const onSaved = () => { void loadWebpages(nick(), true); navigate(`/webpages/${nick()}`); };
   const onCancel = () => navigate(`/webpages/${nick()}`);
 
   return (
@@ -69,11 +70,19 @@ export default function WebpageEditorView() {
           profileUid={auth()?.uid ?? 0}
           nick={nick()}
           initial={{
-            mid:      page()!.mid,
-            title:    page()!.title,
-            slug:     page()!.slug,
-            body:     page()!.body,
-            mimetype: page()!.mimetype,
+            uuid:          page()!.uuid,
+            mid:           page()!.mid,
+            title:         page()!.title,
+            summary:       page()!.summary,
+            slug:          page()!.slug,
+            body:          page()!.body,
+            mimetype:      page()!.mimetype,
+            item_private:  page()!.item_private,
+            public_policy: page()!.public_policy,
+            allow_cid:     page()!.allow_cid,
+            allow_gid:     page()!.allow_gid,
+            deny_cid:      page()!.deny_cid,
+            deny_gid:      page()!.deny_gid,
           }}
           onSaved={onSaved}
           onCancel={onCancel}

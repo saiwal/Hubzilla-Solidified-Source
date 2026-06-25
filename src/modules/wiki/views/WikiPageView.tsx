@@ -8,36 +8,57 @@ import { useParams, A, useNavigate } from "@solidjs/router";
 import { useI18n } from "@/i18n";
 import DOMPurify from "dompurify";
 import {
-  pageData, pageLoading, editMode, draftContent, canWrite,
+  pageData, pageLoading, pageNotFound, editMode, draftContent, canWrite,
   pages, currentWiki, pagesLoading,
-  loadPage, loadWikiPages, toggleEditMode, resetPage,
+  historyData, historyLoading, showHistory,
+  previewRevision, previewHtml, previewLoading,
+  loadPage, loadWikiPages, loadHistory, toggleEditMode, toggleHistory, resetPage,
+  loadRevisionPreview, closePreview,
 } from "../store";
-import { savePage, deletePage } from "../api";
+import { savePage, deletePage, revertPage, renamePage } from "../api";
 
 export default function WikiPageView() {
   const { t } = useI18n();
   const params   = useParams<{ nick: string; wikiName: string; pageName: string }>();
   const navigate = useNavigate();
+
   const [saving, setSaving]         = createSignal(false);
   const [deleting, setDeleting]     = createSignal(false);
   const [confirmDel, setConfirmDel] = createSignal(false);
+  const [reverting, setReverting]   = createSignal<number | null>(null);
+  const [renaming, setRenaming]     = createSignal(false);
+  const [newPageName, setNewPageName] = createSignal("");
+  const [renameBusy, setRenameBusy] = createSignal(false);
+  // New page form in sidebar
+  const [creatingPage, setCreatingPage]   = createSignal(false);
+  const [newPageInput, setNewPageInput]   = createSignal("");
 
-  // Track which wiki was last loaded so we only refetch the page list on wiki change.
-  // Read currentWiki() outside the effect to avoid it becoming a reactive dependency
-  // that re-triggers the effect when loadWikiPages updates it.
   let lastWikiName = "";
 
   createEffect(() => {
     const { nick, wikiName, pageName } = params;
     if (!nick || !wikiName || !pageName) return;
 
-    // Always load the page when params change
     loadPage(nick, wikiName, pageName);
 
-    // Only fetch the sidebar page list when the wiki itself changes
     if (lastWikiName !== wikiName) {
       lastWikiName = wikiName;
       loadWikiPages(nick, wikiName);
+    }
+  });
+
+  // Auto-open edit mode for pages that don't exist yet (new page flow).
+  // Guard with !editMode() to avoid double-toggling if canWrite resolves after pageNotFound.
+  createEffect(() => {
+    if (!pageLoading() && pageNotFound() && canWrite() && !editMode()) {
+      toggleEditMode();
+    }
+  });
+
+  // Load history when panel is opened
+  createEffect(() => {
+    if (showHistory() && pageData()) {
+      loadHistory(params.nick, params.wikiName, params.pageName);
     }
   });
 
@@ -54,6 +75,7 @@ export default function WikiPageView() {
       );
       toggleEditMode();
       loadPage(params.nick, params.wikiName, params.pageName);
+      loadWikiPages(params.nick, params.wikiName);
     } catch (e: any) {
       toast.error(e.message ?? t("wiki.error_saving"));
     } finally {
@@ -70,6 +92,48 @@ export default function WikiPageView() {
       toast.error(e.message ?? t("wiki.error_deleting"));
       setDeleting(false);
     }
+  }
+
+  async function handleRevert(revision: number) {
+    setReverting(revision);
+    try {
+      await revertPage(params.nick, params.wikiName, params.pageName, revision);
+      toast.success(t("wiki.reverted"));
+      toggleHistory();
+      loadPage(params.nick, params.wikiName, params.pageName);
+    } catch (e: any) {
+      toast.error(e.message ?? t("wiki.error_reverting"));
+    } finally {
+      setReverting(null);
+    }
+  }
+
+  async function handleRename(e: Event) {
+    e.preventDefault();
+    const name = newPageName().trim();
+    if (!name) return;
+    setRenameBusy(true);
+    try {
+      const res = await renamePage(params.nick, params.wikiName, params.pageName, name);
+      setRenaming(false);
+      setNewPageName("");
+      loadWikiPages(params.nick, params.wikiName);
+      navigate(`/wiki/${params.nick}/${params.wikiName}/${res.url_name}`, { replace: true });
+    } catch (e: any) {
+      toast.error(e.message ?? t("wiki.error_renaming"));
+    } finally {
+      setRenameBusy(false);
+    }
+  }
+
+  function handleNewPage(e: Event) {
+    e.preventDefault();
+    const name = newPageInput().trim();
+    if (!name) return;
+    const encoded = encodeURIComponent(name);
+    setCreatingPage(false);
+    setNewPageInput("");
+    navigate(`/wiki/${params.nick}/${params.wikiName}/${encoded}`);
   }
 
   const safeHtml = () =>
@@ -112,6 +176,53 @@ export default function WikiPageView() {
             </For>
           </Show>
 
+          {/* New page button / form */}
+          <Show when={canWrite()}>
+            <div class="pt-2 border-t border-rim mt-2">
+              <Show
+                when={!creatingPage()}
+                fallback={
+                  <form onSubmit={handleNewPage} class="space-y-1.5">
+                    <input
+                      type="text"
+                      autofocus
+                      class="w-full bg-surface border border-rim text-txt rounded-lg px-2 py-1 text-xs
+                             hover:border-rim-strong focus:outline-none"
+                      placeholder={t("wiki.page_name_placeholder") as string}
+                      value={newPageInput()}
+                      onInput={(e) => setNewPageInput(e.currentTarget.value)}
+                    />
+                    <div class="flex gap-1">
+                      <button
+                        type="submit"
+                        disabled={!newPageInput().trim()}
+                        class="flex-1 text-xs bg-accent-muted text-accent px-2 py-1 rounded-md
+                               hover:bg-elevated disabled:opacity-50 transition-colors"
+                      >
+                        {t("wiki.create_page")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setCreatingPage(false); setNewPageInput(""); }}
+                        class="text-xs text-muted hover:text-txt px-2 py-1 rounded-md transition-colors"
+                      >
+                        {t("wiki.cancel")}
+                      </button>
+                    </div>
+                  </form>
+                }
+              >
+                <button
+                  type="button"
+                  onClick={() => setCreatingPage(true)}
+                  class="w-full text-left text-xs text-muted hover:text-txt transition-colors px-2 py-1"
+                >
+                  + {t("wiki.new_page")}
+                </button>
+              </Show>
+            </div>
+          </Show>
+
           <div class="pt-2 border-t border-rim mt-2">
             <A
               href={`/wiki/${params.nick}`}
@@ -135,6 +246,30 @@ export default function WikiPageView() {
           </div>
         </Show>
 
+        {/* Page not found */}
+        <Show when={!pageLoading() && pageNotFound()}>
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <h1 class="text-xl font-semibold text-txt">
+              {decodeURIComponent(params.pageName)}
+            </h1>
+          </div>
+
+          <Show when={!canWrite()}>
+            <p class="text-muted text-sm">{t("wiki.page_not_found")}</p>
+          </Show>
+
+          <Show when={canWrite() && editMode()}>
+            <p class="text-muted text-xs mb-2">{t("wiki.page_new_hint")}</p>
+            <WikiComposer
+              initialBody=""
+              mimeType={currentWiki()?.mime_type ?? "text/markdown"}
+              saving={saving()}
+              onSave={handleSave}
+              onCancel={() => navigate(`/wiki/${params.nick}/${params.wikiName}/Home`, { replace: true })}
+            />
+          </Show>
+        </Show>
+
         <Show when={!pageLoading() && pageData()}>
           {/* Toolbar */}
           <div class="flex items-center justify-between gap-2 flex-wrap">
@@ -142,14 +277,35 @@ export default function WikiPageView() {
               <h1 class="text-xl font-semibold text-txt">
                 {pageData()!.page.name}
               </h1>
-              <span class="text-xs text-muted bg-elevated border border-rim px-2 py-0.5 rounded-full">
-                {pageData()!.page.mime_type.replace("text/", "")}
-              </span>
             </div>
 
             <Show when={canWrite()}>
               <div class="flex items-center gap-2">
                 <Show when={!editMode()}>
+                  {/* History toggle */}
+                  <button
+                    type="button"
+                    onClick={toggleHistory}
+                    class="text-sm border border-rim px-3 py-1.5 rounded-lg transition-colors"
+                    classList={{
+                      "bg-elevated text-txt": showHistory(),
+                      "text-muted hover:bg-elevated": !showHistory(),
+                    }}
+                  >
+                    {t("wiki.history")}
+                  </button>
+
+                  {/* Rename (not Home) */}
+                  <Show when={!isHome()}>
+                    <button
+                      type="button"
+                      onClick={() => { setRenaming(true); setNewPageName(pageData()!.page.name); }}
+                      class="text-sm border border-rim text-muted hover:bg-elevated px-3 py-1.5 rounded-lg transition-colors"
+                    >
+                      {t("wiki.rename")}
+                    </button>
+                  </Show>
+
                   <button
                     type="button"
                     onClick={toggleEditMode}
@@ -172,6 +328,97 @@ export default function WikiPageView() {
             </Show>
           </div>
 
+          {/* Rename form */}
+          <Show when={renaming()}>
+            <form
+              onSubmit={handleRename}
+              class="flex items-center gap-2 bg-surface border border-rim rounded-xl p-3"
+            >
+              <input
+                type="text"
+                autofocus
+                class="flex-1 bg-surface border border-rim text-txt rounded-lg px-3 py-1.5 text-sm
+                       hover:border-rim-strong focus:outline-none"
+                value={newPageName()}
+                onInput={(e) => setNewPageName(e.currentTarget.value)}
+              />
+              <button
+                type="submit"
+                disabled={renameBusy() || !newPageName().trim()}
+                class="text-sm bg-accent-muted text-accent px-3 py-1.5 rounded-lg
+                       hover:bg-elevated disabled:opacity-50 transition-colors"
+              >
+                {renameBusy() ? t("wiki.renaming") : t("wiki.rename_save")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setRenaming(false)}
+                class="text-sm border border-rim text-muted hover:bg-elevated px-3 py-1.5 rounded-lg"
+              >
+                {t("wiki.cancel")}
+              </button>
+            </form>
+          </Show>
+
+          {/* History panel */}
+          <Show when={showHistory()}>
+            <div class="bg-surface border border-rim rounded-xl p-4 space-y-3">
+              <h2 class="text-sm font-semibold text-txt">{t("wiki.history")}</h2>
+
+              <Show when={historyLoading()}>
+                <For each={[1, 2, 3]}>
+                  {() => <div class="h-10 rounded bg-elevated animate-pulse" />}
+                </For>
+              </Show>
+
+              <Show when={!historyLoading() && historyData().length === 0}>
+                <p class="text-muted text-xs">{t("wiki.no_history")}</p>
+              </Show>
+
+              <Show when={!historyLoading() && historyData().length > 0}>
+                <ul class="divide-y divide-rim">
+                  <For each={historyData()}>
+                    {(entry) => (
+                      <li class="flex items-start justify-between gap-3 py-2.5">
+                        <div class="min-w-0">
+                          <div class="text-xs text-txt font-medium truncate">
+                            {entry.title || t("wiki.no_commit_msg")}
+                          </div>
+                          <div class="text-xs text-muted mt-0.5">
+                            {entry.name} · {entry.date}
+                          </div>
+                        </div>
+                        <div class="flex shrink-0 gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => loadRevisionPreview(
+                              params.nick, params.wikiName, params.pageName, entry.revision
+                            )}
+                            class="text-xs border border-rim text-muted hover:bg-elevated
+                                   px-2.5 py-1 rounded-lg transition-colors"
+                          >
+                            {t("wiki.view_revision")}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={reverting() !== null}
+                            onClick={() => handleRevert(entry.revision)}
+                            class="text-xs border border-rim text-muted hover:bg-elevated
+                                   px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50"
+                          >
+                            {reverting() === entry.revision
+                              ? t("wiki.reverting")
+                              : t("wiki.revert")}
+                          </button>
+                        </div>
+                      </li>
+                    )}
+                  </For>
+                </ul>
+              </Show>
+            </div>
+          </Show>
+
           {/* Edit mode */}
           <Show when={editMode()}>
             <WikiComposer
@@ -193,6 +440,46 @@ export default function WikiPageView() {
               innerHTML={safeHtml()}
             />
           </Show>
+        </Show>
+
+        {/* Revision preview modal */}
+        <Show when={previewRevision() !== null}>
+          <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+            <div class="bg-surface border border-rim rounded-xl flex flex-col max-w-3xl w-full max-h-[85vh]">
+              {/* Header */}
+              <div class="flex items-center justify-between px-5 py-3 border-b border-rim shrink-0">
+                <span class="text-sm font-medium text-txt">
+                  {t("wiki.revision_preview")} #{previewRevision()}
+                </span>
+                <button
+                  type="button"
+                  onClick={closePreview}
+                  class="text-muted hover:text-txt transition-colors text-lg leading-none"
+                >
+                  ✕
+                </button>
+              </div>
+              {/* Body */}
+              <div class="overflow-y-auto flex-1 px-5 py-4">
+                <Show when={previewLoading()}>
+                  <div class="space-y-3">
+                    <div class="h-4 w-full bg-elevated rounded animate-pulse" />
+                    <div class="h-4 w-5/6 bg-elevated rounded animate-pulse" />
+                    <div class="h-4 w-4/6 bg-elevated rounded animate-pulse" />
+                  </div>
+                </Show>
+                <Show when={!previewLoading()}>
+                  <article
+                    class="prose prose-neutral dark:prose-invert max-w-none
+                           [&_a]:text-accent [&_a]:no-underline [&_a:hover]:underline
+                           [&_pre]:bg-elevated [&_pre]:border [&_pre]:border-rim [&_pre]:rounded-xl
+                           [&_blockquote]:border-l-2 [&_blockquote]:border-rim [&_blockquote]:text-muted"
+                    innerHTML={DOMPurify.sanitize(previewHtml(), { USE_PROFILES: { html: true } })}
+                  />
+                </Show>
+              </div>
+            </div>
+          </div>
         </Show>
 
         {/* Delete confirmation modal */}

@@ -264,9 +264,10 @@ export default function ArticleComposer(props: Props) {
       const res = await fetch("/item", {
         method: "POST",
         credentials: "include",
+        redirect: "manual",
         body: fd,
       });
-      if (!res.ok) throw new Error("Save failed");
+      if (res.type !== "opaqueredirect" && !res.ok) throw new Error("Save failed");
     }
 
     attach.clear();

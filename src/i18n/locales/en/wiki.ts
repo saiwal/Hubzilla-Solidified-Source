@@ -24,4 +24,43 @@ export const wiki: RawDictionary["wiki"] = {
   delete_confirm:   "? This cannot be undone.",
   error_saving:     "Error saving",
   error_deleting:   "Error deleting",
+  // page creation
+  new_page:         "New page",
+  page_name_placeholder: "Page title",
+  create_page:      "Create",
+  page_not_found:   "Page not found.",
+  page_new_hint:    "This page doesn't exist yet. Add content below to create it.",
+  // history & revert
+  history:          "History",
+  no_history:       "No history available.",
+  no_commit_msg:    "(no message)",
+  view_revision:    "View",
+  revision_preview: "Revision preview",
+  revert:           "Revert",
+  reverting:        "Reverting…",
+  reverted:         "Page reverted",
+  error_reverting:  "Error reverting page",
+  // rename
+  rename:           "Rename",
+  rename_save:      "Save name",
+  renaming:         "Renaming…",
+  error_renaming:   "Error renaming page",
+  // delete wiki
+  delete_wiki:      "Delete wiki",
+  deleting_wiki:    "Deleting…",
+  delete_wiki_confirm: "? All pages will be permanently deleted.",
+  error_deleting_wiki: "Error deleting wiki",
+  // privacy / ACL
+  privacy:          "Privacy",
+  privacy_editor_title: "Wiki Privacy",
+  privacy_saved:    "Privacy settings saved",
+  error_saving_privacy: "Error saving privacy settings",
+  // list columns
+  name_col:         "Name",
+  format_col:       "Format",
+  format_markdown:  "Markdown",
+  format_bbcode:    "BBCode",
+  format_plain:     "Plain text",
+  public_label:     "Public",
+  restricted_label: "Restricted",
 };

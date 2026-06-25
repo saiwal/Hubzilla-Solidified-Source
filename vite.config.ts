@@ -147,6 +147,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      "/item": {
+        target: "https://hz-ddev.ddev.site",
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
   base: ASSET_WEB_PATH + "/",

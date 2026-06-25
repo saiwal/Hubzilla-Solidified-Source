@@ -55,10 +55,11 @@ export default function CommentComposer(props: Props) {
         method: "POST",
         headers: { "X-CSRF-Token": csrf },
         credentials: "include",
+        redirect: "manual",
         body: fd,
       });
 
-      if (!res.ok) throw new Error("Comment failed");
+      if (res.type !== "opaqueredirect" && !res.ok) throw new Error("Comment failed");
       attach.clear();
       props.onSubmitted?.(body);
     },

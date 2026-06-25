@@ -194,9 +194,10 @@ const PostComposer: Component<ComposerProps> = (props) => {
       const res = await fetch("/item", {
         method: "POST",
         credentials: "include",
+        redirect: "manual",
         body: fd,
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (res.type !== "opaqueredirect" && !res.ok) throw new Error(`HTTP ${res.status}`);
       const json = (await res.json().catch(() => ({}))) as {
         success?: number;
         cancel?: number;

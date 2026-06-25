@@ -369,6 +369,7 @@ export type RawDictionary = {
     article_summary_placeholder: string;
     slug_label:             string;
     slug_placeholder:       string;
+    generate_slug:          string;
     category_label:         string;
     category_field_placeholder: string;
     format_label:           string;
@@ -1012,6 +1013,8 @@ export type RawDictionary = {
     acl_custom:           string;
     acl_groups:           string;
     acl_no_groups:        string;
+    acl_connections:      string;
+    acl_none_available:   string;
     acl_loading:          string;
     acl_saving:           string;
     acl_save:             string;
@@ -1199,6 +1202,45 @@ export type RawDictionary = {
     delete_confirm:   string;
     error_saving:     string;
     error_deleting:   string;
+    // page creation
+    new_page:         string;
+    page_name_placeholder: string;
+    create_page:      string;
+    page_not_found:   string;
+    page_new_hint:    string;
+    // history & revert
+    history:          string;
+    no_history:       string;
+    no_commit_msg:    string;
+    view_revision:    string;
+    revision_preview: string;
+    revert:           string;
+    reverting:        string;
+    reverted:         string;
+    error_reverting:  string;
+    // rename
+    rename:           string;
+    rename_save:      string;
+    renaming:         string;
+    error_renaming:   string;
+    // delete wiki
+    delete_wiki:      string;
+    deleting_wiki:    string;
+    delete_wiki_confirm: string;
+    error_deleting_wiki: string;
+    // privacy / ACL
+    privacy:          string;
+    privacy_editor_title: string;
+    privacy_saved:    string;
+    error_saving_privacy: string;
+    // list columns
+    name_col:         string;
+    format_col:       string;
+    format_markdown:  string;
+    format_bbcode:    string;
+    format_plain:     string;
+    public_label:     string;
+    restricted_label: string;
   };
   webpages: {
     title:            string;

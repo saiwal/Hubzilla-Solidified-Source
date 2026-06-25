@@ -4,9 +4,12 @@ import {
   fetchWikis,
   fetchWikiPages,
   fetchWikiPage,
+  fetchPageHistory,
+  fetchPageRevision,
   type WikiMeta,
   type WikiPage,
   type WikiPageResponse,
+  type PageHistoryEntry,
 } from "./api";
 
 // ── Wiki list ─────────────────────────────────────────────────────────────────
@@ -47,6 +50,10 @@ export function resetWikis(): void {
   setWikisError("");
 }
 
+export function patchWiki(urlName: string, patch: Partial<import("./api").WikiMeta>): void {
+  setWikis((prev) => prev.map((w) => w.url_name === urlName ? { ...w, ...patch } : w));
+}
+
 // ── Page list ─────────────────────────────────────────────────────────────────
 
 const [pages, setPages]               = createSignal<WikiPage[]>([]);
@@ -74,12 +81,13 @@ export async function loadWikiPages(nick: string, wikiUrlName: string): Promise<
 
 // ── Current page ──────────────────────────────────────────────────────────────
 
-const [pageData, setPageData]             = createSignal<WikiPageResponse | null>(null);
-const [pageLoading, setPageLoading]       = createSignal(false);
-const [editMode, setEditMode]             = createSignal(false);
-const [draftContent, setDraftContent]     = createSignal("");
+const [pageData, setPageData]         = createSignal<WikiPageResponse | null>(null);
+const [pageLoading, setPageLoading]   = createSignal(false);
+const [pageNotFound, setPageNotFound] = createSignal(false);
+const [editMode, setEditMode]         = createSignal(false);
+const [draftContent, setDraftContent] = createSignal("");
 
-export { pageData, pageLoading, editMode, draftContent };
+export { pageData, pageLoading, pageNotFound, editMode, draftContent };
 
 export function toggleEditMode(): void {
   const entering = !editMode();
@@ -98,13 +106,17 @@ export async function loadPage(
 ): Promise<void> {
   setPageLoading(true);
   setEditMode(false);
+  setPageNotFound(false);
   try {
     const res = await fetchWikiPage(nick, wikiUrlName, pageUrlName);
     setPageData(res);
     setDraftContent(res.raw);
     setCanWrite(res.can_write);
-  } catch (e) {
-    console.error("loadPage:", e);
+  } catch (e: any) {
+    const msg: string = e?.message ?? "";
+    if (msg.includes("404")) {
+      setPageNotFound(true);
+    }
     setPageData(null);
   } finally {
     setPageLoading(false);
@@ -115,4 +127,72 @@ export function resetPage(): void {
   setPageData(null);
   setEditMode(false);
   setDraftContent("");
+  setPageNotFound(false);
+  clearHistory();
+}
+
+// ── Page history ──────────────────────────────────────────────────────────────
+
+const [historyData, setHistoryData]       = createSignal<PageHistoryEntry[]>([]);
+const [historyLoading, setHistoryLoading] = createSignal(false);
+const [showHistory, setShowHistory]       = createSignal(false);
+
+export { historyData, historyLoading, showHistory };
+
+export function toggleHistory(): void {
+  setShowHistory((v) => !v);
+}
+
+export function clearHistory(): void {
+  setHistoryData([]);
+  setShowHistory(false);
+}
+
+export async function loadHistory(
+  nick: string,
+  wikiUrlName: string,
+  pageUrlName: string,
+): Promise<void> {
+  setHistoryLoading(true);
+  try {
+    const res = await fetchPageHistory(nick, wikiUrlName, pageUrlName);
+    setHistoryData(res.history ?? []);
+  } catch (e) {
+    console.error("loadHistory:", e);
+    setHistoryData([]);
+  } finally {
+    setHistoryLoading(false);
+  }
+}
+
+// ── Revision preview ──────────────────────────────────────────────────────────
+
+const [previewRevision, setPreviewRevision]   = createSignal<number | null>(null);
+const [previewHtml, setPreviewHtml]           = createSignal<string>("");
+const [previewLoading, setPreviewLoading]     = createSignal(false);
+
+export { previewRevision, previewHtml, previewLoading };
+
+export function closePreview(): void {
+  setPreviewRevision(null);
+  setPreviewHtml("");
+}
+
+export async function loadRevisionPreview(
+  nick: string,
+  wikiUrlName: string,
+  pageUrlName: string,
+  revision: number,
+): Promise<void> {
+  setPreviewRevision(revision);
+  setPreviewLoading(true);
+  try {
+    const res = await fetchPageRevision(nick, wikiUrlName, pageUrlName, revision);
+    setPreviewHtml(res.html);
+  } catch (e) {
+    console.error("loadRevisionPreview:", e);
+    setPreviewHtml("");
+  } finally {
+    setPreviewLoading(false);
+  }
 }

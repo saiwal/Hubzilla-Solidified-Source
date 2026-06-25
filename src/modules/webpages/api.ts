@@ -14,13 +14,21 @@ export type WebPage = {
 };
 
 export type WebPageDetail = {
+  uuid: string;
   mid: string;
   title: string;
+  summary: string;
   body: string;
   mimetype: string;
   slug: string;
   created: string;
   edited: string;
+  item_private: number;
+  public_policy: string;
+  allow_cid: string[];
+  allow_gid: string[];
+  deny_cid: string[];
+  deny_gid: string[];
 };
 
 export async function fetchWebpages(nick: string): Promise<WebPage[]> {
