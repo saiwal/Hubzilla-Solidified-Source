@@ -1,4 +1,4 @@
-import { createSignal, Show, onCleanup } from "solid-js";
+import { createSignal, Show, For, onCleanup } from "solid-js";
 import { DraftsList } from "../components/DraftsList";
 import { createComposerStore } from "../store/createComposerStore";
 import { useI18n } from "@/i18n";
@@ -48,6 +48,50 @@ export default function ArticleComposer(props: Props) {
 
   // ── Attachment store ─────────────────────────────────────────────────────────
   const attach = createAttachmentStore(props.nick, scope);
+
+  // ── Multi-category helpers ────────────────────────────────────────────────────
+  const [pendingCategory, setPendingCategory] = createSignal("");
+
+  const categoryTags = () =>
+    store.category().split(",").map((s) => s.trim()).filter(Boolean);
+
+  function addCategoryTag(raw: string) {
+    const incoming = raw.split(",").map((s) => s.trim()).filter(Boolean);
+    if (!incoming.length) return;
+    const merged = [...new Set([...categoryTags(), ...incoming])];
+    store.setCategory(merged.join(","));
+    setPendingCategory("");
+  }
+
+  function removeCategoryTag(tag: string) {
+    store.setCategory(categoryTags().filter((t) => t !== tag).join(","));
+  }
+
+  function onCategoryKeyDown(e: KeyboardEvent) {
+    const val = pendingCategory().trim();
+    if ((e.key === "Enter" || e.key === ",") && val) {
+      e.preventDefault();
+      addCategoryTag(pendingCategory());
+    } else if (e.key === "Backspace" && !pendingCategory() && categoryTags().length) {
+      store.setCategory(categoryTags().slice(0, -1).join(","));
+    }
+  }
+
+  // ── Poll state ───────────────────────────────────────────────────────────────
+  const [pollEnabled, setPollEnabled] = createSignal(false);
+  const [pollAnswers, setPollAnswers] = createSignal<string[]>(["", ""]);
+  const [pollExpireValue, setPollExpireValue] = createSignal("1");
+  const [pollExpireUnit, setPollExpireUnit] = createSignal("Days");
+
+  function updatePollAnswer(i: number, val: string) {
+    setPollAnswers((prev) => prev.map((a, j) => (j === i ? val : a)));
+  }
+  function addPollAnswer() {
+    if (pollAnswers().length < 10) setPollAnswers((prev) => [...prev, ""]);
+  }
+  function removePollAnswer(i: number) {
+    setPollAnswers((prev) => prev.filter((_, j) => j !== i));
+  }
 
   // ── ACL state ────────────────────────────────────────────────────────────────
   const [aclMode, setAclMode] = createSignal<AclMode>("connections");
@@ -207,6 +251,16 @@ export default function ArticleComposer(props: Props) {
         }
       }
 
+      // ── Poll ──
+      if (pollEnabled()) {
+        const answers = pollAnswers().filter((a) => a.trim());
+        if (answers.length < 2)
+          throw new Error("At least 2 poll options are required.");
+        for (const a of answers) fd.append("poll_answers[]", a);
+        fd.append("poll_expire_value", pollExpireValue());
+        fd.append("poll_expire_unit", pollExpireUnit());
+      }
+
       const res = await fetch("/item", {
         method: "POST",
         credentials: "include",
@@ -338,33 +392,36 @@ export default function ArticleComposer(props: Props) {
         <Show when={caps.category}>
           <div class="flex-1 min-w-0">
             <label class="block text-xs text-muted mb-1">{t("editor.category_label")}</label>
-            <input
-              type="text"
-              placeholder={t("editor.category_field_placeholder")}
-              value={store.category()}
-              onInput={(e) => store.setCategory(e.currentTarget.value)}
-              class="w-full px-2 py-1.5 text-sm rounded border border-rim bg-surface
-                     text-txt outline-none hover:border-rim-strong focus:border-rim-strong transition-colors"
-            />
+            <div class="flex flex-wrap items-center gap-1.5 px-2 py-1.5 rounded border border-rim bg-surface
+                        hover:border-rim-strong focus-within:border-rim-strong transition-colors">
+              <For each={categoryTags()}>
+                {(tag) => (
+                  <span class="flex items-center gap-1 px-2 py-0.5 rounded bg-elevated text-xs text-txt">
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => removeCategoryTag(tag)}
+                      class="text-muted hover:text-txt leading-none"
+                    >×</button>
+                  </span>
+                )}
+              </For>
+              <input
+                type="text"
+                placeholder={categoryTags().length ? "" : t("editor.category_field_placeholder")}
+                value={pendingCategory()}
+                onInput={(e) => setPendingCategory(e.currentTarget.value)}
+                onKeyDown={onCategoryKeyDown}
+                onBlur={() => { if (pendingCategory().trim()) addCategoryTag(pendingCategory()); }}
+                class="flex-1 min-w-16 bg-transparent text-sm text-txt outline-none placeholder:text-muted"
+              />
+            </div>
           </div>
         </Show>
       </div>
 
-      {/* Mimetype picker */}
-      <div class="flex items-center gap-3">
-        <label class="text-xs text-muted">{t("editor.format_label")}</label>
-        <select
-          value={store.mimetype()}
-          onChange={(e) =>
-            store.setMimetype(e.currentTarget.value as import("../types/editor.types").MimeType)
-          }
-          class="text-xs px-2 py-1 rounded border border-rim bg-surface text-txt"
-        >
-          <option value="text/bbcode">BBCode</option>
-          <option value="text/markdown">Markdown</option>
-          <option value="text/html">HTML</option>
-        </select>
-        <span class="text-xs text-muted ml-auto">{t("editor.words_count", { count: wordCount() })}</span>
+      <div class="flex items-center justify-end">
+        <span class="text-xs text-muted">{t("editor.words_count", { count: wordCount() })}</span>
       </div>
 
       {/* Editor */}
@@ -387,6 +444,90 @@ export default function ArticleComposer(props: Props) {
             store.setBody(store.body() + "\n" + bbcodeToInsert(bbcode, store.mimetype()));
           }}
         />
+      </div>
+
+      {/* Poll */}
+      <div class="space-y-2">
+        <button
+          type="button"
+          onClick={() => setPollEnabled((p) => !p)}
+          class={
+            "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm transition-colors " +
+            (pollEnabled()
+              ? "bg-accent/10 text-accent border-accent/30"
+              : "text-muted hover:text-txt hover:bg-elevated border-rim")
+          }
+        >
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          {t("editor.poll_toggle")}
+        </button>
+        <Show when={pollEnabled()}>
+          <div class="rounded-lg border border-rim bg-elevated/40 p-4 space-y-2">
+            <For each={pollAnswers()}>
+              {(ans, i) => (
+                <div class="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={ans}
+                    placeholder={`${t("editor.poll_answer_placeholder")} ${i() + 1}`}
+                    onInput={(e) => updatePollAnswer(i(), e.currentTarget.value)}
+                    class="flex-1 bg-transparent border border-rim rounded px-2.5 py-1.5 text-sm
+                           text-txt placeholder:text-muted outline-none focus:border-rim-strong transition-colors"
+                  />
+                  <Show when={pollAnswers().length > 2}>
+                    <button
+                      type="button"
+                      onClick={() => removePollAnswer(i())}
+                      title={t("editor.poll_remove_answer")}
+                      class="p-1.5 rounded text-muted hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </Show>
+                </div>
+              )}
+            </For>
+            <div class="flex flex-wrap items-center gap-3 pt-1">
+              <Show when={pollAnswers().length < 10}>
+                <button
+                  type="button"
+                  onClick={addPollAnswer}
+                  class="text-sm text-accent hover:opacity-80 transition-opacity"
+                >
+                  {t("editor.poll_add_answer")}
+                </button>
+              </Show>
+              <div class="flex items-center gap-2 ml-auto">
+                <span class="text-sm text-muted shrink-0">{t("editor.poll_expires_label")}</span>
+                <input
+                  type="number"
+                  min="1"
+                  max="365"
+                  value={pollExpireValue()}
+                  onInput={(e) => setPollExpireValue(e.currentTarget.value)}
+                  class="w-16 bg-transparent border border-rim rounded px-2 py-1 text-sm text-txt
+                         outline-none focus:border-rim-strong transition-colors"
+                />
+                <select
+                  value={pollExpireUnit()}
+                  onChange={(e) => setPollExpireUnit(e.currentTarget.value)}
+                  class="bg-surface border border-rim rounded px-2 py-1 text-sm text-txt
+                         outline-none focus:border-rim-strong transition-colors cursor-pointer"
+                >
+                  <option value="Days">Days</option>
+                  <option value="Hours">Hours</option>
+                  <option value="Minutes">Minutes</option>
+                  <option value="Weeks">Weeks</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </Show>
       </div>
 
       {/* Mention popup */}
@@ -437,7 +578,7 @@ export default function ArticleComposer(props: Props) {
         <div class="flex gap-2 items-center">
           <button
             type="button"
-            onClick={() => { store.reset(); attach.clear(); clearEntries(); setAclMode("connections"); }}
+            onClick={() => { store.reset(); attach.clear(); clearEntries(); setAclMode("connections"); setPollEnabled(false); setPollAnswers(["", ""]); setPollExpireValue("1"); setPollExpireUnit("Days"); setPendingCategory(""); }}
             class="px-3 py-1.5 text-sm rounded-lg border border-rim text-muted
                    hover:bg-elevated transition-colors"
           >

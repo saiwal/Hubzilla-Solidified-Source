@@ -1,4 +1,4 @@
-import { createMemo } from "solid-js";
+import { createMemo, Suspense } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { useLocation } from "@solidjs/router";
 import { useI18n } from "@/i18n";
@@ -28,7 +28,9 @@ export default function ToolsPage() {
   return (
     <SubPageLayout base="/tools" items={items} activeKey={activeKey()}>
       <div class="px-4 md:px-6 py-6">
-        <Dynamic component={activeComponent()} />
+        <Suspense>
+          <Dynamic component={activeComponent()} />
+        </Suspense>
       </div>
     </SubPageLayout>
   );

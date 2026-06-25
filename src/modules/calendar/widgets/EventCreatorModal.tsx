@@ -117,7 +117,7 @@ export default function EventCreatorModal(props: Props) {
       style={{ background: "rgba(0,0,0,0.5)" }}
       onClick={(e) => { if (e.target === e.currentTarget) props.onClose(); }}
     >
-      <div class="bg-surface border border-rim rounded-2xl shadow-xl w-full max-w-md flex flex-col">
+      <div class="bg-surface border border-rim rounded-2xl shadow-xl w-full max-w-md flex flex-col max-h-[90vh] overflow-hidden">
 
         {/* Header */}
         <div class="flex items-center justify-between px-5 pt-5 pb-4 border-b border-rim shrink-0">
@@ -135,7 +135,7 @@ export default function EventCreatorModal(props: Props) {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} class="p-5 flex flex-col gap-4 overflow-y-auto">
+        <form onSubmit={handleSubmit} class="flex-1 p-5 flex flex-col gap-4 overflow-y-auto min-h-0">
 
           {/* Calendar picker — only shown when there are multiple options */}
           <Show when={calendarOptions().length > 1}>
@@ -210,7 +210,7 @@ export default function EventCreatorModal(props: Props) {
                 <input
                   type="time"
                   value={startTime()}
-                  onInput={(e) => setStartTime(e.currentTarget.value)}
+                  onChange={(e) => setStartTime(e.currentTarget.value)}
                   class={inputClass}
                 />
               </div>
@@ -246,7 +246,7 @@ export default function EventCreatorModal(props: Props) {
                   <input
                     type="time"
                     value={endTime()}
-                    onInput={(e) => setEndTime(e.currentTarget.value)}
+                    onChange={(e) => setEndTime(e.currentTarget.value)}
                     class={inputClass}
                   />
                 </div>

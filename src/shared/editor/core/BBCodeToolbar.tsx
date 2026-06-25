@@ -1,5 +1,5 @@
 import { Show } from "solid-js";
-import { MdOutlineLink, MdOutlineVpn_key, MdOutlineImage } from "solid-icons/md";
+import { MdOutlineLink, MdOutlineImage } from "solid-icons/md";
 
 interface Props {
   textareaRef: () => HTMLTextAreaElement | undefined;
@@ -95,7 +95,6 @@ export default function BBCodeToolbar(props: Props) {
     }
   };
 
-  const center = () => isSource() ? wrapSource("[center]", "[/center]") : exec("justifyCenter");
   const hr = () => isSource() ? insertSource("[hr]\n") : exec("insertHorizontalRule");
   const quote = () => isSource() ? wrapSource("[quote]", "[/quote]") : exec("formatBlock", "blockquote");
 
@@ -115,23 +114,10 @@ export default function BBCodeToolbar(props: Props) {
     isSource() ? wrapSource(`[url=${u}]`, "[/url]") : exec("createLink", u);
   };
 
-  const zrl = () => {
-    const u = prompt("URL (magic-auth link):");
-    if (!u) return;
-    // ZRL is BBCode-specific; in wysiwyg fall back to a regular link
-    isSource() ? wrapSource(`[zrl=${u}]`, "[/zrl]") : exec("createLink", u);
-  };
-
   const img = () => {
     const u = prompt("Image URL:");
     if (!u) return;
     isSource() ? insertSource(`[img]${u}[/img]`) : exec("insertImage", u);
-  };
-
-  const zmg = () => {
-    const u = prompt("Image URL (magic-auth):");
-    if (!u) return;
-    isSource() ? insertSource(`[zmg]${u}[/zmg]`) : exec("insertImage", u);
   };
 
   const video = () => {
@@ -155,10 +141,25 @@ export default function BBCodeToolbar(props: Props) {
   };
 
   const table = () => {
+    const colsRaw = prompt("Number of columns:", "2");
+    if (!colsRaw) return;
+    const rowsRaw = prompt("Number of rows (excluding header):", "2");
+    if (!rowsRaw) return;
+    const cols = Math.max(1, parseInt(colsRaw, 10) || 2);
+    const rows = Math.max(0, parseInt(rowsRaw, 10) || 2);
+
     if (isSource()) {
-      insertSource("[table border=1]\n[tr][th]Header 1[/th][th]Header 2[/th][/tr]\n[tr][td]Cell 1[/td][td]Cell 2[/td][/tr]\n[/table]\n");
+      const header = "[tr]" + Array.from({ length: cols }, (_, i) => `[th]Header ${i + 1}[/th]`).join("") + "[/tr]";
+      const dataRows = Array.from({ length: rows }, (_, r) =>
+        "[tr]" + Array.from({ length: cols }, (_, c) => `[td]Cell ${r + 1}-${c + 1}[/td]`).join("") + "[/tr]"
+      ).join("\n");
+      insertSource(`[table border=1]\n${header}\n${dataRows}\n[/table]\n`);
     } else {
-      exec("insertHTML", '<table border="1"><tr><th>Header 1</th><th>Header 2</th></tr><tr><td>Cell 1</td><td>Cell 2</td></tr></table>');
+      const header = "<tr>" + Array.from({ length: cols }, (_, i) => `<th>Header ${i + 1}</th>`).join("") + "</tr>";
+      const dataRows = Array.from({ length: rows }, (_, r) =>
+        "<tr>" + Array.from({ length: cols }, (_, c) => `<td>Cell ${r + 1}-${c + 1}</td>`).join("") + "</tr>"
+      ).join("");
+      exec("insertHTML", `<table border="1">${header}${dataRows}</table>`);
     }
   };
 
@@ -203,21 +204,14 @@ export default function BBCodeToolbar(props: Props) {
       <Sep />
 
       {/* Layout */}
-      <Btn title="Center [center]" onPress={center}><span class="text-xs">⟺</span></Btn>
       <Btn title="Horizontal rule [hr]" onPress={hr}><span class="text-xs font-bold">—</span></Btn>
       <Btn title="Quote [quote]" onPress={quote}><span class="text-xs">❝</span></Btn>
       <Btn title="Quote with author [quote=Author]" onPress={quoteAuthor}><span class="text-xs">❝A</span></Btn>
 
       <Sep />
 
-      {/* Magic-auth links — BBCode-specific */}
-      <Btn title="Magic-auth link [zrl=X]" onPress={zrl}><MdOutlineVpn_key class="w-4 h-4" /></Btn>
-
-      <Sep />
-
       {/* Media */}
       <Btn title="Image [img]" onPress={img}><MdOutlineImage class="w-4 h-4" /></Btn>
-      <Btn title="Magic-auth image [zmg]" onPress={zmg}><span class="text-[10px] font-mono">zmg</span></Btn>
       <Btn title="Video [video]" onPress={video}><span class="text-xs">▶</span></Btn>
       <Btn title="Audio [audio]" onPress={audio}><span class="text-xs">♪</span></Btn>
 

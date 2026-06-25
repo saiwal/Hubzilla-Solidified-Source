@@ -13,7 +13,10 @@ const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  const raw = html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  const el = document.createElement("textarea");
+  el.innerHTML = raw;
+  return el.value;
 }
 
 // ── vote gutter ───────────────────────────────────────────────────────────────

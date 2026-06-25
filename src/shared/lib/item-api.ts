@@ -106,6 +106,9 @@ export const apiSaveToFolder = (uuid: string, name: string, remove = false): Pro
   post<{ data: { folders: string[] } }>(`${BASE}/${encodeId(uuid)}/saveto`, { name, remove })
     .then(d => d.data.folders);
 
+export const apiVotePoll = (uuid: string, answer: string | string[]) =>
+  post<{ success: boolean }>(`${BASE}/${encodeId(uuid)}/vote`, { answer });
+
 export const apiFollowPost = (iid: number): Promise<void> =>
   fetch(`/subthread/sub/${iid}`, { credentials: 'include' }).then(() => undefined);
 

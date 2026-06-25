@@ -26,14 +26,18 @@ export default function AttachmentList(props: { attachments: StreamAttachment[];
   const [open, setOpen] = createSignal(false);
 
   const images = () => props.attachments.filter((a) => a.type.startsWith("image/"));
-  const files  = () => props.attachments.filter((a) => !a.type.startsWith("image/"));
+  const links  = () => props.attachments.filter((a) => a.type.startsWith("text/html"));
+  const files  = () => props.attachments.filter((a) => !a.type.startsWith("image/") && !a.type.startsWith("text/html"));
 
   const label = () => {
     const img = images().length;
+    const lnk = links().length;
     const fil = files().length;
-    if (img > 0 && fil > 0) return `${img} image${img !== 1 ? "s" : ""}, ${fil} file${fil !== 1 ? "s" : ""}`;
-    if (img > 0) return `${img} image${img !== 1 ? "s" : ""}`;
-    return `${fil} file${fil !== 1 ? "s" : ""}`;
+    const parts: string[] = [];
+    if (img > 0) parts.push(`${img} image${img !== 1 ? "s" : ""}`);
+    if (lnk > 0) parts.push(`${lnk} link${lnk !== 1 ? "s" : ""}`);
+    if (fil > 0) parts.push(`${fil} file${fil !== 1 ? "s" : ""}`);
+    return parts.join(", ");
   };
 
   return (
@@ -66,6 +70,14 @@ export default function AttachmentList(props: { attachments: StreamAttachment[];
             </div>
           </Show>
 
+          <Show when={links().length > 0}>
+            <div class="flex flex-col gap-1.5">
+              <For each={links()}>
+                {(link) => <LinkChip link={link} />}
+              </For>
+            </div>
+          </Show>
+
           <Show when={files().length > 0}>
             <div class="flex flex-wrap gap-2">
               <For each={files()}>
@@ -94,6 +106,40 @@ export default function AttachmentList(props: { attachments: StreamAttachment[];
         </div>
       </Show>
     </div>
+  );
+}
+
+function LinkChip(props: { link: StreamAttachment }) {
+  const displayTitle = () => {
+    const t = decodeURIComponent(props.link.title).trim();
+    if (t) return t;
+    try {
+      return new URL(props.link.href).hostname;
+    } catch {
+      return props.link.href;
+    }
+  };
+
+  const hostname = () => {
+    try { return new URL(props.link.href).hostname; } catch { return ""; }
+  };
+
+  return (
+    <a
+      href={props.link.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="flex items-center gap-2 px-3 py-2 rounded-lg border border-rim bg-elevated
+             hover:bg-overlay text-txt transition-colors"
+    >
+      <LinkIcon />
+      <div class="min-w-0 flex-1">
+        <div class="truncate text-xs font-medium">{displayTitle()}</div>
+        <Show when={hostname()}>
+          <div class="text-[10px] text-muted truncate">{hostname()}</div>
+        </Show>
+      </div>
+    </a>
   );
 }
 
@@ -161,6 +207,19 @@ function ChevronIcon(props: { open: boolean }) {
       viewBox="0 0 24 24"
     >
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+    </svg>
+  );
+}
+
+function LinkIcon() {
+  return (
+    <svg class="w-4 h-4 shrink-0 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+      />
     </svg>
   );
 }

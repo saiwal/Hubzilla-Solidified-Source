@@ -158,10 +158,10 @@ export async function wallAttach(
   }
 
   // File response: [attachment]hash,revision[/attachment]
-  // May be preceded by [video]url[/video] or [audio]url[/audio] for media files.
+  // May be preceded by [zvideo]/[video] or [zaudio]/[audio] for media files.
   const attachMatch = message.match(/\[attachment\]([^,\]]+),(\d+)/i);
   if (!attachMatch) throw new Error("Could not parse attachment from wall_attach response");
-  const mediaMatch = message.match(/\[(?:video|audio)\](.*?)\[\/(?:video|audio)\]/i);
+  const mediaMatch = message.match(/\[z?(?:video|audio)\](.*?)\[\/z?(?:video|audio)\]/i);
   const src = mediaMatch ? mediaMatch[1].trim() : undefined;
   return { hash: attachMatch[1], revision: parseInt(attachMatch[2], 10), isPhoto: false, src, message };
 }

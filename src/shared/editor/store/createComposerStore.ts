@@ -31,6 +31,15 @@ export type SavedDraft = {
  *
  * When `options.initialBody` is provided the IDB draft will NOT override it.
  */
+type LocalDraft = {
+  body: string;
+  title: string;
+  summary: string;
+  slug: string;
+  category: string;
+  mimetype: MimeType;
+};
+
 export function createComposerStore(
   submitFn: SubmitFn,
   scope: string,
@@ -49,6 +58,9 @@ export function createComposerStore(
   const [tab, setTab]           = createSignal<"wysiwyg" | "source" | "preview">("wysiwyg");
   const [savedDrafts, setSavedDrafts] = createSignal<SavedDraft[]>([]);
   const [loadedDraftId, setLoadedDraftId] = createSignal<string | null>(null);
+  // Prevents the autosave effect from running (and deleting the draft) before
+  // the async storage read has had a chance to restore the previous body.
+  const [initialized, setInitialized] = createSignal(false);
 
   // Load saved drafts from server, filtered to this scope
   listServerDrafts().then((serverDrafts) => {
@@ -71,16 +83,38 @@ export function createComposerStore(
       setMimetype(pending.mimetype);
       setLoadedDraftId(pending.id);
       await storageDel(PENDING_KEY);
-      return;
+    } else if (!options?.initialBody) {
+      // Support both the new LocalDraft shape and the old plain-string format
+      const raw = await storageGet<LocalDraft | string | null>(DRAFT_KEY, null);
+      if (raw) {
+        const local: LocalDraft = typeof raw === "string"
+          ? { body: raw, title: "", summary: "", slug: "", category: "", mimetype: "text/bbcode" }
+          : raw;
+        setBody(local.body);
+        setTitle(local.title);
+        setSummary(local.summary);
+        setSlug(local.slug);
+        setCategory(local.category);
+        setMimetype(local.mimetype);
+      }
     }
-    const v = await storageGet<string>(DRAFT_KEY, "");
-    if (!options?.initialBody && v) setBody(v);
+    setInitialized(true);
   });
 
-  // Persist body as draft while typing; remove when submitted or cleared
+  // Persist the full local draft while typing; clear when submitted or reset.
+  // Guard on `initialized` so the effect doesn't fire (and delete the saved
+  // draft) during the async window before storage has been read on mount.
   createEffect(() => {
-    const b = body();
-    if (b) storageSet(DRAFT_KEY, b);
+    if (!initialized()) return;
+    const snapshot: LocalDraft = {
+      body:     body(),
+      title:    title(),
+      summary:  summary(),
+      slug:     slug(),
+      category: category(),
+      mimetype: mimetype(),
+    };
+    if (snapshot.body) storageSet(DRAFT_KEY, snapshot);
     else storageDel(DRAFT_KEY);
   });
 

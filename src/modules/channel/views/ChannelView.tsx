@@ -96,11 +96,13 @@ export default function ChannelView() {
   return (
     <>
       <ProfileView />
-      <ViewSwitcher
-        viewMode={viewMode()}
-        onChange={changeView}
-        available={["feed", "masonry", "list", "inbox"]}
-      />
+      <div class="flex justify-center mb-4">
+        <ViewSwitcher
+          viewMode={viewMode()}
+          onChange={changeView}
+          available={["feed", "masonry", "list", "inbox"]}
+        />
+      </div>
       <Show when={searchParams.cat || searchParams.tag}>
         <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/10 border border-accent/25 text-sm mb-3">
           <span class="text-muted">{t("channel.filtered_by")}</span>

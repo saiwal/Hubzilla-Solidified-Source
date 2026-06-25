@@ -18,6 +18,7 @@ export const post: RawDictionary["post"] = {
   view_source:          "View source",
   import_post:          "Import post",
   import:               "Import",
+  source:               "Source",
   toggle_comments:      "Toggle comments",
   toggle_flat:          "Switch to flat view",
   toggle_threaded:      "Switch to threaded view",

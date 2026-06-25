@@ -64,7 +64,7 @@ export default function DayDetailModal(props: Props) {
           if (e.target === e.currentTarget) props.onClose();
         }}
       >
-        <div class="bg-surface border border-rim rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-md max-h-[85vh] flex flex-col">
+        <div class="bg-surface border border-rim rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-md max-h-[85vh] flex flex-col overflow-hidden">
           {/* Header */}
           <div class="flex items-start justify-between px-5 pt-5 pb-4 border-b border-rim shrink-0 gap-3">
             <div class="min-w-0">

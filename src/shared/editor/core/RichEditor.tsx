@@ -2,7 +2,6 @@ import { createEffect, onMount, Show } from "solid-js";
 import type { EditorCapabilities, EditorTab, MimeType } from "../types/editor.types";
 import EditorToolbar from "./EditorToolbar";
 import EditorPreview from "./EditorPreview";
-import BBCodeToolbar from "./BBCodeToolbar";
 import { sourceToHtml } from "./sourceToHtml";
 import { htmlToSource } from "./htmlToSource";
 import { useI18n } from "@/i18n";
@@ -64,7 +63,9 @@ export default function RichEditor(props: Props) {
       // Convert WYSIWYG HTML back to the chosen source format before storing
       props.onInput(htmlToSource(editorRef.innerHTML, mime()));
     }
-    isUserTyping = false;
+    // Reset after Solid's effect microtask has already run — if we reset synchronously
+    // the effect sees isUserTyping=false and re-writes innerHTML, clearing the selection.
+    queueMicrotask(() => { isUserTyping = false; });
   };
 
   const onTextareaInput = (e: InputEvent) => {
@@ -88,7 +89,7 @@ export default function RichEditor(props: Props) {
   const showPreviewTab = () => props.capabilities.preview;
 
   return (
-    <div class="rich-editor rounded-lg border border-rim overflow-hidden bg-surface">
+    <div class="rich-editor rounded-lg border border-rim overflow-hidden bg-surface flex flex-col flex-1 min-h-0">
       {/* ── Tab bar ──────────────────────────────────────── */}
       <Show when={showTabs()}>
         <div class="flex bg-elevated border-b border-rim">
@@ -117,20 +118,13 @@ export default function RichEditor(props: Props) {
         </div>
       </Show>
 
-      {/* ── Toolbar (wysiwyg only) ────────────────────────── */}
-      <Show when={props.tab === "wysiwyg"}>
+      {/* ── Unified toolbar (wysiwyg + source tabs) ── */}
+      <Show when={props.tab !== "preview"}>
         <EditorToolbar
           level={props.capabilities.toolbar}
+          tab={props.tab as "wysiwyg" | "source"}
           editorRef={() => editorRef}
-        />
-      </Show>
-
-      {/* ── BBCode toolbar (bbcode format, write + source tabs) ── */}
-      <Show when={mime() === "text/bbcode" && props.tab !== "preview"}>
-        <BBCodeToolbar
           textareaRef={() => textareaRef}
-          editorRef={() => editorRef}
-          tab={props.tab}
           onSourceChange={(v) => { props.onInput(v); }}
         />
       </Show>
@@ -145,7 +139,8 @@ export default function RichEditor(props: Props) {
           onKeyDown={handleKeyDown}
           data-placeholder={props.placeholder ?? t("editor.write_placeholder")}
           style={{ "min-height": minH() }}
-          class="p-3 outline-none text-sm text-txt
+          class="grow overflow-y-auto p-3 outline-none text-sm text-txt
+                 [&_img]:max-w-full [&_img]:h-auto
                  empty:before:content-[attr(data-placeholder)]
                  empty:before:text-muted empty:before:pointer-events-none"
         />
@@ -159,7 +154,7 @@ export default function RichEditor(props: Props) {
           onInput={onTextareaInput}
           onKeyDown={handleKeyDown}
           style={{ "min-height": minH() }}
-          class="w-full p-3 text-sm font-mono bg-surface text-txt outline-none resize-y"
+          class="grow overflow-y-auto w-full p-3 text-sm font-mono bg-surface text-txt outline-none resize-none"
           placeholder={
             mime() === "text/markdown"
               ? t("editor.markdown_source_placeholder")
@@ -172,7 +167,9 @@ export default function RichEditor(props: Props) {
 
       {/* ── Preview panel ────────────────────────────────── */}
       <Show when={props.tab === "preview"}>
-        <EditorPreview body={props.body} mimetype={mime()} />
+        <div class="grow min-h-0 overflow-y-auto">
+          <EditorPreview body={props.body} mimetype={mime()} />
+        </div>
       </Show>
     </div>
   );

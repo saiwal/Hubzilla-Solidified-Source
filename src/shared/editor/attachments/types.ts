@@ -15,6 +15,7 @@ export interface Attachment {
   isAudio: boolean;
   thumbUrl?: string;
   insertUrl?: string;
+  photoPageUrl?: string;
   hash?: string;
   resourceId?: string;
   altText?: string;

@@ -20,15 +20,13 @@ import { useSearchParams } from "@solidjs/router";
 import { apiFetch } from "@/shared/lib/fetch";
 const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
 import { loadNetwork, loading, refreshing, resetPosts, softRefresh, viewMode, changeView } from "../store";
+import { ViewSwitcher } from "@/shared/stream/filters";
 import {
   MdFillPerson,
   MdFillRefresh,
   MdFillSearch,
   MdFillClose,
-  MdFillShort_text,
-  MdFillApps,
   MdFillFormat_list_bulleted,
-  MdFillAll_inbox,
   MdFillSchedule,
   MdFillForum,
   MdFillBookmark_add,
@@ -36,7 +34,6 @@ import {
 import { helpable } from "@/shared/lib/helpable";
 import { toast } from "@/shared/store/toast";
 import { useI18n } from "@/i18n";
-import type { ViewMode } from "@/shared/stream/types";
 import {
   fetchConnections,
   type AclConnection,
@@ -53,13 +50,6 @@ const ORDER_OPTS: { value: Order; key: string; Icon: any }[] = [
   { value: "created",    key: "latest", Icon: MdFillSchedule },
   { value: "commented",  key: "active", Icon: MdFillForum    },
   { value: "unthreaded", key: "unthreaded", Icon: MdFillFormat_list_bulleted },
-];
-
-const VIEW_OPTS: { id: ViewMode; key: string; Icon: any }[] = [
-  { id: "feed",    key: "feed",  Icon: MdFillShort_text          },
-  { id: "masonry", key: "grid",  Icon: MdFillApps                },
-  { id: "list",    key: "list",  Icon: MdFillFormat_list_bulleted },
-  { id: "inbox",   key: "inbox", Icon: MdFillAll_inbox           },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -295,30 +285,6 @@ export default function StreamFilters() {
     }, 150);
   }
 
-  // ── View switcher (shared between rows) ───────────────────────────────────
-
-  const ViewSwitcher = () => (
-    <div class="flex rounded-lg border border-rim overflow-hidden shrink-0"
-      role="group" aria-label="View mode">
-      <For each={VIEW_OPTS}>
-        {(v) => (
-          <button
-            title={t(`network.${v.key}` as any)}
-            aria-pressed={viewMode() === v.id}
-            onClick={() => changeView(v.id)}
-            class={`px-2 py-1.5 transition-colors
-              ${viewMode() === v.id
-                ? "bg-elevated text-txt"
-                : "bg-surface text-muted hover:bg-elevated hover:text-txt"
-              }`}
-          >
-            <v.Icon size={15} />
-          </button>
-        )}
-      </For>
-    </div>
-  );
-
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -360,7 +326,7 @@ export default function StreamFilters() {
         </div>
 
         {/* ── Center: view switcher ── */}
-        <ViewSwitcher />
+        <ViewSwitcher viewMode={viewMode()} onChange={changeView} />
 
         {/* ── Right: utility icons ── */}
         <div class="flex items-center gap-1 justify-end min-w-0">

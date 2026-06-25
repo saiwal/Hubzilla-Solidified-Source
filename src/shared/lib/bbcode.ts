@@ -368,26 +368,20 @@ function bbDefinitionList(termStyles: string, content: string): string {
 // ---------------------------------------------------------------------------
 
 function bbOpenTag(title: string, body: string): string {
-  const rnd = randomString(8);
   const label = title || "Click to open/close";
-  return `<div onclick="openClose('opendiv-${rnd}'); return false;" class="fakelink"><span class="bb-open" title="Click to open/close">${label}</span></div><div id="opendiv-${rnd}" style="display: none;">${body}</div>`;
+  return `<details class="bb-open"><summary>${label}</summary><div>${body}</div></details>`;
 }
 
 function bbSpoilerTag(title: string, body: string): string {
-  const rnd = randomString(8);
-  const label = title ? `${title} spoiler` : "Click to open/close";
-  return `<div onclick="openClose('opendiv-${rnd}'); return false;" class="fakelink"><span class="bb-spoiler" title="Click to open/close">${label}</span></div><blockquote id="opendiv-${rnd}" style="display: none;">${body}</blockquote>`;
+  const label = title ? `${title} spoiler` : "Spoiler";
+  return `<details class="bb-spoiler"><summary>${label}</summary><blockquote>${body}</blockquote></details>`;
 }
 
 function bbSummary(pre: string, summary: string, full: string): string {
-  const [r1, r2, r3, r4] = [randomString(8), randomString(8), randomString(8), randomString(8)];
-  const toggle = `openClose('opendiv-${r1}'); openClose('opendiv-${r2}'); openClose('opendiv-${r3}'); openClose('opendiv-${r4}');`;
   return (
     pre +
-    `<div style="display: block;" id="opendiv-${r2}">${summary}</div>` +
-    `<div style="display: block;" id="opendiv-${r3}" onclick="${toggle} return false;" class="fakelink view-article">View article</div>` +
-    `<div style="display: none;" id="opendiv-${r4}" onclick="${toggle} return false;" class="fakelink view-summary">View summary</div>` +
-    `<div id="opendiv-${r1}" style="display: none;">${full}</div>`
+    `<div class="bb-summary">${summary}</div>` +
+    `<details class="bb-summary-full"><summary>View full article</summary>${full}</details>`
   );
 }
 

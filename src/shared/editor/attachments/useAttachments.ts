@@ -20,6 +20,7 @@ type DraftAttachment = {
   hash?: string;
   resourceId?: string;
   insertUrl?: string;
+  photoPageUrl?: string;
   thumbUrl?: string;   // only non-blob: URLs
   altText?: string;
   posterUrl?: string;
@@ -36,7 +37,10 @@ function toSerializable(a: Attachment): DraftAttachment {
     hash: a.hash,
     resourceId: a.resourceId,
     insertUrl: a.insertUrl,
-    thumbUrl: a.thumbUrl?.startsWith("blob:") ? undefined : a.thumbUrl,
+    photoPageUrl: a.photoPageUrl,
+    thumbUrl: a.thumbUrl?.startsWith("blob:")
+      ? (a.insertUrl?.startsWith("http") ? a.insertUrl : undefined)
+      : a.thumbUrl,
     altText: a.altText,
     posterUrl: a.posterUrl?.startsWith("blob:") ? undefined : a.posterUrl,
   };
@@ -79,17 +83,6 @@ function isAudioFilename(name: string): boolean {
 
 function uid(): string {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
-}
-
-// Strip host from an absolute URL so [img] tags stay same-origin regardless
-// of whether z_root() on the server matches the browser's actual hostname.
-function toRelativePath(url: string): string {
-  try {
-    const u = new URL(url);
-    return u.pathname + u.search + u.hash;
-  } catch {
-    return url;
-  }
 }
 
 // ── Store factory ─────────────────────────────────────────────────────────────
@@ -143,7 +136,7 @@ export function createAttachmentStore(nick: string, scope: string): AttachmentSt
       isImage: isImageMime(file.type) || isImageFilename(file.name),
       isVideo: isVideoMime(file.type) || isVideoFilename(file.name),
       isAudio: isAudioMime(file.type) || isAudioFilename(file.name),
-      thumbUrl: isImageMime(file.type) ? URL.createObjectURL(file) : undefined,
+      thumbUrl: (isImageMime(file.type) || isImageFilename(file.name)) ? URL.createObjectURL(file) : undefined,
       file,
     }));
 
@@ -154,27 +147,23 @@ export function createAttachmentStore(nick: string, scope: string): AttachmentSt
         try {
           const res = await wallAttach(nick, item.file!, (pct) => update(item.id, { progress: pct }));
           if (res.isPhoto) {
-            // Photos: resourceId = attach hash (= photo resource_id); insertUrl for [img] inline embed.
+            // Photos: resourceId = attach hash (= photo resource_id); insertUrl for [zmg] inline embed.
+            // Keep the absolute URL so magic-auth works for private photos on remote servers.
             // Hubzilla's fix_attached_permissions() uses the attach record (flags=1) to update
             // photo permissions to match the post ACL when the post is submitted.
             update(item.id, {
               status: "ready",
               progress: 100,
               resourceId: res.hash,
-              insertUrl: res.src ? toRelativePath(res.src) : undefined,
+              insertUrl: res.src,
+              photoPageUrl: `${window.location.origin}/photos/${nick}/image/${res.hash}`,
             });
           } else {
-            // For video/audio: build a playable /cloud/nick/filename URL.
-            // wall_attach places the file at the root of the channel's cloud storage,
-            // so /cloud/nick/filename is always reachable. Use server-provided src
-            // when available (some Hubzilla versions include [video]url[/video] in
-            // the message), otherwise construct it from the filename.
+            // For video/audio: use the absolute /attach/hash URL from the server response.
+            // For other files: store hash,revision for the [attachment] tag.
             let insertUrl: string;
             if (item.isVideo || item.isAudio) {
-              const path = res.src
-                ? toRelativePath(res.src)
-                : `/cloud/${nick}/${encodeURIComponent(item.file!.name)}`;
-              insertUrl = window.location.origin + path;
+              insertUrl = res.src ?? `${window.location.origin}/attach/${res.hash}`;
             } else {
               insertUrl = `${res.hash},${res.revision}`;
             }
@@ -228,7 +217,8 @@ export function createAttachmentStore(nick: string, scope: string): AttachmentSt
       isVideo: false,
       isAudio: false,
       thumbUrl: p.src,
-      insertUrl: toRelativePath(p.src),
+      insertUrl: p.src,
+      photoPageUrl: p.link,
       resourceId: p.resource_id,
     }));
     setState("items", (prev) => [...prev, ...dedup(prev, newItems)]);
@@ -253,17 +243,20 @@ export function createAttachmentStore(nick: string, scope: string): AttachmentSt
     const item = state.items.find((a) => a.id === id);
     if (!item || !item.insertUrl) return "";
     if (item.isImage) {
-      const alt = item.altText?.trim();
-      return alt
-        ? `[img alt="${alt}"]${item.insertUrl}[/img]`
+      const label = item.altText?.trim() || item.filename;
+      if (item.photoPageUrl) {
+        return `[zrl=${item.photoPageUrl}][zmg=${item.insertUrl}]${label}[/zmg][/zrl]`;
+      }
+      return item.altText?.trim()
+        ? `[img alt="${item.altText.trim()}"]${item.insertUrl}[/img]`
         : `[img]${item.insertUrl}[/img]`;
     }
     if (item.isVideo) {
       return item.posterUrl
-        ? `[video poster='${item.posterUrl}']${item.insertUrl}[/video]`
-        : `[video]${item.insertUrl}[/video]`;
+        ? `[zvideo poster='${item.posterUrl}']${item.insertUrl}[/zvideo]`
+        : `[zvideo]${item.insertUrl}[/zvideo]`;
     }
-    if (item.isAudio) return `[audio]${item.insertUrl}[/audio]`;
+    if (item.isAudio) return `[zaudio]${item.insertUrl}[/zaudio]`;
     return `[attachment]${item.insertUrl}[/attachment]`;
   }
 
@@ -286,9 +279,7 @@ export function createAttachmentStore(nick: string, scope: string): AttachmentSt
       try {
         // Upload thumbnail first (small file) to get its URL for the poster attribute
         const thumbRes = await wallAttach(nick, thumbnail);
-        const posterUrl = thumbRes.isPhoto && thumbRes.src
-          ? toRelativePath(thumbRes.src)
-          : undefined;
+        const posterUrl = thumbRes.isPhoto && thumbRes.src ? thumbRes.src : undefined;
         if (thumbRes.hash) applyAcl(thumbRes.hash);
 
         // Now upload the video, tracking progress
@@ -298,14 +289,12 @@ export function createAttachmentStore(nick: string, scope: string): AttachmentSt
             status: "ready",
             progress: 100,
             resourceId: videoRes.hash,
-            insertUrl: videoRes.src ? toRelativePath(videoRes.src) : undefined,
+            insertUrl: videoRes.src,
+            photoPageUrl: `${window.location.origin}/photos/${nick}/image/${videoRes.hash}`,
             posterUrl,
           });
         } else {
-          const path = videoRes.src
-            ? toRelativePath(videoRes.src)
-            : `/cloud/${nick}/${encodeURIComponent(video.name)}`;
-          const insertUrl = window.location.origin + path;
+          const insertUrl = videoRes.src ?? `${window.location.origin}/attach/${videoRes.hash}`;
           update(id, {
             status: "ready",
             progress: 100,

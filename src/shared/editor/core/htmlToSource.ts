@@ -57,6 +57,8 @@ function nodeTobbcode(node: Node): string {
     case "br":  return "\n";
     case "hr":  return "\n[hr]\n";
 
+    case "center": return `[center]${children()}[/center]`;
+
     case "a": {
       const href = el.getAttribute("href") ?? "";
       return `[url=${href}]${children()}[/url]`;

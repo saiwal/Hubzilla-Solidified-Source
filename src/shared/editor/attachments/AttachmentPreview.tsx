@@ -67,14 +67,20 @@ const AttachmentPreview: Component<Props> = (props) => {
       {/* Thumbnail or file icon */}
       <div class="w-14 h-14 rounded-md overflow-hidden flex items-center justify-center bg-elevated shrink-0">
         <Show
-          when={a().isImage && a().thumbUrl}
+          when={(() => {
+            const src = a().thumbUrl ?? (a().isImage ? a().insertUrl : undefined) ?? a().posterUrl;
+            return src ? src : false;
+          })()}
           fallback={<FileIcon filename={a().filename} />}
+          keyed
         >
-          <img
-            src={a().thumbUrl}
-            alt={a().altText || a().filename}
-            class="w-full h-full object-cover"
-          />
+          {(src) => (
+            <img
+              src={src}
+              alt={a().altText || a().filename}
+              class="w-full h-full object-cover"
+            />
+          )}
         </Show>
 
         {/* Upload progress overlay */}

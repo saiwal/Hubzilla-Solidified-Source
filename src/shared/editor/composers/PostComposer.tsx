@@ -16,6 +16,7 @@ import {
   createEffect,
   onCleanup,
   Show,
+  For,
   type Component,
 } from "solid-js";
 import { DraftsList } from "../components/DraftsList";
@@ -38,7 +39,7 @@ import EmojiPopup from "../emoji/EmojiPopup";
 import { helpable } from "@/shared/lib/helpable";
 import AttachmentBar from "../attachments/AttachmentBar";
 import { createAttachmentStore } from "../attachments/useAttachments";
-import { currentNick } from "@/shared/store/auth-store";
+import { currentNick, isFeatureEnabled } from "@/shared/store/auth-store";
 import { bbcodeToInsert } from "../attachments/insertHelpers";
 import type { FileAcl } from "@/modules/files/api";
 import { useI18n } from "@/i18n";
@@ -88,6 +89,12 @@ const PostComposer: Component<ComposerProps> = (props) => {
   const [fullscreen, setFullscreen] = createSignal(false);
   const [draftsOpen, setDraftsOpen] = createSignal(false);
 
+  // ── Poll state ─────────────────────────────────────────────────────────────
+  const [pollEnabled, setPollEnabled] = createSignal(false);
+  const [pollAnswers, setPollAnswers] = createSignal<string[]>(["", ""]);
+  const [pollExpireValue, setPollExpireValue] = createSignal("1");
+  const [pollExpireUnit, setPollExpireUnit] = createSignal("Days");
+
   // ── Sync ACL to attachment store ───────────────────────────────────────────
   createEffect(() => {
     const mode = aclMode();
@@ -136,9 +143,20 @@ const PostComposer: Component<ComposerProps> = (props) => {
       fd.append("type", props.parentId ? "net-comment" : "wall");
       if (props.parentId) fd.append("parent", String(props.parentId));
       if (meta.title) fd.append("title", meta.title);
+      if (meta.summary) fd.append("summary", meta.summary);
       if (meta.category) fd.append("category", meta.category);
       if (expiry()) fd.append("expire", expiry());
       fd.append("return", "");
+
+      // ── Poll ──
+      if (pollEnabled()) {
+        const answers = pollAnswers().filter((a) => a.trim());
+        if (answers.length < 2)
+          throw new Error("At least 2 poll options are required.");
+        for (const a of answers) fd.append("poll_answers[]", a);
+        fd.append("poll_expire_value", pollExpireValue());
+        fd.append("poll_expire_unit", pollExpireUnit());
+      }
 
       // ── ACL ──
       const mode = aclMode();
@@ -226,6 +244,47 @@ const PostComposer: Component<ComposerProps> = (props) => {
     setDenyEntries(() => new Set<string>());
   }
 
+  // ── Multi-category helpers ─────────────────────────────────────────────────
+  const [pendingCategory, setPendingCategory] = createSignal("");
+
+  const categoryTags = () =>
+    store.category().split(",").map((s) => s.trim()).filter(Boolean);
+
+  function addCategoryTag(raw: string) {
+    const incoming = raw.split(",").map((s) => s.trim()).filter(Boolean);
+    if (!incoming.length) return;
+    const merged = [...new Set([...categoryTags(), ...incoming])];
+    store.setCategory(merged.join(","));
+    setPendingCategory("");
+  }
+
+  function removeCategoryTag(tag: string) {
+    store.setCategory(categoryTags().filter((t) => t !== tag).join(","));
+  }
+
+  function onCategoryKeyDown(e: KeyboardEvent) {
+    const val = pendingCategory().trim();
+    if ((e.key === "Enter" || e.key === ",") && val) {
+      e.preventDefault();
+      addCategoryTag(pendingCategory());
+    } else if (e.key === "Backspace" && !pendingCategory() && categoryTags().length) {
+      const tags = categoryTags();
+      store.setCategory(tags.slice(0, -1).join(","));
+    }
+  }
+
+  // ── Poll helpers ────────────────────────────────────────────────────────────
+  function updatePollAnswer(i: number, val: string) {
+    setPollAnswers((prev) => prev.map((a, j) => (j === i ? val : a)));
+  }
+  function addPollAnswer() {
+    if (pollAnswers().length < 10)
+      setPollAnswers((prev) => [...prev, ""]);
+  }
+  function removePollAnswer(i: number) {
+    setPollAnswers((prev) => prev.filter((_, j) => j !== i));
+  }
+
   // ── Reset ──────────────────────────────────────────────────────────────────
   function resetAll() {
     store.reset();
@@ -234,6 +293,11 @@ const PostComposer: Component<ComposerProps> = (props) => {
     setAllowEntries(() => new Set<string>());
     setDenyEntries(() => new Set<string>());
     setExpiry("");
+    setPollEnabled(false);
+    setPollAnswers(["", ""]);
+    setPollExpireValue("1");
+    setPollExpireUnit("Days");
+    setPendingCategory("");
   }
 
   // ── Mention + emoji autocomplete ──────────────────────────────────────────
@@ -333,8 +397,8 @@ const PostComposer: Component<ComposerProps> = (props) => {
               "flex flex-col bg-surface border border-rim " +
               "shadow-2xl text-txt overflow-hidden " +
               (fullscreen()
-                ? "fixed inset-0 w-full max-h-full rounded-none"
-                : "w-full max-w-2xl max-h-[90vh] rounded-xl")
+                ? "fixed inset-0 w-full rounded-none"
+                : "w-full max-w-2xl h-[90vh] rounded-xl")
             }
             role="dialog"
             aria-modal="true"
@@ -396,8 +460,8 @@ const PostComposer: Component<ComposerProps> = (props) => {
               </div>
             </header>
 
-            {/* ── Meta fields (title / category) ── */}
-            <Show when={caps.title || caps.category}>
+            {/* ── Meta fields (title) ── */}
+            <Show when={caps.title}>
               <div class="flex gap-2 px-4 pt-3 pb-2 border-b border-rim shrink-0">
                 <Show when={caps.title}>
                   <input
@@ -409,16 +473,46 @@ const PostComposer: Component<ComposerProps> = (props) => {
                            placeholder:text-muted outline-none"
                   />
                 </Show>
-                <Show when={caps.category}>
-                  <input
-                    type="text"
-                    placeholder={t("editor.category_placeholder")}
-                    value={store.category()}
-                    onInput={(e) => store.setCategory(e.currentTarget.value)}
-                    class="w-32 shrink-0 bg-transparent text-sm text-txt
-                           placeholder:text-muted outline-none border-l border-rim pl-2"
-                  />
-                </Show>
+              </div>
+            </Show>
+
+            {/* ── Summary ── */}
+            <Show when={caps.summary && !props.parentId}>
+              <div class="px-4 py-2 border-b border-rim shrink-0">
+                <input
+                  type="text"
+                  placeholder={t("editor.post_summary_placeholder")}
+                  value={store.summary()}
+                  onInput={(e) => store.setSummary(e.currentTarget.value)}
+                  class="w-full bg-transparent text-sm text-txt placeholder:text-muted outline-none"
+                />
+              </div>
+            </Show>
+
+            {/* ── Category ── */}
+            <Show when={caps.category && !props.parentId}>
+              <div class="flex flex-wrap items-center gap-1 px-4 py-2 border-b border-rim shrink-0">
+                <For each={categoryTags()}>
+                  {(tag) => (
+                    <span class="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-elevated text-xs text-txt">
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => removeCategoryTag(tag)}
+                        class="text-muted hover:text-txt leading-none"
+                      >×</button>
+                    </span>
+                  )}
+                </For>
+                <input
+                  type="text"
+                  placeholder={categoryTags().length ? "" : t("editor.category_placeholder")}
+                  value={pendingCategory()}
+                  onInput={(e) => setPendingCategory(e.currentTarget.value)}
+                  onKeyDown={onCategoryKeyDown}
+                  onBlur={() => { if (pendingCategory().trim()) addCategoryTag(pendingCategory()); }}
+                  class="flex-1 min-w-0 bg-transparent text-sm text-txt placeholder:text-muted outline-none"
+                />
               </div>
             </Show>
 
@@ -455,22 +549,77 @@ const PostComposer: Component<ComposerProps> = (props) => {
               />
             </div>
 
+            {/* ── Poll panel ── */}
+            <Show when={pollEnabled()}>
+              <div class="px-4 py-3 border-t border-rim bg-elevated/40 shrink-0 space-y-2">
+                <span class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1">
+                  {t("editor.poll_toggle")}
+                </span>
+                <For each={pollAnswers()}>
+                  {(ans, i) => (
+                    <div class="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={ans}
+                        placeholder={`${t("editor.poll_answer_placeholder")} ${i() + 1}`}
+                        onInput={(e) => updatePollAnswer(i(), e.currentTarget.value)}
+                        class="flex-1 bg-transparent border border-rim rounded px-2.5 py-1 text-sm
+                               text-txt placeholder:text-muted outline-none focus:border-rim-strong transition-colors"
+                      />
+                      <Show when={pollAnswers().length > 2}>
+                        <button
+                          type="button"
+                          onClick={() => removePollAnswer(i())}
+                          title={t("editor.poll_remove_answer")}
+                          class="p-1 rounded text-muted hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                        >
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </Show>
+                    </div>
+                  )}
+                </For>
+                <div class="flex flex-wrap items-center gap-3 pt-1">
+                  <Show when={pollAnswers().length < 10}>
+                    <button
+                      type="button"
+                      onClick={addPollAnswer}
+                      class="text-xs text-accent hover:opacity-80 transition-opacity"
+                    >
+                      {t("editor.poll_add_answer")}
+                    </button>
+                  </Show>
+                  <div class="flex items-center gap-1.5 ml-auto">
+                    <span class="text-xs text-muted shrink-0">{t("editor.poll_expires_label")}</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max="365"
+                      value={pollExpireValue()}
+                      onInput={(e) => setPollExpireValue(e.currentTarget.value)}
+                      class="w-14 bg-transparent border border-rim rounded px-2 py-0.5 text-xs text-txt
+                             outline-none focus:border-rim-strong transition-colors"
+                    />
+                    <select
+                      value={pollExpireUnit()}
+                      onChange={(e) => setPollExpireUnit(e.currentTarget.value)}
+                      class="bg-surface border border-rim rounded px-1.5 py-0.5 text-xs text-txt
+                             outline-none focus:border-rim-strong transition-colors cursor-pointer"
+                    >
+                      <option value="Days">Days</option>
+                      <option value="Hours">Hours</option>
+                      <option value="Minutes">Minutes</option>
+                      <option value="Weeks">Weeks</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </Show>
+
             {/* ── Footer ── */}
             <footer class="flex flex-wrap items-center gap-2 px-3.5 py-2.5 border-t border-rim bg-elevated shrink-0">
-              {/* Format picker */}
-              <select
-                value={store.mimetype()}
-                onChange={(e) =>
-                  store.setMimetype(e.currentTarget.value as import("../types/editor.types").MimeType)
-                }
-                class="text-xs px-2 py-1 rounded border border-rim bg-surface text-txt"
-                title="Input format"
-              >
-                <option value="text/bbcode">BBCode</option>
-                <option value="text/markdown">Markdown</option>
-                <option value="text/html">HTML</option>
-              </select>
-
               {/* ACL Picker */}
               <AclPicker
                 mode={aclMode()}
@@ -481,21 +630,39 @@ const PostComposer: Component<ComposerProps> = (props) => {
                 onClear={clearEntries}
               />
 
-              {/* Expiry */}
-              <div class="hidden sm:flex items-center gap-1.5 min-w-0">
-                <span
-                  class="text-muted text-xs shrink-0"
-                  title="Post expiry"
+              {/* Expiry — gated behind Settings → Features → Content Expiration */}
+              <Show when={isFeatureEnabled("content_expire") && !props.parentId}>
+                <div class="hidden sm:flex items-center gap-1.5 min-w-0">
+                  <span class="text-muted text-xs shrink-0" title="Post expiry">⏱</span>
+                  <input
+                    type="datetime-local"
+                    value={expiry()}
+                    onChange={(e) => setExpiry(e.currentTarget.value)}
+                    class="bg-transparent border border-rim rounded px-1.5 py-0.5 text-xs text-muted focus:outline-none focus:border-rim-strong focus:text-txt transition-colors"
+                  />
+                </div>
+              </Show>
+
+              {/* Poll toggle */}
+              <Show when={!props.parentId}>
+                <button
+                  type="button"
+                  onClick={() => setPollEnabled((p) => !p)}
+                  title={t("editor.poll_toggle")}
+                  class={
+                    "hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-md text-xs border transition-colors " +
+                    (pollEnabled()
+                      ? "bg-accent/10 text-accent border-accent/30"
+                      : "text-muted hover:text-txt hover:bg-elevated border-rim")
+                  }
                 >
-                  ⏱
-                </span>
-                <input
-                  type="datetime-local"
-                  value={expiry()}
-                  onInput={(e) => setExpiry(e.currentTarget.value)}
-                  class="bg-transparent border border-rim rounded px-1.5 py-0.5 text-xs text-muted focus:outline-none focus:border-rim-strong focus:text-txt transition-colors"
-                />
-              </div>
+                  <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  {t("editor.poll_toggle")}
+                </button>
+              </Show>
 
               {/* Character count + draft controls + reset + submit */}
               <div class="flex items-center gap-3 ml-auto shrink-0">

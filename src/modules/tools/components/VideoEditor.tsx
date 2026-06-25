@@ -95,6 +95,7 @@ const QUALITIES:   Quality[]    = ["copy", "high", "medium", "low"];
 const ROTATIONS:   Rotate[]     = ["none", "90cw", "90ccw", "180", "fliph", "flipv"];
 const SPEEDS                    = [0.5, 0.75, 1, 1.25, 1.5, 2];
 const RESOLUTIONS: Resolution[] = ["original", "1080p", "720p", "480p", "360p"];
+const GIF_FPS                   = [8, 10, 15, 20, 24];
 
 const QUALITY_CRF: Record<Exclude<Quality, "copy">, string> = {
   high: "23", medium: "28", low: "35",
@@ -148,6 +149,8 @@ export function VideoEditor(props: VideoEditorProps = {}) {
   const [resolution,  setResolution]  = createSignal<Resolution>("original");
   const [mute,        setMute]        = createSignal(false);
   const [audioOnly,   setAudioOnly]   = createSignal(false);
+  const [gifMode,     setGifMode]     = createSignal(false);
+  const [gifFps,      setGifFps]      = createSignal(10);
 
   // Processing
   const [processing,    setProcessing]    = createSignal(false);
@@ -158,6 +161,7 @@ export function VideoEditor(props: VideoEditorProps = {}) {
   const [resultBlob,    setResultBlob]    = createSignal<Blob | null>(null);
   const [resultUrl,     setResultUrl]     = createSignal<string | null>(null);
   const [resultIsAudio, setResultIsAudio] = createSignal(false);
+  const [resultIsGif,   setResultIsGif]   = createSignal(false);
 
   // Thumbnail
   const [thumbnailFile, setThumbnailFile] = createSignal<File | null>(null);
@@ -216,7 +220,8 @@ export function VideoEditor(props: VideoEditorProps = {}) {
     setDuration(0);  setStartTime(0);  setEndTime(0);
     setFolders([]);
     setRotate("none");  setSpeed(1);  setResolution("original");
-    setMute(false);  setAudioOnly(false);
+    setMute(false);  setAudioOnly(false);  setGifMode(false);  setGifFps(10);
+    setResultIsGif(false);
   };
 
   const onVideoMeta = (el: HTMLVideoElement) => {
@@ -249,8 +254,9 @@ export function VideoEditor(props: VideoEditorProps = {}) {
 
       const ext        = (f.name.split(".").pop() ?? "mp4").toLowerCase();
       const inputName  = `input.${ext}`;
-      const isAudioOut = audioOnly();
-      const outputExt  = isAudioOut ? "mp3" : "mp4";
+      const isGifOut   = gifMode();
+      const isAudioOut = !isGifOut && audioOnly();
+      const outputExt  = isGifOut ? "gif" : isAudioOut ? "mp3" : "mp4";
       const outputName = `output.${outputExt}`;
 
       await worker.write(inputName, await f.arrayBuffer());
@@ -265,77 +271,126 @@ export function VideoEditor(props: VideoEditorProps = {}) {
       const res   = resolution();
       const muted = mute();
 
-      const args: string[] = [];
-      if (hasTrim) args.push("-ss", start.toFixed(3), "-to", end.toFixed(3));
-      args.push("-i", inputName);
-
-      if (isAudioOut) {
-        // Audio-only: strip video, encode as MP3; apply speed if needed
-        args.push("-vn", "-c:a", "libmp3lame", "-q:a", "2");
-        if (spd !== 1) args.push("-af", buildAtempoChain(spd));
-      } else {
-        // Build video filter chain: rotate → scale → speed
-        const vf: string[] = [];
-
-        if (rot === "90cw")       vf.push("transpose=1");
-        else if (rot === "90ccw") vf.push("transpose=2");
-        else if (rot === "180")   vf.push("vflip,hflip");
-        else if (rot === "fliph") vf.push("hflip");
-        else if (rot === "flipv") vf.push("vflip");
-
-        if (res !== "original") {
-          const h: Record<string, string> = { "1080p":"1080", "720p":"720", "480p":"480", "360p":"360" };
-          vf.push(`scale=-2:${h[res]}`);
-        }
-
-        if (spd !== 1) vf.push(`setpts=${(1 / spd).toFixed(4)}*PTS`);
-
-        const needsTranscode = vf.length > 0 || q !== "copy";
-        if (vf.length > 0) args.push("-vf", vf.join(","));
-
-        if (needsTranscode) {
-          // Use "high" CRF if user had "copy" selected but filters forced a re-encode
-          const crf = q === "copy" ? QUALITY_CRF["high"] : QUALITY_CRF[q as Exclude<Quality, "copy">];
-          args.push("-c:v", "libx264", "-crf", crf, "-preset", "fast");
-        } else {
-          args.push("-c:v", "copy");
-        }
-
-        if (muted) {
-          args.push("-an");
-        } else if (spd !== 1) {
-          args.push("-c:a", "aac", "-b:a", "128k", "-af", buildAtempoChain(spd));
-        } else if (needsTranscode) {
-          args.push("-c:a", "aac", "-b:a", "128k");
-        } else {
-          args.push("-c:a", "copy");
-        }
-
-        args.push("-movflags", "+faststart");
-      }
-
-      // Strip all metadata (GPS, device make/model, serial number, timestamps)
-      args.push("-map_metadata", "-1");
-      args.push(outputName);
-
       // Estimate output duration for progress calculation
       const baseDur = hasTrim ? end - start : (dur || 0);
       const outputDuration = spd > 0 ? baseDur / spd : baseDur;
 
-      const { ret } = await worker.exec(args, outputDuration);
-      if (ret !== 0) throw new Error(`FFmpeg exited with code ${ret}`);
+      if (isGifOut) {
+        // Build shared vf chain: rotate → fps → scale
+        const gifVf: string[] = [];
+        if (rot === "90cw")       gifVf.push("transpose=1");
+        else if (rot === "90ccw") gifVf.push("transpose=2");
+        else if (rot === "180")   gifVf.push("vflip,hflip");
+        else if (rot === "fliph") gifVf.push("hflip");
+        else if (rot === "flipv") gifVf.push("vflip");
+        gifVf.push(`fps=${gifFps()}`);
+        if (res !== "original") {
+          const h: Record<string, string> = { "1080p":"1080", "720p":"720", "480p":"480", "360p":"360" };
+          gifVf.push(`scale=-2:${h[res]}:flags=lanczos`);
+        }
+        if (spd !== 1) gifVf.push(`setpts=${(1 / spd).toFixed(4)}*PTS`);
+        const gifVfStr = gifVf.join(",");
 
-      const outputBuf = await worker.read(outputName);
-      await worker.unlink(inputName);
-      await worker.unlink(outputName);
+        // Pass 1: generate palette (0-30%)
+        const pass1: string[] = [];
+        if (hasTrim) pass1.push("-ss", start.toFixed(3), "-to", end.toFixed(3));
+        pass1.push("-i", inputName, "-vf", `${gifVfStr},palettegen=stats_mode=diff`, "palette.png");
+        worker.onProgress = (ratio) => setProgress(Math.round(ratio * 30));
+        const { ret: r1 } = await worker.exec(pass1, baseDur);
+        if (r1 !== 0) throw new Error(`Palette generation failed (code ${r1})`);
 
-      const mime = isAudioOut ? "audio/mpeg" : "video/mp4";
-      const blob = new Blob([outputBuf], { type: mime });
-      setResultBlob(blob);
-      setResultUrl(URL.createObjectURL(blob));
-      setResultIsAudio(isAudioOut);
-      setSaveFileName(`${f.name.replace(/\.[^.]+$/, "")}-edited.${outputExt}`);
-      setProgress(100);
+        // Pass 2: encode GIF (30-100%)
+        const pass2: string[] = [];
+        if (hasTrim) pass2.push("-ss", start.toFixed(3), "-to", end.toFixed(3));
+        pass2.push("-i", inputName, "-i", "palette.png");
+        pass2.push("-filter_complex", `[0:v]${gifVfStr}[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle`);
+        pass2.push("-map_metadata", "-1", outputName);
+        worker.onProgress = (ratio) => setProgress(30 + Math.round(ratio * 69));
+        const { ret: r2 } = await worker.exec(pass2, outputDuration);
+        if (r2 !== 0) throw new Error(`GIF encoding failed (code ${r2})`);
+
+        const gifBuf = await worker.read(outputName);
+        await worker.unlink(inputName);
+        await worker.unlink("palette.png");
+        await worker.unlink(outputName);
+
+        const gifBlob = new Blob([gifBuf], { type: "image/gif" });
+        setResultBlob(gifBlob);
+        setResultUrl(URL.createObjectURL(gifBlob));
+        setResultIsAudio(false);
+        setResultIsGif(true);
+        setSaveFileName(`${f.name.replace(/\.[^.]+$/, "")}.gif`);
+        setProgress(100);
+      } else {
+        const args: string[] = [];
+        if (hasTrim) args.push("-ss", start.toFixed(3), "-to", end.toFixed(3));
+        args.push("-i", inputName);
+
+        if (isAudioOut) {
+          // Audio-only: strip video, encode as MP3; apply speed if needed
+          args.push("-vn", "-c:a", "libmp3lame", "-q:a", "2");
+          if (spd !== 1) args.push("-af", buildAtempoChain(spd));
+        } else {
+          // Build video filter chain: rotate → scale → speed
+          const vf: string[] = [];
+
+          if (rot === "90cw")       vf.push("transpose=1");
+          else if (rot === "90ccw") vf.push("transpose=2");
+          else if (rot === "180")   vf.push("vflip,hflip");
+          else if (rot === "fliph") vf.push("hflip");
+          else if (rot === "flipv") vf.push("vflip");
+
+          if (res !== "original") {
+            const h: Record<string, string> = { "1080p":"1080", "720p":"720", "480p":"480", "360p":"360" };
+            vf.push(`scale=-2:${h[res]}`);
+          }
+
+          if (spd !== 1) vf.push(`setpts=${(1 / spd).toFixed(4)}*PTS`);
+
+          const needsTranscode = vf.length > 0 || q !== "copy";
+          if (vf.length > 0) args.push("-vf", vf.join(","));
+
+          if (needsTranscode) {
+            // Use "high" CRF if user had "copy" selected but filters forced a re-encode
+            const crf = q === "copy" ? QUALITY_CRF["high"] : QUALITY_CRF[q as Exclude<Quality, "copy">];
+            args.push("-c:v", "libx264", "-crf", crf, "-preset", "fast");
+          } else {
+            args.push("-c:v", "copy");
+          }
+
+          if (muted) {
+            args.push("-an");
+          } else if (spd !== 1) {
+            args.push("-c:a", "aac", "-b:a", "128k", "-af", buildAtempoChain(spd));
+          } else if (needsTranscode) {
+            args.push("-c:a", "aac", "-b:a", "128k");
+          } else {
+            args.push("-c:a", "copy");
+          }
+
+          args.push("-movflags", "+faststart");
+        }
+
+        // Strip all metadata (GPS, device make/model, serial number, timestamps)
+        args.push("-map_metadata", "-1");
+        args.push(outputName);
+
+        const { ret } = await worker.exec(args, outputDuration);
+        if (ret !== 0) throw new Error(`FFmpeg exited with code ${ret}`);
+
+        const outputBuf = await worker.read(outputName);
+        await worker.unlink(inputName);
+        await worker.unlink(outputName);
+
+        const mime = isAudioOut ? "audio/mpeg" : "video/mp4";
+        const blob = new Blob([outputBuf], { type: mime });
+        setResultBlob(blob);
+        setResultUrl(URL.createObjectURL(blob));
+        setResultIsAudio(isAudioOut);
+        setResultIsGif(false);
+        setSaveFileName(`${f.name.replace(/\.[^.]+$/, "")}-edited.${outputExt}`);
+        setProgress(100);
+      }
 
       // Pre-fetch folders in background
       const nick = currentNick();
@@ -363,7 +418,8 @@ export function VideoEditor(props: VideoEditorProps = {}) {
     const a = document.createElement("a");
     a.href = url;
     const base = file()?.name.replace(/\.[^.]+$/, "") ?? "video";
-    a.download = `${base}-edited.${resultIsAudio() ? "mp3" : "mp4"}`;
+    const ext = resultIsGif() ? "gif" : resultIsAudio() ? "mp3" : "mp4";
+    a.download = resultIsGif() ? `${base}.gif` : `${base}-edited.${ext}`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -563,14 +619,32 @@ export function VideoEditor(props: VideoEditorProps = {}) {
 
               <div class="flex flex-wrap gap-5">
                 <label class="flex items-center gap-2 cursor-pointer select-none">
-                  <input type="checkbox" checked={mute()} onChange={(e) => setMute(e.currentTarget.checked)} class="rounded" />
+                  <input type="checkbox" checked={mute()} onChange={(e) => setMute(e.currentTarget.checked)} class="rounded" disabled={gifMode()} />
                   <span class="text-sm text-txt">{s("tools.vid_mute")}</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer select-none">
-                  <input type="checkbox" checked={audioOnly()} onChange={(e) => setAudioOnly(e.currentTarget.checked)} class="rounded" />
+                  <input type="checkbox" checked={audioOnly()} onChange={(e) => { setAudioOnly(e.currentTarget.checked); if (e.currentTarget.checked) setGifMode(false); }} class="rounded" />
                   <span class="text-sm text-txt">{s("tools.vid_audio_only")}</span>
                 </label>
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" checked={gifMode()} onChange={(e) => { setGifMode(e.currentTarget.checked); if (e.currentTarget.checked) { setAudioOnly(false); setMute(false); } }} class="rounded" />
+                  <span class="text-sm text-txt">{s("tools.vid_gif_mode")}</span>
+                </label>
               </div>
+              <Show when={gifMode()}>
+                <div class="flex flex-col gap-2">
+                  <span class="text-xs text-muted">{s("tools.vid_gif_fps")}</span>
+                  <div class="flex flex-wrap gap-2">
+                    <For each={GIF_FPS}>
+                      {(fps) => (
+                        <button onClick={() => setGifFps(fps)} class={`${chip} ${gifFps() === fps ? chipOn : chipOff}`}>
+                          {fps} fps
+                        </button>
+                      )}
+                    </For>
+                  </div>
+                </div>
+              </Show>
             </div>
 
             {/* Loading / error */}
@@ -619,10 +693,15 @@ export function VideoEditor(props: VideoEditorProps = {}) {
                       when={!resultIsAudio()}
                       fallback={<audio src={url()} controls class="w-full" />}
                     >
-                      <video ref={(el) => { resultVideoEl = el; }} src={url()} controls class="w-full rounded-lg" />
+                      <Show
+                        when={resultIsGif()}
+                        fallback={<video ref={(el) => { resultVideoEl = el; }} src={url()} controls class="w-full rounded-lg" />}
+                      >
+                        <img src={url()} alt="GIF" class="w-full rounded-lg" />
+                      </Show>
                     </Show>
-                    {/* Thumbnail picker — video only */}
-                    <Show when={!resultIsAudio()}>
+                    {/* Thumbnail picker — video only, not for GIF */}
+                    <Show when={!resultIsAudio() && !resultIsGif()}>
                       <div class="border border-rim rounded-xl overflow-hidden">
                         <div class="px-4 py-2.5 border-b border-rim bg-elevated flex items-center justify-between">
                           <span class="text-xs font-medium text-txt">{s("tools.vid_thumbnail")}</span>
@@ -639,7 +718,18 @@ export function VideoEditor(props: VideoEditorProps = {}) {
                           {(url) => (
                             <div class="p-3 flex items-center gap-3">
                               <img src={url()} alt="thumbnail" class="h-16 rounded-lg object-cover shrink-0" />
-                              <p class="text-xs text-muted">{s("tools.vid_thumbnail_set")}</p>
+                              <div class="flex flex-col gap-2">
+                                <p class="text-xs text-muted">{s("tools.vid_thumbnail_set")}</p>
+                                <Show when={props.onAttach}>
+                                  <button
+                                    onClick={() => { const tf = thumbnailFile(); if (tf && props.onAttach) props.onAttach(tf); }}
+                                    class={btnOutline}
+                                    style="padding:0.25rem 0.75rem;font-size:0.75rem"
+                                  >
+                                    {s("tools.vid_thumbnail_attach")}
+                                  </button>
+                                </Show>
+                              </div>
                             </div>
                           )}
                         </Show>
@@ -666,7 +756,7 @@ export function VideoEditor(props: VideoEditorProps = {}) {
                           </button>
                         </Show>
                         <button onClick={download} class={props.onAttach ? btnOutline : btnPrimary}>
-                          {resultIsAudio() ? s("tools.vid_download_mp3") : s("tools.vid_download")}
+                          {resultIsGif() ? s("tools.vid_download_gif") : resultIsAudio() ? s("tools.vid_download_mp3") : s("tools.vid_download")}
                         </button>
                       </div>
                     </div>

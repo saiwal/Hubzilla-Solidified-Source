@@ -36,13 +36,14 @@ import {
 } from "solid-icons/md";
 import { useI18n } from "@/i18n";
 import { BiRegularLinkExternal, BiSolidShareAlt } from "solid-icons/bi";
-import CommentComposer from "@/shared/editor/composers/CommentComposer";
-import ReshareComposer from "@/shared/editor/composers/ReshareComposer";
+const CommentComposer = lazy(() => import("@/shared/editor/composers/CommentComposer"));
+const ReshareComposer = lazy(() => import("@/shared/editor/composers/ReshareComposer"));
 import DOMPurify from "dompurify";
 import { useAuth } from "@/shared/store/auth-store";
 import { apiFollowPost, apiUnfollowPost, apiFetchItemFolders, apiSaveToFolder } from "@/shared/lib/item-api";
 import { fetchFolders } from "@/modules/network/api";
 import EventCard from "./EventCard";
+import PollCard from "./PollCard";
 import { parseEventData } from "@/shared/lib/activity.mapper";
 import AttachmentList from "./AttachmentList";
 import { apiFetch } from "@/shared/lib/fetch";
@@ -137,6 +138,7 @@ export default function PostCard(props: {
   // Detect event posts: prefer pre-parsed eventData from mapper, fall back to
   // parsing the body directly (handles cases where obj_type wasn't "Event").
   const isUnseen = () => props.post.flags.includes("unseen");
+  const isExpired = () => props.post.flags.includes("expired");
   const isRepeat = () => props.post.verb === "Announce";
 
   const eventData = () =>
@@ -454,6 +456,11 @@ export default function PostCard(props: {
           >
             {formatPostDate(props.post.created, locale())}
           </span>
+          <Show when={isExpired()}>
+            <span class="shrink-0 px-1 py-px rounded text-[10px] font-bold leading-none bg-muted/30 text-muted" title="This post has expired and is only visible to you">
+              expired
+            </span>
+          </Show>
           <a
             href={props.post.permalink}
             class="ml-auto pr-2 text-subtle hover:text-txt transition-colors shrink-0"
@@ -468,8 +475,13 @@ export default function PostCard(props: {
           {(ev) => <EventCard post={props.post} event={ev()} />}
         </Show>
 
+        {/* Poll card (compact) */}
+        <Show when={props.post.poll}>
+          {(poll) => <PollCard uuid={props.post.uuid} poll={poll()} />}
+        </Show>
+
         {/* Body — no title rendered for comments */}
-        <Show when={!eventData()}>
+        <Show when={!eventData() && !props.post.poll}>
           <div
             ref={setBodyRef}
             class="mt-1.5 prose prose-sm dark:prose-invert max-w-none text-muted
@@ -830,8 +842,13 @@ export default function PostCard(props: {
         {(ev) => <EventCard post={props.post} event={ev()} />}
       </Show>
 
-      {/* Body — hidden for pure event posts (body is just BBCode tags) */}
-      <Show when={!eventData()}>
+      {/* Poll card */}
+      <Show when={props.post.poll}>
+        {(poll) => <PollCard uuid={props.post.uuid} poll={poll()} />}
+      </Show>
+
+      {/* Body — hidden for pure event/poll posts (body is just BBCode tags) */}
+      <Show when={!eventData() && !props.post.poll}>
         <div
           ref={setBodyRef}
           class="mt-4 prose-code:break-all prose prose-sm dark:prose-invert max-w-none

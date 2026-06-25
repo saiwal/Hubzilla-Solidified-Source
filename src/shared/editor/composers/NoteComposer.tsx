@@ -77,16 +77,6 @@ export default function NoteComposer(props: Props) {
       />
 
       <div class="flex items-center gap-2 justify-end">
-        <select
-          value={store.mimetype()}
-          onChange={(e) => store.setMimetype(e.currentTarget.value as any)}
-          class="text-xs px-2 py-1 rounded border border-rim bg-surface text-txt mr-auto"
-        >
-          <option value="text/bbcode">BBCode</option>
-          <option value="text/markdown">Markdown</option>
-          <option value="text/html">HTML</option>
-        </select>
-
         <Show when={props.onCancel}>
           <button
             type="button"

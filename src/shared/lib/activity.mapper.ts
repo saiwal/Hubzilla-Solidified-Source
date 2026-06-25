@@ -2,7 +2,7 @@
 import { sanitizeHtml } from "@/shared/lib/sanitize";
 import { bbcodeToHtml } from "@/shared/lib/bbcode";
 import { oembedResolver } from "@/shared/lib/oembedResolver";
-import type { Post, EventData } from "@/shared/types/post.types";
+import type { Post, EventData, PollData } from "@/shared/types/post.types";
 
 export function parseEventData(raw: string): EventData | undefined {
   const get = (tag: string) => {
@@ -39,6 +39,17 @@ export function mapActivityToPost(activity: any): Post {
   }
 
   const eventData = activity.obj_type === "Event" ? parseEventData(rawBody) : undefined;
+
+  const poll: PollData | undefined =
+    activity.obj_type === "Question" && activity.poll
+      ? {
+          multiple:     activity.poll.multiple     ?? false,
+          end_time:     activity.poll.end_time     ?? null,
+          closed:       activity.poll.closed       ?? null,
+          options:      Array.isArray(activity.poll.options) ? activity.poll.options : [],
+          viewer_votes: Array.isArray(activity.poll.viewer_votes) ? activity.poll.viewer_votes : [],
+        }
+      : undefined;
 
   // summary: returned by Articles handler as 'summary', fallback to activity stream fields
   const rawSummary: string =
@@ -94,6 +105,7 @@ export function mapActivityToPost(activity: any): Post {
     repeatCount: activity.announce_count ?? 0,
     commentCount: activity.comment_count ?? 0,
     eventData,
+    poll,
     attachments: Array.isArray(activity.attach)
       ? activity.attach.map((a: any) => ({
           href: a.href ?? "",

@@ -17,6 +17,7 @@ export const post: RawDictionary["post"] = {
   view_source:          "स्रोत देखें",
   import_post:          "पोस्ट आयात करें",
   import:               "आयात करें",
+  source:               "स्रोत",
   toggle_comments:      "टिप्पणियाँ टॉगल करें",
   toggle_flat:          "सपाट दृश्य पर जाएँ",
   toggle_threaded:      "थ्रेडेड दृश्य पर जाएँ",

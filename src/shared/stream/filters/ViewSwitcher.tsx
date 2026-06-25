@@ -27,18 +27,20 @@ export default function ViewSwitcher(props: {
       : ALL_VIEWS;
 
   return (
-    <div class="flex gap-1 mb-4">
+    <div class="flex rounded-lg border border-rim overflow-hidden shrink-0"
+      role="group" aria-label="View mode">
       <For each={views()}>
         {(v) => (
           <button
             title={t(`network.${v.key}` as any)}
+            aria-pressed={props.viewMode === v.id}
             onClick={() => props.onChange(v.id)}
-            class={`px-3 py-1.5 text-sm rounded-lg transition-colors
+            class={`px-2 py-1.5 transition-colors
               ${props.viewMode === v.id
-                ? "bg-elevated text-txt font-medium"
-                : "text-muted hover:bg-elevated"}`}
+                ? "bg-elevated text-txt"
+                : "bg-surface text-muted hover:bg-elevated hover:text-txt"}`}
           >
-            <v.icon size={18} />
+            <v.icon size={15} />
           </button>
         )}
       </For>

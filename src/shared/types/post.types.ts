@@ -1,3 +1,16 @@
+export interface PollOption {
+  name: string;
+  votes: number;
+}
+
+export interface PollData {
+  multiple: boolean;
+  end_time: string | null;
+  closed: string | null;
+  options: PollOption[];
+  viewer_votes: string[];
+}
+
 export interface StreamAttachment {
   href: string;
   length: string;
@@ -58,6 +71,7 @@ export interface Post {
   maybeCount?: number;
   eventData?: EventData;
   attachments?: StreamAttachment[];
+  poll?: PollData;
   item_origin?: number; // 1 = authored by this channel (viewer is the author)
   dislikeCount: number;
   repeatCount: number;

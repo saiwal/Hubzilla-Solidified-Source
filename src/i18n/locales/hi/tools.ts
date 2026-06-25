@@ -93,6 +93,10 @@ export const tools: RawDictionary["tools"] = {
   vid_thumbnail_recapture:"थंबनेल फिर से कैप्चर करें",
   vid_thumbnail_hint:   "वीडियो को उस फ़्रेम पर ले जाएँ जो आप चाहते हैं, फिर बटन क्लिक करें।",
   vid_thumbnail_set:    "थंबनेल सेट हो गया — एम्बेड करते समय इसे पोस्टर के रूप में उपयोग किया जाएगा।",
+  vid_thumbnail_attach: "पोस्ट में जोड़ें",
+  vid_gif_mode:         "GIF",
+  vid_gif_fps:          "फ्रेम दर",
+  vid_download_gif:     "GIF डाउनलोड करें",
   // Image Editor
   img:              "इमेज एडिटर",
   img_drop:         "यहाँ इमेज छोड़ें, या ब्राउज़ करने के लिए क्लिक करें",

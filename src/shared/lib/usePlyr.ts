@@ -1,4 +1,4 @@
-import Plyr from 'plyr';
+import type Plyr from 'plyr';
 import { createEffect, onCleanup } from 'solid-js';
 
 const PLYR_OPTIONS: Plyr.Options = {
@@ -51,20 +51,6 @@ function patchDownloadButton(plyrContainer: Element): void {
   });
 }
 
-function initPlayer(target: HTMLMediaElement | HTMLElement): Plyr | null {
-  try {
-    const player = new Plyr(target, PLYR_OPTIONS);
-    player.on('error', () => {});
-    player.on('ready', () => {
-      const container = target.closest('.plyr');
-      if (container) patchDownloadButton(container);
-    });
-    return player;
-  } catch (_) {
-    return null;
-  }
-}
-
 export function usePlyr(
   containerRef: () => HTMLElement | undefined,
   body: () => string,
@@ -74,24 +60,50 @@ export function usePlyr(
   createEffect(() => {
     body();
     const el = containerRef();
-    if (!el) return;
 
     instances.forEach(p => { try { p.destroy(); } catch (_) {} });
     instances = [];
 
-    el.querySelectorAll<HTMLMediaElement>('video, audio').forEach(media => {
-      const p = initPlayer(media);
-      if (p) instances.push(p);
-    });
+    if (!el) return;
 
-    el.querySelectorAll<HTMLElement>('[data-plyr-provider]').forEach(embed => {
-      const p = initPlayer(embed);
-      if (p) instances.push(p);
-    });
+    const hasMedia =
+      el.querySelector('video, audio, [data-plyr-provider]') !== null;
+    if (!hasMedia) return;
 
+    // `active` guards against a stale .then() firing after the effect re-runs
+    // or the component unmounts before the async import resolves.
+    let active = true;
     onCleanup(() => {
+      active = false;
       instances.forEach(p => { try { p.destroy(); } catch (_) {} });
       instances = [];
+    });
+
+    import('plyr').then(({ default: PlyrCtor }) => {
+      if (!active || !el.isConnected) return;
+
+      const init = (target: HTMLMediaElement | HTMLElement): Plyr | null => {
+        try {
+          const player = new PlyrCtor(target, PLYR_OPTIONS);
+          player.on('error', () => {});
+          player.on('ready', () => {
+            const container = target.closest('.plyr');
+            if (container) patchDownloadButton(container);
+          });
+          return player;
+        } catch (_) {
+          return null;
+        }
+      };
+
+      el.querySelectorAll<HTMLMediaElement>('video, audio').forEach(media => {
+        const p = init(media);
+        if (p) instances.push(p);
+      });
+      el.querySelectorAll<HTMLElement>('[data-plyr-provider]').forEach(embed => {
+        const p = init(embed);
+        if (p) instances.push(p);
+      });
     });
   });
 }

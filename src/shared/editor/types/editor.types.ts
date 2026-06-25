@@ -30,7 +30,7 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
     toolbar: "full",
     preview: true,
     title: true,
-    summary: false,
+    summary: true,
     slug: false,
     category: true,
     attachments: "both",

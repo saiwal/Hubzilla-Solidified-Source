@@ -306,12 +306,16 @@ export type RawDictionary = {
     vid_thumbnail_recapture:string;
     vid_thumbnail_hint:   string;
     vid_thumbnail_set:    string;
+    vid_thumbnail_attach: string;
+    vid_gif_mode:         string;
+    vid_gif_fps:          string;
+    vid_download_gif:     string;
   };
   post: {
     like: string; dislike: string; repeat: string; reshare_with_comment: string;
     more_sharing: string; star: string; unstar: string; follow: string; unfollow: string;
     follow_for_notifs: string; unfollow_post: string; statistics: string; post_statistics: string;
-    view_source: string; import_post: string; import: string; toggle_comments: string;
+    view_source: string; import_post: string; import: string; source: string; toggle_comments: string;
     toggle_flat: string; toggle_threaded: string; flat: string; threaded: string;
     flat_view: string; threaded_view: string; refresh: string; more_actions: string;
     reply: string; delete_post: string; delete: string; confirm: string; confirm_delete: string;
@@ -372,12 +376,10 @@ export type RawDictionary = {
     link:             string;
     bullet_list:      string;
     numbered_list:    string;
-    heading2:         string;
-    heading3:         string;
+    heading:          string;
+    heading_label:    string;
     blockquote:       string;
     code_block:       string;
-    align_left:       string;
-    align_center:     string;
     clear_formatting: string;
     // RichEditor tabs
     write_tab:   string;
@@ -458,6 +460,13 @@ export type RawDictionary = {
     cam_error_access: string;
     cam_retry:        string;
     cam_btn_title:    string;
+    // Post summary + Poll
+    post_summary_placeholder: string;
+    poll_toggle:              string;
+    poll_answer_placeholder:  string;
+    poll_add_answer:          string;
+    poll_remove_answer:       string;
+    poll_expires_label:       string;
   };
   profiles: {
     title:             string;

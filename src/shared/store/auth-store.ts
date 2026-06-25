@@ -12,6 +12,7 @@ export type AuthState = {
   uid: number; // local channel id, 0 for visitors/anonymous
   pageSize: number;
 	updateInterval: number;
+  features: Record<string, boolean>;
 };
 
 const ANONYMOUS: AuthState = {
@@ -22,6 +23,7 @@ const ANONYMOUS: AuthState = {
   uid: 0,
   pageSize: 10,
 	updateInterval: 60,
+  features: {},
 };
 
 function channelNickFromUrl(): string {
@@ -86,6 +88,7 @@ async function fetchAuthState(): Promise<AuthState> {
     uid,
     pageSize: parseInt(data.system?.itemspage ?? "10", 10),
     updateInterval: parseInt(data.system?.update_interval ?? "60000", 10),
+    features: (data.features ?? {}) as Record<string, boolean>,
   };
 }
 // Singleton resource — fetched once at boot, shared across the app
@@ -116,4 +119,7 @@ export function pageSize(): number {
 }
 export function updateInterval(): number{
 	return authState()?.updateInterval ?? 60000;
+}
+export function isFeatureEnabled(name: string): boolean {
+  return authState()?.features[name] === true;
 }
