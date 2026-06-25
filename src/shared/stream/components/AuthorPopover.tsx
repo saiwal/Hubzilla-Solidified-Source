@@ -1,4 +1,5 @@
 import { createSignal, createEffect, Show, onCleanup, type JSX } from "solid-js";
+import { Portal } from "solid-js/web";
 import { createMediaQuery } from "@solid-primitives/media";
 import { MdOutlinePerson, MdOutlinePerson_add, MdOutlineEdit, MdOutlineEmail, MdOutlineChat_bubble, MdOutlineCheck } from "solid-icons/md";
 import { useAuth } from "@/shared/store/auth-store";
@@ -53,10 +54,13 @@ export default function AuthorPopover(props: Props) {
   const [xchanHash, setXchanHash] = createSignal<string | null>(null);
   const [pdesc, setPdesc] = createSignal<string>("");
   const [chatCreating, setChatCreating] = createSignal(false);
+  const [popoverPos, setPopoverPos] = createSignal<{ top: number; left: number } | null>(null);
   const canHover = createMediaQuery("(hover: hover) and (pointer: fine)");
   const auth = useAuth();
   const navigate = useNavigate();
   let closeTimer: ReturnType<typeof setTimeout> | null = null;
+  let triggerRef!: HTMLDivElement;
+  let popoverRef!: HTMLDivElement;
 
   const isSelf = () => {
     const a = auth();
@@ -99,6 +103,15 @@ export default function AuthorPopover(props: Props) {
       .catch(() => setConnState({ tag: "not_connected" }));
   });
 
+  function calcPos() {
+    if (!triggerRef) return;
+    const rect = triggerRef.getBoundingClientRect();
+    const w = 320;
+    let left = rect.left;
+    if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
+    setPopoverPos({ top: rect.bottom + 8, left: Math.max(8, left) });
+  }
+
   function scheduleClose() {
     closeTimer = setTimeout(() => setOpen(false), 150);
   }
@@ -106,6 +119,16 @@ export default function AuthorPopover(props: Props) {
   function cancelClose() {
     if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; }
   }
+
+  createEffect(() => {
+    if (!open()) return;
+    const handler = (e: MouseEvent) => {
+      if (!triggerRef?.contains(e.target as Node) && !popoverRef?.contains(e.target as Node))
+        setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    onCleanup(() => document.removeEventListener("mousedown", handler));
+  });
 
   async function handleConnect(e: MouseEvent) {
     e.preventDefault();
@@ -179,16 +202,20 @@ export default function AuthorPopover(props: Props) {
   return (
     <>
       <div
+        ref={triggerRef}
         class="relative shrink-0"
-        onMouseEnter={() => { if (canHover()) { cancelClose(); setOpen(true); } }}
+        onMouseEnter={() => { if (canHover()) { cancelClose(); calcPos(); setOpen(true); } }}
         onMouseLeave={() => { if (canHover()) scheduleClose(); }}
-        onClick={() => { if (!canHover()) setOpen((v) => !v); }}
+        onClick={() => { if (!canHover()) { if (open()) setOpen(false); else { calcPos(); setOpen(true); } } }}
       >
         {props.children}
-        <Show when={open()}>
+      </div>
+      <Portal>
+        <Show when={open() && popoverPos()}>
           <div
-            class="absolute left-0 top-full mt-2 z-50 w-80 bg-surface border border-rim
-                   rounded-xl shadow-xl overflow-hidden"
+            ref={popoverRef}
+            class="fixed z-[9999] w-80 bg-surface border border-rim rounded-xl shadow-xl overflow-hidden"
+            style={{ top: `${popoverPos()!.top}px`, left: `${popoverPos()!.left}px` }}
             onMouseEnter={cancelClose}
             onMouseLeave={scheduleClose}
           >
@@ -331,7 +358,7 @@ export default function AuthorPopover(props: Props) {
             </Show>
           </div>
         </Show>
-      </div>
+      </Portal>
 
       {/* Connection editor modal */}
       <Show when={editOpen() && cs().tag === "connected" && (cs() as { tag: "connected"; conn: Connection | null }).conn}>

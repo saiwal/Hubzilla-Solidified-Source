@@ -26,6 +26,7 @@ import {
   MdFillStar_border,
   MdOutlineDelete,
   MdOutlineRefresh,
+  MdOutlineCloud_download,
   MdFillNotifications,
   MdOutlineNotifications_none,
   MdOutlineCode,
@@ -110,6 +111,7 @@ export default function PostCard(props: {
   const [repeatDropdownOpen, setRepeatDropdownOpen] = createSignal(false);
   const [dropdownAnchor, setDropdownAnchor] = createSignal<{ top: number; left: number } | null>(null);
   const [moreDropdownOpen, setMoreDropdownOpen] = createSignal(false);
+  const [moreDropdownAnchor, setMoreDropdownAnchor] = createSignal<{ bottom: number; right: number } | null>(null);
   const [showStats, setShowStats] = createSignal(false);
   const [statsLoading, setStatsLoading] = createSignal(false);
   const [statsData, setStatsData] = createSignal<{
@@ -131,6 +133,7 @@ export default function PostCard(props: {
   let repeatDropdownRef!: HTMLDivElement;
   let repeatDropdownPortalRef!: HTMLDivElement;
   let moreDropdownRef!: HTMLDivElement;
+  let moreDropdownPortalRef!: HTMLDivElement;
   let deleteTimer: ReturnType<typeof setTimeout> | null = null;
   const { locale, t } = useI18n();
   const auth = useAuth();
@@ -240,7 +243,7 @@ export default function PostCard(props: {
   createEffect(() => {
     if (!moreDropdownOpen()) return;
     const handler = (e: MouseEvent) => {
-      if (!moreDropdownRef?.contains(e.target as Node))
+      if (!moreDropdownRef?.contains(e.target as Node) && !moreDropdownPortalRef?.contains(e.target as Node))
         setMoreDropdownOpen(false);
     };
     document.addEventListener("mousedown", handler);
@@ -254,6 +257,14 @@ export default function PostCard(props: {
       setDropdownAnchor({ top: rect.bottom + 4, left: rect.left });
     }
     setRepeatDropdownOpen(v => !v);
+  }
+
+  function openMoreDropdown() {
+    if (!moreDropdownOpen()) {
+      const rect = moreDropdownRef.getBoundingClientRect();
+      setMoreDropdownAnchor({ bottom: window.innerHeight - rect.top + 4, right: window.innerWidth - rect.right });
+    }
+    setMoreDropdownOpen(v => !v);
   }
 
   const isRss = () => props.post.authorNetwork === "rss" && !!props.post.permalink;
@@ -484,13 +495,6 @@ export default function PostCard(props: {
               expired
             </span>
           </Show>
-          <a
-            href={props.post.permalink}
-            class="ml-auto pr-2 text-subtle hover:text-txt transition-colors shrink-0"
-            title="source"
-          >
-            <BiRegularLinkExternal size={13} />
-          </a>
         </div>
 
         {/* Event card (compact) */}
@@ -523,20 +527,6 @@ export default function PostCard(props: {
 
         {/* Compact action bar */}
         <div class="mt-2 flex items-center gap-0.5 flex-wrap">
-          <Show when={canStar()}>
-            <button
-              onClick={onStar}
-              title={props.post.viewerStarred ? t("post.unstar") : t("post.star")}
-              class={`flex items-center gap-1 px-2 py-1 rounded-md text-xs
-                     transition-colors select-none hover:bg-overlay
-                     ${props.post.viewerStarred ? "text-yellow-500" : "text-subtle hover:text-txt"}`}
-            >
-              <Show when={props.post.viewerStarred} fallback={<MdFillStar_border size={14} />}>
-                <MdFillStar size={14} />
-              </Show>
-            </button>
-          </Show>
-
           <CompactActionBtn
             icon={props.post.viewerLiked ? <MdFillThumb_up size={14} /> : <MdOutlineThumb_up size={14} />}
             count={props.post.likeCount}
@@ -551,6 +541,19 @@ export default function PostCard(props: {
             onClick={onDislike}
             active={props.post.viewerDisliked}
           />
+          <Show when={canStar()}>
+            <button
+              onClick={onStar}
+              title={props.post.viewerStarred ? t("post.unstar") : t("post.star")}
+              class={`flex items-center gap-1 px-2 py-1 rounded-md text-xs
+                     transition-colors select-none hover:bg-overlay
+                     ${props.post.viewerStarred ? "text-yellow-500" : "text-subtle hover:text-txt"}`}
+            >
+              <Show when={props.post.viewerStarred} fallback={<MdFillStar_border size={14} />}>
+                <MdFillStar size={14} />
+              </Show>
+            </button>
+          </Show>
           <Show
             when={canReshare()}
             fallback={
@@ -600,51 +603,6 @@ export default function PostCard(props: {
             </button>
           </Show>
 
-          <Show when={canFollow()}>
-            <button
-              onClick={onFollowToggle}
-              disabled={followPending()}
-              title={following() ? t("post.unfollow_post") : t("post.follow_for_notifs")}
-              class={`flex items-center gap-1 px-2 py-1 rounded-md text-xs
-                     transition-colors select-none hover:bg-overlay disabled:opacity-50
-                     ${following() ? "text-accent" : "text-subtle hover:text-txt"}`}
-            >
-              <Show when={following()} fallback={<MdOutlineNotifications_none size={14} />}>
-                <MdFillNotifications size={14} />
-              </Show>
-            </button>
-          </Show>
-
-          <Show
-            when={
-              props.post.likeCount > 0 ||
-              props.post.dislikeCount > 0 ||
-              props.post.repeatCount > 0
-            }
-          >
-            <button
-              onClick={toggleStats}
-              class={`flex items-center gap-1 px-2 py-1 rounded-md text-xs
-                     transition-colors hover:bg-overlay
-                     ${showStats() ? "text-accent" : "text-subtle hover:text-txt"}`}
-              title={t("post.post_statistics")}
-            >
-              <MdFillBar_chart size={14} />
-            </button>
-          </Show>
-
-          <Show when={canViewSource()}>
-            <button
-              onClick={toggleSource}
-              class={`flex items-center gap-1 px-2 py-1 rounded-md text-xs
-                     transition-colors hover:bg-overlay
-                     ${showSource() ? "text-accent" : "text-subtle hover:text-txt"}`}
-              title={t("post.view_source")}
-            >
-              <MdOutlineCode size={14} />
-            </button>
-          </Show>
-
           <Show when={isRss()}>
             <button
               onClick={handleRssImport}
@@ -654,7 +612,7 @@ export default function PostCard(props: {
                      text-subtle hover:bg-overlay hover:text-accent transition-colors
                      disabled:opacity-50"
             >
-              <MdOutlineRefresh size={14} classList={{ "animate-spin": rssImporting() }} />
+              <MdOutlineCloud_download size={14} classList={{ "animate-spin": rssImporting() }} />
             </button>
           </Show>
 
@@ -697,10 +655,14 @@ export default function PostCard(props: {
             <MdOutlineReply size={14} />
           </button>
 
-          <Show when={canDelete()}>
+          <Show when={
+            canDelete() || canFollow() || canViewSource() ||
+            (props.post.likeCount > 0 || props.post.dislikeCount > 0 || props.post.repeatCount > 0) ||
+            !!props.post.permalink
+          }>
             <div ref={moreDropdownRef} class="relative">
               <button
-                onClick={() => setMoreDropdownOpen(v => !v)}
+                onClick={openMoreDropdown}
                 title={t("post.more_actions")}
                 class={`flex items-center px-1 py-1 rounded-md text-xs
                        transition-colors hover:bg-overlay
@@ -708,8 +670,60 @@ export default function PostCard(props: {
               >
                 <MdFillMore_vert size={14} />
               </button>
-              <Show when={moreDropdownOpen()}>
-                <div class="absolute bottom-full right-0 mb-1 min-w-[9rem] bg-surface border border-rim rounded-lg shadow-lg py-1 z-50">
+            </div>
+          </Show>
+          <Portal>
+            <Show when={moreDropdownOpen() && moreDropdownAnchor()}>
+              <div
+                ref={moreDropdownPortalRef}
+                class="fixed z-[9999] min-w-[9rem] bg-surface border border-rim rounded-lg shadow-lg py-1"
+                style={{ bottom: `${moreDropdownAnchor()!.bottom}px`, right: `${moreDropdownAnchor()!.right}px` }}
+              >
+                <Show when={canFollow()}>
+                  <button
+                    onClick={() => { onFollowToggle(); setMoreDropdownOpen(false); }}
+                    disabled={followPending()}
+                    class={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-overlay transition-colors text-left disabled:opacity-50
+                           ${following() ? "text-accent" : "text-txt"}`}
+                  >
+                    <Show when={following()} fallback={<MdOutlineNotifications_none size={13} />}>
+                      <MdFillNotifications size={13} />
+                    </Show>
+                    <span>{following() ? t("post.unfollow") : t("post.follow")}</span>
+                  </button>
+                </Show>
+                <Show when={props.post.likeCount > 0 || props.post.dislikeCount > 0 || props.post.repeatCount > 0}>
+                  <button
+                    onClick={() => { toggleStats(); setMoreDropdownOpen(false); }}
+                    class={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-overlay transition-colors text-left
+                           ${showStats() ? "text-accent" : "text-txt"}`}
+                  >
+                    <MdFillBar_chart size={13} />
+                    <span>{t("post.statistics")}</span>
+                  </button>
+                </Show>
+                <Show when={canViewSource()}>
+                  <button
+                    onClick={() => { toggleSource(); setMoreDropdownOpen(false); }}
+                    class={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-overlay transition-colors text-left
+                           ${showSource() ? "text-accent" : "text-txt"}`}
+                  >
+                    <MdOutlineCode size={13} />
+                    <span>{t("post.view_source")}</span>
+                  </button>
+                </Show>
+                <Show when={!!props.post.permalink}>
+                  <a
+                    href={props.post.permalink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="w-full flex items-center gap-2 px-3 py-2 text-xs text-txt hover:bg-overlay transition-colors"
+                  >
+                    <BiRegularLinkExternal size={13} />
+                    <span>{t("post.source")}</span>
+                  </a>
+                </Show>
+                <Show when={canDelete()}>
                   <button
                     onClick={onDeleteClick}
                     class={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-overlay transition-colors text-left
@@ -718,10 +732,10 @@ export default function PostCard(props: {
                     <MdOutlineDelete size={13} />
                     <span>{deleteConfirming() ? t("post.confirm_delete") : t("post.delete")}</span>
                   </button>
-                </div>
-              </Show>
-            </div>
-          </Show>
+                </Show>
+              </div>
+            </Show>
+          </Portal>
         </div>
 
         <Show when={replyOpen() && props.post.iid && props.post.profileUid}>
@@ -851,13 +865,6 @@ export default function PostCard(props: {
               {t("post.new_badge")}
             </span>
           </Show>
-          <a
-            href={props.post.permalink}
-            class="text-sm text-muted hover:text-txt transition-colors"
-            title="source"
-          >
-            <BiRegularLinkExternal size={17} />
-          </a>
         </div>
       </div>
 
@@ -899,22 +906,7 @@ export default function PostCard(props: {
 
       {/* Action bar */}
       <div class="mt-4 pt-3 border-t border-rim flex items-center gap-1">
-        {/* ── Star (before like) ── */}
-        <Show when={canStar()}>
-          <button
-            onClick={onStar}
-            title={props.post.viewerStarred ? t("post.unstar") : t("post.star")}
-            class={`flex items-center px-2 py-1.5 rounded-lg text-sm font-medium
-                   transition-colors select-none hover:bg-overlay
-                   ${props.post.viewerStarred ? "text-yellow-500" : "text-muted hover:text-txt"}`}
-          >
-            <Show when={props.post.viewerStarred} fallback={<MdFillStar_border size={17} />}>
-              <MdFillStar size={17} />
-            </Show>
-          </button>
-        </Show>
-
-        {/* ── Like / Dislike / Repeat ── */}
+        {/* ── Like / Dislike / Star / Repeat ── */}
         <ActionBtn
           icon={props.post.viewerLiked ? <MdFillThumb_up size={17} /> : <MdOutlineThumb_up size={17} />}
           count={props.post.likeCount}
@@ -931,6 +923,19 @@ export default function PostCard(props: {
           active={props.post.viewerDisliked}
           activeClass="text-accent"
         />
+        <Show when={canStar()}>
+          <button
+            onClick={onStar}
+            title={props.post.viewerStarred ? t("post.unstar") : t("post.star")}
+            class={`flex items-center px-2 py-1.5 rounded-lg text-sm font-medium
+                   transition-colors select-none hover:bg-overlay
+                   ${props.post.viewerStarred ? "text-yellow-500" : "text-muted hover:text-txt"}`}
+          >
+            <Show when={props.post.viewerStarred} fallback={<MdFillStar_border size={17} />}>
+              <MdFillStar size={17} />
+            </Show>
+          </button>
+        </Show>
         <Show
           when={canReshare()}
           fallback={
@@ -1034,7 +1039,7 @@ export default function PostCard(props: {
         {/* ── More actions dropdown (vertical three dots, after Reply) ── */}
         <div ref={moreDropdownRef} class="relative">
           <button
-            onClick={() => setMoreDropdownOpen(v => !v)}
+            onClick={openMoreDropdown}
             title={t("post.more_actions")}
             class={`flex items-center px-1.5 py-1.5 rounded-lg text-sm font-medium
                    transition-colors hover:bg-overlay
@@ -1042,76 +1047,93 @@ export default function PostCard(props: {
           >
             <MdFillMore_vert size={18} />
           </button>
-          <Show when={moreDropdownOpen()}>
-            <div class="absolute bottom-full right-0 mb-1 min-w-[11rem] bg-surface border border-rim rounded-lg shadow-lg py-1 z-50">
-              <Show when={canFollow()}>
-                <button
-                  onClick={() => { onFollowToggle(); setMoreDropdownOpen(false); }}
-                  disabled={followPending()}
-                  class={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-overlay transition-colors text-left disabled:opacity-50
-                         ${following() ? "text-accent" : "text-txt"}`}
-                >
-                  <Show when={following()} fallback={<MdOutlineNotifications_none size={15} />}>
-                    <MdFillNotifications size={15} />
-                  </Show>
-                  <span>{following() ? t("post.unfollow") : t("post.follow")}</span>
-                </button>
-              </Show>
-              <Show when={props.post.likeCount > 0 || props.post.dislikeCount > 0 || props.post.repeatCount > 0}>
-                <button
-                  onClick={() => { toggleStats(); setMoreDropdownOpen(false); }}
-                  class={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-overlay transition-colors text-left
-                         ${showStats() ? "text-accent" : "text-txt"}`}
-                >
-                  <MdFillBar_chart size={15} />
-                  <span>{t("post.statistics")}</span>
-                </button>
-              </Show>
-              <Show when={canViewSource()}>
-                <button
-                  onClick={() => { toggleSource(); setMoreDropdownOpen(false); }}
-                  class={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-overlay transition-colors text-left
-                         ${showSource() ? "text-accent" : "text-txt"}`}
-                >
-                  <MdOutlineCode size={15} />
-                  <span>{t("post.view_source")}</span>
-                </button>
-              </Show>
-              <Show when={isRss()}>
-                <button
-                  onClick={() => { handleRssImport(); setMoreDropdownOpen(false); }}
-                  disabled={rssImporting()}
-                  class="w-full flex items-center gap-2 px-3 py-2 text-sm text-txt hover:bg-overlay transition-colors text-left disabled:opacity-50"
-                >
-                  <MdOutlineRefresh size={15} classList={{ "animate-spin": rssImporting() }} />
-                  <span>{t("post.import")}</span>
-                </button>
-              </Show>
-              <Show when={!!props.handlers.onRefresh}>
-                <button
-                  onClick={() => { onRefresh(); setMoreDropdownOpen(false); }}
-                  disabled={refreshing()}
-                  class="w-full flex items-center gap-2 px-3 py-2 text-sm text-txt hover:bg-overlay transition-colors text-left disabled:opacity-50"
-                >
-                  <MdOutlineRefresh size={15} class={refreshing() ? "animate-spin" : ""} />
-                  <span>{t("post.refresh")}</span>
-                </button>
-              </Show>
-              <Show when={canDelete()}>
-                <button
-                  onClick={onDeleteClick}
-                  class={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-overlay transition-colors text-left
-                         ${deleteConfirming() ? "text-red-500" : "text-txt"}`}
-                >
-                  <MdOutlineDelete size={15} />
-                  <span>{deleteConfirming() ? t("post.confirm_delete") : t("post.delete")}</span>
-                </button>
-              </Show>
-            </div>
-          </Show>
         </div>
       </div>
 
+      <Portal>
+        <Show when={moreDropdownOpen() && moreDropdownAnchor()}>
+          <div
+            ref={moreDropdownPortalRef}
+            class="fixed z-[9999] min-w-[11rem] bg-surface border border-rim rounded-lg shadow-lg py-1"
+            style={{ bottom: `${moreDropdownAnchor()!.bottom}px`, right: `${moreDropdownAnchor()!.right}px` }}
+          >
+            <Show when={canFollow()}>
+              <button
+                onClick={() => { onFollowToggle(); setMoreDropdownOpen(false); }}
+                disabled={followPending()}
+                class={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-overlay transition-colors text-left disabled:opacity-50
+                       ${following() ? "text-accent" : "text-txt"}`}
+              >
+                <Show when={following()} fallback={<MdOutlineNotifications_none size={15} />}>
+                  <MdFillNotifications size={15} />
+                </Show>
+                <span>{following() ? t("post.unfollow") : t("post.follow")}</span>
+              </button>
+            </Show>
+            <Show when={props.post.likeCount > 0 || props.post.dislikeCount > 0 || props.post.repeatCount > 0}>
+              <button
+                onClick={() => { toggleStats(); setMoreDropdownOpen(false); }}
+                class={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-overlay transition-colors text-left
+                       ${showStats() ? "text-accent" : "text-txt"}`}
+              >
+                <MdFillBar_chart size={15} />
+                <span>{t("post.statistics")}</span>
+              </button>
+            </Show>
+            <Show when={canViewSource()}>
+              <button
+                onClick={() => { toggleSource(); setMoreDropdownOpen(false); }}
+                class={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-overlay transition-colors text-left
+                       ${showSource() ? "text-accent" : "text-txt"}`}
+              >
+                <MdOutlineCode size={15} />
+                <span>{t("post.view_source")}</span>
+              </button>
+            </Show>
+            <Show when={!!props.post.permalink}>
+              <a
+                href={props.post.permalink}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="w-full flex items-center gap-2 px-3 py-2 text-sm text-txt hover:bg-overlay transition-colors"
+              >
+                <BiRegularLinkExternal size={15} />
+                <span>{t("post.source")}</span>
+              </a>
+            </Show>
+            <Show when={isRss()}>
+              <button
+                onClick={() => { handleRssImport(); setMoreDropdownOpen(false); }}
+                disabled={rssImporting()}
+                class="w-full flex items-center gap-2 px-3 py-2 text-sm text-txt hover:bg-overlay transition-colors text-left disabled:opacity-50"
+              >
+                <MdOutlineCloud_download size={15} classList={{ "animate-spin": rssImporting() }} />
+                <span>{t("post.import")}</span>
+              </button>
+            </Show>
+            <Show when={!!props.handlers.onRefresh}>
+              <button
+                onClick={() => { onRefresh(); setMoreDropdownOpen(false); }}
+                disabled={refreshing()}
+                class="w-full flex items-center gap-2 px-3 py-2 text-sm text-txt hover:bg-overlay transition-colors text-left disabled:opacity-50"
+              >
+                <MdOutlineRefresh size={15} class={refreshing() ? "animate-spin" : ""} />
+                <span>{t("post.refresh")}</span>
+              </button>
+            </Show>
+            <Show when={canDelete()}>
+              <button
+                onClick={onDeleteClick}
+                class={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-overlay transition-colors text-left
+                       ${deleteConfirming() ? "text-red-500" : "text-txt"}`}
+              >
+                <MdOutlineDelete size={15} />
+                <span>{deleteConfirming() ? t("post.confirm_delete") : t("post.delete")}</span>
+              </button>
+            </Show>
+          </div>
+        </Show>
+      </Portal>
       <Portal>
         <Show when={repeatDropdownOpen() && dropdownAnchor()}>
           <div
