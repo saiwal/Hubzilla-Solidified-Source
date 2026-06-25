@@ -1,5 +1,5 @@
 // src/shared/views/PostDetailModal.tsx
-import { type Component, createMemo, createResource, createSignal, Show, onMount } from "solid-js";
+import { type Component, createEffect, createMemo, createSignal, on, Show, onMount } from "solid-js";
 import { Portal } from "solid-js/web";
 import PostCard from "../stream/components/PostCard";
 import type { StreamHandlers } from "../stream/types";
@@ -44,9 +44,8 @@ function findInTree(n: ThreadNode | undefined, mid: string): ThreadNode | undefi
 }
 
 function applyOverrides(n: ThreadNode, overrides: Record<string, ReactionOverride>): ThreadNode {
-  const o = overrides[n.mid];
   return {
-    ...(o ? { ...n, ...o } : n),
+    ...(overrides[n.mid] ? { ...n, ...overrides[n.mid] } : n),
     children: n.children.map(c => applyOverrides(c, overrides)),
   };
 }
@@ -58,7 +57,9 @@ interface PostDetailModalProps {
 }
 
 const PostDetailModal: Component<PostDetailModalProps> = (props) => {
-  const [node, { refetch }] = createResource(() => props.uuid, fetchDisplay);
+  const [nodeData, setNodeData] = createSignal<ThreadNode | undefined>(undefined);
+  const [nodeLoading, setNodeLoading] = createSignal(true);
+  const [nodeError, setNodeError] = createSignal<Error | null>(null);
   const [nestedUuid, setNestedUuid] = createSignal<string | null>(null);
   const [localReactions, setLocalReactions] = createSignal<Record<string, ReactionOverride>>({});
 
@@ -66,14 +67,31 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
   let dialogRef!: HTMLDivElement;
   onMount(() => dialogRef?.focus());
 
+  async function loadNode(uuid: string) {
+    setNodeLoading(true);
+    setNodeError(null);
+    try {
+      const result = await fetchDisplay(uuid);
+      setNodeData(() => result);
+    } catch (e) {
+      setNodeError(e instanceof Error ? e : new Error(String(e)));
+    } finally {
+      setNodeLoading(false);
+    }
+  }
+
+  createEffect(on(() => props.uuid, (uuid) => { void loadNode(uuid); }));
+
+  function refetch() { void loadNode(props.uuid); }
+
   const highlightUuid = createMemo(() => {
-    const n = node();
+    const n = nodeData();
     if (!n) return undefined;
     return props.uuid !== n.uuid ? props.uuid : undefined;
   });
 
   const displayNode = createMemo((): ThreadNode | undefined => {
-    const n = node();
+    const n = nodeData();
     return n ? applyOverrides(n, localReactions()) : undefined;
   });
 
@@ -84,7 +102,7 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
   ) {
     setLocalReactions(prev => {
       const o = prev[mid] ?? {};
-      const treeNode = findInTree(node(), mid);
+      const treeNode = findInTree(nodeData(), mid);
       const currentActive = o[viewerField] ?? treeNode?.[viewerField] ?? false;
       const currentCount = o[countField] ?? treeNode?.[countField] ?? 0;
       return {
@@ -100,20 +118,20 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
 
   const selfHandlers: StreamHandlers = {
     onLike(mid) {
-      const found = findInTree(node(), mid);
+      const found = findInTree(nodeData(), mid);
       if (!found?.iid) return;
       toggleReaction(mid, "viewerLiked", "likeCount");
       toggleVerb(found.iid, "like").catch(() => toggleReaction(mid, "viewerLiked", "likeCount"));
     },
     onDislike(mid) {
-      const found = findInTree(node(), mid);
+      const found = findInTree(nodeData(), mid);
       if (!found?.iid) return;
       toggleReaction(mid, "viewerDisliked", "dislikeCount");
       toggleVerb(found.iid, "dislike").catch(() => toggleReaction(mid, "viewerDisliked", "dislikeCount"));
     },
     onRepeat(mid) {
       const o = localReactions()[mid];
-      const treeNode = findInTree(node(), mid);
+      const treeNode = findInTree(nodeData(), mid);
       const alreadyRepeated = o?.viewerRepeated ?? treeNode?.viewerRepeated ?? false;
       if (alreadyRepeated || !treeNode?.iid) return;
       setLocalReactions(prev => {
@@ -128,14 +146,14 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
       });
     },
     async onComment(parentMid, body) {
-      const found = findInTree(node(), parentMid);
+      const found = findInTree(nodeData(), parentMid);
       if (!found) return;
       await apiCreateComment(found.uuid, body);
       refetch();
     },
     onLoadComments: () => Promise.resolve(),
     onStar(mid) {
-      const found = findInTree(node(), mid);
+      const found = findInTree(nodeData(), mid);
       if (!found?.iid) return;
       const o = localReactions()[mid];
       const current = o?.viewerStarred ?? found.viewerStarred ?? false;
@@ -145,7 +163,7 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
       });
     },
     async onDelete(mid) {
-      const found = findInTree(node(), mid);
+      const found = findInTree(nodeData(), mid);
       if (found?.uuid) await apiDeleteItem(found.uuid);
       props.onClose();
     },
@@ -185,7 +203,7 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
         },
         onRepeat: (mid: string) => {
           const o = localReactions()[mid];
-          const treeNode = findInTree(node(), mid);
+          const treeNode = findInTree(nodeData(), mid);
           const alreadyRepeated = o?.viewerRepeated ?? treeNode?.viewerRepeated ?? false;
           if (alreadyRepeated) return;
           props.handlers!.onRepeat(mid);
@@ -205,7 +223,7 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
               props.handlers!.onStar!(mid);
               setLocalReactions(prev => {
                 const o = prev[mid] ?? {};
-                const treeNode = findInTree(node(), mid);
+                const treeNode = findInTree(nodeData(), mid);
                 const current = o.viewerStarred ?? treeNode?.viewerStarred ?? false;
                 return { ...prev, [mid]: { ...o, viewerStarred: !current } };
               });
@@ -213,7 +231,7 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
           : undefined,
         onDelete: props.handlers!.onDelete
           ? async (mid: string) => {
-              const found = findInTree(node(), mid);
+              const found = findInTree(nodeData(), mid);
               if (found?.uuid) await apiDeleteItem(found.uuid);
               props.handlers!.onDelete!(mid);
               props.onClose();
@@ -268,7 +286,7 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
             style={{ "-webkit-overflow-scrolling": "touch" }}
             onClick={(e) => { e.stopPropagation(); handleBodyClick(e); }}
           >
-            <Show when={node.loading && !node()}>
+            <Show when={nodeLoading() && !nodeData()}>
               <div class="space-y-4 animate-pulse">
                 <div class="bg-surface rounded-2xl p-5">
                   <div class="flex gap-3 mb-4">
@@ -287,10 +305,10 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
               </div>
             </Show>
 
-            <Show when={node.error}>
+            <Show when={nodeError()}>
               <div class="bg-surface rounded-2xl p-6 text-center">
                 <p class="text-sm text-red-500">
-                  {t("post.load_error")}: {node.error?.message}
+                  {t("post.load_error")}: {nodeError()?.message}
                 </p>
               </div>
             </Show>

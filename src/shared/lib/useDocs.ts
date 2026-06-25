@@ -17,8 +17,6 @@ export function useDocs(path: string, docType: Accessor<DocType>) {
       );
 
       if (!res.ok) {
-        console.log("Failed");
-
         const fallback = await fetch(
           `/view/theme/solidified/docs/${type}/en/${path}.txt`
         );

@@ -4,6 +4,11 @@ import {
   fetchPhotoSummary, fetchAlbums,
   fetchPhotoAlbum, fetchPhotoImage,
   togglePhotoReaction, postPhotoComment,
+  createAlbum as apiCreateAlbum,
+  deletePhoto as apiDeletePhoto,
+  batchDeletePhotos as apiBatchDeletePhotos,
+  deleteAlbum as apiDeleteAlbum,
+  renamePhoto as apiRenamePhoto,
 } from "../api/api";
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -161,6 +166,35 @@ export async function handleCommentReaction(mid: string, verb: 'like' | 'dislike
   } catch {
     setDetail(d);
   }
+}
+
+export async function createNewAlbum(nickname: string, name: string): Promise<Album> {
+  const album = await apiCreateAlbum(nickname, name);
+  setAlbums(prev => [album, ...prev]);
+  return album;
+}
+
+export function removePhotoLocally(resourceId: string) {
+  setPhotos(prev => prev.filter(p => p.resource_id !== resourceId));
+}
+
+export async function deletePhotoAction(nick: string, resourceId: string): Promise<void> {
+  await apiDeletePhoto(nick, resourceId);
+  removePhotoLocally(resourceId);
+}
+
+export async function batchDeleteAction(nick: string, resourceIds: string[]): Promise<void> {
+  await apiBatchDeletePhotos(nick, resourceIds);
+  setPhotos(prev => prev.filter(p => !resourceIds.includes(p.resource_id)));
+}
+
+export async function deleteAlbumAction(nick: string, folderHash: string): Promise<void> {
+  await apiDeleteAlbum(nick, folderHash);
+}
+
+export async function renamePhotoAction(nick: string, resourceId: string, filename: string): Promise<void> {
+  await apiRenamePhoto(nick, resourceId, filename);
+  setDetail(prev => prev ? { ...prev, filename } : prev);
 }
 
 export { photos, albums, recentPhotos, albumName, detail, loading, albumsLoading, nick };

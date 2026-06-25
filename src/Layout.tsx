@@ -1,9 +1,9 @@
-import { type ParentComponent, createSignal, Show, createMemo, createEffect, on } from "solid-js";
+import { type ParentComponent, createSignal, Show, createMemo, createEffect, on, ErrorBoundary, Suspense } from "solid-js";
 import { For } from "solid-js";
-import { A, useLocation } from "@solidjs/router";
+import { A, useLocation, useIsRouting } from "@solidjs/router";
 import NavItem, { getNavIcon } from "./shared/views/NavItem";
 import { useNav, useNavActionItems } from "./shared/lib/useNav";
-import { moduleIdForPath } from "./shared/lib/module-registry";
+import { moduleIdForPath, getModule } from "./shared/lib/module-registry";
 import Slot from "./shared/views/Slot";
 import RemoteAuthBanner from "./shared/views/RemoteAuthBanner";
 import { useViewerRole, useSubjectNick } from "./shared/store/site-config";
@@ -23,6 +23,7 @@ import { useNavActions, useNavViewer, useNavData, setNavNick } from "./shared/st
 import { motion } from "solid-motionone";
 import ToastContainer from "@/shared/views/ToastContainer";
 import { useI18n } from "@/i18n";
+import { usePWA } from "@/pwa";
 import DOMPurify from "dompurify";
 void motion;
 
@@ -57,6 +58,7 @@ function MobileTab(props: {
 // ── Layout ────────────────────────────────────────────────────────────────────
 const Layout: ParentComponent = (props) => {
   const { t } = useI18n();
+  usePWA();
   const [rightOpen, setRightOpen] = createSignal(false);
   const [moreOpen, setMoreOpen] = createSignal(false);
   const [actionsOpen, setActionsOpen] = createSignal(false);
@@ -69,6 +71,7 @@ const Layout: ParentComponent = (props) => {
   const navItems = useNav(subjectNick);
   const viewerRole = useViewerRole();
   const online = useOnlineStatus();
+  const isRouting = useIsRouting();
   const navViewer = useNavViewer();
   const navActions = useNavActions();
   const navData = useNavData();
@@ -101,6 +104,13 @@ const Layout: ParentComponent = (props) => {
 
   const activeModuleId = createMemo(() => moduleIdForPath(location.pathname));
 
+  createEffect(() => {
+    const mod = getModule(activeModuleId());
+    const label = mod?.navItem?.label;
+    const resolved = typeof label === "function" ? label() : label;
+    document.title = resolved ? `${resolved} · Hubzilla` : "Hubzilla";
+  });
+
   const closeAll = () => {
     setRightOpen(false);
     setMoreOpen(false);
@@ -127,6 +137,11 @@ const Layout: ParentComponent = (props) => {
       </a>
       <HelpOverlay />
       <ToastContainer />
+      <Show when={isRouting()}>
+        <div class="fixed top-0 inset-x-0 z-[150] h-[2px] overflow-hidden" aria-hidden="true">
+          <div class="h-full w-full bg-accent" style={{ animation: "hz-routing 1s linear infinite" }} />
+        </div>
+      </Show>
 
       <div class="flex h-full flex-col">
         {/* ── Offline banner ── */}
@@ -265,7 +280,31 @@ const Layout: ParentComponent = (props) => {
               <Slot name="mainTop" moduleId={activeModuleId()} />
             </Show>
 
-            {props.children}
+            <ErrorBoundary fallback={(_, reset) => (
+              <div class="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-8 text-center">
+                <span class="text-8xl font-bold text-gray-200 dark:text-gray-700 select-none">!</span>
+                <h1 class="text-2xl font-semibold">{t("ui.error_title")}</h1>
+                <p class="text-muted max-w-sm">{t("ui.error_desc")}</p>
+                <div class="flex gap-3 mt-2">
+                  <button
+                    onClick={reset}
+                    class="px-4 py-2 rounded-lg border border-rim hover:bg-elevated transition-colors text-sm"
+                  >
+                    {t("ui.try_again")}
+                  </button>
+                  <a
+                    href="/hq"
+                    class="px-4 py-2 rounded-lg bg-accent text-accent-fg hover:opacity-90 transition-opacity text-sm"
+                  >
+                    {t("ui.go_home")}
+                  </a>
+                </div>
+              </div>
+            )}>
+              <Suspense>
+                {props.children}
+              </Suspense>
+            </ErrorBoundary>
 
             <Show when={showScrollTop()}>
               <button

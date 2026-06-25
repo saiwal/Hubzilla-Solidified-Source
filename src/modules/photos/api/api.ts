@@ -33,6 +33,25 @@ export async function fetchAlbums(nick: string): Promise<Album[]> {
   return data as Album[];
 }
 
+// createAlbum — POST /api/photos/:nick/albums
+export async function createAlbum(nick: string, name: string): Promise<Album> {
+  const { getCsrfToken } = await import('@/shared/lib/csrf');
+  const token = await getCsrfToken().catch(() => '');
+  const res = await fetch(`/api/photos/${nick}/albums`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as Record<string, unknown>;
+    const msg = (err?.error as Record<string, unknown>)?.message;
+    throw new Error(typeof msg === 'string' ? msg : 'Could not create album');
+  }
+  const { data } = await res.json();
+  return data as Album;
+}
+
 // fetchPhotoAlbum — photos in a specific album
 export async function fetchPhotoAlbum(
   nick: string,
@@ -109,12 +128,15 @@ export async function uploadNewPhoto(
   nick: string,
   blob: Blob,
   album = "",
+  folder = "",
 ): Promise<PhotoEditResult> {
   const { getCsrfToken } = await import("@/shared/lib/csrf");
   const token = await getCsrfToken().catch(() => "");
   const fd = new FormData();
-  fd.append("file", blob, "photo.jpg");
+  const filename = blob instanceof File ? blob.name : "photo.jpg";
+  fd.append("file", blob, filename);
   if (album) fd.append("album", album);
+  if (folder) fd.append("folder", folder);
   const res = await fetch(`/api/photos/${nick}/image/upload`, {
     method: "POST",
     credentials: "include",
@@ -128,6 +150,51 @@ export async function uploadNewPhoto(
   }
   const { data } = await res.json();
   return data as PhotoEditResult;
+}
+
+export async function deletePhoto(nick: string, resourceId: string): Promise<void> {
+  const { getCsrfToken } = await import('@/shared/lib/csrf');
+  const token = await getCsrfToken().catch(() => '');
+  const res = await fetch(`/api/photos/${nick}/image/${resourceId}`, {
+    method: 'DELETE',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
+    body: JSON.stringify({}),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as Record<string, unknown>;
+    throw new Error(String((err?.error as Record<string, unknown>)?.message ?? 'Delete failed'));
+  }
+}
+
+export async function batchDeletePhotos(nick: string, resourceIds: string[]): Promise<void> {
+  const { getCsrfToken } = await import('@/shared/lib/csrf');
+  const token = await getCsrfToken().catch(() => '');
+  const res = await fetch(`/api/photos/${nick}/images`, {
+    method: 'DELETE',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
+    body: JSON.stringify({ resource_ids: resourceIds }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as Record<string, unknown>;
+    throw new Error(String((err?.error as Record<string, unknown>)?.message ?? 'Delete failed'));
+  }
+}
+
+export async function deleteAlbum(nick: string, folderHash: string): Promise<void> {
+  const { getCsrfToken } = await import('@/shared/lib/csrf');
+  const token = await getCsrfToken().catch(() => '');
+  const res = await fetch(`/api/photos/${nick}/album/${folderHash}`, {
+    method: 'DELETE',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
+    body: JSON.stringify({}),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as Record<string, unknown>;
+    throw new Error(String((err?.error as Record<string, unknown>)?.message ?? 'Delete failed'));
+  }
 }
 
 export function uploadPhotoEdit(
@@ -161,6 +228,57 @@ export function uploadPhotoEdit(
     xhr.onerror = () => reject(new Error("Network error"));
     xhr.send(fd);
   });
+}
+
+export interface AclGroup { id: string; name: string; }
+export interface AclData {
+  allow_cid: string[];
+  allow_gid: string[];
+  deny_cid:  string[];
+  deny_gid:  string[];
+  groups:    AclGroup[];
+}
+
+export async function fetchAcl(nick: string, type: 'image' | 'album', datum: string): Promise<AclData> {
+  const res = await apiFetch(`/api/photos/${nick}/${type}/${datum}/acl`);
+  if (!res.ok) throw await res.json();
+  const { data } = await res.json();
+  return data as AclData;
+}
+
+export async function saveAcl(
+  nick: string,
+  type: 'image' | 'album',
+  datum: string,
+  acl: { allow_gid: string[]; allow_cid: string[]; deny_gid: string[]; deny_cid: string[] },
+): Promise<void> {
+  const { getCsrfToken } = await import('@/shared/lib/csrf');
+  const token = await getCsrfToken().catch(() => '');
+  const res = await fetch(`/api/photos/${nick}/${type}/${datum}/acl`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
+    body: JSON.stringify(acl),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as Record<string, unknown>;
+    throw new Error(String((err?.error as Record<string, unknown>)?.message ?? 'Could not save privacy'));
+  }
+}
+
+export async function renamePhoto(nick: string, resourceId: string, filename: string): Promise<void> {
+  const { getCsrfToken } = await import('@/shared/lib/csrf');
+  const token = await getCsrfToken().catch(() => '');
+  const res = await fetch(`/api/photos/${nick}/image/${resourceId}/rename`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
+    body: JSON.stringify({ filename }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as Record<string, unknown>;
+    throw new Error(String((err?.error as Record<string, unknown>)?.message ?? 'Rename failed'));
+  }
 }
 
 export async function togglePhotoReaction(itemId: number, verb: 'like' | 'dislike'): Promise<void> {

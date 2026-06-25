@@ -37,7 +37,9 @@ import {
 } from "../api";
 import type { FileMeta, FileAcl } from "../api";
 
-type ViewMode = "list" | "grid";
+type ViewMode   = "list" | "grid";
+type SortField  = "name" | "size" | "date";
+type SortDir    = "asc"  | "desc";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -519,6 +521,32 @@ export default function FilesView() {
     (files() ?? []).map((f) => overrides().get(f.hash) ?? f)
   );
 
+  // Sorting
+  const [sortField, setSortField] = createSignal<SortField>("name");
+  const [sortDir,   setSortDir]   = createSignal<SortDir>("asc");
+
+  function toggleSort(field: SortField) {
+    if (sortField() === field) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDir("asc");
+    }
+  }
+
+  const sortedFiles = createMemo(() => {
+    const field = sortField();
+    const dir   = sortDir();
+    return displayFiles().slice().sort((a, b) => {
+      if (a.is_dir !== b.is_dir) return a.is_dir ? -1 : 1;
+      let cmp = 0;
+      if (field === "name") cmp = a.filename.localeCompare(b.filename);
+      else if (field === "size") cmp = a.filesize - b.filesize;
+      else cmp = a.created.localeCompare(b.created);
+      return dir === "asc" ? cmp : -cmp;
+    });
+  });
+
   function navigateInto(item: FileMeta) {
     setNavStack((prev) => [
       ...prev,
@@ -634,6 +662,38 @@ export default function FilesView() {
             </Show>
           </button>
 
+          {/* Sort control — grid/thumbnail mode */}
+          <Show when={viewMode() === "grid"}>
+            <div class="flex items-center border border-rim rounded-lg overflow-hidden text-xs">
+              {(["name", "size", "date"] as SortField[]).map((field, i) => {
+                const label = field === "name"
+                  ? t("files_mod.name_col") as string
+                  : field === "size"
+                    ? t("files_mod.size_col") as string
+                    : t("files_mod.created_col") as string;
+                return (
+                  <button
+                    onClick={() => toggleSort(field)}
+                    class={`px-2.5 py-1.5 flex items-center gap-0.5 transition-colors ${
+                      i > 0 ? "border-l border-rim" : ""
+                    } ${
+                      sortField() === field
+                        ? "bg-accent text-accent-fg"
+                        : "text-muted hover:bg-elevated hover:text-txt"
+                    }`}
+                  >
+                    {label}
+                    <Show when={sortField() === field}>
+                      <span class="text-[10px] leading-none">
+                        {sortDir() === "asc" ? "↑" : "↓"}
+                      </span>
+                    </Show>
+                  </button>
+                );
+              })}
+            </div>
+          </Show>
+
           <button
             onClick={() => setShowNewFolder((v) => !v)}
             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rim
@@ -703,12 +763,45 @@ export default function FilesView() {
       {/* ── Column labels (list mode only) ── */}
       <Show when={viewMode() === "list"}>
         <div class="border-t border-rim" />
-        <div class="flex items-center gap-3 px-3 text-[10px] font-semibold uppercase tracking-wide text-muted">
+        <div class="flex items-center gap-3 px-3 text-[10px] font-semibold uppercase tracking-wide text-muted select-none">
           <span class="w-6 shrink-0" />
-          <span class="flex-1">{t("files_mod.name_col")}</span>
+          {/* Sortable: Name */}
+          <button
+            onClick={() => toggleSort("name")}
+            class={`flex-1 flex items-center gap-0.5 text-left transition-colors hover:text-txt ${
+              sortField() === "name" ? "text-txt" : ""
+            }`}
+          >
+            {t("files_mod.name_col")}
+            <Show when={sortField() === "name"}>
+              <span class="ml-0.5 text-accent">{sortDir() === "asc" ? "↑" : "↓"}</span>
+            </Show>
+          </button>
           <span class="hidden sm:block w-20 shrink-0 text-right">{t("files_mod.access_col")}</span>
-          <span class="hidden sm:block w-20 shrink-0 text-right">{t("files_mod.size_col")}</span>
-          <span class="hidden md:block w-28 shrink-0 text-right">{t("files_mod.created_col")}</span>
+          {/* Sortable: Size */}
+          <button
+            onClick={() => toggleSort("size")}
+            class={`hidden sm:flex w-20 shrink-0 items-center justify-end gap-0.5 transition-colors hover:text-txt ${
+              sortField() === "size" ? "text-txt" : ""
+            }`}
+          >
+            <Show when={sortField() === "size"}>
+              <span class="text-accent">{sortDir() === "asc" ? "↑" : "↓"}</span>
+            </Show>
+            {t("files_mod.size_col")}
+          </button>
+          {/* Sortable: Created */}
+          <button
+            onClick={() => toggleSort("date")}
+            class={`hidden md:flex w-28 shrink-0 items-center justify-end gap-0.5 transition-colors hover:text-txt ${
+              sortField() === "date" ? "text-txt" : ""
+            }`}
+          >
+            <Show when={sortField() === "date"}>
+              <span class="text-accent">{sortDir() === "asc" ? "↑" : "↓"}</span>
+            </Show>
+            {t("files_mod.created_col")}
+          </button>
           <span class="w-20 shrink-0" />
         </div>
       </Show>
@@ -728,7 +821,7 @@ export default function FilesView() {
           }
         >
           <Show
-            when={displayFiles().length > 0}
+            when={sortedFiles().length > 0}
             fallback={<p class="py-12 text-center text-sm text-muted">{t("files_mod.folder_empty")}</p>}
           >
             <Show
@@ -736,7 +829,7 @@ export default function FilesView() {
               fallback={
                 <>
                   <ThumbnailGrid
-                    files={displayFiles()}
+                    files={sortedFiles()}
                     nick={nick()}
                     deleting={deleting()}
                     permItem={permItem()}
@@ -769,7 +862,7 @@ export default function FilesView() {
               }
             >
               <div class="space-y-0.5">
-                <For each={displayFiles()}>
+                <For each={sortedFiles()}>
                   {(item) => (
                     <>
                       <FileRow

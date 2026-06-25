@@ -9,4 +9,6 @@ export const auth: RawDictionary["auth"] = {
   password_placeholder: "••••••••",
   signing_in:           "साइन इन हो रहा है…",
   signing_out:          "साइन आउट हो रहा है…",
+  load_form_error:      "लॉगिन फ़ॉर्म लोड करने में विफल। कृपया पृष्ठ ताज़ा करें।",
+  login_failed:         "लॉगिन विफल रहा",
 };

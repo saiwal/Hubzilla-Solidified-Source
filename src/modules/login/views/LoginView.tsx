@@ -14,7 +14,7 @@ export default function LoginView() {
     try {
       setToken(await fetchLoginToken());
     } catch {
-      toast.error("Failed to load login form. Please refresh the page.");
+      toast.error(t("auth.load_form_error"));
     }
   });
 
@@ -27,7 +27,7 @@ export default function LoginView() {
       // Full reload so auth state re-initialises from scratch
       window.location.href = "/hq";
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Login failed");
+      toast.error(err instanceof Error ? err.message : t("auth.login_failed"));
       setLoading(false);
       // Refresh the token for the next attempt
       try {

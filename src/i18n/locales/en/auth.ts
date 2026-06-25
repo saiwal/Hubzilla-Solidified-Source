@@ -9,4 +9,6 @@ export const auth: RawDictionary["auth"] = {
   password_placeholder: "••••••••",
   signing_in:           "Signing in…",
   signing_out:          "Signing out…",
+  load_form_error:      "Failed to load login form. Please refresh the page.",
+  login_failed:         "Login failed",
 };

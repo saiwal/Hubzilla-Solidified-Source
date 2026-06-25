@@ -1,7 +1,6 @@
 import { render } from "solid-js/web";
 import "./index.css";
 import App from "./App";
-import { initPWA } from './pwa';
 import { loadTypography } from "@/shared/lib/typography";
 import { loadBackground } from "@/shared/lib/background";
 import { DARK_THEMES } from "@/shared/lib/useTheme";
@@ -13,6 +12,5 @@ document.documentElement.classList.toggle("dark", DARK_THEMES.has(saved));
 
 loadTypography();
 loadBackground();
-initPWA();
 
 render(() => <App />, document.getElementById("root")!);

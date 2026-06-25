@@ -7,6 +7,7 @@ registerModule({
   routes: [
     { path: "/photos", component: () => import("./views/PhotoView") },
     { path: "/photos/:nick", component: () => import("./views/PhotoView") },
+    { path: "/photos/:nick/album", component: () => import("./views/PhotoView") },
     {
       path: "/photos/:nick/album/:datum",
       component: () => import("./views/PhotoView"),
