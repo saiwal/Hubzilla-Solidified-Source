@@ -104,6 +104,8 @@ export default defineConfig({
           ) {
             return "vendor-image-editor";
           }
+          if (id.includes("node_modules/plyr/")) return "vendor-plyr";
+          if (id.includes("node_modules/dompurify/")) return "vendor-dompurify";
         },
       },
     },
