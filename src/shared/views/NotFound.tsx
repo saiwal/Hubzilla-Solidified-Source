@@ -7,9 +7,9 @@ export default function NotFound() {
 
   return (
     <div class="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-8 text-center">
-      <span class="text-8xl font-bold text-gray-200 dark:text-gray-700 select-none">404</span>
+      <span aria-hidden="true" class="text-8xl font-bold text-gray-200 dark:text-gray-700 select-none">404</span>
       <h1 class="text-2xl font-semibold">{t("ui.not_found_title")}</h1>
-      <p class="text-gray-500 dark:text-gray-400 max-w-sm">
+      <p class="text-muted max-w-sm">
         {t("ui.not_found_desc")}
       </p>
       <button

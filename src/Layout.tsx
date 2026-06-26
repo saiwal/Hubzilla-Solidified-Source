@@ -144,9 +144,12 @@ const Layout: ParentComponent = (props) => {
       </Show>
 
       <div class="flex h-full flex-col">
+        {/* ── Site-level alerts (banner landmark) ── */}
+        <header>
         {/* ── Offline banner ── */}
         <Show when={!online()}>
           <div
+            role="alert"
             class="fixed top-0 inset-x-0 z-[100] flex items-center justify-center gap-2
                    bg-amber-500 text-amber-950 text-sm font-medium py-1.5 select-none"
           >
@@ -173,6 +176,7 @@ const Layout: ParentComponent = (props) => {
           subjectNick={subjectNick()}
           homeUrl={navActions().navhome}
         />
+        </header>
 
         <div class="flex flex-1 min-h-0">
           {/* ═══════════════════════════════════════════════════════
@@ -211,7 +215,7 @@ const Layout: ParentComponent = (props) => {
             </div>
 
             {/* Primary nav */}
-            <nav aria-label="Primary" class="flex-1 flex flex-col gap-0.5 overflow-y-auto">
+            <nav aria-label="Primary" tabindex="0" class="flex-1 flex flex-col gap-0.5 overflow-y-auto">
               <For each={navItems()}>
                 {(item) => (
                   <NavItem
@@ -282,7 +286,7 @@ const Layout: ParentComponent = (props) => {
 
             <ErrorBoundary fallback={(_, reset) => (
               <div class="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-8 text-center">
-                <span class="text-8xl font-bold text-gray-200 dark:text-gray-700 select-none">!</span>
+                <span aria-hidden="true" class="text-8xl font-bold text-gray-200 dark:text-gray-700 select-none">!</span>
                 <h1 class="text-2xl font-semibold">{t("ui.error_title")}</h1>
                 <p class="text-muted max-w-sm">{t("ui.error_desc")}</p>
                 <div class="flex gap-3 mt-2">
@@ -339,6 +343,7 @@ const Layout: ParentComponent = (props) => {
             id="right-sidebar"
             aria-label="Sidebar panel"
             aria-hidden={!isXl() && !rightOpen()}
+            tabindex="0"
             class={`
               fixed inset-y-0 right-0 z-40 w-72 shrink-0 p-4 overflow-y-auto space-y-4
               bg-surface border-l border-rim
@@ -377,10 +382,9 @@ const Layout: ParentComponent = (props) => {
           {/* ═══════════════════════════════════════════════════════
               MOBILE — "More" bottom sheet drawer
           ═══════════════════════════════════════════════════════ */}
-          <div
+          <nav
             id="more-drawer"
             ref={morePanelRef}
-            role="navigation"
             aria-label={t("layout.more")}
             aria-hidden={!moreOpen()}
             class={`
@@ -472,7 +476,7 @@ const Layout: ParentComponent = (props) => {
               actionsOpen={actionsOpen()}
               onUserMenuToggle={() => setActionsOpen((o) => !o)}
             />
-          </div>
+          </nav>
 
           {/* ═══════════════════════════════════════════════════════
               MOBILE — Bottom Tab Bar

@@ -18,6 +18,7 @@ export const DARK_THEMES = new Set<ThemeId>([
   "cyberpunk",
   "matrix",
   "rose-pine",
+  "high-contrast",
 ]);
 
 export const DEFAULT_CUSTOM_COLORS: CustomThemeColors = {

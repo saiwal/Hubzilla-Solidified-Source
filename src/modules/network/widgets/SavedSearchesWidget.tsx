@@ -51,7 +51,7 @@ export default function SavedSearchesWidget() {
       <div class="bg-surface border border-rim rounded-xl overflow-hidden">
         <div class="px-4 py-3 border-b border-rim flex items-center gap-2">
           <MdFillBookmarks size={14} class="text-muted shrink-0" />
-          <h3 class="text-sm font-semibold text-txt">{t("network.saved_searches")}</h3>
+          <h2 class="text-sm font-semibold text-txt">{t("network.saved_searches")}</h2>
         </div>
         <div class="px-3 py-2 space-y-1">
           <For each={savedSearches()}>

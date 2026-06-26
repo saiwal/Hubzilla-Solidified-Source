@@ -117,7 +117,9 @@ const ToastContainer: Component = () => {
   return (
     <Portal mount={document.body}>
       <div
+        role="region"
         aria-label={t("ui.notifications")}
+        aria-live="polite"
         class="fixed z-[9999] flex flex-col gap-2 pointer-events-none
                bottom-21 right-4
                xl:bottom-6 xl:right-6"

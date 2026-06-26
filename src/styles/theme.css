@@ -7,8 +7,8 @@
   --color-overlay: #f7f7f4;
 
   --color-txt: #1c1c1a;
-  --color-muted: #6b6b66;
-  --color-subtle: #9b9b95;
+  --color-muted: #565650;
+  --color-subtle: #626260;
 
   --color-rim: #ccccc5;
   --color-rim-strong: #b0b0a8;
@@ -395,6 +395,46 @@
   --color-accent-txt: #a67c3d;
   --color-accent-fg: #ffffff;
 }
+/* ── High Contrast (dark) ────────────────────────────────────── */
+[data-theme="high-contrast"] {
+  --color-base: #000000;
+  --color-surface: #0d0d0d;
+  --color-elevated: #1a1a1a;
+  --color-overlay: #000000;
+
+  --color-txt: #ffffff;
+  --color-muted: #c8c8c8;
+  --color-subtle: #a0a0a0;
+
+  --color-rim: #ffffff;
+  --color-rim-strong: #ffffff;
+
+  --color-accent: #ffff00;
+  --color-accent-muted: #2a2a00;
+  --color-accent-txt: #ffff00;
+  --color-accent-fg: #000000;
+}
+
+/* ── High Contrast (light) ───────────────────────────────────── */
+[data-theme="high-contrast-light"] {
+  --color-base: #ffffff;
+  --color-surface: #f5f5f5;
+  --color-elevated: #ffffff;
+  --color-overlay: #ebebeb;
+
+  --color-txt: #000000;
+  --color-muted: #333333;
+  --color-subtle: #555555;
+
+  --color-rim: #000000;
+  --color-rim-strong: #000000;
+
+  --color-accent: #0000cc;
+  --color-accent-muted: #e6e6ff;
+  --color-accent-txt: #0000aa;
+  --color-accent-fg: #ffffff;
+}
+
 /* ── Matrix ─────────────────────────────────────────────────── */
 [data-theme="matrix"] {
   --color-base:     #0a0f0a;

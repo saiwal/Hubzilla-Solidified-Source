@@ -1,4 +1,4 @@
-import { createContext, useContext, createMemo, createSignal, createResource } from "solid-js";
+import { createContext, useContext, createMemo, createSignal, createResource, createEffect } from "solid-js";
 import type { ParentComponent } from "solid-js";
 import * as i18n from "@solid-primitives/i18n";
 import { storageSet } from "@/shared/lib/storage";
@@ -57,6 +57,10 @@ export const I18nProvider: ParentComponent = (props) => {
       return key as string;
     }
   };
+
+  createEffect(() => {
+    document.documentElement.lang = locale();
+  });
 
   const setLocale = (l: Locale) => {
     storageSet("hz-locale", l);

@@ -243,9 +243,9 @@ const PopularPostsWidget: Component<PopularPostsWidgetProps> = (props) => {
     <div class="bg-surface border border-rim rounded-xl overflow-hidden">
       {/* Header */}
       <div class="px-4 py-3 border-b border-rim">
-        <h3 class="text-sm font-semibold text-txt">
+        <h2 class="text-sm font-semibold text-txt">
           {t("widgets.popular_posts")}
-        </h3>
+        </h2>
       </div>
 
       {/* Loading */}

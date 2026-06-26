@@ -20,6 +20,8 @@ export const THEMES = [
   { id: "solarized-dark", label: "Solarized Dark" },
   { id: "tokyo-night", label: "Tokyo Night" },
   { id: "matrix", label: "Matrix" },
+  { id: "high-contrast", label: "High Contrast" },
+  { id: "high-contrast-light", label: "High Contrast Light" },
   { id: "custom", label: "Custom" },
 ] as const;
 
