@@ -9,6 +9,7 @@ import {
   loadSummary, loadAlbum, loadImage, loadAlbums,
   handleLike, handleDislike, addComment, handleCommentReaction,
   createNewAlbum, deletePhotoAction, batchDeleteAction, deleteAlbumAction, renamePhotoAction,
+  updateTitleAction, updateDescriptionAction, toggleNsfwAction,
 } from "../store/store";
 import {
   MdFillChat, MdFillChevron_left, MdFillChevron_right,
@@ -23,6 +24,15 @@ import {
   MdFillCloud_upload, MdFillDelete_forever,
   MdFillCheck_box, MdFillCheck_box_outline_blank,
 } from "solid-icons/md";
+import PhotoSwipe from "photoswipe";
+import "photoswipe/style.css";
+
+const knownDims = new Map<string, { w: number; h: number }>();
+
+// Replace the Hubzilla size suffix (-0/-1/-2/-3) in a photo URL
+const variantSrc = (src: string, size: number) =>
+  src.replace(/-\d+(\.[^.]+)$/, `-${size}$1`);
+
 import CommentComposer from "@/shared/editor/composers/CommentComposer";
 import CommentThread from "@/shared/views/CommentThread";
 import AclEditor from "../components/AclEditor";
@@ -339,8 +349,7 @@ function AlbumGrid() {
   const { t }    = useI18n();
 
   // View controls
-  const [sortBy, setSortBy]     = createSignal<'date' | 'name'>('date');
-  const [viewMode, setViewMode] = createSignal<'grid' | 'list'>('grid');
+  const [sortBy, setSortBy] = createSignal<'date' | 'name'>('date');
 
   // Selection
   const [selectMode, setSelectMode]       = createSignal(false);
@@ -362,6 +371,190 @@ function AlbumGrid() {
   const [uploadProgress, setUploadProgress] =
     createSignal<{ done: number; total: number } | null>(null);
   let fileInputRef: HTMLInputElement | undefined;
+  let pswpRef: PhotoSwipe | null = null;
+  const [isDragging, setIsDragging] = createSignal(false);
+
+  onCleanup(() => { pswpRef?.close(); });
+
+  function openLightbox(startIndex: number) {
+    pswpRef?.close();
+    const list = sortedPhotos();
+
+    let currentSize = 2; // open at medium (-2); grid thumbs are -3
+
+    const items = list.map(p => ({
+      src:         variantSrc(p.src, currentSize),
+      msrc:        variantSrc(p.src, 3), // small thumbnail as placeholder while larger loads
+      alt:         p.filename,
+      width:       0, // let PhotoSwipe read naturalWidth/naturalHeight after load
+      height:      0,
+      resource_id: p.resource_id,
+      title:       p.title ?? '',
+      description: p.description ?? '',
+      is_nsfw:     p.is_nsfw ?? false,
+    }));
+
+    const pswp = new PhotoSwipe({
+      dataSource: items,
+      index: startIndex,
+      bgOpacity: 0.95,
+      wheelToZoom: true,
+    });
+
+    // After each image loads, propagate real pixel dimensions into every layer
+    // PhotoSwipe consults so that recycled slide holders never stretch:
+    //   • items[i]   — data source, read when new Content is constructed
+    //   • content    — the cached Content object, read when its Slide is (re)created
+    //   • slide      — the live Slide, needed for the immediate calculateSize call
+    pswp.on('loadComplete', (e) => {
+      const { slide, content } = e;
+      const img = content.element;
+      if (!(img instanceof HTMLImageElement)) return;
+      const w = img.naturalWidth;
+      const h = img.naturalHeight;
+      if (!w || !h) return;
+      items[slide.index].width  = w;   // fresh Content construction path
+      items[slide.index].height = h;
+      (content as any).width   = w;   // cached Content reuse path
+      (content as any).height  = h;
+      const wasAtInitial = slide.currZoomLevel === slide.zoomLevels.initial;
+      (slide as any).width  = w;
+      (slide as any).height = h;
+      slide.calculateSize();
+      slide.updateContentSize(true);
+      if (wasAtInitial) slide.zoomTo(slide.zoomLevels.initial, undefined, 0);
+    });
+
+    pswp.on('uiRegister', () => {
+      // Size selector
+      pswp.ui?.registerElement({
+        name: 'size-selector',
+        order: 8,
+        isButton: false,
+        tagName: 'div',
+        onInit: (el: HTMLElement) => {
+          const SIZES = [
+            { label: 'S', title: t('photos.size_small'),    size: 3 },
+            { label: 'M', title: t('photos.size_medium'),   size: 2 },
+            { label: 'L', title: t('photos.size_large'),    size: 1 },
+            { label: 'XL', title: t('photos.size_original'), size: 0 },
+          ] as const;
+
+          el.style.cssText = 'display:flex;align-items:center;gap:3px;padding:0 4px;';
+
+          const btns: HTMLButtonElement[] = [];
+
+          const refresh = (activeSize: number) => {
+            btns.forEach((btn, i) => {
+              const on = SIZES[i].size === activeSize;
+              btn.style.color    = on ? 'rgba(255,255,255,1)'    : 'rgba(255,255,255,0.45)';
+              btn.style.background = on ? 'rgba(255,255,255,0.18)' : 'transparent';
+              btn.style.borderColor = on ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.2)';
+            });
+          };
+
+          SIZES.forEach(({ label, title, size }) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = label;
+            btn.title = title;
+            btn.style.cssText =
+              'padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;' +
+              'border:1px solid;cursor:pointer;transition:all 0.12s;line-height:1.6;';
+            btn.addEventListener('click', () => {
+              if (size === currentSize) return;
+              currentSize = size;
+              items.forEach((item, i) => {
+                item.src    = variantSrc(list[i].src, size);
+                item.width  = 0;
+                item.height = 0;
+              });
+              const curr = pswp.currIndex;
+              [curr - 1, curr, curr + 1]
+                .filter(i => i >= 0 && i < list.length)
+                .forEach(i => pswp.refreshSlideContent(i));
+              refresh(size);
+            });
+            btns.push(btn);
+            el.appendChild(btn);
+          });
+
+          refresh(currentSize);
+
+          // Caption — gradient bar at the bottom showing title, description, NSFW badge
+          pswp.ui?.registerElement({
+            name: 'description-caption',
+            order: 10,
+            isButton: false,
+            appendTo: 'root',
+            onInit: (cap: HTMLElement) => {
+              cap.style.cssText =
+                'position:absolute;bottom:0;left:0;right:0;' +
+                'padding:40px 56px 18px;' + // 56px clears prev/next arrow buttons
+                'background:linear-gradient(transparent,rgba(0,0,0,0.6));' +
+                'color:rgba(255,255,255,0.92);font-size:14px;line-height:1.5;' +
+                'text-align:center;pointer-events:none;';
+              const update = () => {
+                const photo = list[pswp.currIndex];
+                const title = photo?.title ?? '';
+                const desc  = photo?.description ?? '';
+                const nsfw  = photo?.is_nsfw ?? false;
+                if (!title && !desc && !nsfw) { cap.style.display = 'none'; return; }
+                cap.style.display = '';
+                cap.innerHTML = '';
+                if (nsfw) {
+                  const badge = document.createElement('span');
+                  badge.textContent = 'NSFW';
+                  badge.style.cssText =
+                    'display:inline-block;margin-bottom:6px;padding:1px 7px;' +
+                    'background:rgba(239,68,68,0.25);color:#fca5a5;' +
+                    'border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.05em;';
+                  const br = document.createElement('br');
+                  cap.appendChild(badge);
+                  cap.appendChild(br);
+                }
+                if (title) {
+                  const t = document.createElement('strong');
+                  t.textContent = title;
+                  t.style.cssText = 'display:block;font-size:15px;';
+                  cap.appendChild(t);
+                }
+                if (desc) {
+                  const d = document.createElement('span');
+                  d.textContent = desc;
+                  d.style.cssText = 'display:block;font-size:13px;opacity:0.8;margin-top:2px;';
+                  cap.appendChild(d);
+                }
+              };
+              update();
+              pswp.on('change', update);
+            },
+          });
+
+          // Details link — appended into the same row as size buttons
+          const sep = document.createElement('span');
+          sep.style.cssText = 'width:1px;height:16px;background:rgba(255,255,255,0.2);margin:0 4px;flex-shrink:0;';
+          el.appendChild(sep);
+
+          const link = document.createElement('a');
+          link.title = t('photos.view_details');
+          link.style.cssText = 'display:flex;align-items:center;opacity:0.75;color:white;padding:2px 4px;';
+          link.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>';
+          const setHref = () => {
+            const photo = list[pswp.currIndex];
+            if (photo) link.href = `/photos/${params.nick}/image/${photo.resource_id}`;
+          };
+          setHref();
+          pswp.on('change', setHref);
+          el.appendChild(link);
+        },
+      });
+    });
+
+    pswp.on('close', () => { pswpRef = null; });
+    pswpRef = pswp;
+    pswp.init();
+  }
 
   const isOwner = () => !!auth()?.nick && auth()!.nick === params.nick;
 
@@ -447,7 +640,39 @@ function AlbumGrid() {
   }
 
   return (
-    <div class="flex flex-col gap-4">
+    <div
+      class="flex flex-col gap-4"
+      onDragEnter={(e) => {
+        if (!isOwner() || !e.dataTransfer?.types?.length) return;
+        e.preventDefault();
+        setIsDragging(true);
+      }}
+    >
+      {/* Drop overlay — must be a real pointer-events target so the browser's
+          hit-test lands here rather than on the scroll wrapper or body.
+          The inner content is pointer-events-none so events reach the outer div. */}
+      <Show when={isDragging()}>
+        <div
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onDragOver={(e) => e.preventDefault()}
+          onDragLeave={(e) => {
+            if (!(e.currentTarget as HTMLElement).contains(e.relatedTarget as Node | null))
+              setIsDragging(false);
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            setIsDragging(false);
+            const files = e.dataTransfer?.files;
+            if (files?.length) handleFiles(files);
+          }}
+        >
+          <div class="bg-surface rounded-2xl px-10 py-8 shadow-2xl text-center border-4 border-dashed border-accent pointer-events-none">
+            <MdFillCloud_upload size={48} class="text-accent mx-auto mb-3" />
+            <p class="text-lg font-semibold text-txt">{t("photos.drop_to_upload")}</p>
+          </div>
+        </div>
+      </Show>
+
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
@@ -487,25 +712,12 @@ function AlbumGrid() {
           )}
         </For>
 
-        <div class="flex items-center gap-1 ml-auto">
-          <button onClick={() => setViewMode('grid')} title={t("photos.view_grid")}
-            class={`p-1.5 rounded-md transition-colors
-              ${viewMode() === 'grid' ? 'text-accent bg-surface' : 'text-muted hover:text-txt'}`}>
-            <MdFillApps size={17} />
-          </button>
-          <button onClick={() => setViewMode('list')} title={t("photos.view_list")}
-            class={`p-1.5 rounded-md transition-colors
-              ${viewMode() === 'list' ? 'text-accent bg-surface' : 'text-muted hover:text-txt'}`}>
-            <MdFillFormat_list_bulleted size={17} />
-          </button>
-        </div>
-
         <Show when={isOwner()}>
           {/* Upload */}
           <button
             onClick={() => fileInputRef?.click()}
             disabled={!!uploadProgress()}
-            class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium
+            class="ml-auto flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium
                    bg-accent/10 text-accent hover:bg-accent/20 transition-colors
                    disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -626,127 +838,71 @@ function AlbumGrid() {
         <p class="text-sm text-muted py-8 text-center">{t("photos.no_photos")}</p>
       </Show>
 
-      {/* Grid mode */}
-      <Show when={viewMode() === 'grid'}>
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-          <For each={sortedPhotos()}>
-            {(photo) => {
-              const isSelected = () => selected().has(photo.resource_id);
-              const isPending  = () => pendingDelete() === photo.resource_id;
-              return (
-                <div class="group relative aspect-square overflow-hidden rounded-xl bg-surface">
-                  <Show when={!selectMode()} fallback={
-                    <button onClick={() => toggleOne(photo.resource_id)} class="block w-full h-full">
-                      <img src={photo.src} alt={photo.filename} loading="lazy"
-                        class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+      {/* Photo grid */}
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+        <For each={sortedPhotos()}>
+          {(photo, index) => {
+            const isSelected = () => selected().has(photo.resource_id);
+            const isPending  = () => pendingDelete() === photo.resource_id;
+            return (
+              <div class="group relative aspect-[4/3] overflow-hidden rounded-xl bg-surface">
+                <button
+                  onClick={() => selectMode() ? toggleOne(photo.resource_id) : openLightbox(index())}
+                  class="block w-full h-full cursor-pointer"
+                >
+                  <img
+                    src={variantSrc(photo.src, 3)}
+                    alt={photo.filename}
+                    loading="lazy"
+                    onLoad={(e) => {
+                      const el = e.currentTarget;
+                      knownDims.set(photo.resource_id, { w: el.naturalWidth, h: el.naturalHeight });
+                    }}
+                    class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                </button>
+
+                {/* Checkbox overlay */}
+                <Show when={selectMode()}>
+                  <div class={`absolute top-1.5 left-1.5 drop-shadow pointer-events-none
+                    ${isSelected() ? 'text-accent' : 'text-white'}`}>
+                    <Show when={isSelected()} fallback={<MdFillCheck_box_outline_blank size={20} />}>
+                      <MdFillCheck_box size={20} />
+                    </Show>
+                  </div>
+                  <Show when={isSelected()}>
+                    <div class="absolute inset-0 ring-2 ring-accent ring-inset rounded-xl pointer-events-none" />
+                  </Show>
+                </Show>
+
+                {/* Per-photo delete (owner, non-select mode) */}
+                <Show when={isOwner() && !selectMode()}>
+                  <Show when={isPending()} fallback={
+                    <button
+                      onClick={() => handleDeletePhoto(photo.resource_id)}
+                      class="absolute top-1.5 right-1.5 p-1 rounded-lg bg-black/50 text-white
+                             opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <MdFillDelete_forever size={16} />
                     </button>
                   }>
-                    <A href={`/photos/${params.nick}/image/${photo.resource_id}`} class="block w-full h-full">
-                      <img src={photo.src} alt={photo.filename} loading="lazy"
-                        class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                    </A>
-                  </Show>
-
-                  {/* Checkbox overlay */}
-                  <Show when={selectMode()}>
-                    <div class={`absolute top-1.5 left-1.5 drop-shadow
-                      ${isSelected() ? 'text-accent' : 'text-white'}`}>
-                      <Show when={isSelected()} fallback={<MdFillCheck_box_outline_blank size={20} />}>
-                        <MdFillCheck_box size={20} />
-                      </Show>
-                    </div>
-                    <Show when={isSelected()}>
-                      <div class="absolute inset-0 ring-2 ring-accent ring-inset rounded-xl pointer-events-none" />
-                    </Show>
-                  </Show>
-
-                  {/* Per-photo delete (owner, non-select mode) */}
-                  <Show when={isOwner() && !selectMode()}>
-                    <Show when={isPending()} fallback={
-                      <button
-                        onClick={() => handleDeletePhoto(photo.resource_id)}
-                        class="absolute top-1.5 right-1.5 p-1 rounded-lg bg-black/50 text-white
-                               opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <MdFillDelete_forever size={16} />
-                      </button>
-                    }>
-                      <div class="absolute top-1.5 right-1.5 flex items-center gap-1">
-                        <button onClick={() => handleDeletePhoto(photo.resource_id)}
-                          class="px-2 py-0.5 rounded-md bg-red-500 text-white text-xs font-medium">
-                          {t("photos.confirm")}
-                        </button>
-                        <button onClick={() => setPendingDelete(null)}
-                          class="p-1 rounded-md bg-black/50 text-white">
-                          <MdFillClose size={14} />
-                        </button>
-                      </div>
-                    </Show>
-                  </Show>
-                </div>
-              );
-            }}
-          </For>
-        </div>
-      </Show>
-
-      {/* List mode */}
-      <Show when={viewMode() === 'list'}>
-        <div class="flex flex-col divide-y divide-rim">
-          <For each={sortedPhotos()}>
-            {(photo) => {
-              const isSelected = () => selected().has(photo.resource_id);
-              const isPending  = () => pendingDelete() === photo.resource_id;
-              return (
-                <div class={`flex items-center gap-3 py-2 px-2 hover:bg-surface/50 rounded-lg
-                  ${isSelected() ? 'bg-accent/5' : ''}`}>
-                  <Show when={selectMode()}>
-                    <button onClick={() => toggleOne(photo.resource_id)}
-                      class={isSelected() ? 'text-accent' : 'text-muted'}>
-                      <Show when={isSelected()} fallback={<MdFillCheck_box_outline_blank size={18} />}>
-                        <MdFillCheck_box size={18} />
-                      </Show>
-                    </button>
-                  </Show>
-
-                  <A href={`/photos/${params.nick}/image/${photo.resource_id}`}
-                    class="w-12 h-12 rounded-lg overflow-hidden bg-overlay flex-shrink-0 block">
-                    <img src={photo.src} alt={photo.filename} loading="lazy"
-                      class="w-full h-full object-cover" />
-                  </A>
-
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm text-txt truncate">{photo.filename}</p>
-                    <p class="text-xs text-muted">
-                      {photo.created ? new Date(photo.created).toLocaleDateString() : ''}
-                    </p>
-                  </div>
-
-                  <Show when={isOwner() && !selectMode()}>
-                    <Show when={isPending()} fallback={
+                    <div class="absolute top-1.5 right-1.5 flex items-center gap-1">
                       <button onClick={() => handleDeletePhoto(photo.resource_id)}
-                        class="p-1.5 rounded-md text-muted hover:text-red-500 hover:bg-red-500/10 transition-colors">
-                        <MdFillDelete_forever size={16} />
+                        class="px-2 py-0.5 rounded-md bg-red-500 text-white text-xs font-medium">
+                        {t("photos.confirm")}
                       </button>
-                    }>
-                      <div class="flex items-center gap-1">
-                        <button onClick={() => handleDeletePhoto(photo.resource_id)}
-                          class="px-2 py-1 rounded-md bg-red-500 text-white text-xs">
-                          {t("photos.confirm")}
-                        </button>
-                        <button onClick={() => setPendingDelete(null)}
-                          class="p-1 rounded-md text-muted hover:text-txt">
-                          <MdFillClose size={14} />
-                        </button>
-                      </div>
-                    </Show>
+                      <button onClick={() => setPendingDelete(null)}
+                        class="p-1 rounded-md bg-black/50 text-white">
+                        <MdFillClose size={14} />
+                      </button>
+                    </div>
                   </Show>
-                </div>
-              );
-            }}
-          </For>
-        </div>
-      </Show>
+                </Show>
+              </div>
+            );
+          }}
+        </For>
+      </div>
     </div>
   );
 }
@@ -813,6 +969,13 @@ function ImageView() {
   const [renameOpen, setRenameOpen]             = createSignal(false);
   const [renameInput, setRenameInput]           = createSignal('');
   const [renaming, setRenaming]                 = createSignal(false);
+  const [titleEditing, setTitleEditing]           = createSignal(false);
+  const [titleInput, setTitleInput]               = createSignal('');
+  const [titleSaving, setTitleSaving]             = createSignal(false);
+  const [descEditing, setDescEditing]             = createSignal(false);
+  const [descInput, setDescInput]                 = createSignal('');
+  const [descSaving, setDescSaving]               = createSignal(false);
+  const [nsfwSaving, setNsfwSaving]               = createSignal(false);
   let moreRef!: HTMLDivElement;
   let morePortalRef!: HTMLDivElement;
   let deleteTimer: ReturnType<typeof setTimeout> | null = null;
@@ -876,6 +1039,49 @@ function ImageView() {
       toast.error(err instanceof Error ? err.message : t("photos.rename_error"));
     } finally {
       setRenaming(false);
+    }
+  }
+
+  async function handleTitleSave(e: Event) {
+    e.preventDefault();
+    if (titleSaving()) return;
+    setTitleSaving(true);
+    try {
+      await updateTitleAction(params.nick ?? '', d()!.resource_id, titleInput().trim());
+      setTitleEditing(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("photos.title_error"));
+    } finally {
+      setTitleSaving(false);
+    }
+  }
+
+  async function handleDescSave(e: Event) {
+    e.preventDefault();
+    if (descSaving()) return;
+    setDescSaving(true);
+    try {
+      await updateDescriptionAction(params.nick ?? '', d()!.resource_id, descInput().trim());
+      setDescEditing(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("photos.description_error"));
+    } finally {
+      setDescSaving(false);
+    }
+  }
+
+  async function handleNsfwToggle() {
+    if (nsfwSaving()) return;
+    const photo = d();
+    if (!photo) return;
+    setNsfwSaving(true);
+    setMoreOpen(false);
+    try {
+      await toggleNsfwAction(params.nick ?? '', photo.resource_id, !photo.is_nsfw);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("photos.nsfw_error"));
+    } finally {
+      setNsfwSaving(false);
     }
   }
 
@@ -960,7 +1166,10 @@ function ImageView() {
       {/* Breadcrumb */}
       <div class="flex items-center gap-2">
         <button
-          onClick={() => navigate(`/photos/${params.nick ?? ''}`)}
+          onClick={() => {
+            const albumPath = d()?.album_link?.replace(window.location.origin, '');
+            navigate(albumPath ?? `/photos/${params.nick ?? ''}`);
+          }}
           class="text-sm text-muted hover:text-txt flex items-center gap-1 transition-colors"
         >
           <MdFillChevron_left size={16} /> {t("photos.back")}
@@ -1003,9 +1212,100 @@ function ImageView() {
 
         {/* Content */}
         <div class="p-3 md:p-5">
-          <Show when={d()?.description}>
-            <p class="text-txt mb-2">{d()?.description}</p>
+          {/* NSFW badge */}
+          <Show when={d()?.is_nsfw}>
+            <span class="inline-block mb-2 px-2 py-0.5 rounded-md bg-red-500/15 text-red-500
+                         text-xs font-semibold tracking-wide">
+              {t("photos.nsfw")}
+            </span>
           </Show>
+
+          {/* Title — editable for owner */}
+          <Show when={isOwner()} fallback={
+            <Show when={d()?.title}>
+              <p class="text-txt font-medium mb-1">{d()?.title}</p>
+            </Show>
+          }>
+            <Show when={titleEditing()} fallback={
+              <div
+                class="group/title flex items-center gap-1.5 mb-1 cursor-pointer"
+                onClick={() => { setTitleInput(d()?.title ?? ''); setTitleEditing(true); }}
+                title={t("photos.edit_title")}
+              >
+                <p class={`flex-1 text-sm font-medium ${d()?.title ? 'text-txt' : 'text-muted italic'}`}>
+                  {d()?.title || t("photos.title_ph")}
+                </p>
+                <MdOutlineEdit size={13} class="flex-shrink-0 text-muted opacity-0 group-hover/title:opacity-100 transition-opacity" />
+              </div>
+            }>
+              <form onSubmit={handleTitleSave} class="mb-2 flex items-center gap-2">
+                <input
+                  type="text"
+                  value={titleInput()}
+                  onInput={e => setTitleInput(e.currentTarget.value)}
+                  disabled={titleSaving()}
+                  autofocus
+                  placeholder={t("photos.title_ph")}
+                  class="flex-1 bg-overlay text-sm text-txt placeholder:text-muted rounded-lg
+                         px-3 py-1.5 outline-none border border-rim disabled:opacity-50"
+                />
+                <button type="submit" disabled={titleSaving()}
+                  class="px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-medium
+                         transition-opacity disabled:opacity-40 flex-shrink-0">
+                  {titleSaving() ? t("photos.title_saving") : t("photos.title_save")}
+                </button>
+                <button type="button" onClick={() => setTitleEditing(false)}
+                  class="px-2 py-1.5 rounded-lg text-xs text-muted hover:text-txt transition-colors flex-shrink-0">
+                  {t("photos.cancel")}
+                </button>
+              </form>
+            </Show>
+          </Show>
+
+          {/* Description — editable for owner */}
+          <Show when={isOwner()} fallback={
+            <Show when={d()?.description}>
+              <p class="text-sm text-muted mb-2 whitespace-pre-wrap">{d()?.description}</p>
+            </Show>
+          }>
+            <Show when={descEditing()} fallback={
+              <div
+                class="group/desc flex items-start gap-1.5 mb-2 cursor-pointer"
+                onClick={() => { setDescInput(d()?.description ?? ''); setDescEditing(true); }}
+                title={t("photos.edit_description")}
+              >
+                <p class={`flex-1 text-sm ${d()?.description ? 'text-muted' : 'text-muted/50 italic'}`}>
+                  {d()?.description || t("photos.description_ph")}
+                </p>
+                <MdOutlineEdit size={13} class="flex-shrink-0 mt-0.5 text-muted opacity-0 group-hover/desc:opacity-100 transition-opacity" />
+              </div>
+            }>
+              <form onSubmit={handleDescSave} class="mb-3 flex flex-col gap-2">
+                <textarea
+                  value={descInput()}
+                  onInput={e => setDescInput(e.currentTarget.value)}
+                  disabled={descSaving()}
+                  autofocus
+                  rows={3}
+                  placeholder={t("photos.description_ph")}
+                  class="w-full bg-overlay text-sm text-txt placeholder:text-muted rounded-lg
+                         px-3 py-2 outline-none border border-rim resize-none disabled:opacity-50"
+                />
+                <div class="flex items-center gap-2">
+                  <button type="submit" disabled={descSaving()}
+                    class="px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-medium
+                           transition-opacity disabled:opacity-40">
+                    {descSaving() ? t("photos.description_saving") : t("photos.description_save")}
+                  </button>
+                  <button type="button" onClick={() => setDescEditing(false)}
+                    class="px-2 py-1.5 rounded-lg text-xs text-muted hover:text-txt transition-colors">
+                    {t("photos.cancel")}
+                  </button>
+                </div>
+              </form>
+            </Show>
+          </Show>
+
           <p class="text-xs text-muted">
             {d()?.filename}
             <Show when={d()?.created}>
@@ -1136,6 +1436,15 @@ function ImageView() {
                 >
                   <MdOutlineLock size={15} />
                   <span>{t("photos.acl_privacy")}</span>
+                </button>
+                <button
+                  onClick={handleNsfwToggle}
+                  disabled={nsfwSaving()}
+                  class="w-full flex items-center gap-2 px-3 py-2 text-sm text-txt
+                         hover:bg-overlay transition-colors text-left disabled:opacity-50"
+                >
+                  <span class="text-xs font-bold w-[15px] text-center leading-none text-red-400">18+</span>
+                  <span>{d()?.is_nsfw ? t("photos.nsfw_unmark") : t("photos.nsfw_mark")}</span>
                 </button>
                 <button
                   onClick={onDeleteClick}

@@ -10,7 +10,9 @@ export interface Album {
 export interface Photo {
   resource_id: string;
   filename:    string;
+  title:       string;
   description: string;
+  is_nsfw:     boolean;
   album:       string;
   created:     string;
   src:         string;
@@ -85,6 +87,7 @@ export interface PhotoComment {
 export interface PhotoDetail {
   resource_id:     string;
   filename:        string;
+  title:           string;
   description:     string;
   album:           string;
   album_link:      string | null;
@@ -265,6 +268,51 @@ export async function saveAcl(
   if (!res.ok) {
     const err = await res.json().catch(() => ({})) as Record<string, unknown>;
     throw new Error(String((err?.error as Record<string, unknown>)?.message ?? 'Could not save privacy'));
+  }
+}
+
+export async function updatePhotoTitle(nick: string, resourceId: string, title: string): Promise<void> {
+  const { getCsrfToken } = await import('@/shared/lib/csrf');
+  const token = await getCsrfToken().catch(() => '');
+  const res = await fetch(`/api/photos/${nick}/image/${resourceId}/title`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
+    body: JSON.stringify({ title }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as Record<string, unknown>;
+    throw new Error(String((err?.error as Record<string, unknown>)?.message ?? 'Could not save title'));
+  }
+}
+
+export async function updatePhotoDescription(nick: string, resourceId: string, description: string): Promise<void> {
+  const { getCsrfToken } = await import('@/shared/lib/csrf');
+  const token = await getCsrfToken().catch(() => '');
+  const res = await fetch(`/api/photos/${nick}/image/${resourceId}/description`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
+    body: JSON.stringify({ description }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as Record<string, unknown>;
+    throw new Error(String((err?.error as Record<string, unknown>)?.message ?? 'Could not save description'));
+  }
+}
+
+export async function togglePhotoNsfw(nick: string, resourceId: string, is_nsfw: boolean): Promise<void> {
+  const { getCsrfToken } = await import('@/shared/lib/csrf');
+  const token = await getCsrfToken().catch(() => '');
+  const res = await fetch(`/api/photos/${nick}/image/${resourceId}/nsfw`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
+    body: JSON.stringify({ is_nsfw }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as Record<string, unknown>;
+    throw new Error(String((err?.error as Record<string, unknown>)?.message ?? 'Could not update NSFW flag'));
   }
 }
 

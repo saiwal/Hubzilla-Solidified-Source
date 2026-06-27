@@ -1019,6 +1019,26 @@ export type RawDictionary = {
     acl_saving:           string;
     acl_save:             string;
     acl_error:            string;
+    view_details:         string;
+    drop_to_upload:       string;
+    size_small:           string;
+    size_medium:          string;
+    size_large:           string;
+    size_original:        string;
+    edit_title:           string;
+    title_ph:             string;
+    title_save:           string;
+    title_saving:         string;
+    title_error:          string;
+    edit_description:     string;
+    description_ph:       string;
+    description_save:     string;
+    description_saving:   string;
+    description_error:    string;
+    nsfw:                 string;
+    nsfw_mark:            string;
+    nsfw_unmark:          string;
+    nsfw_error:           string;
   };
   articles: {
     title:            string;

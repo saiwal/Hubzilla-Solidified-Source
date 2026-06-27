@@ -9,6 +9,9 @@ import {
   batchDeletePhotos as apiBatchDeletePhotos,
   deleteAlbum as apiDeleteAlbum,
   renamePhoto as apiRenamePhoto,
+  updatePhotoTitle as apiUpdateTitle,
+  updatePhotoDescription as apiUpdateDescription,
+  togglePhotoNsfw as apiToggleNsfw,
 } from "../api/api";
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -44,12 +47,6 @@ export async function loadAlbums(nickname: string) {
   try {
     const items = await fetchAlbums(nickname);
     setAlbums(items);
-    // Use first photo of each album as recent photos for widget
-    const recent = items
-      .filter(a => a.thumb)
-      .slice(0, 6)
-      .map(a => ({ src: a.thumb! } as unknown as Photo));
-    setRecent(recent);
   } catch (err) {
     console.error('loadAlbums failed', err);
   } finally {
@@ -195,6 +192,21 @@ export async function deleteAlbumAction(nick: string, folderHash: string): Promi
 export async function renamePhotoAction(nick: string, resourceId: string, filename: string): Promise<void> {
   await apiRenamePhoto(nick, resourceId, filename);
   setDetail(prev => prev ? { ...prev, filename } : prev);
+}
+
+export async function updateTitleAction(nick: string, resourceId: string, title: string): Promise<void> {
+  await apiUpdateTitle(nick, resourceId, title);
+  setDetail(prev => prev ? { ...prev, title } : prev);
+}
+
+export async function updateDescriptionAction(nick: string, resourceId: string, description: string): Promise<void> {
+  await apiUpdateDescription(nick, resourceId, description);
+  setDetail(prev => prev ? { ...prev, description } : prev);
+}
+
+export async function toggleNsfwAction(nick: string, resourceId: string, is_nsfw: boolean): Promise<void> {
+  await apiToggleNsfw(nick, resourceId, is_nsfw);
+  setDetail(prev => prev ? { ...prev, is_nsfw } : prev);
 }
 
 export { photos, albums, recentPhotos, albumName, detail, loading, albumsLoading, nick };
