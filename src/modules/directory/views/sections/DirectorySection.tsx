@@ -3,6 +3,11 @@ import {
   entries, loading, loadingMore, hasMore, total,
   loadDirectory, loadMoreDirectory,
 } from "../../people/store";
+import {
+  network, setNetwork, safe, setSafe,
+  pubforums, setPubforums, globalDir, setGlobalDir,
+  type NetworkFilter,
+} from "../../people/filters";
 import DirectoryCard from "../DirectoryCard";
 import DirectoryEntryModal from "../DirectoryEntryModal";
 import type { DirectoryParams, DirectoryEntry } from "../../people/api";
@@ -15,15 +20,18 @@ export default function DirectorySection() {
   const [searchInput, setSearchInput] = createSignal("");
   const [appliedSearch, setAppliedSearch] = createSignal("");
   const [order, setOrder] = createSignal<Order>("date");
-  const [globalDir, setGlobalDir] = createSignal<0 | 1>(1);
   const [selected, setSelected] = createSignal<DirectoryEntry | null>(null);
 
-  // Runs on mount and whenever order, globalDir, or committed search changes.
-  // appliedSearch only updates on form submit, so typing does not re-fetch.
   createEffect(() => {
-    loadDirectory({ search: appliedSearch(), order: order(), global: globalDir() });
+    loadDirectory({
+      search: appliedSearch(),
+      order: order(),
+      global: globalDir(),
+      network: network() === "all" ? undefined : (network() as "zot6" | "activitypub"),
+      safe: safe(),
+      pubforums: pubforums(),
+    });
   });
-
 
   function handleSearch(e: Event) {
     e.preventDefault();
@@ -33,69 +41,115 @@ export default function DirectorySection() {
   return (
     <div class="px-4 md:px-6 py-6 space-y-4">
 
-      {/* ── Toolbar ── */}
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <form onSubmit={handleSearch} class="flex gap-2 flex-1">
-          <input
-            type="text"
-            value={searchInput()}
-            onInput={(e) => setSearchInput(e.currentTarget.value)}
-            placeholder="Name, address, or keyword…"
-            class="flex-1 border border-rim rounded-lg px-3 py-1.5 text-sm bg-surface text-txt
-                   placeholder:text-muted focus:outline-none hover:border-rim-strong
-                   focus:border-rim-strong transition-colors"
-          />
+      {/* ── Search row ── */}
+      <form onSubmit={handleSearch} class="flex gap-2">
+        <input
+          type="text"
+          value={searchInput()}
+          onInput={(e) => setSearchInput(e.currentTarget.value)}
+          placeholder="Name, address, or keyword…"
+          class="flex-1 border border-rim rounded-lg px-3 py-2 text-sm bg-surface text-txt
+                 placeholder:text-muted focus:outline-none focus:border-rim-strong
+                 hover:border-rim-strong transition-colors"
+        />
+        <button
+          type="submit"
+          class="px-4 py-2 rounded-lg bg-accent text-accent-fg text-sm font-medium
+                 hover:opacity-80 transition-opacity shrink-0"
+        >
+          {t("directory.search")}
+        </button>
+      </form>
+
+      {/* ── Filter bar ── */}
+      <div class="flex flex-wrap items-center gap-2">
+
+        {/* Sort */}
+        <select
+          value={order()}
+          onChange={(e) => setOrder(e.currentTarget.value as Order)}
+          class="px-3 py-1.5 rounded-lg border border-rim bg-surface text-txt text-sm
+                 focus:outline-none hover:border-rim-strong transition-colors"
+        >
+          <option value="date">{t("directory.sort_newest")}</option>
+          <option value="rdate">{t("directory.sort_oldest")}</option>
+          <option value="alphabetic">{t("directory.sort_az")}</option>
+          <option value="ralpha">{t("directory.sort_za")}</option>
+        </select>
+
+        {/* Network */}
+        <select
+          value={network()}
+          onChange={(e) => setNetwork(e.currentTarget.value as NetworkFilter)}
+          class="px-3 py-1.5 rounded-lg border border-rim bg-surface text-txt text-sm
+                 focus:outline-none hover:border-rim-strong transition-colors"
+        >
+          <option value="all">{t("directory.network_all")}</option>
+          <option value="zot6">{t("directory.network_zot6")}</option>
+          <option value="activitypub">{t("directory.network_activitypub")}</option>
+        </select>
+
+        {/* Divider */}
+        <span class="hidden sm:block w-px h-5 bg-rim" />
+
+        {/* Scope toggle */}
+        <div class="flex rounded-lg border border-rim overflow-hidden text-sm">
           <button
-            type="submit"
-            class="px-4 py-1.5 rounded-lg bg-accent text-accent-fg text-sm hover:opacity-80 transition-opacity"
+            onClick={() => setGlobalDir(1)}
+            class={`px-3 py-1.5 transition-colors ${
+              globalDir() === 1
+                ? "bg-accent-muted text-accent font-medium"
+                : "bg-surface text-muted hover:bg-overlay"
+            }`}
           >
-            {t("directory.search")}
+            {t("directory.global_dir")}
           </button>
-        </form>
-
-        <div class="flex flex-wrap gap-2">
-          <select
-            value={order()}
-            onChange={(e) => setOrder(e.currentTarget.value as Order)}
-            class="px-3 py-1.5 rounded-lg border border-rim bg-surface text-txt text-sm
-                   focus:outline-none hover:border-rim-strong transition-colors"
+          <div class="w-px bg-rim" />
+          <button
+            onClick={() => setGlobalDir(0)}
+            class={`px-3 py-1.5 transition-colors ${
+              globalDir() === 0
+                ? "bg-accent-muted text-accent font-medium"
+                : "bg-surface text-muted hover:bg-overlay"
+            }`}
           >
-            <option value="date">{t("directory.sort_newest")}</option>
-            <option value="rdate">{t("directory.sort_oldest")}</option>
-            <option value="alphabetic">{t("directory.sort_az")}</option>
-            <option value="ralpha">{t("directory.sort_za")}</option>
-          </select>
-
-          <div class="flex rounded-lg border border-rim overflow-hidden text-sm">
-            <button
-              onClick={() => setGlobalDir(1)}
-              class={`px-3 py-1.5 transition-colors ${
-                globalDir() === 1
-                  ? "bg-accent-muted text-accent"
-                  : "bg-surface text-muted hover:bg-overlay"
-              }`}
-            >
-              {t("directory.global_dir")}
-            </button>
-            <div class="w-px bg-rim" />
-            <button
-              onClick={() => setGlobalDir(0)}
-              class={`px-3 py-1.5 transition-colors ${
-                globalDir() === 0
-                  ? "bg-accent-muted text-accent"
-                  : "bg-surface text-muted hover:bg-overlay"
-              }`}
-            >
-              {t("directory.local_dir")}
-            </button>
-          </div>
-
+            {t("directory.local_dir")}
+          </button>
         </div>
+
+        {/* Divider */}
+        <span class="hidden sm:block w-px h-5 bg-rim" />
+
+        {/* Forums chip */}
+        <button
+          onClick={() => setPubforums(pubforums() === 1 ? 0 : 1)}
+          class={`px-3 py-1.5 rounded-lg border text-sm transition-colors ${
+            pubforums() === 1
+              ? "border-accent bg-accent-muted text-accent font-medium"
+              : "border-rim bg-surface text-muted hover:bg-overlay"
+          }`}
+        >
+          {t("directory.filter_forums_only")}
+        </button>
+
+        {/* Safe mode chip */}
+        <button
+          onClick={() => setSafe(safe() === 1 ? 0 : 1)}
+          class={`px-3 py-1.5 rounded-lg border text-sm transition-colors ${
+            safe() === 1
+              ? "border-accent bg-accent-muted text-accent font-medium"
+              : "border-rim bg-surface text-muted hover:bg-overlay"
+          }`}
+        >
+          {t("directory.filter_safe_mode")}
+        </button>
       </div>
 
       {/* ── Count ── */}
       <Show when={!loading() && total() > 0}>
-        <p class="text-sm text-muted">{total().toLocaleString()} {t("directory.channels_found")}</p>
+        <p class="text-sm text-muted">
+          {total().toLocaleString()} {t("directory.channels_found")}
+        </p>
       </Show>
 
       {/* ── Skeleton ── */}

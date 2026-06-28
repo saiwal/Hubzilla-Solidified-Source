@@ -4,6 +4,7 @@ export interface DirectoryEntry {
   hash: string;
   name: string;
   address: string;
+  network: string;
   photo: string;
   description: string;
   about: string;
@@ -44,7 +45,8 @@ export interface DirectoryParams {
   keywords?: string;
   order?: "date" | "rdate" | "alphabetic" | "ralpha";
   global?: 0 | 1;
-  safe?: number;
+  network?: "zot6" | "activitypub";
+  safe?: 0 | 1;
   pubforums?: 0 | 1;
   suggest?: 0 | 1;
   start?: number;
@@ -54,14 +56,15 @@ export async function fetchDirectory(
   params: DirectoryParams = {},
 ): Promise<DirectoryResponse> {
   const q = new URLSearchParams();
-  if (params.search)    q.set("search",    params.search);
-  if (params.keywords)  q.set("keywords",  params.keywords);
-  if (params.order)     q.set("order",     params.order);
+  if (params.search)               q.set("search",    params.search);
+  if (params.keywords)             q.set("keywords",  params.keywords);
+  if (params.order)                q.set("order",     params.order);
   if (params.global !== undefined) q.set("global",    String(params.global));
-  if (params.safe   !== undefined) q.set("safe",      String(params.safe));
-  if (params.pubforums !== undefined) q.set("pubforums", String(params.pubforums));
-  if (params.suggest !== undefined)   q.set("suggest",   String(params.suggest));
-  if (params.start)     q.set("start",    String(params.start));
+  if (params.network)              q.set("network",   params.network);
+  if (params.safe)                 q.set("safe",      String(params.safe));
+  if (params.pubforums)            q.set("pubforums", String(params.pubforums));
+  if (params.suggest !== undefined) q.set("suggest",  String(params.suggest));
+  if (params.start)                q.set("start",     String(params.start));
 
   const res = await fetch(`/api/directory?${q}`, { credentials: "include" });
   if (!res.ok) throw new Error(`Directory fetch failed: ${res.status}`);

@@ -877,6 +877,15 @@ export type RawDictionary = {
     no_connections_found: string;
     add_to_group:         string;
     remove_from_group:    string;
+    // DirectoryFiltersWidget
+    filters:              string;
+    filter_network:       string;
+    filter_scope:         string;
+    filter_forums_only:   string;
+    filter_safe_mode:     string;
+    network_all:          string;
+    network_zot6:         string;
+    network_activitypub:  string;
   };
   hq: {
     activity:             string;

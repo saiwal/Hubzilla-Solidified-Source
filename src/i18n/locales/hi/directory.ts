@@ -111,4 +111,13 @@ export const directory: RawDictionary["directory"] = {
   no_connections_found: "कोई कनेक्शन नहीं मिला।",
   add_to_group:         "समूह में जोड़ें",
   remove_from_group:    "समूह से हटाएँ",
+  // DirectoryFiltersWidget
+  filters:              "फ़िल्टर",
+  filter_network:       "नेटवर्क",
+  filter_scope:         "दायरा",
+  filter_forums_only:   "केवल फ़ोरम",
+  filter_safe_mode:     "सुरक्षित मोड",
+  network_all:          "सभी नेटवर्क",
+  network_zot6:         "Hubzilla / Streams",
+  network_activitypub:  "ActivityPub",
 };

@@ -205,8 +205,7 @@ function ConnectionsSkeleton() {
 
 export default function ConnectionsSection() {
   const { t } = useI18n();
-  const [searchInput, setSearchInput] = createSignal("");
-  const [addAddr, setAddAddr] = createSignal("");
+  const [input, setInput] = createSignal("");
   const [addBusy, setAddBusy] = createSignal(false);
   const [addError, setAddError] = createSignal<string | null>(null);
   const [newConn, setNewConn] = createSignal<Connection | null>(null);
@@ -216,7 +215,8 @@ export default function ConnectionsSection() {
   const totalPages  = () => Math.ceil((meta()?.total ?? 0) / LIMIT);
 
   function applySearch() {
-    setSearch(searchInput());
+    setAddError(null);
+    setSearch(input());
     setPage(0);
   }
 
@@ -230,9 +230,8 @@ export default function ConnectionsSection() {
     setPage(0);
   }
 
-  async function handleAdd(e: Event) {
-    e.preventDefault();
-    const addr = addAddr().trim();
+  async function handleAdd() {
+    const addr = input().trim();
     if (!addr) return;
     setAddBusy(true);
     setAddError(null);
@@ -241,7 +240,7 @@ export default function ConnectionsSection() {
       const conn = await fetchConnectionByAddress(addr);
       if (conn) setNewConn(conn);
       refetch();
-      setAddAddr("");
+      setInput("");
     } catch {
       setAddError(t("directory.add_connection_error"));
     } finally {
@@ -250,37 +249,56 @@ export default function ConnectionsSection() {
   }
 
   return (
-    <div class="px-4 md:px-6 py-6 space-y-4">
+    <div class="px-4 md:px-6 py-6 space-y-3">
 
-      {/* ── Add connection ── */}
-      <form onSubmit={handleAdd} class="flex gap-2">
+      {/* ── Row 1: shared input + search + connect + sort ── */}
+      <div class="flex gap-2">
         <input
           type="text"
-          value={addAddr()}
-          onInput={(e) => setAddAddr(e.currentTarget.value)}
-          placeholder={t("directory.add_connection_placeholder")}
-          disabled={addBusy()}
+          placeholder={t("directory.search_connections")}
+          value={input()}
+          onInput={(e) => { setInput(e.currentTarget.value); setAddError(null); }}
+          onKeyDown={(e) => e.key === "Enter" && applySearch()}
           class="flex-1 px-3 py-2 rounded-lg border border-rim bg-surface text-sm text-txt
                  placeholder:text-muted focus:outline-none hover:border-rim-strong
-                 focus:border-rim-strong disabled:opacity-50 transition-colors"
+                 focus:border-rim-strong transition-colors"
         />
         <button
-          type="submit"
-          disabled={addBusy() || !addAddr().trim()}
-          class="shrink-0 px-4 py-2 rounded-lg bg-accent text-accent-fg text-sm font-medium
-                 hover:opacity-80 disabled:opacity-50 transition-opacity flex items-center gap-1.5"
+          onClick={applySearch}
+          class="px-4 py-2 rounded-lg bg-accent text-accent-fg text-sm font-medium
+                 hover:opacity-80 transition-opacity shrink-0"
+        >
+          {t("directory.search")}
+        </button>
+        <button
+          onClick={handleAdd}
+          disabled={addBusy() || !input().trim()}
+          class="shrink-0 px-3 py-2 rounded-lg border border-rim bg-surface text-muted text-sm
+                 font-medium hover:bg-overlay disabled:opacity-40 transition-colors
+                 flex items-center gap-1.5"
         >
           <Show when={addBusy()}>
-            <span class="w-3 h-3 border-2 border-accent-fg/40 border-t-accent-fg rounded-full animate-spin" />
+            <span class="w-3 h-3 border-2 border-muted/40 border-t-muted rounded-full animate-spin" />
           </Show>
-          {addBusy() ? t("directory.add_connection_connecting") : t("directory.connect")}
+          {addBusy() ? t("directory.add_connection_connecting") : "+ " + t("directory.connect")}
         </button>
-      </form>
+        <select
+          value={order()}
+          onChange={(e) => handleOrderChange(e.currentTarget.value as ConnectionOrder)}
+          class="hidden sm:block px-3 py-2 rounded-lg border border-rim bg-surface text-txt text-sm
+                 focus:outline-none hover:border-rim-strong transition-colors"
+        >
+          <For each={ORDER_IDS}>
+            {(o) => <option value={o.id}>{t(`directory.${o.key}` as any)}</option>}
+          </For>
+        </select>
+      </div>
+
       <Show when={addError()}>
-        <p class="text-xs text-red-500 -mt-2">{addError()}</p>
+        <p class="text-xs text-red-500">{addError()}</p>
       </Show>
 
-      {/* ── Filter tabs ── */}
+      {/* ── Row 2: status filter tabs ── */}
       <div class="flex flex-wrap gap-1.5">
         <For each={FILTER_IDS}>
           {(id) => (
@@ -296,31 +314,12 @@ export default function ConnectionsSection() {
             </button>
           )}
         </For>
-      </div>
-
-      {/* ── Search + sort ── */}
-      <div class="flex gap-2">
-        <input
-          type="search"
-          placeholder={t("directory.search_connections")}
-          value={searchInput()}
-          onInput={(e) => setSearchInput(e.currentTarget.value)}
-          onKeyDown={(e) => e.key === "Enter" && applySearch()}
-          class="flex-1 px-3 py-2 rounded-lg border border-rim bg-surface text-sm text-txt
-                 placeholder:text-muted focus:outline-none hover:border-rim-strong
-                 focus:border-rim-strong transition-colors"
-        />
-        <button
-          onClick={applySearch}
-          class="px-4 py-2 rounded-lg bg-accent text-accent-fg text-sm hover:opacity-80 transition-opacity"
-        >
-          {t("directory.search")}
-        </button>
+        {/* Sort on mobile (no room in row 1) */}
         <select
           value={order()}
           onChange={(e) => handleOrderChange(e.currentTarget.value as ConnectionOrder)}
-          class="px-3 py-2 rounded-lg border border-rim bg-surface text-txt text-sm
-                 focus:outline-none hover:border-rim-strong transition-colors"
+          class="sm:hidden ml-auto px-2 py-1 rounded-full border border-rim bg-surface
+                 text-txt text-sm focus:outline-none"
         >
           <For each={ORDER_IDS}>
             {(o) => <option value={o.id}>{t(`directory.${o.key}` as any)}</option>}

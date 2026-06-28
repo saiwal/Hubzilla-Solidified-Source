@@ -121,4 +121,13 @@ export const directory: RawDictionary["directory"] = {
   no_connections_found: "No connections found.",
   add_to_group:         "Add to group",
   remove_from_group:    "Remove from group",
+  // DirectoryFiltersWidget
+  filters:              "Filters",
+  filter_network:       "Network",
+  filter_scope:         "Scope",
+  filter_forums_only:   "Forums only",
+  filter_safe_mode:     "Safe mode",
+  network_all:          "All networks",
+  network_zot6:         "Hubzilla / Streams",
+  network_activitypub:  "ActivityPub",
 };
