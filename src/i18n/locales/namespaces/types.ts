@@ -1063,6 +1063,7 @@ export type RawDictionary = {
     delete:           string;
     deleting:         string;
     delete_failed:    string;
+    share:            string;
   };
   calendar: {
     loading:          string;

@@ -1,6 +1,6 @@
 // src/modules/articles/views/ArticlesView.tsx
 import { createEffect, createSignal, onMount, onCleanup, Show, For, Index } from "solid-js";
-import { MdOutlineArticle } from "solid-icons/md";
+import { MdOutlineArticle, MdOutlineShare } from "solid-icons/md";
 import { useParams, useNavigate, useSearchParams } from "@solidjs/router";
 import { useI18n } from "@/i18n";
 import { Portal } from "solid-js/web";
@@ -8,6 +8,7 @@ import { useAuth } from "@/shared/store/auth-store";
 import { useViewerRole } from "@/shared/store/site-config";
 import { BiRegularEdit, BiRegularX } from "solid-icons/bi";
 import ArticleComposer from "@/shared/editor/composers/ArticleComposer";
+import PostComposer from "@/shared/editor/composers/PostComposer";
 import {
   posts, loading, hasMore,
   loadArticles, resetPosts, loadMore,
@@ -47,7 +48,8 @@ function formatDate(iso: string): string {
 
 // ── card ──────────────────────────────────────────────────────────────────────
 
-function ArticleCard(props: { post: Post; nick: string; onOpen: () => void }) {
+function ArticleCard(props: { post: Post; nick: string; onOpen: () => void; onShare?: () => void }) {
+  const { t } = useI18n();
   const ex = () => excerpt(props.post);
 
   return (
@@ -96,6 +98,17 @@ function ArticleCard(props: { post: Post; nick: string; onOpen: () => void }) {
         <Show when={props.post.likeCount > 0}>
           <span>·</span>
           <span>♥ {props.post.likeCount}</span>
+        </Show>
+        <Show when={props.onShare}>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); props.onShare!(); }}
+            title={t("articles.share")}
+            class="ml-auto p-1 rounded-md text-muted hover:text-accent hover:bg-accent/10
+                   transition-colors opacity-0 group-hover:opacity-100"
+          >
+            <MdOutlineShare size={15} />
+          </button>
         </Show>
       </div>
     </article>
@@ -175,6 +188,12 @@ function ArticleModal(props: {
   );
 }
 
+function buildArticleShareBody(title: string, summary: string): string {
+  let body = `[b]${title}[/b]`;
+  if (summary) body += `\n\n${summary}`;
+  return body;
+}
+
 export default function ArticlesView() {
   const auth = useAuth();
   const role = useViewerRole();
@@ -182,6 +201,7 @@ export default function ArticlesView() {
   const params = useParams<{ nick: string }>();
   const navigate = useNavigate();
   const [open, setOpen] = createSignal(false);
+  const [sharePost, setSharePost] = createSignal<Post | null>(null);
   const [searchParams] = useSearchParams();
   let initialized = false;
 
@@ -256,6 +276,7 @@ export default function ArticlesView() {
                   post={post}
                   nick={params.nick}
                   onOpen={() => goToArticle(post.uuid)}
+                  onShare={auth() ? () => setSharePost(post) : undefined}
                 />
               )}
             </For>
@@ -277,6 +298,16 @@ export default function ArticlesView() {
             <p class="text-center py-2 text-xs text-muted">{t("articles.all_loaded")}</p>
           </Show>
         </Show>
+      </Show>
+
+      {/* ── Share composer ── */}
+      <Show when={sharePost() !== null}>
+        <PostComposer
+          open={true}
+          onClose={() => setSharePost(null)}
+          profileUid={auth()?.uid ?? 0}
+          initialBody={buildArticleShareBody(sharePost()!.title, sharePost()!.summary ?? "")}
+        />
       </Show>
 
       {/* ── Compose modal ── */}

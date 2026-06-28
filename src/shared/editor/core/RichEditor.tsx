@@ -167,7 +167,10 @@ export default function RichEditor(props: Props) {
 
       {/* ── Preview panel ────────────────────────────────── */}
       <Show when={props.tab === "preview"}>
-        <div class="grow min-h-0 overflow-y-auto">
+        <div
+          class="grow overflow-y-auto flex flex-col"
+          style={{ "min-height": minH() }}
+        >
           <EditorPreview body={props.body} mimetype={mime()} />
         </div>
       </Show>

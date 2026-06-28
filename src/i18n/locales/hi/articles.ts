@@ -22,4 +22,5 @@ export const articles: RawDictionary["articles"] = {
   delete:           "हटाएँ",
   deleting:         "हटाया जा रहा है…",
   delete_failed:    "हटाने में विफल",
+  share:            "लेख साझा करें",
 };

@@ -10,6 +10,7 @@ import { Portal } from "solid-js/web";
 import { fetchArticle, deleteArticle } from "../api";
 import ArticleComposer from "@/shared/editor/composers/ArticleComposer";
 import CommentComposer from "@/shared/editor/composers/CommentComposer";
+import PostComposer from "@/shared/editor/composers/PostComposer";
 import DOMPurify from "dompurify";
 import { usePageNick, useViewerRole } from "@/shared/store/site-config";
 import { useAuth } from "@/shared/store/auth-store";
@@ -19,6 +20,7 @@ import {
   MdOutlineThumb_down,
   MdFillShare,
   MdFillChat,
+  MdOutlineShare,
 } from "solid-icons/md";
 import { apiToggleLike, apiToggleDislike, apiToggleRepeat } from "@/shared/lib/item-api";
 import type { Post } from "@/shared/types/post.types";
@@ -248,6 +250,7 @@ export default function ArticleView() {
 
   // Comment composer visibility
   const [replyOpen, setReplyOpen] = createSignal(false);
+  const [shareOpen, setShareOpen] = createSignal(false);
 
   function handleLike() {
     const art = data()?.article;
@@ -461,17 +464,46 @@ export default function ArticleView() {
                     </Show>
                   </button>
 
+                  <Show when={auth()}>
+                    <button
+                      onClick={() => setShareOpen(v => !v)}
+                      title={t("articles.share")}
+                      class={`ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                             transition-colors hover:bg-overlay
+                             ${shareOpen() ? "text-accent" : "text-muted hover:text-txt"}`}
+                    >
+                      <MdOutlineShare size={17} />
+                    </button>
+                  </Show>
+
                   <Show when={auth()?.isLocal}>
                     <button
                       onClick={() => setReplyOpen(v => !v)}
-                      class="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
-                             text-muted hover:bg-overlay hover:text-txt transition-colors"
+                      class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                             transition-colors hover:bg-overlay
+                             ${replyOpen() ? "text-accent" : "text-muted hover:text-txt"}`}
                     >
                       <MdFillChat size={17} />
                       <span>{t("articles.comment")}</span>
                     </button>
                   </Show>
                 </div>
+
+                {/* Share composer */}
+                <Show when={shareOpen()}>
+                  <PostComposer
+                    open={true}
+                    onClose={() => setShareOpen(false)}
+                    profileUid={auth()?.uid ?? 0}
+                    initialBody={(() => {
+                      const title   = d().article.title ?? "";
+                      const summary = d().article.summary ?? "";
+                      let body = `[b]${title}[/b]`;
+                      if (summary) body += `\n\n${summary}`;
+                      return body;
+                    })()}
+                  />
+                </Show>
 
                 {/* Comment composer */}
                 <Show when={replyOpen() && d().article.iid && d().article.profileUid}>

@@ -113,7 +113,7 @@ export default function EditorPreview(props: Props) {
     <iframe
       srcdoc={srcdoc()}
       sandbox="allow-same-origin"
-      class="w-full h-full border-0"
+      class="flex-1 w-full border-0"
     />
   );
 }

@@ -25,4 +25,5 @@ export const articles: RawDictionary["articles"] = {
   deleting:         "Deleting…",
   // Delete failed
   delete_failed:    "Delete failed",
+  share:            "Share article",
 };
