@@ -1039,6 +1039,7 @@ export type RawDictionary = {
     nsfw_mark:            string;
     nsfw_unmark:          string;
     nsfw_error:           string;
+    share:                string;
   };
   articles: {
     title:            string;

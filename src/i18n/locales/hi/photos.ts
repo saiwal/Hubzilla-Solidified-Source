@@ -77,4 +77,5 @@ export const photos: RawDictionary["photos"] = {
   nsfw_mark:            "NSFW के रूप में चिह्नित करें",
   nsfw_unmark:          "NSFW चिह्न हटाएं",
   nsfw_error:           "NSFW फ़्लैग अपडेट नहीं हो सका।",
+  share:                "फ़ोटो साझा करें",
 };

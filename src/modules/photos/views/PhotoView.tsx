@@ -18,7 +18,7 @@ import {
   MdFillKeyboard_arrow_down, MdFillKeyboard_arrow_up,
   MdFillAccount_tree, MdFillFormat_list_bulleted,
   MdOutlineEdit, MdOutlineDelete, MdOutlineReply, MdFillMore_vert,
-  MdOutlineLock,
+  MdOutlineLock, MdOutlineShare,
   MdFillApps, MdFillCollections,
   MdFillAdd, MdFillClose,
   MdFillCloud_upload, MdFillDelete_forever,
@@ -33,7 +33,16 @@ const knownDims = new Map<string, { w: number; h: number }>();
 const variantSrc = (src: string, size: number) =>
   src.replace(/-\d+(\.[^.]+)$/, `-${size}$1`);
 
+function buildShareBody(src: string, title: string, description: string): string {
+  const medium = variantSrc(src, 2);
+  let body = `[img]${medium}[/img]`;
+  if (title) body += `\n\n[b]${title}[/b]`;
+  if (description) body += `\n${description}`;
+  return body;
+}
+
 import CommentComposer from "@/shared/editor/composers/CommentComposer";
+import PostComposer from "@/shared/editor/composers/PostComposer";
 import CommentThread from "@/shared/views/CommentThread";
 import AclEditor from "../components/AclEditor";
 import { buildThreadTree } from "@/shared/lib/thread";
@@ -363,6 +372,9 @@ function AlbumGrid() {
 
   // Per-photo pending confirm (resource_id)
   const [pendingDelete, setPendingDelete] = createSignal<string | null>(null);
+
+  // Share composer
+  const [shareBody, setShareBody] = createSignal<string | null>(null);
 
   // ACL editor
   const [aclOpen, setAclOpen] = createSignal(false);
@@ -838,6 +850,16 @@ function AlbumGrid() {
         <p class="text-sm text-muted py-8 text-center">{t("photos.no_photos")}</p>
       </Show>
 
+      {/* Share composer — Show forces remount so initialBody is captured correctly */}
+      <Show when={shareBody() !== null}>
+        <PostComposer
+          open={true}
+          onClose={() => setShareBody(null)}
+          profileUid={auth()?.uid ?? 0}
+          initialBody={shareBody()!}
+        />
+      </Show>
+
       {/* Photo grid */}
       <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
         <For each={sortedPhotos()}>
@@ -873,6 +895,21 @@ function AlbumGrid() {
                   <Show when={isSelected()}>
                     <div class="absolute inset-0 ring-2 ring-accent ring-inset rounded-xl pointer-events-none" />
                   </Show>
+                </Show>
+
+                {/* Share button (authenticated users, non-select mode) */}
+                <Show when={!!auth() && !selectMode()}>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShareBody(buildShareBody(photo.src, photo.title, photo.description));
+                    }}
+                    title={t("photos.share")}
+                    class="absolute bottom-1.5 left-1.5 p-1 rounded-lg bg-black/50 text-white
+                           opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <MdOutlineShare size={16} />
+                  </button>
                 </Show>
 
                 {/* Per-photo delete (owner, non-select mode) */}
@@ -957,6 +994,7 @@ function ImageView() {
   const { t }     = useI18n();
   const d         = detail;
 
+  const [shareOpen, setShareOpen]         = createSignal(false);
   const [replyOpen, setReplyOpen]         = createSignal(false);
   const [showComments, setShowComments]   = createSignal(true);
   const [threaded, setThreaded]           = createSignal(true);
@@ -1152,6 +1190,16 @@ function ImageView() {
 
   return (
     <div class="flex flex-col gap-4">
+      {/* Share composer — Show forces remount so initialBody is captured correctly */}
+      <Show when={shareOpen() && !!d()}>
+        <PostComposer
+          open={true}
+          onClose={() => setShareOpen(false)}
+          profileUid={auth()?.uid ?? 0}
+          initialBody={buildShareBody(d()!.src, d()!.title, d()!.description)}
+        />
+      </Show>
+
       {/* Image editor overlay */}
       <Show when={editFile()}>
         {(file) => (
@@ -1373,12 +1421,26 @@ function ImageView() {
               </button>
             </Show>
 
-            {/* Reply — pushed to right */}
+            {/* Share — pushed to right */}
+            <Show when={!!auth()}>
+              <button
+                onClick={() => setShareOpen(v => !v)}
+                title={t("photos.share")}
+                class={`ml-auto flex items-center px-2 py-1.5 rounded-lg text-sm font-medium
+                       transition-colors hover:bg-overlay
+                       ${shareOpen() ? 'text-accent' : 'text-muted hover:text-txt'}`}
+              >
+                <MdOutlineShare size={17} />
+              </button>
+            </Show>
+
+            {/* Reply */}
             <Show when={d()?.item_id}>
               <button
                 onClick={() => setReplyOpen(v => !v)}
-                class="ml-auto flex items-center px-2 py-1.5 rounded-lg text-sm font-medium
-                       text-muted hover:bg-overlay hover:text-txt transition-colors"
+                class={`flex items-center px-2 py-1.5 rounded-lg text-sm font-medium
+                       transition-colors hover:bg-overlay
+                       ${replyOpen() ? 'text-accent' : 'text-muted hover:text-txt'}`}
                 title={t("photos.comment")}
               >
                 <MdOutlineReply size={17} />
