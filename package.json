@@ -9,7 +9,8 @@
     "build:sw": "node build-sw.mjs",
     "build:all": "vite build && node build-sw.mjs",
     "watch": "vite build --watch",
-    "typecheck": "tsc -b --watch"
+    "typecheck": "tsc -b --watch",
+    "games:download": "node scripts/download-puzzles.mjs"
   },
   "dependencies": {
     "@bbob/html": "^4.3.1",

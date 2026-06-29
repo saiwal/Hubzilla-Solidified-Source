@@ -4,6 +4,7 @@ import { layout }     from "./layout";
 import { ui }         from "./ui";
 import { widgets }    from "./widgets";
 import { tools }      from "./tools";
+import { games }      from "./games";
 import { post }       from "./post";
 import { help }       from "./help";
 import { connection } from "./connection";
@@ -35,6 +36,7 @@ export const dict: RawDictionary = {
   ui,
   widgets,
   tools,
+  games,
   post,
   help,
   connection,

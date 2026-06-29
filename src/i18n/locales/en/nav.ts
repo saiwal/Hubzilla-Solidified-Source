@@ -19,6 +19,7 @@ export const nav: RawDictionary["nav"] = {
   wiki:          "Wiki",
   notepad:       "Notepad",
   tools:         "Tools",
+  games:         "Games",
   // action items
   profile:       "Profile",
   edit_profile:  "Edit Profile",

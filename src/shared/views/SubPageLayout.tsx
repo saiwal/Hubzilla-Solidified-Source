@@ -22,6 +22,7 @@ interface Props {
   items: SubPageItem[];
   activeKey: string;
   children: JSX.Element;
+  sidebarFooter?: JSX.Element;
 }
 
 function isVisible(item: SubPageItem, role: string, installed: Set<string>): boolean {
@@ -68,6 +69,9 @@ export default function SubPageLayout(props: Props) {
           items={visibleItems()}
           activeKey={props.activeKey}
         />
+        <Show when={props.sidebarFooter}>
+          <div class="px-4 pb-3 mt-auto">{props.sidebarFooter}</div>
+        </Show>
       </aside>
 
       {/* ── Right detail ─────────────────────────────────── */}

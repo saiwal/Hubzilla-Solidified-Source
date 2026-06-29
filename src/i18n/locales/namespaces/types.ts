@@ -2,6 +2,50 @@
 // All locale files import from here — never redeclare this type locally.
 
 export type RawDictionary = {
+  games: {
+    label:    string;
+    blackbox: string;
+    bridges:  string;
+    cube:     string;
+    dominosa: string;
+    fifteen:  string;
+    filling:  string;
+    flip:     string;
+    flood:    string;
+    galaxies: string;
+    group:    string;
+    guess:    string;
+    inertia:  string;
+    keen:     string;
+    lightup:  string;
+    loopy:    string;
+    magnets:  string;
+    map:      string;
+    mines:    string;
+    mosaic:   string;
+    net:      string;
+    netslide: string;
+    palisade: string;
+    pattern:  string;
+    pearl:    string;
+    pegs:     string;
+    range:    string;
+    rect:     string;
+    samegame: string;
+    signpost: string;
+    singles:  string;
+    sixteen:  string;
+    slant:    string;
+    solo:     string;
+    tents:    string;
+    towers:   string;
+    tracks:   string;
+    twiddle:  string;
+    undead:   string;
+    unequal:  string;
+    unruly:   string;
+    untangle: string;
+  };
   nav: {
     articles:      string;
     calendar:      string;
@@ -21,6 +65,7 @@ export type RawDictionary = {
     wiki:          string;
     notepad:       string;
     tools:         string;
+    games:         string;
     // action items
     profile:       string;
     edit_profile:  string;
