@@ -3,6 +3,7 @@ import { Portal } from "solid-js/web";
 import { createMediaQuery } from "@solid-primitives/media";
 import { MdOutlinePerson, MdOutlinePerson_add, MdOutlineEdit, MdOutlineEmail, MdOutlineChat_bubble, MdOutlineCheck } from "solid-icons/md";
 import { useAuth } from "@/shared/store/auth-store";
+import { useNavViewer } from "@/shared/store/nav-store";
 import { addConnection } from "@/modules/directory/people/api";
 import { fetchConnectionByAddress } from "@/modules/directory/connections/api";
 import type { Connection } from "@/modules/directory/connections/api";
@@ -45,6 +46,15 @@ function networkBadge(network?: string): NetworkBadge | null {
   }
 }
 
+function buildChatRoomName(names: string[]): string {
+  if (names.length === 0) return "Chat";
+  if (names.length === 1) return `Chat with ${names[0]}`;
+  if (names.length === 2) return `Chat with ${names[0]} and ${names[1]}`;
+  if (names.length === 3) return `Chat with ${names[0]}, ${names[1]}, and ${names[2]}`;
+  const more = names.length - 3;
+  return `Chat with ${names[0]}, ${names[1]}, ${names[2]}, and ${more} more`;
+}
+
 export default function AuthorPopover(props: Props) {
   const { t, locale } = useI18n();
   const [open, setOpen] = createSignal(false);
@@ -54,9 +64,14 @@ export default function AuthorPopover(props: Props) {
   const [xchanHash, setXchanHash] = createSignal<string | null>(null);
   const [pdesc, setPdesc] = createSignal<string>("");
   const [chatCreating, setChatCreating] = createSignal(false);
+  const [chatPanelOpen, setChatPanelOpen] = createSignal(false);
+  const [chatExpire, setChatExpire] = createSignal(0);
+  const [chatCustomMode, setChatCustomMode] = createSignal(false);
+  const [chatCustomInput, setChatCustomInput] = createSignal("60");
   const [popoverPos, setPopoverPos] = createSignal<{ top: number; left: number } | null>(null);
   const canHover = createMediaQuery("(hover: hover) and (pointer: fine)");
   const auth = useAuth();
+  const navViewer = useNavViewer();
   const navigate = useNavigate();
   let closeTimer: ReturnType<typeof setTimeout> | null = null;
   let triggerRef!: HTMLDivElement;
@@ -159,18 +174,27 @@ export default function AuthorPopover(props: Props) {
     setDmOpen(true);
   }
 
+  function handleChatButtonClick(e: MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setChatPanelOpen((v) => !v);
+    setChatExpire(0);
+    setChatCustomMode(false);
+    setChatCustomInput("60");
+  }
+
   async function handleStartChat(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
     const hash = xchanHash();
     const nick = auth()?.nick;
     if (!hash || !nick) return;
-    setOpen(false);
+    setChatPanelOpen(false);
     setChatCreating(true);
     try {
       const room = await createRoom(nick, {
-        name: props.name,
-        expire: 0,
+        name: buildChatRoomName([props.name, navViewer()?.name].filter(Boolean) as string[]),
+        expire: chatExpire(),
         visibility: "private",
         allow_cid: [hash],
       });
@@ -341,7 +365,7 @@ export default function AuthorPopover(props: Props) {
                       <MdOutlineEmail size={16} />
                     </button>
                     <button
-                      onClick={handleStartChat}
+                      onClick={handleChatButtonClick}
                       disabled={chatCreating()}
                       title={t("ui.start_chatroom")}
                       class="w-8 h-8 flex items-center justify-center rounded-lg border border-rim text-muted
@@ -354,6 +378,63 @@ export default function AuthorPopover(props: Props) {
                     </button>
                   </Show>
                 </Show>
+              </div>
+            </Show>
+
+            {/* Expiry picker — shown after clicking the chat icon */}
+            <Show when={chatPanelOpen()}>
+              <div class="px-3 pb-3 border-t border-rim/50 pt-2 space-y-2">
+                <p class="text-[11px] text-muted">{t("chat.expire_after")}</p>
+                <div class="flex gap-1.5 flex-wrap items-center">
+                  {([
+                    [0,     "Never"],
+                    [5,     "5m"],
+                    [60,    "1h"],
+                    [1440,  "24h"],
+                    [10080, "1w"],
+                  ] as [number, string][]).map(([val, label]) => (
+                    <button
+                      onClick={() => { setChatExpire(val); setChatCustomMode(false); }}
+                      class={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                        chatExpire() === val && !chatCustomMode()
+                          ? "border-accent text-accent bg-accent/10"
+                          : "border-rim text-muted hover:border-accent hover:text-accent"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => { setChatCustomMode(true); setChatExpire(parseInt(chatCustomInput()) || 60); }}
+                    class={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                      chatCustomMode()
+                        ? "border-accent text-accent bg-accent/10"
+                        : "border-rim text-muted hover:border-accent hover:text-accent"
+                    }`}
+                  >
+                    Custom
+                  </button>
+                  <Show when={chatCustomMode()}>
+                    <input
+                      type="number"
+                      min="1"
+                      max="10080"
+                      value={chatCustomInput()}
+                      onInput={(e) => {
+                        setChatCustomInput(e.currentTarget.value);
+                        setChatExpire(parseInt(e.currentTarget.value) || 0);
+                      }}
+                      placeholder="min"
+                      class="w-16 bg-surface border border-accent text-txt text-xs rounded-md px-2 py-1 focus:outline-none"
+                    />
+                  </Show>
+                </div>
+                <button
+                  onClick={handleStartChat}
+                  class="w-full text-xs bg-accent text-accent-fg rounded-lg py-1.5 hover:opacity-90 transition-opacity"
+                >
+                  {t("chat.create")}
+                </button>
               </div>
             </Show>
           </div>

@@ -18,12 +18,15 @@ import {
 	chatLoading,
 	viewerHash,
 	roomName,
+	roomExpire,
+	roomIsOwner,
 	roomAcl,
 	enterRoom,
 	exitRoom,
 	pinRoom,
 	unpinRoom,
 	isRoomPinned,
+	updateChatRoomExpire,
 	type PinnedRoom,
 } from "../store";
 import {
@@ -34,7 +37,7 @@ import {
 	removeChatBookmark,
 } from "../bookmarks";
 import { isLocalUser } from "@/shared/store/auth-store";
-import { MdFillArrow_back, MdFillPeople, MdFillChat, MdFillLock, MdFillLock_open } from "solid-icons/md";
+import { MdFillArrow_back, MdFillPeople, MdFillChat, MdFillLock, MdFillLock_open, MdOutlineTimer } from "solid-icons/md";
 import formatPostDate from "@/shared/lib/date";
 import ChatComposer from "../ChatComposer";
 import DOMPurify from "dompurify";
@@ -50,6 +53,10 @@ export default function ChatRoomView() {
 	const roomId = () => parseInt(params.roomId);
 
 	const [showPresence, setShowPresence] = createSignal(false);
+	const [expireEditing, setExpireEditing] = createSignal(false);
+	const [expireUpdating, setExpireUpdating] = createSignal(false);
+	const [expireCustomMode, setExpireCustomMode] = createSignal(false);
+	const [expireCustomInput, setExpireCustomInput] = createSignal("60");
 
 	let messagesEl: HTMLDivElement | undefined;
 
@@ -103,6 +110,25 @@ export default function ChatRoomView() {
 		if (n && r) exitRoom(n, r);
 	});
 
+	async function handleSetExpire(val: number) {
+		setExpireUpdating(true);
+		try {
+			await updateChatRoomExpire(nick(), roomId(), val);
+		} finally {
+			setExpireUpdating(false);
+			setExpireEditing(false);
+			setExpireCustomMode(false);
+			setExpireCustomInput("60");
+		}
+	}
+
+	function expireLabel(minutes: number): string {
+		if (minutes === 0) return t("chat.expire_never") as string;
+		if (minutes < 60) return `${minutes}m`;
+		if (minutes < 1440) return `${Math.round(minutes / 60)}h`;
+		return `${Math.round(minutes / 1440)}d`;
+	}
+
 	const presenceCount = createMemo(() => presence().length);
 	const isRestricted = createMemo(() => {
 		const acl = roomAcl();
@@ -154,6 +180,23 @@ export default function ChatRoomView() {
 						</span>
 					</Show>
 				</div>
+
+				{/* Expiry badge — clickable for owner */}
+				<Show when={!chatLoading()}>
+					<button
+						onClick={() => roomIsOwner() && setExpireEditing((v) => !v)}
+						title={roomIsOwner() ? (t("chat.expire_after") as string) : undefined}
+						class={`flex items-center gap-1 shrink-0 text-xs px-1.5 py-0.5 rounded-full border transition-colors ${
+							roomIsOwner()
+								? "border-rim hover:border-accent hover:text-accent cursor-pointer"
+								: "border-rim cursor-default"
+						} text-muted`}
+					>
+						<MdOutlineTimer size={11} />
+						<span class="hidden sm:inline">{expireLabel(roomExpire())}</span>
+					</button>
+				</Show>
+
 				<Show when={isLocalUser()}>
 					<button
 						onClick={togglePin}
@@ -196,6 +239,69 @@ export default function ChatRoomView() {
 					{presenceCount()} online
 				</button>
 			</div>
+
+			{/* Expiry picker — owner only */}
+			<Show when={expireEditing()}>
+				<div class="px-4 py-2 border-b border-rim bg-surface flex items-center gap-3 flex-wrap">
+					<span class="text-xs text-muted shrink-0">{t("chat.expire_after")}</span>
+					<div class="flex gap-1.5 flex-wrap items-center">
+						{([
+							[0,     "Never"],
+							[5,     "5m"],
+							[60,    "1h"],
+							[1440,  "24h"],
+							[10080, "1w"],
+						] as [number, string][]).map(([val, label]) => (
+							<button
+								onClick={() => { void handleSetExpire(val); setExpireCustomMode(false); }}
+								disabled={expireUpdating()}
+								class={`text-xs px-2.5 py-1 rounded-md border transition-colors disabled:opacity-50 ${
+									roomExpire() === val && !expireCustomMode()
+										? "border-accent text-accent bg-accent/10"
+										: "border-rim text-muted hover:border-accent hover:text-accent"
+								}`}
+							>
+								{label}
+							</button>
+						))}
+						<button
+							onClick={() => { setExpireCustomMode(true); }}
+							disabled={expireUpdating()}
+							class={`text-xs px-2.5 py-1 rounded-md border transition-colors disabled:opacity-50 ${
+								expireCustomMode()
+									? "border-accent text-accent bg-accent/10"
+									: "border-rim text-muted hover:border-accent hover:text-accent"
+							}`}
+						>
+							Custom
+						</button>
+						<Show when={expireCustomMode()}>
+							<input
+								type="number"
+								min="1"
+								max="10080"
+								value={expireCustomInput()}
+								onInput={(e) => setExpireCustomInput(e.currentTarget.value)}
+								placeholder="min"
+								class="w-16 bg-surface border border-accent text-txt text-xs rounded-md px-2 py-1 focus:outline-none"
+							/>
+							<button
+								onClick={() => void handleSetExpire(parseInt(expireCustomInput()) || 0)}
+								disabled={expireUpdating()}
+								class="text-xs px-2.5 py-1 rounded-md bg-accent text-accent-fg hover:opacity-90 transition-opacity disabled:opacity-50"
+							>
+								Set
+							</button>
+						</Show>
+					</div>
+					<button
+						onClick={() => setExpireEditing(false)}
+						class="ml-auto text-xs text-muted hover:text-txt transition-colors"
+					>
+						{t("chat.cancel")}
+					</button>
+				</div>
+			</Show>
 
 			<div class="flex flex-1 min-h-0">
 				{/* Messages area */}

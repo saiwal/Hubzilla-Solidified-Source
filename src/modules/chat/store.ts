@@ -9,6 +9,7 @@ import {
   leaveRoom as apiLeave,
   createRoom as apiCreate,
   dropRoom as apiDrop,
+  updateRoom as apiUpdate,
 } from "./api";
 
 // ── Room list state (persists across navigation) ───────────────────────────────
@@ -44,9 +45,11 @@ const [sendError, setSendError] = createSignal<string | null>(null);
 const [activeRoomId, setActiveRoomId] = createSignal<number | null>(null);
 const [viewerHash, setViewerHash] = createSignal("");
 const [roomName, setRoomName] = createSignal("");
+const [roomExpire, setRoomExpire] = createSignal(0);
+const [roomIsOwner, setRoomIsOwner] = createSignal(false);
 const [roomAcl, setRoomAcl] = createSignal<ChatRoomAcl | null>(null);
 
-export { messages, presence, chatLoading, sendError, activeRoomId, viewerHash, roomName, roomAcl };
+export { messages, presence, chatLoading, sendError, activeRoomId, viewerHash, roomName, roomExpire, roomIsOwner, roomAcl };
 
 // Track the latest message timestamp for polling
 let lastSince: string | undefined;
@@ -64,6 +67,8 @@ export async function enterRoom(
     setMessages([]);
     setPresence([]);
     setRoomName("");
+    setRoomExpire(0);
+    setRoomIsOwner(false);
     setRoomAcl(null);
     lastSince = undefined;
     setChatLoading(true);
@@ -75,9 +80,11 @@ export async function enterRoom(
     batch(() => {
       setMessages(data.messages);
       setPresence(data.presence);
-      if (data.viewer_hash) setViewerHash(data.viewer_hash);
-      if (data.room_name)   setRoomName(data.room_name);
-      if (data.room_acl)    setRoomAcl(data.room_acl);
+      if (data.viewer_hash)           setViewerHash(data.viewer_hash);
+      if (data.room_name)             setRoomName(data.room_name);
+      if (data.room_expire != null)   setRoomExpire(data.room_expire);
+      if (data.is_room_owner != null) setRoomIsOwner(data.is_room_owner);
+      if (data.room_acl)              setRoomAcl(data.room_acl);
       if (data.messages.length > 0)
         lastSince = data.messages[data.messages.length - 1].created;
       setChatLoading(false);
@@ -166,6 +173,16 @@ export async function createChatRoom(
   return room;
 }
 
+export async function updateChatRoomExpire(
+  nick: string,
+  roomId: number,
+  expire: number,
+): Promise<void> {
+  const result = await apiUpdate(nick, roomId, { expire });
+  setRoomExpire(result.expire);
+  setRooms((prev) => prev.map((r) => r.id === roomId ? { ...r, expire: result.expire } : r));
+}
+
 export async function deleteChatRoom(
   nick: string,
   roomId: number,
@@ -182,6 +199,8 @@ export function resetChat(): void {
     setPresence([]);
     setActiveRoomId(null);
     setViewerHash("");
+    setRoomExpire(0);
+    setRoomIsOwner(false);
     setRoomAcl(null);
     lastSince = undefined;
   });

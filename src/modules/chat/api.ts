@@ -56,6 +56,8 @@ export interface ChatMessagesResponse {
   presence: PresenceMember[];
   viewer_hash: string;
   room_name: string;
+  room_expire?: number;
+  is_room_owner?: boolean;
   room_acl?: ChatRoomAcl;
 }
 
@@ -147,6 +149,23 @@ export async function createRoom(
   if (!res.ok) {
     const err = await res.json().catch(() => null);
     throw new Error(err?.error?.message ?? `Create failed: ${res.status}`);
+  }
+  const json = await res.json();
+  return json.data;
+}
+
+export async function updateRoom(
+  nick: string,
+  roomId: number,
+  opts: { expire?: number; name?: string },
+): Promise<{ id: number; name: string; expire: number }> {
+  const res = await apiFetch(`/api/chat/${nick}/${roomId}/update`, {
+    method: "POST",
+    body: JSON.stringify(opts),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(err?.error?.message ?? `Update failed: ${res.status}`);
   }
   const json = await res.json();
   return json.data;
