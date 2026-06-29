@@ -43,4 +43,6 @@ export const chat: RawDictionary["chat"] = {
   pinned_chats:     "पिन किए गए चैट",
   pin_to_sidebar:   "साइडबार में पिन करें",
   unpin:            "अनपिन करें",
+  expire_never:     "कभी समाप्त नहीं",
+  expire_label:     "समाप्त होता है",
 };

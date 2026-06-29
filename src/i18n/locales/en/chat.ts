@@ -47,4 +47,6 @@ export const chat: RawDictionary["chat"] = {
   pinned_chats:     "Pinned Chats",
   pin_to_sidebar:   "Pin to sidebar",
   unpin:            "Unpin",
+  expire_never:     "Never expires",
+  expire_label:     "Expires in",
 };

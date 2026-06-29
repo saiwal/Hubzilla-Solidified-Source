@@ -1228,6 +1228,8 @@ export type RawDictionary = {
     pinned_chats:     string;
     pin_to_sidebar:   string;
     unpin:            string;
+    expire_never:     string;
+    expire_label:     string;
   };
   files_mod: {
     new_folder:       string;

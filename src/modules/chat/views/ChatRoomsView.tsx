@@ -24,9 +24,17 @@ import {
   MdFillPeople,
   MdFillDelete,
   MdFillSchedule,
+  MdOutlineTimer,
 } from "solid-icons/md";
 import formatPostDate from "@/shared/lib/date";
 import AclPicker, { entryKey, type AclMode, type AclEntry } from "@/shared/editor/components/AclPicker";
+
+function formatExpiry(minutes: number, neverLabel: string, expiresLabel: string): string {
+  if (minutes === 0) return neverLabel;
+  if (minutes < 60) return `${expiresLabel} ${minutes}m`;
+  if (minutes < 1440) return `${expiresLabel} ${Math.round(minutes / 60)}h`;
+  return `${expiresLabel} ${Math.round(minutes / 1440)}d`;
+}
 
 // ── Main view ─────────────────────────────────────────────────────────────────
 
@@ -276,6 +284,10 @@ export default function ChatRoomsView() {
                           {formatPostDate(room.last_msg!)}
                         </span>
                       </Show>
+                      <span class="flex items-center gap-1 text-xs text-muted">
+                        <MdOutlineTimer class="text-sm" />
+                        {formatExpiry(room.expire, t("chat.expire_never") as string, t("chat.expire_label") as string)}
+                      </span>
                     </div>
                   </div>
                 </button>

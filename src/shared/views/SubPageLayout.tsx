@@ -23,6 +23,8 @@ interface Props {
   activeKey: string;
   children: JSX.Element;
   sidebarFooter?: JSX.Element;
+  /** Override the content area wrapper classes. Default: "flex-1 overflow-y-auto" */
+  contentClass?: string;
 }
 
 function isVisible(item: SubPageItem, role: string, installed: Set<string>): boolean {
@@ -103,7 +105,7 @@ export default function SubPageLayout(props: Props) {
           </div>
         </Show>
 
-        <div class="flex-1 overflow-y-auto">
+        <div class={props.contentClass ?? "flex-1 overflow-y-auto"}>
           {props.children}
         </div>
       </main>

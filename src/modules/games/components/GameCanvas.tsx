@@ -26,7 +26,7 @@ body{display:flex;flex-direction:column;position:relative}
 #puzzlecanvascontain{flex:1;min-height:0;position:relative;overflow:hidden}
 #apology{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--color-surface);padding:1em;text-align:center}
 #resizable{position:relative;margin:0 auto}
-#puzzlecanvas{display:block;font-family:sans-serif}
+#puzzlecanvas{display:block;font-family:sans-serif;max-width:100%;height:auto}
 #gamemenu{margin:0 0 .375em;font-weight:bold;font-size:.8em;text-align:center;color:var(--color-txt)}
 #gamemenu ul{list-style:none;display:flex;flex-wrap:wrap;justify-content:center;margin:0;padding:.5px}
 #gamemenu li{cursor:default;border:1px solid var(--color-rim);margin:-.5px;position:relative}
@@ -122,7 +122,7 @@ export default function GameCanvas(props: Props) {
   return (
     <iframe
       srcdoc={buildSrcdoc(props.gameId, import.meta.env.BASE_URL)}
-      style="width:100%;height:100%;border:none;display:block"
+      style="position:absolute;inset:0;width:100%;height:100%;border:none;display:block"
       title={`Puzzle: ${props.gameId}`}
     />
   );

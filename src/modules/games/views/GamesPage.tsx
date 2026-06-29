@@ -46,10 +46,16 @@ export default function GamesPage() {
   );
 
   return (
-    <SubPageLayout base="/games" items={items} activeKey={activeKey()} sidebarFooter={attribution}>
+    <SubPageLayout
+      base="/games"
+      items={items}
+      activeKey={activeKey()}
+      sidebarFooter={attribution}
+      contentClass="flex-1 min-h-0 overflow-hidden flex flex-col"
+    >
       <Show when={activeGame()} keyed>
         {(game) => (
-          <div class="relative h-full">
+          <div class="relative flex-1 min-h-0">
             {/* Captures clicks for help mode; transparent otherwise so iframe works normally */}
             <div
               use:helpable={`games.${game.id}`}
