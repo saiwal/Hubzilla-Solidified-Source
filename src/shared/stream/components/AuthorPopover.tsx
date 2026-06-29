@@ -3,7 +3,7 @@ import { Portal } from "solid-js/web";
 import { createMediaQuery } from "@solid-primitives/media";
 import { MdOutlinePerson, MdOutlinePerson_add, MdOutlineEdit, MdOutlineEmail, MdOutlineChat_bubble, MdOutlineCheck } from "solid-icons/md";
 import { useAuth } from "@/shared/store/auth-store";
-import { useNavViewer } from "@/shared/store/nav-store";
+import { useNavViewer, useInstalledApps } from "@/shared/store/nav-store";
 import { addConnection } from "@/modules/directory/people/api";
 import { fetchConnectionByAddress } from "@/modules/directory/connections/api";
 import type { Connection } from "@/modules/directory/connections/api";
@@ -72,6 +72,8 @@ export default function AuthorPopover(props: Props) {
   const canHover = createMediaQuery("(hover: hover) and (pointer: fine)");
   const auth = useAuth();
   const navViewer = useNavViewer();
+  const installedApps = useInstalledApps();
+  const chatroomsInstalled = () => installedApps().has("Chatrooms");
   const navigate = useNavigate();
   let closeTimer: ReturnType<typeof setTimeout> | null = null;
   let triggerRef!: HTMLDivElement;
@@ -364,25 +366,27 @@ export default function AuthorPopover(props: Props) {
                     >
                       <MdOutlineEmail size={16} />
                     </button>
-                    <button
-                      onClick={handleChatButtonClick}
-                      disabled={chatCreating()}
-                      title={t("ui.start_chatroom")}
-                      class="w-8 h-8 flex items-center justify-center rounded-lg border border-rim text-muted
-                             hover:border-accent hover:text-accent transition-colors
-                             disabled:opacity-50 disabled:cursor-default disabled:hover:border-rim disabled:hover:text-muted"
-                    >
-                      <Show when={!chatCreating()} fallback={<span class="w-3.5 h-3.5 border border-current border-t-transparent rounded-full animate-spin" />}>
-                        <MdOutlineChat_bubble size={16} />
-                      </Show>
-                    </button>
+                    <Show when={chatroomsInstalled()}>
+                      <button
+                        onClick={handleChatButtonClick}
+                        disabled={chatCreating()}
+                        title={t("ui.start_chatroom")}
+                        class="w-8 h-8 flex items-center justify-center rounded-lg border border-rim text-muted
+                               hover:border-accent hover:text-accent transition-colors
+                               disabled:opacity-50 disabled:cursor-default disabled:hover:border-rim disabled:hover:text-muted"
+                      >
+                        <Show when={!chatCreating()} fallback={<span class="w-3.5 h-3.5 border border-current border-t-transparent rounded-full animate-spin" />}>
+                          <MdOutlineChat_bubble size={16} />
+                        </Show>
+                      </button>
+                    </Show>
                   </Show>
                 </Show>
               </div>
             </Show>
 
             {/* Expiry picker — shown after clicking the chat icon */}
-            <Show when={chatPanelOpen()}>
+            <Show when={chatPanelOpen() && chatroomsInstalled()}>
               <div class="px-3 pb-3 border-t border-rim/50 pt-2 space-y-2">
                 <p class="text-[11px] text-muted">{t("chat.expire_after")}</p>
                 <div class="flex gap-1.5 flex-wrap items-center">

@@ -7,7 +7,12 @@ import type { ConnectionFilter, ConnectionOrder, Connection } from "../../connec
 import { deleteConnection, approveConnection, fetchConnectionByAddress } from "../../connections/api";
 import { addConnection } from "../../people/api";
 import ConnectionEditorModal from "@/shared/views/ConnectionEditorModal";
-import { MdOutlineEdit } from "solid-icons/md";
+import PostComposer from "@/shared/editor/composers/PostComposer";
+import { createRoom } from "@/modules/chat/api";
+import { MdOutlineEdit, MdOutlineEmail, MdOutlineChat_bubble } from "solid-icons/md";
+import { useAuth } from "@/shared/store/auth-store";
+import { useNavViewer, useInstalledApps } from "@/shared/store/nav-store";
+import { useNavigate } from "@solidjs/router";
 import { useI18n } from "@/i18n";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -39,8 +44,38 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
   const [busy, setBusy] = createSignal(false);
   const [expanded, setExpanded] = createSignal(false);
   const [editOpen, setEditOpen] = createSignal(false);
+  const [dmOpen, setDmOpen] = createSignal(false);
+  const [chatCreating, setChatCreating] = createSignal(false);
   const { t } = useI18n();
+  const auth = useAuth();
+  const navViewer = useNavViewer();
+  const installedApps = useInstalledApps();
+  const chatroomsInstalled = () => installedApps().has("Chatrooms");
+  const navigate = useNavigate();
   const networkLabel = () => NETWORK_LABELS[props.conn.network] ?? props.conn.network;
+
+  async function handleStartChat() {
+    const nick = auth()?.nick;
+    if (!nick) return;
+    setChatCreating(true);
+    try {
+      const names = [props.conn.name, navViewer()?.name].filter(Boolean) as string[];
+      const name = names.length >= 2
+        ? `Chat with ${names[0]} and ${names[1]}`
+        : `Chat with ${names[0]}`;
+      const room = await createRoom(nick, {
+        name,
+        expire: 0,
+        visibility: "custom",
+        allow_cid: [props.conn.xchan_hash],
+      });
+      navigate(`/chat/${nick}/${room.id}`);
+    } catch {
+      // ignore — chat app may not be installed
+    } finally {
+      setChatCreating(false);
+    }
+  }
 
   async function handleApprove() {
     setBusy(true);
@@ -112,6 +147,27 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
               {t("directory.approve")}
             </button>
           </Show>
+          <Show when={!props.conn.pending}>
+            <button
+              onClick={() => setDmOpen(true)}
+              title={t("ui.send_dm")}
+              class="p-1.5 rounded text-muted hover:text-txt hover:bg-overlay transition-colors"
+            >
+              <MdOutlineEmail size={14} />
+            </button>
+            <Show when={chatroomsInstalled()}>
+              <button
+                onClick={() => void handleStartChat()}
+                disabled={chatCreating()}
+                title={t("ui.start_chatroom")}
+                class="p-1.5 rounded text-muted hover:text-txt hover:bg-overlay disabled:opacity-50 transition-colors"
+              >
+                <Show when={!chatCreating()} fallback={<span class="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin inline-block" />}>
+                  <MdOutlineChat_bubble size={14} />
+                </Show>
+              </button>
+            </Show>
+          </Show>
           <button
             onClick={() => setExpanded((e) => !e)}
             class="p-1.5 rounded text-muted hover:text-txt hover:bg-overlay transition-colors"
@@ -168,6 +224,16 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
             setEditOpen(false);
             props.onDeleted();
           }}
+        />
+      </Show>
+
+      <Show when={dmOpen() && auth()}>
+        <PostComposer
+          open={dmOpen()}
+          onClose={() => setDmOpen(false)}
+          profileUid={auth()!.uid}
+          initialAclMode="custom"
+          initialAllowEntries={new Set([`c:${props.conn.xchan_hash}`])}
         />
       </Show>
     </div>
