@@ -9,6 +9,7 @@ import {
 import { useI18n } from "@/i18n";
 import { useNavigate, useParams } from "@solidjs/router";
 import { usePageNick } from "@/shared/store/site-config";
+import { useAuth } from "@/shared/store/auth-store";
 import {
   rooms,
   roomsLoading,
@@ -54,6 +55,8 @@ export default function ChatRoomsView() {
   const [denyEntries, setDenyEntries] = createSignal<Set<string>>(new Set<string>());
   const [creating, setCreating] = createSignal(false);
   const [formError, setFormError] = createSignal<string | null>(null);
+  const [sendInvite, setSendInvite] = createSignal(true);
+  const auth = useAuth();
 
   createEffect(on(nick, (n) => {
     if (n) loadRooms(n);
@@ -94,6 +97,7 @@ export default function ChatRoomsView() {
     setAclMode("public");
     clearEntries();
     setFormError(null);
+    setSendInvite(true);
   }
 
   async function handleCreate(e: Event) {
@@ -121,6 +125,24 @@ export default function ChatRoomsView() {
         deny_cid: denyCids,
         deny_gid: denyGids,
       });
+      if (sendInvite() && aclMode() === "custom" && allowCids.length > 0) {
+        const uid = auth()?.uid;
+        if (uid) {
+          const roomUrl = `${window.location.origin}/chat/${nick()}/${room.id}`;
+          for (const xchan of allowCids) {
+            const fd = new FormData();
+            fd.append("body", `You've been invited to the chatroom "${name}". [url=${roomUrl}]Join here[/url]`);
+            fd.append("mimetype", "text/bbcode");
+            fd.append("obj_type", "Note");
+            fd.append("profile_uid", String(uid));
+            fd.append("type", "wall");
+            fd.append("contact_allow[]", xchan);
+            fd.append("return", "");
+            fetch("/item", { method: "POST", credentials: "include", redirect: "manual", body: fd })
+              .catch(() => {});
+          }
+        }
+      }
       setShowForm(false);
       resetForm();
       navigate(`/chat/${nick()}/${room.id}`);
@@ -204,6 +226,18 @@ export default function ChatRoomsView() {
               {aclMode() === "custom" && t("chat.visibility_private")}
             </p>
           </div>
+
+          <Show when={aclMode() === "custom"}>
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={sendInvite()}
+                onChange={(e) => setSendInvite(e.currentTarget.checked)}
+                class="accent-accent w-3.5 h-3.5 cursor-pointer"
+              />
+              <span class="text-xs text-muted">Notify invited members</span>
+            </label>
+          </Show>
 
           <Show when={formError()}>
             <p class="text-xs text-red-500">{formError()}</p>

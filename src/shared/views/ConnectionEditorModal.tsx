@@ -7,6 +7,7 @@ import {
 } from "@/modules/directory/connections/api";
 import { fetchGroups } from "@/modules/directory/groups/api";
 import { toggleMember } from "@/modules/directory/groups/api";
+import { fetchProfiles } from "@/modules/profiles/api/api";
 import { useI18n } from "@/i18n";
 
 interface Props {
@@ -70,6 +71,8 @@ export default function ConnectionEditorModal(props: Props) {
   const [deleting, setDeleting] = createSignal(false);
   const [confirmDelete, setConfirmDelete] = createSignal(false);
 
+  const [profileId, setProfileId] = createSignal<number | null>(props.connection.profile_id ?? null);
+
   const [checkedGroupIds, setCheckedGroupIds] = createSignal<Set<number>>(new Set());
   let initialGroupIds = new Set<number>();
 
@@ -77,6 +80,15 @@ export default function ConnectionEditorModal(props: Props) {
     try { return await fetchGroups(); }
     catch { return []; }
   });
+
+  const [profilesResult] = createResource(async () => {
+    try { return await fetchProfiles(); }
+    catch { return null; }
+  });
+
+  // Only show the profile selector when multi-profiles are enabled and there are non-default profiles
+  const extraProfiles = () =>
+    (profilesResult()?.profiles ?? []).filter((p) => !p.is_default);
 
   const [connectionGroupIds] = createResource(
     () => props.connection.id,
@@ -124,6 +136,7 @@ export default function ConnectionEditorModal(props: Props) {
         hidden: hidden(),
         incl: incl(),
         excl: excl(),
+        profile_id: profileId(),
       });
 
       const current = checkedGroupIds();
@@ -308,6 +321,29 @@ export default function ConnectionEditorModal(props: Props) {
                         )}
                       </For>
                     </div>
+                  </div>
+                </Show>
+
+                {/* Profile assignment — only when multi-profiles are active */}
+                <Show when={extraProfiles().length > 0}>
+                  <div>
+                    <label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">
+                      {t("connection.profile_label")}
+                    </label>
+                    <select
+                      value={profileId() ?? ""}
+                      onChange={(e) => {
+                        const v = e.currentTarget.value;
+                        setProfileId(v === "" ? null : Number(v));
+                      }}
+                      class="w-full px-3 py-2 rounded-lg border border-rim bg-surface text-txt text-sm
+                             focus:outline-none hover:border-rim-strong transition-colors"
+                    >
+                      <option value="">{t("connection.profile_default")}</option>
+                      <For each={extraProfiles()}>
+                        {(p) => <option value={String(p.id)}>{p.profile_name}</option>}
+                      </For>
+                    </select>
                   </div>
                 </Show>
 

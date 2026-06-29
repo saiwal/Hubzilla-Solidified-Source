@@ -65,6 +65,16 @@ export const profiles: RawDictionary["profiles"] = {
   dislikes:           "नापसंद",
   contact:            "संपर्क जानकारी",
   channels:           "अन्य चैनल",
+  // contacts assignment
+  contacts_title:      "असाइन किए गए संपर्क",
+  contacts_desc:       "वे संपर्क जो डिफ़ॉल्ट के बजाय यह प्रोफ़ाइल देखेंगे।",
+  contacts_empty:      "अभी तक कोई संपर्क इस प्रोफ़ाइल में असाइन नहीं।",
+  contacts_remove:     "हटाएँ",
+  contacts_add:        "संपर्क जोड़ें",
+  contacts_search:     "संपर्क खोजें…",
+  contacts_none_found: "कोई मेल खाने वाला संपर्क नहीं।",
+  contacts_load_error: "संपर्क लोड करने में विफल।",
+  contacts_save_error: "संपर्क असाइनमेंट अपडेट करने में विफल।",
   // photo uploaders
   avatar_editor_title: "प्रोफ़ाइल फ़ोटो संपादित करें",
   cover_editor_title:  "कवर फ़ोटो संपादित करें",

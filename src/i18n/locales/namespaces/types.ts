@@ -224,6 +224,9 @@ export type RawDictionary = {
     filter_excl_hint:   string;
     // Privacy groups
     privacy_groups:     string;
+    // Profile assignment
+    profile_label:      string;
+    profile_default:    string;
   };
   auth: {
     sign_in:           string;
@@ -246,6 +249,8 @@ export type RawDictionary = {
     no_popular:     string;
     load_error:     string;
     show_more_tags: string;
+    archive:        string;
+    no_archive:     string;
   };
   tools: {
     label:            string;
@@ -596,6 +601,16 @@ export type RawDictionary = {
     avatar_error:        string;
     cover_saved:         string;
     cover_error:         string;
+    // contacts assignment
+    contacts_title:      string;
+    contacts_desc:       string;
+    contacts_empty:      string;
+    contacts_remove:     string;
+    contacts_add:        string;
+    contacts_search:     string;
+    contacts_none_found: string;
+    contacts_load_error: string;
+    contacts_save_error: string;
   };
   settings: {
     // Section titles and descriptions

@@ -42,4 +42,7 @@ export const connection: RawDictionary["connection"] = {
   filter_excl_hint: "शब्द, #टैग, /पैटर्न/, या lang=xx — प्रति पंक्ति एक। कुछ भी न छोड़ने के लिए खाली छोड़ें।",
   // Privacy groups
   privacy_groups:   "गोपनीयता समूह",
+  // Profile assignment
+  profile_label:    "संपर्क को दिखाई जाने वाली प्रोफ़ाइल",
+  profile_default:  "डिफ़ॉल्ट प्रोफ़ाइल",
 };

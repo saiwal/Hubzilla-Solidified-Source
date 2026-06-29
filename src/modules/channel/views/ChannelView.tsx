@@ -103,7 +103,7 @@ export default function ChannelView() {
           available={["feed", "masonry", "list", "inbox"]}
         />
       </div>
-      <Show when={searchParams.cat || searchParams.tag}>
+      <Show when={searchParams.cat || searchParams.tag || searchParams.dbegin}>
         <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/10 border border-accent/25 text-sm mb-3">
           <span class="text-muted">{t("channel.filtered_by")}</span>
           <Show when={searchParams.cat}>
@@ -112,9 +112,14 @@ export default function ChannelView() {
           <Show when={searchParams.tag}>
             <span class="font-medium text-accent">#{searchParams.tag}</span>
           </Show>
+          <Show when={searchParams.dbegin}>
+            <span class="font-medium text-accent">
+              {new Date(String(searchParams.dbegin) + "T00:00:00").toLocaleDateString(undefined, { month: "long", year: "numeric" })}
+            </span>
+          </Show>
           <button
             type="button"
-            onClick={() => setSearchParams({ cat: undefined, tag: undefined })}
+            onClick={() => setSearchParams({ cat: undefined, tag: undefined, dbegin: undefined, dend: undefined })}
             class="ml-auto text-xs text-muted hover:text-txt transition-colors"
           >
             {t("channel.clear")}

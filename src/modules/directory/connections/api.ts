@@ -39,6 +39,7 @@ export interface Connection {
   role: string;
   status: ConnectionStatus[];
   pending: boolean;
+  profile_id: number | null;
 }
 
 export interface ConnectionsMeta {
@@ -144,6 +145,7 @@ export async function updateConnection(
     hidden?: boolean;
     incl?: string;
     excl?: string;
+    profile_id?: number | null;
   },
 ): Promise<void> {
   const res = await apiFetch(`/api/connections/${abookId}`, {

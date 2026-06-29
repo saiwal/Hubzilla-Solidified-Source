@@ -1,4 +1,4 @@
-import { For, Show, createSignal } from "solid-js";
+import { For, Show, Switch, Match, createSignal, createEffect, onMount, onCleanup, batch, untrack } from "solid-js";
 import {
   connectionsData, refetch, setFilter, setOrder, setSearch, setPage,
   filter, order, search, page, LIMIT,
@@ -45,7 +45,12 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
   const [expanded, setExpanded] = createSignal(false);
   const [editOpen, setEditOpen] = createSignal(false);
   const [dmOpen, setDmOpen] = createSignal(false);
+  const [chatPanelOpen, setChatPanelOpen] = createSignal(false);
   const [chatCreating, setChatCreating] = createSignal(false);
+  const [chatExpire, setChatExpire] = createSignal(0);
+  const [chatCustomMode, setChatCustomMode] = createSignal(false);
+  const [chatCustomInput, setChatCustomInput] = createSignal("60");
+  const [sendInvite, setSendInvite] = createSignal(true);
   const { t } = useI18n();
   const auth = useAuth();
   const navViewer = useNavViewer();
@@ -54,9 +59,19 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
   const navigate = useNavigate();
   const networkLabel = () => NETWORK_LABELS[props.conn.network] ?? props.conn.network;
 
+  function handleChatButtonClick() {
+    setChatPanelOpen((v) => !v);
+    setChatExpire(0);
+    setChatCustomMode(false);
+    setChatCustomInput("60");
+    setSendInvite(true);
+  }
+
   async function handleStartChat() {
     const nick = auth()?.nick;
-    if (!nick) return;
+    const uid  = auth()?.uid;
+    if (!nick || !uid) return;
+    setChatPanelOpen(false);
     setChatCreating(true);
     try {
       const names = [props.conn.name, navViewer()?.name].filter(Boolean) as string[];
@@ -65,10 +80,25 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
         : `Chat with ${names[0]}`;
       const room = await createRoom(nick, {
         name,
-        expire: 0,
+        expire: chatExpire(),
         visibility: "custom",
         allow_cid: [props.conn.xchan_hash],
       });
+
+      if (sendInvite()) {
+        const roomUrl = `${window.location.origin}/chat/${nick}/${room.id}`;
+        const fd = new FormData();
+        fd.append("body", `I've started a chatroom for us. [url=${roomUrl}]Join here[/url]`);
+        fd.append("mimetype", "text/bbcode");
+        fd.append("obj_type", "Note");
+        fd.append("profile_uid", String(uid));
+        fd.append("type", "wall");
+        fd.append("contact_allow[]", props.conn.xchan_hash);
+        fd.append("return", "");
+        fetch("/item", { method: "POST", credentials: "include", redirect: "manual", body: fd })
+          .catch(() => {});
+      }
+
       navigate(`/chat/${nick}/${room.id}`);
     } catch {
       // ignore — chat app may not be installed
@@ -157,10 +187,10 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
             </button>
             <Show when={chatroomsInstalled()}>
               <button
-                onClick={() => void handleStartChat()}
+                onClick={handleChatButtonClick}
                 disabled={chatCreating()}
                 title={t("ui.start_chatroom")}
-                class="p-1.5 rounded text-muted hover:text-txt hover:bg-overlay disabled:opacity-50 transition-colors"
+                class={`p-1.5 rounded transition-colors disabled:opacity-50 ${chatPanelOpen() ? "text-accent bg-accent/10" : "text-muted hover:text-txt hover:bg-overlay"}`}
               >
                 <Show when={!chatCreating()} fallback={<span class="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin inline-block" />}>
                   <MdOutlineChat_bubble size={14} />
@@ -200,6 +230,79 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
           </button>
         </div>
       </div>
+
+      <Show when={chatPanelOpen()}>
+        <div class="px-3 pb-3 pt-2 border-t border-rim/50 space-y-2">
+          <p class="text-[11px] text-muted">{t("chat.expire_after")}</p>
+          <div class="flex gap-1.5 flex-wrap items-center">
+            {([
+              [0,     "Never"],
+              [5,     "5m"],
+              [60,    "1h"],
+              [1440,  "24h"],
+              [10080, "1w"],
+            ] as [number, string][]).map(([val, label]) => (
+              <button
+                onClick={() => { setChatExpire(val); setChatCustomMode(false); }}
+                class={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                  chatExpire() === val && !chatCustomMode()
+                    ? "border-accent text-accent bg-accent/10"
+                    : "border-rim text-muted hover:border-accent hover:text-accent"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+            <button
+              onClick={() => { setChatCustomMode(true); setChatExpire(parseInt(chatCustomInput()) || 60); }}
+              class={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                chatCustomMode()
+                  ? "border-accent text-accent bg-accent/10"
+                  : "border-rim text-muted hover:border-accent hover:text-accent"
+              }`}
+            >
+              Custom
+            </button>
+            <Show when={chatCustomMode()}>
+              <input
+                type="number"
+                min="1"
+                max="10080"
+                value={chatCustomInput()}
+                onInput={(e) => {
+                  setChatCustomInput(e.currentTarget.value);
+                  setChatExpire(parseInt(e.currentTarget.value) || 0);
+                }}
+                placeholder="min"
+                class="w-16 bg-surface border border-accent text-txt text-xs rounded-md px-2 py-1 focus:outline-none"
+              />
+            </Show>
+          </div>
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={sendInvite()}
+              onChange={(e) => setSendInvite(e.currentTarget.checked)}
+              class="accent-accent w-3.5 h-3.5 cursor-pointer"
+            />
+            <span class="text-[11px] text-muted">Notify {props.conn.name}</span>
+          </label>
+          <div class="flex gap-2">
+            <button
+              onClick={() => void handleStartChat()}
+              class="text-xs bg-accent text-accent-fg rounded-lg px-4 py-1.5 hover:opacity-90 transition-opacity"
+            >
+              {t("chat.create")}
+            </button>
+            <button
+              onClick={() => setChatPanelOpen(false)}
+              class="text-xs border border-rim text-muted rounded-lg px-3 py-1.5 hover:bg-overlay transition-colors"
+            >
+              {t("chat.cancel")}
+            </button>
+          </div>
+        </div>
+      </Show>
 
       <Show when={expanded()}>
         <div class="px-3 pb-3 pt-0 border-t border-rim grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 text-xs">
@@ -275,25 +378,92 @@ export default function ConnectionsSection() {
   const [addBusy, setAddBusy] = createSignal(false);
   const [addError, setAddError] = createSignal<string | null>(null);
   const [newConn, setNewConn] = createSignal<Connection | null>(null);
+  const [allConnections, setAllConnections] = createSignal<Connection[]>([]);
+  const [hasMore, setHasMore] = createSignal(true);
+  const [appendMode, setAppendMode] = createSignal(false);
 
-  const meta        = () => connectionsData()?.meta;
-  const connections = () => connectionsData()?.connections ?? [];
-  const totalPages  = () => Math.ceil((meta()?.total ?? 0) / LIMIT);
+  let sentinelRef!: HTMLDivElement;
+
+  const meta = () => connectionsData()?.meta;
+
+  onMount(() => {
+    // page is module-level and persists across navigations; always start from page 0
+    setPage(0);
+  });
+
+  onCleanup(() => {
+    setPage(0);
+  });
+
+  createEffect(() => {
+    const data = connectionsData();
+    if (connectionsData.loading || !data) return;
+    const shouldAppend = untrack(appendMode) && untrack(page) > 0;
+    if (shouldAppend) {
+      setAllConnections((prev) => [...prev, ...data.connections]);
+    } else {
+      setAllConnections(data.connections);
+    }
+    setHasMore(data.connections.length >= LIMIT);
+    setAppendMode(false);
+  });
+
+  onMount(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && hasMore() && !connectionsData.loading && allConnections().length > 0) {
+          batch(() => {
+            setAppendMode(true);
+            setPage((p) => p + 1);
+          });
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(sentinelRef);
+    onCleanup(() => observer.disconnect());
+  });
+
+  function resetList() {
+    batch(() => {
+      setAllConnections([]);
+      setHasMore(true);
+      setAppendMode(false);
+    });
+  }
+
+  function onDeleted() {
+    setHasMore(true);
+    if (page() > 0) setPage(0);
+    else {
+      setAllConnections([]);
+      refetch();
+    }
+  }
 
   function applySearch() {
     setAddError(null);
-    setSearch(input());
-    setPage(0);
+    batch(() => {
+      resetList();
+      setSearch(input());
+      setPage(0);
+    });
   }
 
   function handleFilterChange(f: ConnectionFilter) {
-    setFilter(f);
-    setPage(0);
+    batch(() => {
+      resetList();
+      setFilter(f);
+      setPage(0);
+    });
   }
 
   function handleOrderChange(o: ConnectionOrder) {
-    setOrder(o);
-    setPage(0);
+    batch(() => {
+      resetList();
+      setOrder(o);
+      setPage(0);
+    });
   }
 
   async function handleAdd() {
@@ -305,7 +475,7 @@ export default function ConnectionsSection() {
       await addConnection(addr);
       const conn = await fetchConnectionByAddress(addr);
       if (conn) setNewConn(conn);
-      refetch();
+      onDeleted();
       setInput("");
     } catch {
       setAddError(t("directory.add_connection_error"));
@@ -380,7 +550,7 @@ export default function ConnectionsSection() {
             </button>
           )}
         </For>
-        {/* Sort on mobile (no room in row 1) */}
+        {/* Sort on mobile */}
         <select
           value={order()}
           onChange={(e) => handleOrderChange(e.currentTarget.value as ConnectionOrder)}
@@ -394,45 +564,34 @@ export default function ConnectionsSection() {
       </div>
 
       {/* ── Results ── */}
-      <Show when={!connectionsData.loading} fallback={<ConnectionsSkeleton />}>
-        <Show
-          when={connections().length > 0}
-          fallback={<p class="py-8 text-center text-sm text-muted">{t("directory.no_connections")}</p>}
-        >
+      <Switch>
+        <Match when={allConnections().length === 0 && connectionsData.loading}>
+          <ConnectionsSkeleton />
+        </Match>
+        <Match when={allConnections().length === 0}>
+          <p class="py-8 text-center text-sm text-muted">{t("directory.no_connections")}</p>
+        </Match>
+        <Match when={true}>
           <p class="text-sm text-muted">
-            {meta()?.total} {meta()?.total !== 1 ? t("directory.connections_plural") : t("directory.connection_singular")}
+            {meta()?.total}{" "}
+            {meta()?.total !== 1 ? t("directory.connections_plural") : t("directory.connection_singular")}
             {search() ? ` ${t("directory.matching")} "${search()}"` : ""}
           </p>
-
           <div class="space-y-2">
-            <For each={connections()}>
-              {(conn) => <ConnectionCard conn={conn} onDeleted={() => refetch()} />}
+            <For each={allConnections()}>
+              {(conn) => <ConnectionCard conn={conn} onDeleted={onDeleted} />}
             </For>
           </div>
-
-          <Show when={totalPages() > 1}>
-            <div class="flex items-center justify-center gap-2 pt-2">
-              <button
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                disabled={page() === 0}
-                class="px-3 py-1.5 rounded border border-rim text-txt text-sm
-                       disabled:opacity-40 hover:bg-overlay transition-colors"
-              >
-                {t("directory.page_prev")}
-              </button>
-              <span class="text-sm text-muted">{page() + 1} / {totalPages()}</span>
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages() - 1, p + 1))}
-                disabled={page() === totalPages() - 1}
-                class="px-3 py-1.5 rounded border border-rim text-txt text-sm
-                       disabled:opacity-40 hover:bg-overlay transition-colors"
-              >
-                {t("directory.page_next")}
-              </button>
+          <Show when={connectionsData.loading}>
+            <div class="py-4 flex justify-center">
+              <span class="w-5 h-5 border-2 border-muted/30 border-t-accent rounded-full animate-spin" />
             </div>
           </Show>
-        </Show>
-      </Show>
+        </Match>
+      </Switch>
+
+      {/* Sentinel for IntersectionObserver — always in DOM */}
+      <div ref={sentinelRef} class="h-1" />
 
       {/* ── Editor modal for newly added connection ── */}
       <Show when={newConn()}>
@@ -440,9 +599,9 @@ export default function ConnectionsSection() {
           connection={newConn()!}
           authorName={newConn()!.name}
           authorAvatar={newConn()!.photo}
-          onSaved={() => { setNewConn(null); refetch(); }}
+          onSaved={() => { setNewConn(null); onDeleted(); }}
           onClose={() => setNewConn(null)}
-          onDeleted={() => { setNewConn(null); refetch(); }}
+          onDeleted={() => { setNewConn(null); onDeleted(); }}
         />
       </Show>
     </div>

@@ -9,4 +9,6 @@ export const widgets: RawDictionary["widgets"] = {
   no_popular:     "कोई लोकप्रिय पोस्ट नहीं",
   load_error:     "लोड त्रुटि",
   show_more_tags: "और टैग्स दिखाएँ",
+  archive:        "संग्रह",
+  no_archive:     "अभी तक कोई पोस्ट नहीं।",
 };

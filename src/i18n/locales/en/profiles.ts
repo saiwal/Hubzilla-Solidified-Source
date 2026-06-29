@@ -65,6 +65,16 @@ export const profiles: RawDictionary["profiles"] = {
   dislikes:           "Dislikes",
   contact:            "Contact information",
   channels:           "Other channels",
+  // contacts assignment
+  contacts_title:      "Assigned Contacts",
+  contacts_desc:       "Contacts who will see this profile instead of the default.",
+  contacts_empty:      "No contacts assigned to this profile yet.",
+  contacts_remove:     "Remove",
+  contacts_add:        "Add contact",
+  contacts_search:     "Search contacts…",
+  contacts_none_found: "No matching contacts.",
+  contacts_load_error: "Failed to load contacts.",
+  contacts_save_error: "Failed to update contact assignment.",
   // photo uploaders
   avatar_editor_title: "Edit profile photo",
   cover_editor_title:  "Edit cover photo",

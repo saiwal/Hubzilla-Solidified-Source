@@ -68,6 +68,7 @@ export default function AuthorPopover(props: Props) {
   const [chatExpire, setChatExpire] = createSignal(0);
   const [chatCustomMode, setChatCustomMode] = createSignal(false);
   const [chatCustomInput, setChatCustomInput] = createSignal("60");
+  const [sendInvite, setSendInvite] = createSignal(true);
   const [popoverPos, setPopoverPos] = createSignal<{ top: number; left: number } | null>(null);
   const canHover = createMediaQuery("(hover: hover) and (pointer: fine)");
   const auth = useAuth();
@@ -183,6 +184,7 @@ export default function AuthorPopover(props: Props) {
     setChatExpire(0);
     setChatCustomMode(false);
     setChatCustomInput("60");
+    setSendInvite(true);
   }
 
   async function handleStartChat(e: MouseEvent) {
@@ -190,16 +192,32 @@ export default function AuthorPopover(props: Props) {
     e.stopPropagation();
     const hash = xchanHash();
     const nick = auth()?.nick;
-    if (!hash || !nick) return;
+    const uid  = auth()?.uid;
+    if (!hash || !nick || !uid) return;
     setChatPanelOpen(false);
     setChatCreating(true);
     try {
       const room = await createRoom(nick, {
         name: buildChatRoomName([props.name, navViewer()?.name].filter(Boolean) as string[]),
         expire: chatExpire(),
-        visibility: "private",
+        visibility: "custom",
         allow_cid: [hash],
       });
+
+      if (sendInvite()) {
+        const roomUrl = `${window.location.origin}/chat/${nick}/${room.id}`;
+        const fd = new FormData();
+        fd.append("body", `I've started a chatroom for us. [url=${roomUrl}]Join here[/url]`);
+        fd.append("mimetype", "text/bbcode");
+        fd.append("obj_type", "Note");
+        fd.append("profile_uid", String(uid));
+        fd.append("type", "wall");
+        fd.append("contact_allow[]", hash);
+        fd.append("return", "");
+        fetch("/item", { method: "POST", credentials: "include", redirect: "manual", body: fd })
+          .catch(() => {});
+      }
+
       navigate(`/chat/${nick}/${room.id}`);
     } catch {
       // ignore — chat app may not be installed
@@ -433,6 +451,15 @@ export default function AuthorPopover(props: Props) {
                     />
                   </Show>
                 </div>
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={sendInvite()}
+                    onChange={(e) => setSendInvite(e.currentTarget.checked)}
+                    class="accent-accent w-3.5 h-3.5 cursor-pointer"
+                  />
+                  <span class="text-[11px] text-muted">Notify {props.name}</span>
+                </label>
                 <button
                   onClick={handleStartChat}
                   class="w-full text-xs bg-accent text-accent-fg rounded-lg py-1.5 hover:opacity-90 transition-opacity"

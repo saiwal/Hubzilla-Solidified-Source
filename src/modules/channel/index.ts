@@ -8,6 +8,8 @@ const categoryLoader = () =>
   import("./widgets/ChannelPostWidgets").then((m) => ({ default: m.ChannelCategoryWidget }));
 const tagLoader = () =>
   import("./widgets/ChannelPostWidgets").then((m) => ({ default: m.ChannelTagWidget }));
+const archiveLoader = () =>
+  import("./widgets/ChannelPostWidgets").then((m) => ({ default: m.ChannelArchiveWidget }));
 
 registerModule({
   id: "channel",
@@ -23,7 +25,7 @@ registerModule({
     context: "all",
   },
   slots: {
-    right: [popularLoader, categoryLoader, tagLoader],
+    right: [popularLoader, categoryLoader, tagLoader, archiveLoader],
   },
   permissions: [],
 });

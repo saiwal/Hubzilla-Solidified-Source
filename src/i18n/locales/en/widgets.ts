@@ -9,4 +9,6 @@ export const widgets: RawDictionary["widgets"] = {
   no_popular:     "No Popular Posts",
   load_error:     "Load Error",
   show_more_tags: "Show more tags",
+  archive:        "Archive",
+  no_archive:     "No posts yet.",
 };
