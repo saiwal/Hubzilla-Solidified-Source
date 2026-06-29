@@ -1,5 +1,5 @@
 // src/modules/chat/index.ts
-import { registerModule, globalSlot } from "@/shared/lib/module-registry";
+import { registerModule } from "@/shared/lib/module-registry";
 import { useI18n } from "@/i18n";
 import { usePageNick } from "@/shared/store/site-config";
 
@@ -29,7 +29,6 @@ registerModule({
   slots: {
     right: [
       () => import("./widgets/BookmarkedRoomsWidget"),
-      globalSlot(() => import("./widgets/PinnedChatWidget")),
     ],
   },
   permissions: [],

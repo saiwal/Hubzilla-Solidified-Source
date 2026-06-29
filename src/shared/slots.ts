@@ -1,8 +1,10 @@
 import { globalSlot } from "./lib/module-registry";
-// shared/slots.ts
 
 export const notificationSlot = globalSlot(
   () => import("./widgets/notifications/NotificationsAside")
 );
 
+export const pinnedChatSlot = globalSlot(
+  () => import("@/modules/chat/widgets/PinnedChatWidget")
+);
 

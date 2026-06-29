@@ -1,6 +1,6 @@
 import { registerModule } from "@/shared/lib/module-registry";
 import { useI18n } from "@/i18n";
-import { notificationSlot } from "@/shared/slots";
+import { notificationSlot, pinnedChatSlot } from "@/shared/slots";
 
 registerModule({
   id: "hq",
@@ -15,6 +15,7 @@ registerModule({
   slots: {
     right: [
       notificationSlot,
+      pinnedChatSlot,
     ],
   },
   permissions: [],
