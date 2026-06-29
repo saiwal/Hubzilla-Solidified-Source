@@ -1,0 +1,177 @@
+import { createSignal, createResource, Show, Switch, Match } from "solid-js";
+import { useParams, A } from "@solidjs/router";
+import { fetchRegateState, submitRegate } from "../api/api";
+import { useI18n } from "@/i18n";
+
+export default function RegateView() {
+  const { t } = useI18n();
+  const params = useParams<{ token: string }>();
+  const token = () => params.token;
+
+  const [state] = createResource(token, fetchRegateState);
+
+  const [pin, setPin] = createSignal("");
+  const [loading, setLoading] = createSignal(false);
+  const [error, setError] = createSignal("");
+  const [done, setDone] = createSignal<"complete" | "pending_approval" | null>(null);
+
+  const handleSubmit = async (e: Event) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const result = await submitRegate(token(), pin().trim());
+      if (result.next === "complete") {
+        setDone("complete");
+        window.location.href = "/hq";
+      } else {
+        setDone("pending_approval");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("auth.regate_invalid"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const inputClass =
+    "w-full px-3 py-2 rounded-lg border border-rim bg-base text-txt text-sm font-mono " +
+    "placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent " +
+    "disabled:opacity-60 transition-colors";
+
+  return (
+    <div class="min-h-[60vh] flex items-center justify-center py-8">
+      <div class="w-full max-w-md bg-surface border border-rim rounded-2xl p-8 shadow-sm">
+
+        {/* Brand */}
+        <div class="mb-6 text-center">
+          <div
+            class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-txt mb-4
+                   text-[11px] font-bold select-none"
+            style="color: var(--color-surface)"
+          >
+            Hz
+          </div>
+          <h1 class="text-2xl font-bold text-txt">{t("auth.regate_title")}</h1>
+        </div>
+
+        <Show when={state.loading}>
+          <div class="flex justify-center py-8">
+            <div class="w-6 h-6 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+          </div>
+        </Show>
+
+        <Show when={state.error}>
+          <div class="text-center space-y-4">
+            <p class="text-sm text-muted">{t("auth.regate_invalid")}</p>
+            <A href="/register" class="text-sm text-accent hover:underline">
+              {t("auth.register_link")}
+            </A>
+          </div>
+        </Show>
+
+        <Show when={state()}>
+          {(s) => (
+            <Switch>
+
+              {/* Expired */}
+              <Match when={s().expired}>
+                <div class="text-center space-y-4">
+                  <p class="text-sm text-muted">{t("auth.regate_expired")}</p>
+                  <A
+                    href="/register"
+                    class="inline-block py-2 px-4 rounded-lg bg-accent text-accent-fg text-sm font-medium hover:opacity-90 transition-opacity"
+                  >
+                    {t("auth.register_link")}
+                  </A>
+                </div>
+              </Match>
+
+              {/* Already pending approval (was verified before, waiting for admin) */}
+              <Match when={s().pending_approval || done() === "pending_approval"}>
+                <div class="text-center space-y-3">
+                  <div class="text-4xl">⏳</div>
+                  <h2 class="text-lg font-semibold text-txt">{t("auth.register_pending_title")}</h2>
+                  <p class="text-sm text-muted">{t("auth.regate_pending_note")}</p>
+                </div>
+              </Match>
+
+              {/* Redirecting after success */}
+              <Match when={done() === "complete"}>
+                <div class="flex justify-center py-8">
+                  <div class="w-6 h-6 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+                </div>
+              </Match>
+
+              {/* Verification form */}
+              <Match when={!s().expired && !s().pending_approval && !done()}>
+                <div class="space-y-5">
+                  <p class="text-sm text-muted text-center">{t("auth.regate_email_hint")}</p>
+
+                  <Show when={s().email}>
+                    <div class="text-center">
+                      <span class="inline-block px-3 py-1 rounded-full bg-elevated text-xs text-muted font-mono break-all">
+                        {s().email}
+                      </span>
+                    </div>
+                  </Show>
+
+                  <form onSubmit={handleSubmit} class="space-y-4">
+                    <div class="space-y-1">
+                      <label class="text-sm font-medium text-txt" for="regate-pin">
+                        {t("auth.regate_code_label")}
+                      </label>
+                      <input
+                        id="regate-pin"
+                        type="text"
+                        inputmode="text"
+                        autocomplete="one-time-code"
+                        required
+                        disabled={loading()}
+                        value={pin()}
+                        onInput={(e) => setPin(e.currentTarget.value.toLowerCase().replace(/\s/g, ""))}
+                        class={inputClass}
+                        placeholder={t("auth.regate_code_ph")}
+                        maxLength={s().type === "e" ? 24 : 6}
+                      />
+                      <Show when={s().type === "e"}>
+                        <p class="text-xs text-muted">
+                          {pin().replace(/\s/g, "").length} / 24
+                        </p>
+                      </Show>
+                    </div>
+
+                    <Show when={error()}>
+                      <p class="text-sm text-red-500 text-center">{error()}</p>
+                    </Show>
+
+                    <button
+                      type="submit"
+                      disabled={loading() || (s().type === "e" ? pin().length !== 24 : pin().length !== 6)}
+                      class="w-full py-2.5 px-4 rounded-lg bg-accent text-accent-fg font-medium text-sm
+                             hover:opacity-90 active:opacity-80
+                             disabled:opacity-50 disabled:cursor-not-allowed
+                             focus:outline-none focus:ring-2 focus:ring-accent/40
+                             transition-opacity"
+                    >
+                      {loading() ? t("auth.regate_verifying") : t("auth.regate_verify")}
+                    </button>
+                  </form>
+
+                  <p class="text-center text-sm text-muted pt-1">
+                    {t("auth.already_have_account")}{" "}
+                    <A href="/login" class="text-accent hover:underline font-medium">
+                      {t("auth.sign_in")}
+                    </A>
+                  </p>
+                </div>
+              </Match>
+
+            </Switch>
+          )}
+        </Show>
+
+      </div>
+    </div>
+  );
+}

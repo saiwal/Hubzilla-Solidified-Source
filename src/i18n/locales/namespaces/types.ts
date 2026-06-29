@@ -90,6 +90,7 @@ export type RawDictionary = {
     more:               string;
     back:               string;
     section_navigation: string;
+    account:            string;
   };
   ui: {
     show_more:               string;
@@ -239,6 +240,58 @@ export type RawDictionary = {
     signing_out:       string;
     load_form_error:   string;
     login_failed:      string;
+    or:                string;
+    // Remote magic auth
+    remote_login_title:       string;
+    remote_login_desc:        string;
+    remote_address_label:     string;
+    remote_address_placeholder: string;
+    remote_login_hint:        string;
+    remote_login_btn:         string;
+    // Registration
+    register_title:           string;
+    register_subtitle:        string;
+    register_name_label:      string;
+    register_name_ph:         string;
+    register_nick_label:      string;
+    register_nick_ph:         string;
+    register_email_label:     string;
+    register_email_optional:  string;
+    register_email_required:  string;
+    register_pass_label:      string;
+    register_pass2_label:     string;
+    register_invite_label:    string;
+    register_invite_ph:       string;
+    register_invite_toggle:   string;
+    register_msg_label:       string;
+    register_msg_ph:          string;
+    register_tos_agree:       string;
+    register_tos_link:        string;
+    register_tos_suffix:      string;
+    register_tos_age_prefix:  string;
+    register_submit:          string;
+    registering:              string;
+    register_closed:          string;
+    register_approval_note:   string;
+    register_invite_required: string;
+    register_check_email_title: string;
+    register_check_email_desc:  string;
+    register_verify_btn:        string;
+    register_pending_title:   string;
+    register_pending_desc:    string;
+    already_have_account:     string;
+    no_account_yet:           string;
+    register_link:            string;
+    // Regate (email verification)
+    regate_title:             string;
+    regate_email_hint:        string;
+    regate_code_label:        string;
+    regate_code_ph:           string;
+    regate_verify:            string;
+    regate_verifying:         string;
+    regate_expired:           string;
+    regate_invalid:           string;
+    regate_pending_note:      string;
   };
   widgets: {
     tags:           string;
@@ -251,6 +304,7 @@ export type RawDictionary = {
     show_more_tags: string;
     archive:        string;
     no_archive:     string;
+    connections:    string;
   };
   tools: {
     label:            string;

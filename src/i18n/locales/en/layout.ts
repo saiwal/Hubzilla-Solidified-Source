@@ -9,4 +9,5 @@ export const layout: RawDictionary["layout"] = {
   more:               "More",
   back:               "Back",
   section_navigation: "Section navigation",
+  account:            "Account",
 };

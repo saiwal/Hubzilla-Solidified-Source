@@ -15,7 +15,7 @@ import { fetchNavApi, type NavApiResponse, type NavApp } from "../lib/nav-api";
 function nickFromUrl(): string {
   const parts = window.location.pathname.split("/").filter(Boolean);
   const withNick = [
-    "channel", "photos", "articles", "cart", "chat",
+    "channel", "about", "photos", "articles", "cart", "chat",
     "calendar", "cloud", "webpages", "wiki", "cal", "page",
   ];
   return (parts[1] && withNick.includes(parts[0])) ? parts[1] : "";

@@ -2,6 +2,8 @@ import { registerModule } from "@/shared/lib/module-registry";
 import { useI18n } from "@/i18n";
 import { usePageNick } from "@/shared/store/site-config";
 
+const connectionsLoader = () =>
+  import("@/shared/widgets/channelconnections");
 const popularLoader = () =>
   import("./widgets/ChannelPostWidgets").then((m) => ({ default: m.ChannelPopularWidget }));
 const categoryLoader = () =>
@@ -25,7 +27,7 @@ registerModule({
     context: "all",
   },
   slots: {
-    right: [popularLoader, categoryLoader, tagLoader, archiveLoader],
+    right: [connectionsLoader, popularLoader, categoryLoader, tagLoader, archiveLoader],
   },
   permissions: [],
 });

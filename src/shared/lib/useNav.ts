@@ -200,7 +200,6 @@ const ACTION_ORDER = [
   "navhome",
   "logout",
   "login",
-  "remote_login",
   "register",
 ] as const;
 
@@ -242,11 +241,6 @@ export function useNavActionItems(): () => NavItemDef[] {
         context: ["owner", "local", "remote"],
       },
       login: { label: t("nav.login"), icon: "login", context: "anonymous" },
-      remote_login: {
-        label: t("nav.remote_login"),
-        icon: "remote",
-        context: "anonymous",
-      },
       register: {
         label: t("nav.register"),
         icon: "register",
@@ -258,6 +252,7 @@ export function useNavActionItems(): () => NavItemDef[] {
       admin: "/admin",
       settings: "/settings",
       manage: "/manage",
+      login: "/login",
     };
 
     return ACTION_ORDER.filter((key) => {

@@ -216,7 +216,7 @@ const Layout: ParentComponent = (props) => {
             </div>
 
             {/* Primary nav */}
-            <nav aria-label="Primary" tabindex="0" class="flex-1 flex flex-col gap-0.5 overflow-y-auto">
+            <nav aria-label="Primary" tabindex="0" class="flex-1 min-h-0 flex flex-col gap-0.5 overflow-y-auto">
               <For each={navItems()}>
                 {(item) => (
                   <NavItem
@@ -228,7 +228,7 @@ const Layout: ParentComponent = (props) => {
               </For>
             </nav>
 
-            {/* Action items — toggled by avatar click */}
+            {/* Action items — toggled by avatar click for authenticated users */}
             <Show when={actionsOpen() && actionItems().length > 0}>
               <div class="my-2 h-px bg-rim" />
               <div
@@ -433,7 +433,7 @@ const Layout: ParentComponent = (props) => {
               </div>
             </Show>
 
-            {/* Action items — toggled by avatar click */}
+            {/* Action items — toggled by avatar click for authenticated users */}
             <Show when={actionsOpen() && actionItems().length > 0}>
               <div
                 use:motion={{

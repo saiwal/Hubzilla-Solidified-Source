@@ -1,5 +1,7 @@
 import type { NavViewer, NavActions } from "@/shared/lib/nav-api";
 import { Show } from "solid-js";
+import { useI18n } from "@/i18n";
+import NavItem from "./NavItem";
 
 interface NavUtilitiesProps {
   viewer?: NavViewer;
@@ -9,57 +11,70 @@ interface NavUtilitiesProps {
 }
 
 const Usermenu = (props: NavUtilitiesProps) => {
+  const { t } = useI18n();
   const isAuthenticated = () =>
     props.viewer?.is_local || props.viewer?.is_remote || props.viewer?.is_admin;
+  const isAnonymous = () =>
+    props.viewer !== undefined && !isAuthenticated();
+
   return (
-    <Show when={isAuthenticated() && props.onUserMenuToggle}>
-      <div class="mt-3 pt-2 border-t border-rim px-2.5">
-        <button
-          onClick={props.onUserMenuToggle}
-          title={props.viewer!.name}
-          class={`
-            w-full p-1.5 rounded-xl transition-all duration-150 ease-out
-            flex items-center gap-2.5 min-w-0
-            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60
-            ${props.actionsOpen
-              ? "bg-elevated ring-1 ring-accent/30 shadow-sm"
-              : "hover:bg-elevated"
-            }
-          `}
-        >
-          {/* Avatar */}
-          <div class="relative shrink-0">
-            <img
-              src={props.viewer!.avatar}
-              alt={props.viewer!.name}
-              class="w-9 h-9 rounded-lg object-cover select-none"
-              loading="lazy"
-            />
-            <span
-              class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full
-                     bg-green-500 border-2 border-surface"
-              aria-hidden="true"
-            />
-          </div>
-
-          {/* Name */}
-          <span class="flex-1 text-sm font-medium text-txt truncate text-left">
-            {props.viewer!.name}
-          </span>
-
-          {/* Chevron — rotates when open */}
-          <svg
-            class={`w-3.5 h-3.5 shrink-0 text-muted transition-transform duration-200 ease-out
-                    ${props.actionsOpen ? "rotate-180" : "rotate-0"}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+    <>
+      {/* Authenticated: avatar toggle */}
+      <Show when={isAuthenticated() && props.onUserMenuToggle}>
+        <div class="mt-3 pt-2 border-t border-rim px-2.5">
+          <button
+            onClick={props.onUserMenuToggle}
+            title={props.viewer!.name}
+            class={`
+              w-full p-1.5 rounded-xl transition-all duration-150 ease-out
+              flex items-center gap-2.5 min-w-0
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60
+              ${props.actionsOpen
+                ? "bg-elevated ring-1 ring-accent/30 shadow-sm"
+                : "hover:bg-elevated"
+              }
+            `}
           >
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-      </div>
-    </Show>
+            <div class="relative shrink-0">
+              <img
+                src={props.viewer!.avatar}
+                alt={props.viewer!.name}
+                class="w-9 h-9 rounded-lg object-cover select-none"
+                loading="lazy"
+              />
+              <span
+                class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full
+                       bg-green-500 border-2 border-surface"
+                aria-hidden="true"
+              />
+            </div>
+            <span class="flex-1 text-sm font-medium text-txt truncate text-left">
+              {props.viewer!.name}
+            </span>
+            <svg
+              class={`w-3.5 h-3.5 shrink-0 text-muted transition-transform duration-200 ease-out
+                      ${props.actionsOpen ? "rotate-180" : "rotate-0"}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
+      </Show>
+
+      {/* Anonymous: login / register nav items */}
+      <Show when={isAnonymous() && props.actions?.login}>
+        <div class="my-2 h-px bg-rim" />
+        <div class="flex flex-col gap-0.5">
+          <NavItem href={props.actions!.login!} label={t("nav.login")} icon="login" />
+          <Show when={props.actions?.register}>
+            <NavItem href={props.actions!.register!} label={t("nav.register")} icon="register" />
+          </Show>
+        </div>
+      </Show>
+    </>
   );
 };
 

@@ -20,6 +20,7 @@ export function useSubjectNick(): () => string {
     // parts[0] = module, parts[1] = nick
     const modulesWithNick = [
       "channel",
+      "profile",
       "photos",
       "articles",
       "cart",

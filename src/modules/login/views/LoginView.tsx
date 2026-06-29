@@ -1,4 +1,5 @@
 import { createSignal, onMount } from "solid-js";
+import { A } from "@solidjs/router";
 import { fetchLoginToken, submitLogin } from "../api/api";
 import { toast } from "@/shared/store/toast";
 import { useI18n } from "@/i18n";
@@ -9,6 +10,7 @@ export default function LoginView() {
   const [username, setUsername] = createSignal("");
   const [password, setPassword] = createSignal("");
   const [loading, setLoading] = createSignal(false);
+  const [remoteAddr, setRemoteAddr] = createSignal("");
 
   onMount(async () => {
     try {
@@ -38,6 +40,13 @@ export default function LoginView() {
     }
   };
 
+  // Destination to return to after remote auth completes
+  const dest = () => {
+    const ref = document.referrer;
+    if (ref && new URL(ref).origin === window.location.origin) return ref;
+    return window.location.origin;
+  };
+
   return (
     <div class="min-h-[60vh] flex items-center justify-center">
       <div class="w-full max-w-md bg-surface border border-rim rounded-2xl p-8 shadow-sm">
@@ -54,6 +63,7 @@ export default function LoginView() {
           <p class="text-sm text-muted mt-1">{t("auth.continue_to")}</p>
         </div>
 
+        {/* Local login */}
         <form onSubmit={handleSubmit} class="space-y-4" noValidate={false}>
           <div class="space-y-1">
             <label class="text-sm font-medium text-txt" for="login-username">
@@ -105,6 +115,62 @@ export default function LoginView() {
                    transition-opacity"
           >
             {loading() ? t("auth.signing_in") : t("auth.sign_in")}
+          </button>
+        </form>
+
+        {/* Register link */}
+        <p class="text-center text-sm text-muted mt-4">
+          {t("auth.no_account_yet")}{" "}
+          <A href="/register" class="text-accent hover:underline font-medium">
+            {t("auth.register_link")}
+          </A>
+        </p>
+
+        {/* Divider */}
+        <div class="relative my-6">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-rim" />
+          </div>
+          <div class="relative flex justify-center">
+            <span class="px-3 bg-surface text-xs text-muted uppercase tracking-wide">
+              {t("auth.or")}
+            </span>
+          </div>
+        </div>
+
+        {/* Remote login */}
+        <form action="/rmagic" method="post" class="space-y-3">
+          <input type="hidden" name="dest" value={dest()} />
+          <div class="space-y-1">
+            <label class="text-sm font-medium text-txt" for="rmagic-addr">
+              {t("auth.remote_address_label")}
+            </label>
+            <input
+              id="rmagic-addr"
+              name="addr"
+              type="text"
+              autocomplete="email"
+              required
+              value={remoteAddr()}
+              onInput={(e) => setRemoteAddr(e.currentTarget.value)}
+              class="w-full px-3 py-2 rounded-lg border border-rim bg-base text-txt text-sm
+                     placeholder:text-muted
+                     focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent
+                     transition-colors"
+              placeholder={t("auth.remote_address_placeholder")}
+            />
+            <p class="text-xs text-muted">{t("auth.remote_login_hint")}</p>
+          </div>
+          <button
+            type="submit"
+            disabled={!remoteAddr().trim()}
+            class="w-full py-2.5 px-4 rounded-lg border border-rim bg-base text-txt font-medium text-sm
+                   hover:bg-elevated active:opacity-80
+                   disabled:opacity-50 disabled:cursor-not-allowed
+                   focus:outline-none focus:ring-2 focus:ring-accent/40
+                   transition-colors"
+          >
+            {t("auth.remote_login_btn")}
           </button>
         </form>
       </div>
