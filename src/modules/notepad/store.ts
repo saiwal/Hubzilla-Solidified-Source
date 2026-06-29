@@ -30,11 +30,11 @@ export async function loadNotes(reset = false) {
   }
 }
 
-export async function removeNote(mid: string) {
+export async function removeNote(note: { mid: string; uuid: string }) {
   const prev = notes();
-  setNotes(prev.filter((n) => n.mid !== mid));
+  setNotes(prev.filter((n) => n.mid !== note.mid));
   try {
-    await deleteNote(mid);
+    await deleteNote(note.uuid);
   } catch (e: any) {
     setNotes(prev);
     toast.error(e.message ?? "Delete failed");

@@ -29,8 +29,8 @@ export async function fetchNotes(start = 0, limit = 20): Promise<NotesResponse> 
   return res.json() as Promise<NotesResponse>;
 }
 
-export async function deleteNote(mid: string): Promise<void> {
-  const res = await apiFetch(`/api/item/${encodeURIComponent(mid)}/delete`, {
+export async function deleteNote(uuid: string): Promise<void> {
+  const res = await apiFetch(`/api/item/${uuid}/delete`, {
     method: "POST",
     body: JSON.stringify({}),
   });

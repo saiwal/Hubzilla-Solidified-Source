@@ -40,4 +40,11 @@ export const chat: RawDictionary["chat"] = {
   unbookmark:       "Remove bookmark",
   no_bookmarks:     "No bookmarked rooms yet.",
   bookmarked:       "Bookmarked",
+  // Privacy indicator
+  privacy_public:   "Public",
+  privacy_private:  "Private",
+  // Pinned rooms widget
+  pinned_chats:     "Pinned Chats",
+  pin_to_sidebar:   "Pin to sidebar",
+  unpin:            "Unpin",
 };

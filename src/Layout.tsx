@@ -192,25 +192,26 @@ const Layout: ParentComponent = (props) => {
               <Show
                 when={navData()?.banner}
                 fallback={
-                  <div class="flex items-center gap-2.5">
-                    <span
-                      class="shrink-0 w-8 h-8 rounded-xl bg-txt
-                             flex items-center justify-center
-                             text-[11px] font-bold select-none text-surface"
-                    >
+                  <div class="flex items-center gap-3 select-none">
+                    <span class="text-2xl font-black leading-none tracking-tighter text-accent">
                       Hz
                     </span>
-                    <span class="text-sm font-semibold tracking-tight text-txt">
+                    <span class="h-5 w-px bg-rim" />
+                    <span class="text-sm font-medium tracking-tight text-muted">
                       Hubzilla
                     </span>
                   </div>
                 }
               >
-                <div
-                  class="w-full text-center text-sm font-semibold text-txt
-                         [&_img]:mx-auto [&_img]:max-h-12 [&_img]:max-w-full [&_img]:object-contain"
-                  innerHTML={DOMPurify.sanitize(navData()!.banner, { FORBID_TAGS: ["style", "script"] })}
-                />
+                <div class="w-full flex flex-col items-center gap-1.5 select-none">
+                  <div
+                    class="w-full text-center text-base font-bold tracking-tight text-txt
+                           [&_img]:mx-auto [&_img]:max-h-14 [&_img]:max-w-full [&_img]:object-contain
+                           [&_img]:opacity-90 [&_img]:hover:opacity-100 [&_img]:transition-opacity"
+                    innerHTML={DOMPurify.sanitize(navData()!.banner, { FORBID_TAGS: ["style", "script"] })}
+                  />
+                  <span class="h-[2px] w-5 bg-accent rounded-full" />
+                </div>
               </Show>
             </div>
 

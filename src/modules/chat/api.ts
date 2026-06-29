@@ -44,11 +44,19 @@ export interface PresenceMember {
   status: string;
 }
 
+export interface ChatRoomAcl {
+  allow_cid: string[];
+  allow_gid: string[];
+  deny_cid:  string[];
+  deny_gid:  string[];
+}
+
 export interface ChatMessagesResponse {
   messages: ChatMessage[];
   presence: PresenceMember[];
   viewer_hash: string;
   room_name: string;
+  room_acl?: ChatRoomAcl;
 }
 
 // ── Room list ─────────────────────────────────────────────────────────────────
@@ -128,6 +136,8 @@ export async function createRoom(
     visibility: RoomVisibility;
     allow_cid?: string[];
     allow_gid?: string[];
+    deny_cid?: string[];
+    deny_gid?: string[];
   },
 ): Promise<{ id: number; name: string; visibility: string }> {
   const res = await apiFetch(`/api/chat/${nick}/new`, {
@@ -172,7 +182,7 @@ export interface AclOptions {
   connections: AclConnection[];
 }
 
-export type RoomVisibility = 'public' | 'connections' | 'private';
+export type RoomVisibility = 'public' | 'connections' | 'custom';
 
 export async function fetchAclOptions(nick: string): Promise<AclOptions> {
   const res = await apiFetch(`/api/chat/${nick}/acl-options`);

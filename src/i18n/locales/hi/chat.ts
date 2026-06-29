@@ -38,4 +38,9 @@ export const chat: RawDictionary["chat"] = {
   unbookmark:       "बुकमार्क हटाएँ",
   no_bookmarks:     "अभी तक कोई बुकमार्क नहीं।",
   bookmarked:       "बुकमार्क किया गया",
+  privacy_public:   "सार्वजनिक",
+  privacy_private:  "निजी",
+  pinned_chats:     "पिन किए गए चैट",
+  pin_to_sidebar:   "साइडबार में पिन करें",
+  unpin:            "अनपिन करें",
 };

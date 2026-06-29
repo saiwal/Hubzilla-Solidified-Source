@@ -24,8 +24,7 @@ import {
   MdOutlineAttach_file,
 } from "solid-icons/md";
 import { useAuth } from "@/shared/store/auth-store";
-import { fetchGroups } from "@/modules/directory/groups/api";
-import type { PrivacyGroup } from "@/modules/directory/groups/api";
+import AclPicker, { entryKey, type AclMode, type AclEntry } from "@/shared/editor/components/AclPicker";
 import {
   listFolder,
   updatePermissions,
@@ -87,22 +86,37 @@ type FolderFrame = { hash: string; displayPath: string; label: string };
 const PermissionsPanel: Component<{
   item: FileMeta;
   nick: string;
-  groups: PrivacyGroup[];
   onSaved: (updated: FileMeta) => void;
   onClose: () => void;
 }> = (props) => {
   const { t } = useI18n();
-  const [allowGid, setAllowGid] = createSignal<string[]>(props.item.acl.allow_gid);
-  const [recurse,  setRecurse]  = createSignal(false);
-  const [busy,     setBusy]     = createSignal(false);
-  const [err,      setErr]      = createSignal("");
 
-  const restricted = createMemo(() => allowGid().length > 0);
+  const [mode, setMode] = createSignal<AclMode>(
+    props.item.acl.allow_cid.length > 0 || props.item.acl.allow_gid.length > 0 ||
+    props.item.acl.deny_cid.length > 0  || props.item.acl.deny_gid.length > 0
+      ? "custom" : "public"
+  );
+  const [allowKeys, setAllowKeys] = createSignal<Set<string>>(new Set([
+    ...props.item.acl.allow_cid.map((h) => `c:${h}`),
+    ...props.item.acl.allow_gid.map((id) => `g:${id}`),
+  ]));
+  const [denyKeys, setDenyKeys] = createSignal<Set<string>>(new Set([
+    ...props.item.acl.deny_cid.map((h) => `c:${h}`),
+    ...props.item.acl.deny_gid.map((id) => `g:${id}`),
+  ]));
+  const [recurse, setRecurse] = createSignal(false);
+  const [busy,    setBusy]    = createSignal(false);
+  const [err,     setErr]     = createSignal("");
 
-  function toggleGroup(hash: string) {
-    setAllowGid((p) =>
-      p.includes(hash) ? p.filter((h) => h !== hash) : [...p, hash]
-    );
+  function toggleEntry(entry: AclEntry, list: "allow" | "deny") {
+    const key = entryKey(entry);
+    if (list === "allow") {
+      setAllowKeys((prev) => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
+      setDenyKeys((prev)  => { const n = new Set(prev); n.delete(key); return n; });
+    } else {
+      setDenyKeys((prev)  => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
+      setAllowKeys((prev) => { const n = new Set(prev); n.delete(key); return n; });
+    }
   }
 
   async function save(e: Event) {
@@ -110,15 +124,29 @@ const PermissionsPanel: Component<{
     setBusy(true);
     setErr("");
     try {
+      const m = mode();
+      let allow_cid: string[] = [], allow_gid: string[] = [];
+      let deny_cid: string[]  = [], deny_gid: string[]  = [];
+
+      if (m === "custom") {
+        for (const key of allowKeys()) {
+          const [type, ...rest] = key.split(":");
+          const xid = rest.join(":");
+          if (type === "c") allow_cid.push(xid);
+          else if (type === "g") allow_gid.push(xid);
+        }
+        for (const key of denyKeys()) {
+          const [type, ...rest] = key.split(":");
+          const xid = rest.join(":");
+          if (type === "c") deny_cid.push(xid);
+          else if (type === "g") deny_gid.push(xid);
+        }
+      }
+
       const updated = await updatePermissions(
         props.nick,
         props.item.hash,
-        {
-          allow_gid: allowGid(),
-          allow_cid: props.item.acl.allow_cid,
-          deny_gid:  props.item.acl.deny_gid,
-          deny_cid:  props.item.acl.deny_cid,
-        },
+        { allow_cid, allow_gid, deny_cid, deny_gid },
         recurse()
       );
       props.onSaved(updated);
@@ -140,50 +168,15 @@ const PermissionsPanel: Component<{
         </button>
       </div>
 
-      {/* Visibility badge */}
-      <div class={`flex items-center gap-2 text-sm px-3 py-2 rounded-lg border ${
-        restricted()
-          ? "border-accent/40 bg-accent-muted text-accent"
-          : "border-green-500/40 bg-green-500/10 text-green-600"
-      }`}>
-        <Show when={restricted()} fallback={<MdFillLock_open size={14} />}>
-          <MdFillLock size={14} />
-        </Show>
-        {restricted()
-          ? t("files_mod.restricted_msg")
-          : t("files_mod.public_msg")}
-      </div>
+      <AclPicker
+        mode={mode()}
+        onModeChange={setMode}
+        allowEntries={allowKeys()}
+        denyEntries={denyKeys()}
+        onToggle={toggleEntry}
+        onClear={() => { setAllowKeys(new Set<string>()); setDenyKeys(new Set<string>()); }}
+      />
 
-      {/* Privacy group checkboxes */}
-      <Show when={props.groups.length > 0} fallback={
-        <p class="text-sm text-muted">{t("files_mod.no_groups")}</p>
-      }>
-        <div class="space-y-1.5">
-          <p class="text-xs font-semibold uppercase tracking-wide text-muted">{t("files_mod.allow_access_to")}</p>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-            <For each={props.groups}>
-              {(g) => (
-                <label class={`flex items-center gap-2.5 px-3 py-2 rounded-lg border
-                               cursor-pointer text-sm transition-colors select-none ${
-                  allowGid().includes(g.hash)
-                    ? "border-accent bg-accent-muted text-accent"
-                    : "border-rim text-txt hover:bg-overlay"
-                }`}>
-                  <input
-                    type="checkbox"
-                    checked={allowGid().includes(g.hash)}
-                    onChange={() => toggleGroup(g.hash)}
-                    class="accent-[var(--accent)] w-3.5 h-3.5"
-                  />
-                  {g.name}
-                </label>
-              )}
-            </For>
-          </div>
-        </div>
-      </Show>
-
-      {/* Recurse for folders */}
       <Show when={props.item.is_dir}>
         <label class="flex items-center gap-2 text-sm text-muted cursor-pointer select-none">
           <input
@@ -587,7 +580,6 @@ export default function FilesView() {
 
   // Permissions
   const [permItem, setPermItem] = createSignal<FileMeta | null>(null);
-  const [groups]                = createResource(fetchGroups);
 
   async function handleDelete(item: FileMeta) {
     const label = item.is_dir ? `folder "${item.filename}"` : `"${item.filename}"`;
@@ -851,7 +843,6 @@ export default function FilesView() {
                         <PermissionsPanel
                           item={permItem()!}
                           nick={nick()}
-                          groups={groups() ?? []}
                           onSaved={handlePermSaved}
                           onClose={() => setPermItem(null)}
                         />
@@ -880,7 +871,6 @@ export default function FilesView() {
                         <PermissionsPanel
                           item={item}
                           nick={nick()}
-                          groups={groups() ?? []}
                           onSaved={handlePermSaved}
                           onClose={() => setPermItem(null)}
                         />

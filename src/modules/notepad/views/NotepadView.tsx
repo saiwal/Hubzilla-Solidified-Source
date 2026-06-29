@@ -168,7 +168,7 @@ export default function NotepadView() {
                 onDelete={() => {
                   if (confirmMid() === note.mid) {
                     setConfirmMid(null);
-                    removeNote(note.mid);
+                    removeNote(note);
                   } else {
                     setConfirmMid(note.mid);
                   }

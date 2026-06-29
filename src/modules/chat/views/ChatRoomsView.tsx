@@ -4,7 +4,6 @@ import {
   Show,
   For,
   createSignal,
-  createResource,
   on,
 } from "solid-js";
 import { useI18n } from "@/i18n";
@@ -19,179 +18,15 @@ import {
   createChatRoom,
   deleteChatRoom,
 } from "../store";
-import { fetchAclOptions, type RoomVisibility, type AclConnection, type AclGroup } from "../api";
 import {
   MdFillChat,
   MdFillAdd,
   MdFillPeople,
   MdFillDelete,
   MdFillSchedule,
-  MdFillPublic,
-  MdFillLock,
-  MdFillGroup,
-  MdFillSearch,
-  MdFillCheck,
 } from "solid-icons/md";
 import formatPostDate from "@/shared/lib/date";
-
-// ── Visibility pill component ─────────────────────────────────────────────────
-
-function VisibilityPill(props: {
-  value: RoomVisibility;
-  current: RoomVisibility;
-  label: string;
-  icon: any;
-  onClick: () => void;
-}) {
-  const Icon = props.icon;
-  const active = () => props.value === props.current;
-  return (
-    <button
-      type="button"
-      onClick={props.onClick}
-      class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border transition-all"
-      classList={{
-        "bg-accent text-accent-fg border-accent": active(),
-        "border-rim text-muted hover:bg-elevated hover:text-txt": !active(),
-      }}
-    >
-      <Icon class="text-sm" />
-      {props.label}
-    </button>
-  );
-}
-
-// ── Connection/group picker for private rooms ─────────────────────────────────
-
-function PrivatePicker(props: {
-  connections: AclConnection[];
-  groups: AclGroup[];
-  selectedCids: Set<string>;
-  selectedGids: Set<string>;
-  onToggleCid: (hash: string) => void;
-  onToggleGid: (hash: string) => void;
-}) {
-  const { t } = useI18n();
-  const [query, setQuery] = createSignal("");
-
-  const filteredConns = () => {
-    const q = query().toLowerCase();
-    if (!q) return props.connections;
-    return props.connections.filter(
-      (c) => c.name.toLowerCase().includes(q) || c.addr.toLowerCase().includes(q)
-    );
-  };
-  const filteredGroups = () => {
-    const q = query().toLowerCase();
-    if (!q) return props.groups;
-    return props.groups.filter((g) => g.name.toLowerCase().includes(q));
-  };
-
-  const totalSelected = () => props.selectedCids.size + props.selectedGids.size;
-
-  return (
-    <div class="border border-rim rounded-lg overflow-hidden">
-      {/* Search */}
-      <div class="flex items-center gap-2 px-3 py-2 border-b border-rim bg-base">
-        <MdFillSearch class="text-muted text-sm shrink-0" />
-        <input
-          type="text"
-          placeholder={t("chat.search_placeholder") as string}
-          value={query()}
-          onInput={(e) => setQuery(e.currentTarget.value)}
-          class="flex-1 bg-transparent text-txt text-xs focus:outline-none placeholder:text-subtle"
-        />
-        <Show when={totalSelected() > 0}>
-          <span class="text-[10px] text-accent font-medium">{totalSelected()} {t("chat.selected")}</span>
-        </Show>
-      </div>
-
-      <div class="max-h-48 overflow-y-auto divide-y divide-rim">
-        {/* Groups */}
-        <Show when={filteredGroups().length > 0}>
-          <div class="px-3 py-1.5 bg-elevated">
-            <p class="text-[10px] font-medium text-muted uppercase tracking-wider">{t("chat.privacy_groups")}</p>
-          </div>
-          <For each={filteredGroups()}>
-            {(g) => {
-              const selected = () => props.selectedGids.has(g.hash);
-              return (
-                <button
-                  type="button"
-                  onClick={() => props.onToggleGid(g.hash)}
-                  class="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-elevated transition-colors"
-                  classList={{ "bg-accent-muted": selected() }}
-                >
-                  <div
-                    class="w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors"
-                    classList={{
-                      "bg-accent border-accent": selected(),
-                      "border-rim": !selected(),
-                    }}
-                  >
-                    <Show when={selected()}>
-                      <MdFillCheck class="w-3 h-3 text-accent-fg" />
-                    </Show>
-                  </div>
-                  <MdFillGroup class="text-muted text-sm shrink-0" />
-                  <span class="text-xs text-txt truncate">{g.name}</span>
-                </button>
-              );
-            }}
-          </For>
-        </Show>
-
-        {/* Connections */}
-        <Show when={filteredConns().length > 0}>
-          <div class="px-3 py-1.5 bg-elevated">
-            <p class="text-[10px] font-medium text-muted uppercase tracking-wider">{t("chat.connections_section")}</p>
-          </div>
-          <For each={filteredConns()}>
-            {(c) => {
-              const selected = () => props.selectedCids.has(c.hash);
-              return (
-                <button
-                  type="button"
-                  onClick={() => props.onToggleCid(c.hash)}
-                  class="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-elevated transition-colors"
-                  classList={{ "bg-accent-muted": selected() }}
-                >
-                  <div
-                    class="w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors"
-                    classList={{
-                      "bg-accent border-accent": selected(),
-                      "border-rim": !selected(),
-                    }}
-                  >
-                    <Show when={selected()}>
-                      <MdFillCheck class="w-3 h-3 text-accent-fg" />
-                    </Show>
-                  </div>
-                  <Show
-                    when={c.avatar}
-                    fallback={
-                      <div class="w-5 h-5 rounded-full bg-accent-muted flex items-center justify-center shrink-0 text-[9px] text-accent font-semibold">
-                        {c.name[0]?.toUpperCase() ?? "?"}
-                      </div>
-                    }
-                  >
-                    <img src={c.avatar} alt={c.name} class="w-5 h-5 rounded-full object-cover shrink-0" />
-                  </Show>
-                  <span class="text-xs text-txt truncate">{c.name}</span>
-                  <span class="text-[10px] text-muted truncate ml-auto">{c.addr}</span>
-                </button>
-              );
-            }}
-          </For>
-        </Show>
-
-        <Show when={filteredConns().length === 0 && filteredGroups().length === 0}>
-          <p class="text-xs text-muted px-3 py-4 text-center">{t("chat.no_matches")}</p>
-        </Show>
-      </div>
-    </div>
-  );
-}
+import AclPicker, { entryKey, type AclMode, type AclEntry } from "@/shared/editor/components/AclPicker";
 
 // ── Main view ─────────────────────────────────────────────────────────────────
 
@@ -206,44 +41,50 @@ export default function ChatRoomsView() {
   const [showForm, setShowForm] = createSignal(false);
   const [newName, setNewName] = createSignal("");
   const [newExpire, setNewExpire] = createSignal(120);
-  const [visibility, setVisibility] = createSignal<RoomVisibility>("public");
-  const [selectedCids, setSelectedCids] = createSignal<Set<string>>(new Set());
-  const [selectedGids, setSelectedGids] = createSignal<Set<string>>(new Set());
+  const [aclMode, setAclMode] = createSignal<AclMode>("public");
+  const [allowEntries, setAllowEntries] = createSignal<Set<string>>(new Set<string>());
+  const [denyEntries, setDenyEntries] = createSignal<Set<string>>(new Set<string>());
   const [creating, setCreating] = createSignal(false);
   const [formError, setFormError] = createSignal<string | null>(null);
-
-  // Lazy-load ACL options only when form opens and owner
-  const [aclOptions] = createResource(
-    () => showForm() && isOwner() ? nick() : null,
-    (n) => fetchAclOptions(n),
-  );
 
   createEffect(on(nick, (n) => {
     if (n) loadRooms(n);
   }));
 
-  function toggleCid(hash: string) {
-    setSelectedCids((prev) => {
-      const next = new Set(prev);
-      next.has(hash) ? next.delete(hash) : next.add(hash);
-      return next;
-    });
+  function toggleEntry(entry: AclEntry, list: "allow" | "deny") {
+    const key = entryKey(entry);
+    const [getSet, setSet] = list === "allow"
+      ? [allowEntries, setAllowEntries]
+      : [denyEntries, setDenyEntries];
+    const setOther = list === "allow" ? setDenyEntries : setAllowEntries;
+    void getSet();
+    setSet((prev) => { const next = new Set(prev); next.has(key) ? next.delete(key) : next.add(key); return next; });
+    setOther((prev) => { const next = new Set(prev); next.delete(key); return next; });
   }
 
-  function toggleGid(hash: string) {
-    setSelectedGids((prev) => {
-      const next = new Set(prev);
-      next.has(hash) ? next.delete(hash) : next.add(hash);
-      return next;
-    });
+  function clearEntries() {
+    setAllowEntries(new Set<string>());
+    setDenyEntries(new Set<string>());
+  }
+
+  function splitEntries(entries: Set<string>): { cids: string[]; gids: string[] } {
+    const cids: string[] = [];
+    const gids: string[] = [];
+    for (const key of entries) {
+      const colon = key.indexOf(":");
+      const type = key.slice(0, colon);
+      const xid  = key.slice(colon + 1);
+      if (type === "c") cids.push(xid);
+      else if (type === "g") gids.push(xid);
+    }
+    return { cids, gids };
   }
 
   function resetForm() {
     setNewName("");
     setNewExpire(120);
-    setVisibility("public");
-    setSelectedCids(new Set<string>());
-    setSelectedGids(new Set<string>());
+    setAclMode("public");
+    clearEntries();
     setFormError(null);
   }
 
@@ -252,8 +93,11 @@ export default function ChatRoomsView() {
     const name = newName().trim();
     if (!name) return;
 
-    if (visibility() === "private" && selectedCids().size === 0 && selectedGids().size === 0) {
-      setFormError("Select at least one connection or group for a private room.");
+    const { cids: allowCids, gids: allowGids } = splitEntries(allowEntries());
+    const { cids: denyCids, gids: denyGids } = splitEntries(denyEntries());
+
+    if (aclMode() === "custom" && allowCids.length === 0 && allowGids.length === 0) {
+      setFormError(t("chat.private_select_hint") as string);
       return;
     }
 
@@ -263,9 +107,11 @@ export default function ChatRoomsView() {
       const room = await createChatRoom(nick(), {
         name,
         expire: newExpire(),
-        visibility: visibility(),
-        allow_cid: [...selectedCids()],
-        allow_gid: [...selectedGids()],
+        visibility: aclMode(),
+        allow_cid: allowCids,
+        allow_gid: allowGids,
+        deny_cid: denyCids,
+        deny_gid: denyGids,
       });
       setShowForm(false);
       resetForm();
@@ -333,62 +179,23 @@ export default function ChatRoomsView() {
             <span class="text-xs text-muted">{t("chat.minutes_never")}</span>
           </div>
 
-          {/* Visibility */}
+          {/* ACL */}
           <div class="space-y-2">
             <p class="text-xs font-medium text-muted">{t("chat.visibility")}</p>
-            <div class="flex items-center gap-2">
-              <VisibilityPill
-                value="public"
-                current={visibility()}
-                label={t("chat.public_label") as string}
-                icon={MdFillPublic}
-                onClick={() => setVisibility("public")}
-              />
-              <VisibilityPill
-                value="connections"
-                current={visibility()}
-                label={t("chat.connections_label") as string}
-                icon={MdFillPeople}
-                onClick={() => setVisibility("connections")}
-              />
-              <VisibilityPill
-                value="private"
-                current={visibility()}
-                label={t("chat.private_label") as string}
-                icon={MdFillLock}
-                onClick={() => setVisibility("private")}
-              />
-            </div>
+            <AclPicker
+              mode={aclMode()}
+              onModeChange={setAclMode}
+              allowEntries={allowEntries()}
+              denyEntries={denyEntries()}
+              onToggle={toggleEntry}
+              onClear={clearEntries}
+            />
             <p class="text-[11px] text-muted">
-              {visibility() === "public" && t("chat.visibility_public")}
-              {visibility() === "connections" && t("chat.visibility_connections")}
-              {visibility() === "private" && t("chat.visibility_private")}
+              {aclMode() === "public" && t("chat.visibility_public")}
+              {aclMode() === "connections" && t("chat.visibility_connections")}
+              {aclMode() === "custom" && t("chat.visibility_private")}
             </p>
           </div>
-
-          {/* Private picker */}
-          <Show when={visibility() === "private"}>
-            <Show
-              when={!aclOptions.loading && aclOptions()}
-              fallback={<div class="h-16 bg-elevated rounded-lg animate-pulse" />}
-            >
-              <PrivatePicker
-                connections={aclOptions()!.connections}
-                groups={aclOptions()!.groups}
-                selectedCids={selectedCids()}
-                selectedGids={selectedGids()}
-                onToggleCid={toggleCid}
-                onToggleGid={toggleGid}
-              />
-            </Show>
-          </Show>
-
-          {/* Connections hint */}
-          <Show when={visibility() === "connections" && aclOptions()?.default_group === ""}>
-            <p class="text-[11px] text-yellow-500">
-              {t("chat.no_default_group")}
-            </p>
-          </Show>
 
           <Show when={formError()}>
             <p class="text-xs text-red-500">{formError()}</p>
@@ -476,7 +283,7 @@ export default function ChatRoomsView() {
                   <button
                     onClick={() => handleDrop(room.id, room.name)}
                     class="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-muted hover:text-red-500 hover:bg-elevated transition-all"
-                    title="Delete room"
+                    title={t("chat.delete_room") as string}
                   >
                     <MdFillDelete class="text-base" />
                   </button>

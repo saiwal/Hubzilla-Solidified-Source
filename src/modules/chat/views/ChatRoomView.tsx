@@ -16,12 +16,15 @@ import {
 	messages,
 	presence,
 	chatLoading,
-	sendError,
 	viewerHash,
 	roomName,
+	roomAcl,
 	enterRoom,
 	exitRoom,
-	sendChatMessage,
+	pinRoom,
+	unpinRoom,
+	isRoomPinned,
+	type PinnedRoom,
 } from "../store";
 import {
 	loadChatBookmarks,
@@ -31,13 +34,11 @@ import {
 	removeChatBookmark,
 } from "../bookmarks";
 import { isLocalUser } from "@/shared/store/auth-store";
-import {
-	MdFillArrow_back,
-	MdFillSend,
-	MdFillPeople,
-	MdFillChat,
-} from "solid-icons/md";
+import { MdFillArrow_back, MdFillPeople, MdFillChat, MdFillLock, MdFillLock_open } from "solid-icons/md";
 import formatPostDate from "@/shared/lib/date";
+import ChatComposer from "../ChatComposer";
+import DOMPurify from "dompurify";
+import { bbcode } from "@/shared/lib/bbcode";
 
 export default function ChatRoomView() {
 	const params = useParams<{ nick: string; roomId: string }>();
@@ -48,17 +49,30 @@ export default function ChatRoomView() {
 	const nick = () => params.nick || pageNick();
 	const roomId = () => parseInt(params.roomId);
 
-	const [text, setText] = createSignal("");
-	const [sending, setSending] = createSignal(false);
 	const [showPresence, setShowPresence] = createSignal(false);
 
 	let messagesEl: HTMLDivElement | undefined;
-	let inputEl: HTMLTextAreaElement | undefined;
 
 	const isBookmarked = createMemo(() => isRoomBookmarked(nick(), roomId()));
+	const isPinned     = createMemo(() => isRoomPinned(nick(), roomId()));
 
 	// Load bookmarks once for local users
 	createEffect(() => { if (isLocalUser()) loadChatBookmarks(); });
+
+	function togglePin() {
+		const n = nick();
+		const r = roomId();
+		if (isPinned()) {
+			unpinRoom(n, r);
+		} else {
+			pinRoom({
+				nick:  n,
+				roomId: r,
+				name:  roomName() || (t("chat.chatroom") as string),
+				acl:   roomAcl(),
+			} satisfies PinnedRoom);
+		}
+	}
 
 	async function toggleBookmark() {
 		if (isBookmarked()) {
@@ -89,25 +103,13 @@ export default function ChatRoomView() {
 		if (n && r) exitRoom(n, r);
 	});
 
-	async function handleSend() {
-		const body = text().trim();
-		if (!body || sending()) return;
-
-		setSending(true);
-		setText("");
-		await sendChatMessage(nick(), roomId(), body);
-		setSending(false);
-		inputEl?.focus();
-	}
-
-	function handleKey(e: KeyboardEvent) {
-		if (e.key === "Enter" && !e.shiftKey) {
-			e.preventDefault();
-			handleSend();
-		}
-	}
-
 	const presenceCount = createMemo(() => presence().length);
+	const isRestricted = createMemo(() => {
+		const acl = roomAcl();
+		if (!acl) return null;
+		return acl.allow_cid.length > 0 || acl.allow_gid.length > 0 ||
+		       acl.deny_cid.length > 0  || acl.deny_gid.length > 0;
+	});
 	const groupedMessages = createMemo(() => {
 		const msgs = messages();
 		return msgs.map((msg, i) => ({
@@ -134,7 +136,39 @@ export default function ChatRoomView() {
 					<span class="font-medium text-txt text-sm truncate">
 						{roomName() || (chatLoading() ? t("calendar.loading") : t("chat.chatroom"))}
 					</span>
+					<Show when={isRestricted() !== null}>
+						<span
+							title={isRestricted() ? t("chat.privacy_private") as string : t("chat.privacy_public") as string}
+							class={`flex items-center gap-1 shrink-0 text-xs px-1.5 py-0.5 rounded-full border ${
+								isRestricted()
+									? "border-accent/40 bg-accent/10 text-accent"
+									: "border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400"
+							}`}
+						>
+							<Show when={isRestricted()} fallback={<MdFillLock_open size={11} />}>
+								<MdFillLock size={11} />
+							</Show>
+							<span class="hidden sm:inline">
+								{isRestricted() ? t("chat.privacy_private") : t("chat.privacy_public")}
+							</span>
+						</span>
+					</Show>
 				</div>
+				<Show when={isLocalUser()}>
+					<button
+						onClick={togglePin}
+						title={isPinned() ? t("chat.unpin") as string : t("chat.pin_to_sidebar") as string}
+						class="p-1.5 rounded-lg transition-colors hover:bg-elevated"
+						classList={{
+							"text-accent": isPinned(),
+							"text-muted hover:text-txt": !isPinned(),
+						}}
+					>
+						<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+							<path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
+						</svg>
+					</button>
+				</Show>
 				<Show when={isLocalUser()}>
 					<button
 						onClick={() => void toggleBookmark()}
@@ -261,7 +295,10 @@ export default function ChatRoomView() {
 														"rounded-tl-2xl": !isSelf() && !msg.isFirst,
 													}}
 												>
-													{msg.body}
+													<span innerHTML={DOMPurify.sanitize(bbcode(msg.body), {
+							ADD_TAGS: ["video", "audio"],
+							ADD_ATTR: ["controls", "preload", "poster"],
+						})} />
 												</div>
 												<Show when={msg.isLast}>
 													<p
@@ -279,33 +316,7 @@ export default function ChatRoomView() {
 						</div>
 					</Show>
 
-					{/* Send error */}
-					<Show when={sendError()}>
-						<p class="text-xs text-red-500 px-4 py-1">{sendError()}</p>
-					</Show>
-
-					{/* Input bar */}
-					<div class="px-4 py-3 border-t border-rim bg-surface shrink-0">
-						<div class="flex gap-2 items-end">
-							<textarea
-								ref={inputEl}
-								value={text()}
-								onInput={(e) => setText(e.currentTarget.value)}
-								onKeyDown={handleKey}
-								placeholder={t("chat.write_message") as string}
-								rows={1}
-								class="flex-1 bg-surface border border-rim text-txt text-sm rounded-xl px-3 py-2 resize-none hover:border-rim-strong focus:outline-none focus:border-accent transition-colors leading-relaxed"
-								style={{ "max-height": "7rem", "overflow-y": "auto" }}
-							/>
-							<button
-								onClick={handleSend}
-								disabled={!text().trim() || sending()}
-								class="p-2.5 rounded-xl bg-accent text-accent-fg hover:opacity-90 disabled:opacity-40 transition-all shrink-0"
-							>
-								<MdFillSend class="text-base" />
-							</button>
-						</div>
-					</div>
+					<ChatComposer nick={nick()} roomId={roomId()} />
 				</div>
 
 				{/* Presence sidebar */}

@@ -97,4 +97,16 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
     aclPicker: false,
     submitOnCtrlEnter: true,
   },
+  // Chat room message input — comment toolbar, no preview, Ctrl+Enter sends
+  chat: {
+    toolbar: "comment",
+    preview: false,
+    title: false,
+    summary: false,
+    slug: false,
+    category: false,
+    attachments: "none",
+    aclPicker: false,
+    submitOnCtrlEnter: true,
+  },
 };

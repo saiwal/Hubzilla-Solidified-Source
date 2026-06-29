@@ -1178,6 +1178,11 @@ export type RawDictionary = {
     unbookmark:       string;
     no_bookmarks:     string;
     bookmarked:       string;
+    privacy_public:   string;
+    privacy_private:  string;
+    pinned_chats:     string;
+    pin_to_sidebar:   string;
+    unpin:            string;
   };
   files_mod: {
     new_folder:       string;

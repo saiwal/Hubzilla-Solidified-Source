@@ -14,6 +14,8 @@ interface Props {
   onTabChange: (t: EditorTab) => void;
   mimetype?: MimeType;
   onCtrlEnter?: () => void;
+  /** Return true to consume Enter and suppress the default newline insertion. */
+  onEnter?: () => boolean;
   placeholder?: string;
   minHeight?: string;
 }
@@ -73,6 +75,10 @@ export default function RichEditor(props: Props) {
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey && props.onEnter?.()) {
+      e.preventDefault();
+      return;
+    }
     if (
       props.capabilities.submitOnCtrlEnter &&
       e.key === "Enter" &&

@@ -1,6 +1,6 @@
 // src/modules/chat/store.ts
 import { createSignal, batch } from "solid-js";
-import type { ChatRoom, ChatMessage, PresenceMember } from "./api";
+import type { ChatRoom, ChatMessage, PresenceMember, ChatRoomAcl } from "./api";
 import {
   fetchRooms,
   fetchMessages,
@@ -44,8 +44,9 @@ const [sendError, setSendError] = createSignal<string | null>(null);
 const [activeRoomId, setActiveRoomId] = createSignal<number | null>(null);
 const [viewerHash, setViewerHash] = createSignal("");
 const [roomName, setRoomName] = createSignal("");
+const [roomAcl, setRoomAcl] = createSignal<ChatRoomAcl | null>(null);
 
-export { messages, presence, chatLoading, sendError, activeRoomId, viewerHash, roomName };
+export { messages, presence, chatLoading, sendError, activeRoomId, viewerHash, roomName, roomAcl };
 
 // Track the latest message timestamp for polling
 let lastSince: string | undefined;
@@ -63,6 +64,7 @@ export async function enterRoom(
     setMessages([]);
     setPresence([]);
     setRoomName("");
+    setRoomAcl(null);
     lastSince = undefined;
     setChatLoading(true);
   });
@@ -75,6 +77,7 @@ export async function enterRoom(
       setPresence(data.presence);
       if (data.viewer_hash) setViewerHash(data.viewer_hash);
       if (data.room_name)   setRoomName(data.room_name);
+      if (data.room_acl)    setRoomAcl(data.room_acl);
       if (data.messages.length > 0)
         lastSince = data.messages[data.messages.length - 1].created;
       setChatLoading(false);
@@ -154,6 +157,8 @@ export async function createChatRoom(
     visibility: import('./api').RoomVisibility;
     allow_cid?: string[];
     allow_gid?: string[];
+    deny_cid?: string[];
+    deny_gid?: string[];
   },
 ): Promise<{ id: number; name: string }> {
   const room = await apiCreate(nick, opts);
@@ -177,6 +182,54 @@ export function resetChat(): void {
     setPresence([]);
     setActiveRoomId(null);
     setViewerHash("");
+    setRoomAcl(null);
     lastSince = undefined;
   });
+}
+
+// ── Pinned rooms (sidebar widget, localStorage-backed) ─────────────────────────
+
+export interface PinnedRoom {
+  nick: string;
+  roomId: number;
+  name: string;
+  acl: ChatRoomAcl | null;
+}
+
+function loadPinned(): PinnedRoom[] {
+  try { return JSON.parse(localStorage.getItem("hz-pinned-chats") ?? "[]") as PinnedRoom[]; }
+  catch { return []; }
+}
+
+function savePinned(rooms: PinnedRoom[]): void {
+  try { localStorage.setItem("hz-pinned-chats", JSON.stringify(rooms)); } catch {}
+}
+
+const [pinnedRooms, setPinnedRooms] = createSignal<PinnedRoom[]>(loadPinned());
+export { pinnedRooms };
+
+export function pinRoom(room: PinnedRoom): void {
+  setPinnedRooms((prev) => {
+    const existing = prev.findIndex((r) => r.roomId === room.roomId && r.nick === room.nick);
+    if (existing !== -1) {
+      const updated = prev.map((r, i) => i === existing ? { ...r, ...room } : r);
+      savePinned(updated);
+      return updated;
+    }
+    const next = [...prev, room];
+    savePinned(next);
+    return next;
+  });
+}
+
+export function unpinRoom(nick: string, roomId: number): void {
+  setPinnedRooms((prev) => {
+    const next = prev.filter((r) => !(r.nick === nick && r.roomId === roomId));
+    savePinned(next);
+    return next;
+  });
+}
+
+export function isRoomPinned(nick: string, roomId: number): boolean {
+  return pinnedRooms().some((r) => r.nick === nick && r.roomId === roomId);
 }

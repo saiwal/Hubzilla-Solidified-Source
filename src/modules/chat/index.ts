@@ -1,5 +1,5 @@
 // src/modules/chat/index.ts
-import { registerModule } from "@/shared/lib/module-registry";
+import { registerModule, globalSlot } from "@/shared/lib/module-registry";
 import { useI18n } from "@/i18n";
 import { usePageNick } from "@/shared/store/site-config";
 
@@ -27,7 +27,10 @@ registerModule({
     // hidden: true,       // excluded from main nav; shown via channel_tabs
   },
   slots: {
-    right: [() => import("./widgets/BookmarkedRoomsWidget")],
+    right: [
+      () => import("./widgets/BookmarkedRoomsWidget"),
+      globalSlot(() => import("./widgets/PinnedChatWidget")),
+    ],
   },
   permissions: [],
   appName: "Chatrooms",
