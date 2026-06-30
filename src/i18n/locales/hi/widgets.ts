@@ -12,4 +12,5 @@ export const widgets: RawDictionary["widgets"] = {
   archive:        "संग्रह",
   no_archive:     "अभी तक कोई पोस्ट नहीं।",
   connections:    "कनेक्शन",
+  view_all:       "सभी देखें",
 };

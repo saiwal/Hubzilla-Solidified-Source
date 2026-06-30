@@ -380,7 +380,7 @@ export default function ConnectionsSection() {
   const [newConn, setNewConn] = createSignal<Connection | null>(null);
   const [allConnections, setAllConnections] = createSignal<Connection[]>([]);
   const [hasMore, setHasMore] = createSignal(true);
-  const [appendMode, setAppendMode] = createSignal(false);
+  const [lastPage, setLastPage] = createSignal(-1);
 
   let sentinelRef!: HTMLDivElement;
 
@@ -397,25 +397,32 @@ export default function ConnectionsSection() {
 
   createEffect(() => {
     const data = connectionsData();
+    const currentPage = page();
+    
     if (connectionsData.loading || !data) return;
-    const shouldAppend = untrack(appendMode) && untrack(page) > 0;
+    
+    // Determine if we should append or replace
+    const previousPage = untrack(lastPage);
+    const shouldAppend = previousPage !== -1 && currentPage > previousPage;
+    
     if (shouldAppend) {
+      // Append new items to existing list
       setAllConnections((prev) => [...prev, ...data.connections]);
     } else {
+      // Replace entire list (new search/filter/sort)
       setAllConnections(data.connections);
     }
+    
+    // Update tracking
+    setLastPage(currentPage);
     setHasMore(data.connections.length >= LIMIT);
-    setAppendMode(false);
   });
 
   onMount(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && hasMore() && !connectionsData.loading && allConnections().length > 0) {
-          batch(() => {
-            setAppendMode(true);
-            setPage((p) => p + 1);
-          });
+          setPage((p) => p + 1);
         }
       },
       { rootMargin: "200px" },
@@ -428,7 +435,7 @@ export default function ConnectionsSection() {
     batch(() => {
       setAllConnections([]);
       setHasMore(true);
-      setAppendMode(false);
+      setLastPage(-1);
     });
   }
 
@@ -607,3 +614,4 @@ export default function ConnectionsSection() {
     </div>
   );
 }
+

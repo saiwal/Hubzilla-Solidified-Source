@@ -69,9 +69,14 @@ export default function ChannelConnectionsWidget() {
         </div>
 
         <Show when={total() > conns().length}>
-          <p class="text-xs text-muted text-center mt-2.5">
-            {total()} {t("widgets.connections")}
-          </p>
+          <div class="mt-2.5 text-center">
+            <a
+              href="/directory/connections"
+              class="text-xs text-accent hover:underline"
+            >
+              {t("widgets.view_all")} ({total()})
+            </a>
+          </div>
         </Show>
       </div>
     </Show>

@@ -45,6 +45,7 @@ export const settings: RawDictionary["settings"] = {
   keywords:          "कीवर्ड",
   keywords_hint:     "अल्पविराम से अलग। खोज और सुझाव के लिए उपयोग किया जाता है।",
   hide_friends:      "अपनी कनेक्शन सूची दूसरों से छुपाएँ",
+  publish_in_directory: "नेटवर्क डायरेक्टरी में अपनी प्रोफ़ाइल प्रकाशित करें",
   // Display fields
   theme:                   "थीम",
   theme_hint:              "Hubzilla सर्वर-साइड थीम। लागू करने के लिए पेज रीलोड की आवश्यकता है।",

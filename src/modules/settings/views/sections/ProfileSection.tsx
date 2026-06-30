@@ -15,6 +15,7 @@ interface ProfileData {
   about: string;
   keywords: string;
   hide_friends: number;
+  publish: number;
 }
 
 async function fetchProfile(): Promise<ProfileData> {
@@ -39,8 +40,8 @@ export default function ProfileSection() {
   const { data, saving, handleSubmit } = useSectionForm({
     fetcher: fetchProfile,
     saver: saveProfile,
-    numericFields: ["hide_friends"],
-    checkboxFields: ["hide_friends"],
+    numericFields: ["hide_friends", "publish"],
+    checkboxFields: ["hide_friends", "publish"],
   });
 
   return (
@@ -97,6 +98,17 @@ export default function ProfileSection() {
               class="h-4 w-4 rounded border-rim accent-accent"
             />
             <span class="text-sm text-txt">{t("settings.hide_friends")}</span>
+          </label>
+
+          <label class="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              name="publish"
+              value="1"
+              checked={!!data()!.publish}
+              class="h-4 w-4 rounded border-rim accent-accent"
+            />
+            <span class="text-sm text-txt">{t("settings.publish_in_directory")}</span>
           </label>
 
           <SaveBar saving={saving()} />

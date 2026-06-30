@@ -102,7 +102,7 @@ const DirectoryCard: Component<Props> = (props) => {
         <Show
           when={!e().is_connected}
           fallback={
-            <span class="flex-1 text-center px-3 py-1.5 rounded-lg text-xs font-medium border border-rim text-muted cursor-default">
+            <span class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-rim text-muted cursor-default">
               <MdFillCheck class="w-3.5 h-3.5 shrink-0" /> {t("directory.connected")}
             </span>
           }

@@ -17,6 +17,7 @@ export interface ProfileData extends ProfileListItem {
   about: string;
   keywords: string;
   hide_friends: number;
+  publish: number;
   marital: string;
   sexual: string;
   politic: string;

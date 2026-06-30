@@ -1,9 +1,13 @@
 import { createResource, createSignal, lazy, Show } from "solid-js";
+import { Portal } from "solid-js/web";
 import { useParams, A } from "@solidjs/router";
 import { useI18n } from "@/i18n";
 import { toast } from "@/shared/store/toast";
 import { fetchProfile, saveProfile, uploadPhoto } from "../api/api";
+import type { Photo } from "@/modules/photos/api/api";
 import { Section, Toggle, inputClass } from "@/modules/settings/store/FormHelpers";
+import PhotosPicker from "@/shared/editor/attachments/picker/PhotosPicker";
+import { currentNick } from "@/shared/store/auth-store";
 
 // Lazy-loaded so Filerobot + React don't inflate the profile chunk
 const ImageEditor = lazy(() => import("@/shared/views/ImageEditor"));
@@ -20,6 +24,8 @@ export default function ProfileEditView() {
   const [coverUrl, setCoverUrl] = createSignal<string | null>(null);
   const [avatarUploading, setAvatarUploading] = createSignal(false);
   const [coverUploading, setCoverUploading] = createSignal(false);
+  const [avatarPickerOpen, setAvatarPickerOpen] = createSignal(false);
+  const [coverPickerOpen, setCoverPickerOpen] = createSignal(false);
 
   const [profile] = createResource(() => params.id, async (id) => {
     const data = await fetchProfile(id);
@@ -35,6 +41,7 @@ export default function ProfileEditView() {
     const fd = new FormData(form);
     const raw: Record<string, string | number> = Object.fromEntries(fd) as Record<string, string>;
     raw.hide_friends = "hide_friends" in raw ? 1 : 0;
+    raw.publish = "publish" in raw ? 1 : 0;
 
     setSaving(true);
     try {
@@ -71,6 +78,20 @@ export default function ProfileEditView() {
       toast.error(err instanceof Error ? err.message : t("profiles.avatar_error"));
     } finally {
       setAvatarUploading(false);
+    }
+  }
+
+  async function handlePhotoFromLibrary(type: "avatar" | "cover", photo: Photo) {
+    if (type === "avatar") setAvatarPickerOpen(false);
+    else setCoverPickerOpen(false);
+    try {
+      const res = await fetch(photo.src, { credentials: "include" });
+      const blob = await res.blob();
+      const file = new File([blob], photo.filename || "photo.jpg", { type: blob.type || "image/jpeg" });
+      if (type === "avatar") setAvatarFile(file);
+      else setCoverFile(file);
+    } catch {
+      toast.error(t("profiles.photo_fetch_error"));
     }
   }
 
@@ -139,6 +160,22 @@ export default function ProfileEditView() {
         )}
       </Show>
 
+      <Show when={avatarPickerOpen()}>
+        <ProfilePhotoPickerModal
+          nick={currentNick()}
+          onSelect={(photo) => handlePhotoFromLibrary("avatar", photo)}
+          onClose={() => setAvatarPickerOpen(false)}
+        />
+      </Show>
+
+      <Show when={coverPickerOpen()}>
+        <ProfilePhotoPickerModal
+          nick={currentNick()}
+          onSelect={(photo) => handlePhotoFromLibrary("cover", photo)}
+          onClose={() => setCoverPickerOpen(false)}
+        />
+      </Show>
+
       {/* Loading skeleton */}
       <Show when={profile.loading}>
         <FormSkeleton />
@@ -174,25 +211,38 @@ export default function ProfileEditView() {
                   <div class="w-full h-full bg-gradient-to-br from-elevated to-rim" />
                 </Show>
 
-                {/* Cover upload button */}
-                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
-                  <button
-                    type="button"
-                    onClick={() => pickFile("cover")}
-                    disabled={coverUploading()}
-                    class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/60 text-white text-sm
-                           hover:bg-black/80 transition-colors disabled:opacity-50"
-                  >
-                    <Show when={coverUploading()} fallback={<CameraIcon class="w-4 h-4" />}>
+                {/* Cover photo buttons */}
+                <div class="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
+                  <Show when={coverUploading()} fallback={
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => pickFile("cover")}
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/60 text-white text-sm hover:bg-black/80 transition-colors"
+                      >
+                        <UploadIcon class="w-4 h-4" />
+                        {t("profiles.upload_photo")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCoverPickerOpen(true)}
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/60 text-white text-sm hover:bg-black/80 transition-colors"
+                      >
+                        <GalleryIcon class="w-4 h-4" />
+                        {t("profiles.choose_from_library")}
+                      </button>
+                    </>
+                  }>
+                    <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/60 text-white text-sm">
                       <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    </Show>
-                    {coverUploading() ? t("profiles.uploading") : t("profiles.change_cover")}
-                  </button>
+                      {t("profiles.uploading")}
+                    </div>
+                  </Show>
                 </div>
               </div>
 
-              {/* Avatar row */}
-              <div class="flex items-end gap-3 px-4 -mt-10 pb-3">
+              {/* Avatar + info row */}
+              <div class="flex items-start gap-3 px-4 -mt-10 pb-3 relative">
                 <div class="relative shrink-0 group">
                   <div class="w-20 h-20 rounded-full border-4 border-bg overflow-hidden bg-elevated">
                     <Show when={avatarUrl() || p().avatar_l}>
@@ -205,23 +255,36 @@ export default function ProfileEditView() {
                       )}
                     </Show>
                   </div>
-                  {/* Avatar overlay button */}
-                  <button
-                    type="button"
-                    onClick={() => pickFile("avatar")}
-                    disabled={avatarUploading()}
-                    class="absolute inset-0 rounded-full flex items-center justify-center
-                           opacity-0 group-hover:opacity-100 transition-opacity
-                           bg-black/50 disabled:cursor-not-allowed"
-                    aria-label={t("profiles.change_avatar")}
-                  >
-                    <Show when={avatarUploading()} fallback={<CameraIcon class="w-5 h-5 text-white" />}>
+                  {/* Avatar overlay */}
+                  <div class="absolute inset-0 rounded-full flex items-center justify-center gap-1.5
+                              opacity-0 group-hover:opacity-100 transition-opacity bg-black/50">
+                    <Show when={avatarUploading()} fallback={
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => pickFile("avatar")}
+                          class="p-1.5 rounded-full hover:bg-white/20 transition-colors"
+                          aria-label={t("profiles.upload_photo")}
+                        >
+                          <CameraIcon class="w-4 h-4 text-white" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setAvatarPickerOpen(true)}
+                          class="p-1.5 rounded-full hover:bg-white/20 transition-colors"
+                          aria-label={t("profiles.choose_from_library")}
+                        >
+                          <GalleryIcon class="w-4 h-4 text-white" />
+                        </button>
+                      </>
+                    }>
                       <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     </Show>
-                  </button>
+                  </div>
                 </div>
 
-                <div class="pb-1">
+                {/* mt-10 cancels the row's -mt-10: text starts exactly at the cover bottom */}
+                <div class="mt-10 pb-1">
                   <p class="text-sm font-semibold text-txt leading-tight">{p().fullname || p().profile_name}</p>
                   <p class="text-xs text-muted">{p().pdesc}</p>
                 </div>
@@ -251,6 +314,13 @@ export default function ProfileEditView() {
                 label={t("profiles.hide_friends")}
                 checked={!!p().hide_friends}
               />
+              <Show when={p().is_default}>
+                <Toggle
+                  name="publish"
+                  label={t("profiles.publish_in_directory")}
+                  checked={!!p().publish}
+                />
+              </Show>
             </Section>
 
             {/* Personal */}
@@ -361,6 +431,78 @@ export default function ProfileEditView() {
   );
 }
 
+function ProfilePhotoPickerModal(props: {
+  nick: string;
+  onSelect: (photo: Photo) => void;
+  onClose: () => void;
+}) {
+  const { t } = useI18n();
+  const [selectedPhoto, setSelectedPhoto] = createSignal<Photo | null>(null);
+
+  const selectedSet = () => {
+    const p = selectedPhoto();
+    return new Set<string>(p ? [p.resource_id] : []);
+  };
+
+  function handleToggle(photo: Photo) {
+    setSelectedPhoto((prev) => prev?.resource_id === photo.resource_id ? null : photo);
+  }
+
+  return (
+    <Portal mount={document.body}>
+      <div
+        class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60"
+        onClick={(e) => { if (e.target === e.currentTarget) props.onClose(); }}
+      >
+        <div class="flex flex-col w-full max-w-2xl h-[85vh] bg-surface border border-rim rounded-xl shadow-2xl overflow-hidden">
+          <header class="flex items-center justify-between px-4 py-3 border-b border-rim shrink-0">
+            <span class="text-sm font-semibold text-txt">{t("profiles.photo_picker_title")}</span>
+            <button
+              type="button"
+              onClick={props.onClose}
+              class="p-1.5 rounded-md text-muted hover:text-txt hover:bg-elevated transition-colors"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </header>
+
+          <div class="flex-1 overflow-hidden min-h-0 p-4">
+            <PhotosPicker nick={props.nick} selected={selectedSet} onToggle={handleToggle} />
+          </div>
+
+          <footer class="flex items-center justify-between px-4 py-3 border-t border-rim bg-elevated shrink-0">
+            <span class="text-xs text-muted truncate max-w-[50%]">
+              <Show when={selectedPhoto()} fallback={t("editor.select_to_attach")}>
+                {selectedPhoto()!.filename}
+              </Show>
+            </span>
+            <div class="flex gap-2">
+              <button
+                type="button"
+                onClick={props.onClose}
+                class="px-3 py-1.5 text-sm rounded-lg border border-rim text-muted hover:bg-surface transition-colors"
+              >
+                {t("editor.cancel_btn")}
+              </button>
+              <button
+                type="button"
+                disabled={!selectedPhoto()}
+                onClick={() => { const p = selectedPhoto(); if (p) props.onSelect(p); }}
+                class="px-4 py-1.5 text-sm font-medium rounded-lg bg-accent text-accent-fg
+                       hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+              >
+                {t("profiles.use_this_photo")}
+              </button>
+            </div>
+          </footer>
+        </div>
+      </div>
+    </Portal>
+  );
+}
+
 function CameraIcon(props: { class?: string }) {
   return (
     <svg
@@ -375,6 +517,28 @@ function CameraIcon(props: { class?: string }) {
     >
       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
       <circle cx="12" cy="13" r="4" />
+    </svg>
+  );
+}
+
+function GalleryIcon(props: { class?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" class={props.class} viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <polyline points="21 15 16 10 5 21" />
+    </svg>
+  );
+}
+
+function UploadIcon(props: { class?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" class={props.class} viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="17 8 12 3 7 8" />
+      <line x1="12" y1="3" x2="12" y2="15" />
     </svg>
   );
 }

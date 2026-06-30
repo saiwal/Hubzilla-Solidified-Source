@@ -46,6 +46,7 @@ export const settings: RawDictionary["settings"] = {
   keywords:          "Keywords",
   keywords_hint:     "Comma-separated. Used for search and suggestions.",
   hide_friends:      "Hide my connections list from others",
+  publish_in_directory: "Publish my profile in the network directory",
   // Display fields
   theme:                   "Theme",
   theme_hint:              "The Hubzilla server-side theme. Requires a page reload to apply.",

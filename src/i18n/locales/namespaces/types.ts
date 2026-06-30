@@ -305,6 +305,7 @@ export type RawDictionary = {
     archive:        string;
     no_archive:     string;
     connections:    string;
+    view_all:       string;
   };
   tools: {
     label:            string;
@@ -629,6 +630,7 @@ export type RawDictionary = {
     keywords:          string;
     keywords_hint:     string;
     hide_friends:      string;
+    publish_in_directory: string;
     marital:           string;
     sexual:            string;
     politic:           string;
@@ -646,15 +648,20 @@ export type RawDictionary = {
     contact:           string;
     channels:          string;
     // photo uploaders
-    avatar_editor_title: string;
-    cover_editor_title:  string;
-    change_avatar:       string;
-    change_cover:        string;
-    uploading:           string;
-    avatar_saved:        string;
-    avatar_error:        string;
-    cover_saved:         string;
-    cover_error:         string;
+    avatar_editor_title:    string;
+    cover_editor_title:     string;
+    change_avatar:          string;
+    change_cover:           string;
+    uploading:              string;
+    upload_photo:           string;
+    choose_from_library:    string;
+    photo_picker_title:     string;
+    use_this_photo:         string;
+    photo_fetch_error:      string;
+    avatar_saved:           string;
+    avatar_error:           string;
+    cover_saved:            string;
+    cover_error:            string;
     // contacts assignment
     contacts_title:      string;
     contacts_desc:       string;
@@ -712,6 +719,7 @@ export type RawDictionary = {
     keywords:          string;
     keywords_hint:     string;
     hide_friends:      string;
+    publish_in_directory: string;
     // Display fields
     theme:                   string;
     theme_hint:              string;
