@@ -1,5 +1,5 @@
 // src/modules/pubstream/views/PubstreamView.tsx
-import { Show, createEffect, onCleanup, onMount, createSignal } from "solid-js";
+import { Show, createEffect, onCleanup, onMount, createSignal, Switch, Match, For } from "solid-js";
 import { useI18n } from "@/i18n";
 import {
   threads,
@@ -12,13 +12,17 @@ import {
   loadMore,
   optimisticLike,
   optimisticRepeat,
+  viewMode,
+  changeView,
 } from "../store";
-import MasonryView, {
-  MasonryPlaceholder,
-} from "@/shared/stream/feedviews/MasonryView";
+import { MasonryPlaceholder } from "@/shared/stream/feedviews/MasonryView";
+import { ListPlaceholder } from "@/shared/stream/feedviews/ListView";
+import { FeedPlaceholder } from "@/shared/stream/feedviews/FeedView";
+import StreamList from "@/shared/stream/feedviews/StreamList";
+import { ViewSwitcher } from "@/shared/stream/filters";
 import type { StreamHandlers } from "@/shared/stream/types";
 import { toggleVerb, repeatItem } from "@/shared/stream/store/actions-store";
-import { MdFillPublic, MdFillWhatshot } from "solid-icons/md";
+import { MdFillPublic, MdFillSearch, MdFillClose } from "solid-icons/md";
 import { useScrollStyle } from "@/shared/store/scroll-style";
 
 // ── iid lookup from the pubstream flat posts signal ────────────────────────
@@ -35,9 +39,7 @@ function usePubstreamHandlers(tag: () => string): StreamHandlers {
       optimisticLike(mid);
       toggleVerb(iid, "like").catch(() => optimisticLike(mid));
     },
-    onDislike(_mid: string) {
-      // not surfaced in pubstream masonry cards
-    },
+    onDislike(_mid: string) {},
     onRepeat(mid: string) {
       const iid = iidForMid(mid);
       const node = posts().find((p) => p.mid === mid || p.uuid === mid);
@@ -45,82 +47,36 @@ function usePubstreamHandlers(tag: () => string): StreamHandlers {
       optimisticRepeat(mid);
       repeatItem(iid).catch(() => optimisticRepeat(mid));
     },
-    onComment(
-      _parentMid: string,
-      _body: string,
-      _name: string,
-      _avatar: string,
-    ) {
+    onComment(_parentMid, _body, _name, _avatar) {
       loadPubstream(tag() || undefined);
     },
-    onLoadComments: (_mid: string, _uuid: string) => Promise.resolve(),
+    onLoadComments: (_mid, _uuid) => Promise.resolve(),
   };
 }
 
-// ── Tag filter bar ─────────────────────────────────────────────────────────
-function TagBar(props: { tag: string; onTag: (t: string) => void }) {
-  const { t: tr } = useI18n();
-  const [draft, setDraft] = createSignal(props.tag);
-  const submit = () => props.onTag(draft().trim());
-
-  return (
-    <div class="flex items-center gap-2 mb-4">
-      <span class="text-muted text-sm">#</span>
-      <input
-        value={draft()}
-        onInput={(e) => setDraft(e.currentTarget.value)}
-        onKeyDown={(e) => e.key === "Enter" && submit()}
-        placeholder={tr("pubstream.filter_by_tag")}
-        class="flex-1 bg-surface border border-rim rounded-lg px-3 py-1.5 text-sm
-               text-txt placeholder:text-subtle focus:outline-none
-               hover:border-rim-strong focus:border-accent transition-colors"
-      />
-      <Show when={draft()}>
-        <button
-          onClick={() => {
-            setDraft("");
-            props.onTag("");
-          }}
-          class="text-xs text-muted hover:text-txt px-2 py-1.5 rounded-lg
-                 border border-rim hover:bg-elevated transition-colors"
-        >
-          {tr("pubstream.clear")}
-        </button>
-      </Show>
-      <button
-        onClick={submit}
-        class="text-xs px-3 py-1.5 rounded-lg bg-accent text-accent-fg font-medium
-               hover:opacity-90 transition-opacity"
-      >
-        {tr("pubstream.filter")}
-      </button>
-    </div>
-  );
-}
+const ICON_BTN =
+  "p-1.5 rounded-lg border border-rim bg-surface text-muted " +
+  "hover:bg-elevated hover:text-txt transition-colors shrink-0 " +
+  "flex items-center justify-center";
 
 // ── Main view ──────────────────────────────────────────────────────────────
 export default function PubstreamView() {
   const { t } = useI18n();
   const [tag, setTag] = createSignal("");
+  const [searchOpen, setSearchOpen] = createSignal(false);
   const handlers = usePubstreamHandlers(tag);
   const scrollStyle = useScrollStyle();
   let sentinel!: HTMLDivElement;
+  let searchInputRef: HTMLInputElement | undefined;
 
-  // Load on mount; fast back-nav guard
   onMount(() => {
-    if (threads().length === 0) {
-      loadPubstream();
-    }
+    if (threads().length === 0) loadPubstream();
   });
 
-  // Reload when tag changes — skip the initial reactive run
   let tagInitialized = false;
   createEffect(() => {
     const currentTag = tag();
-    if (!tagInitialized) {
-      tagInitialized = true;
-      return;
-    }
+    if (!tagInitialized) { tagInitialized = true; return; }
     loadPubstream(currentTag || undefined);
   });
 
@@ -135,6 +91,20 @@ export default function PubstreamView() {
     onCleanup(() => observer.disconnect());
   });
 
+  function openSearch() {
+    setSearchOpen(true);
+    setTimeout(() => searchInputRef?.focus(), 0);
+  }
+
+  function clearTag() {
+    setTag("");
+    setSearchOpen(false);
+  }
+
+  function onSearchBlur() {
+    if (!tag()) setTimeout(() => setSearchOpen(false), 150);
+  }
+
   return (
     <Show
       when={!disabled()}
@@ -142,43 +112,100 @@ export default function PubstreamView() {
         <div class="flex flex-col items-center justify-center py-20 gap-4 text-center">
           <MdFillPublic size={40} class="text-muted" />
           <p class="text-txt font-semibold">{t("pubstream.unavailable")}</p>
-          <p class="text-sm text-muted max-w-xs">
-            {t("pubstream.unavailable_desc")}
-          </p>
+          <p class="text-sm text-muted max-w-xs">{t("pubstream.unavailable_desc")}</p>
         </div>
       }
     >
-      <div class="">
-        {/* Header */}
-        <div class="flex items-center gap-2 mb-4">
-          <MdFillWhatshot size={18} class="text-accent shrink-0" />
-          <h1 class="font-semibold text-txt text-base">{t("pubstream.title")}</h1>
-          <Show when={meta()?.firehose}>
-            <span class="ml-auto text-xs text-muted border border-rim rounded-full px-2 py-0.5">
-              {t("pubstream.firehose")}
-            </span>
-          </Show>
-        </div>
+      <div>
+        {/* Single toolbar row */}
+        <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-1 pb-2">
 
-        {/* Tag filter */}
-        <TagBar tag={tag()} onTag={setTag} />
+          {/* Left: firehose badge */}
+          <div class="flex items-center">
+            <Show when={meta()?.firehose}>
+              <span class="text-xs text-muted border border-rim rounded-full px-2 py-0.5">
+                {t("pubstream.firehose")}
+              </span>
+            </Show>
+          </div>
+
+          {/* Center: view switcher */}
+          <ViewSwitcher viewMode={viewMode()} onChange={changeView} />
+
+          {/* Right: collapsible tag search */}
+          <div class="flex items-center justify-end gap-1">
+            <Show when={tag()}>
+              <span class="text-xs text-accent font-medium">#{tag()}</span>
+            </Show>
+            <Show
+              when={searchOpen() || !!tag()}
+              fallback={
+                <button onClick={openSearch} title={t("pubstream.filter_by_tag")} class={ICON_BTN}>
+                  <MdFillSearch size={15} />
+                </button>
+              }
+            >
+              <div class="flex items-center gap-1">
+                <span class="text-muted text-sm shrink-0">#</span>
+                <input
+                  ref={searchInputRef}
+                  type="search"
+                  value={tag()}
+                  onInput={(e) => setTag(e.currentTarget.value.trim())}
+                  onKeyDown={(e) => e.key === "Enter" && setSearchOpen(false)}
+                  onBlur={onSearchBlur}
+                  placeholder={t("pubstream.filter_by_tag")}
+                  class="h-8 w-28 sm:w-36 text-sm border border-rim rounded-lg bg-surface
+                         text-txt placeholder:text-muted px-2.5 py-1.5
+                         focus:outline-none focus:ring-2 focus:ring-accent transition-colors"
+                />
+                <Show when={tag()}>
+                  <button onClick={clearTag} title={t("pubstream.clear")} class={ICON_BTN}>
+                    <MdFillClose size={13} />
+                  </button>
+                </Show>
+              </div>
+            </Show>
+          </div>
+        </div>
 
         {/* Initial skeleton */}
         <Show
           when={!loading() || threads().length > 0}
-          fallback={<MasonryPlaceholder count={12} />}
+          fallback={
+            <Switch>
+              <Match when={viewMode() === "list"}>
+                <ListPlaceholder count={8} />
+              </Match>
+              <Match when={viewMode() === "masonry"}>
+                <MasonryPlaceholder count={12} />
+              </Match>
+              <Match when={true}>
+                <For each={Array(5).fill(0)}>{() => <FeedPlaceholder />}</For>
+              </Match>
+            </Switch>
+          }
         >
-          <MasonryView posts={threads()} handlers={handlers} />
+          <StreamList posts={threads()} viewMode={viewMode()} handlers={handlers} />
         </Show>
 
         {/* Append skeleton while loading more */}
         <Show when={loading() && threads().length > 0}>
-          <MasonryPlaceholder count={3} />
+          <Switch>
+            <Match when={viewMode() === "list"}>
+              <ListPlaceholder count={3} />
+            </Match>
+            <Match when={viewMode() === "masonry"}>
+              <MasonryPlaceholder count={3} />
+            </Match>
+            <Match when={true}>
+              <For each={Array(2).fill(0)}>{() => <FeedPlaceholder />}</For>
+            </Match>
+          </Switch>
         </Show>
 
         <div ref={sentinel} class="h-1" />
 
-        {/* Load more button (only in load_more mode) */}
         <Show when={!loading() && hasMore() && threads().length > 0 && scrollStyle() === "load_more"}>
           <div class="flex justify-center mt-6 mb-2">
             <button

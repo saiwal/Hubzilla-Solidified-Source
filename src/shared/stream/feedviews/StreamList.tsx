@@ -5,9 +5,8 @@ import type { StreamHandlers } from "../types";
 import FeedView from "./FeedView";
 import MasonryView from "./MasonryView";
 import ListView from "./ListView";
-import InboxView from "./InboxView";
 
-export type ViewMode = "feed" | "masonry" | "list" | "inbox";
+export type ViewMode = "feed" | "masonry" | "list";
 
 export default function StreamList(props: {
   posts: ThreadNode[];
@@ -24,9 +23,6 @@ export default function StreamList(props: {
       </Match>
       <Match when={props.viewMode === "list"}>
         <ListView posts={props.posts} handlers={props.handlers} />
-      </Match>
-      <Match when={props.viewMode === "inbox"}>
-        <InboxView posts={props.posts} handlers={props.handlers} />
       </Match>
     </Switch>
   );

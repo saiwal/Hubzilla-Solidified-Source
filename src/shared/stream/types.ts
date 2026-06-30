@@ -16,4 +16,4 @@ export interface StreamHandlers {
   onRefresh?: (mid: string, uuid: string) => Promise<void>;
 }
 
-export type ViewMode = "feed" | "masonry" | "list" | "inbox";
+export type ViewMode = "feed" | "masonry" | "list";

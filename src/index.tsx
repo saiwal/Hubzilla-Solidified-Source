@@ -3,6 +3,7 @@ import "./index.css";
 import App from "./App";
 import { loadTypography } from "@/shared/lib/typography";
 import { loadBackground } from "@/shared/lib/background";
+import { loadCornerRadius } from "@/shared/lib/corner-radius";
 import { DARK_THEMES } from "@/shared/lib/useTheme";
 import type { ThemeId } from "@/shared/types/theme.types";
 
@@ -12,5 +13,6 @@ document.documentElement.classList.toggle("dark", DARK_THEMES.has(saved));
 
 loadTypography();
 loadBackground();
+loadCornerRadius();
 
 render(() => <App />, document.getElementById("root")!);

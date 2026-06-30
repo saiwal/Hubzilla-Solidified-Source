@@ -8,7 +8,7 @@ export default function ProfilePageView() {
 
   return (
     <div class="max-w-2xl mx-auto py-4 px-2">
-      <ProfileView />
+      <ProfileView full />
       <div class="mt-3 text-center">
         <a
           href={`/channel/${params.nick}`}

@@ -72,7 +72,7 @@ export default function NetworkView() {
         when={!loading()}
         fallback={
           <Switch>
-            <Match when={viewMode() === "list" || viewMode() === "inbox"}>
+            <Match when={viewMode() === "list"}>
               <ListPlaceholder count={8} />
             </Match>
             <Match when={viewMode() === "masonry"}>
@@ -88,7 +88,7 @@ export default function NetworkView() {
 
         <Show when={loadingMore()}>
           <Switch>
-            <Match when={viewMode() === "list" || viewMode() === "inbox"}>
+            <Match when={viewMode() === "list"}>
               <ListPlaceholder count={4} />
             </Match>
             <Match when={viewMode() === "masonry"}>

@@ -1,8 +1,8 @@
 // src/modules/channel/views/ProfileView.tsx
-import { createResource, Show, For, createSignal } from "solid-js";
-import { useParams } from "@solidjs/router";
+import { createResource, Show, For } from "solid-js";
+import { useParams, A } from "@solidjs/router";
 import { useViewerRole } from "@/shared/store/site-config";
-import { MdFillPublic, MdFillLocation_on, MdFillExpand_more, MdFillExpand_less } from "solid-icons/md";
+import { MdFillLocation_on, MdFillPublic } from "solid-icons/md";
 import { apiFetch } from "@/shared/lib/fetch";
 import { useI18n } from "@/i18n";
 
@@ -47,7 +47,8 @@ async function fetchProfile(nick: string): Promise<ChannelProfile | null> {
   if (!data) return null;
   return data as ChannelProfile;
 }
-export default function ProfileView() {
+
+export default function ProfileView(props: { full?: boolean }) {
   const params = useParams<{ nick?: string }>();
   const viewerRole = useViewerRole();
   const [profile] = createResource(() => params.nick ?? "", fetchProfile);
@@ -62,44 +63,31 @@ export default function ProfileView() {
         <ProfileSkeleton />
       </Show>
       <Show when={p() !== undefined && p() !== null}>
-        <ProfileCard p={p()!} isOwner={isOwner()} isVisitor={isVisitor()} />
+        <Show
+          when={props.full}
+          fallback={
+            <CompactCard p={p()!} isOwner={isOwner()} isVisitor={isVisitor()} />
+          }
+        >
+          <FullCard p={p()!} isOwner={isOwner()} isVisitor={isVisitor()} />
+        </Show>
       </Show>
     </div>
   );
 }
 
-function ProfileField(props: { label: string; value: string }) {
-  return (
-    <Show when={props.value}>
-      <div class="flex gap-2">
-        <span class="text-xs font-medium text-muted w-28 shrink-0 pt-0.5">
-          {props.label}
-        </span>
-        <span class="text-txt text-xs leading-relaxed">
-          {props.value}
-        </span>
-      </div>
-    </Show>
-  );
-}
+// ─── Shared header (cover + avatar + name + connect) ────────────────────────
 
-function ProfileCard(props: {
+function ProfileHeader(props: {
   p: ChannelProfile;
   isOwner: boolean;
   isVisitor: boolean;
 }) {
   const { p } = props;
   const { t } = useI18n();
-  const [expanded, setExpanded] = createSignal(false);
-
-  const hasDetails = () =>
-    p.gender || p.marital || p.sexual || p.dob !== "0000-00-00" ||
-    p.politic || p.religion || p.hometown || p.interest || p.romance ||
-    p.work || p.education || p.music || p.book || p.tv || p.film ||
-    p.likes || p.dislikes || p.contact || p.channels;
 
   return (
-    <div class="rounded-2xl overflow-hidden bg-surface border border-rim shadow-sm">
+    <>
       {/* Cover */}
       <div class="relative bg-gradient-to-br from-accent to-accent-txt" style="aspect-ratio: 3 / 1;">
         <Show when={p.channel_cover}>
@@ -113,7 +101,7 @@ function ProfileCard(props: {
           />
         </div>
         <Show when={props.isOwner}>
-					<a
+          <a
             href="/settings/profile"
             class="absolute top-3 right-3 px-3 py-1.5 text-xs font-medium rounded-lg bg-black/40 hover:bg-black/60 text-white backdrop-blur-sm transition-colors"
           >
@@ -122,42 +110,122 @@ function ProfileCard(props: {
         </Show>
       </div>
 
-      {/* Body */}
-      <div class="pt-12 px-5 pb-5">
-        {/* Name + follow */}
-        <div class="flex items-start justify-between gap-3">
-          <div>
-            <h1 class="text-lg font-bold leading-tight text-txt">
-              {p.channel_name}
-            </h1>
-            <p class="text-sm text-muted">@{p.channel_address}</p>
-            <Show when={p.pdesc}>
-              <p class="text-xs text-muted mt-0.5 italic">{p.pdesc}</p>
-            </Show>
-          </div>
-          <Show when={!props.isOwner}>
-            <FollowButton nick={p.channel_address} connected={p.is_connected} isVisitor={props.isVisitor} />
+      {/* Name row */}
+      <div class="pt-12 px-5 flex items-start justify-between gap-3">
+        <div>
+          <h1 class="text-lg font-bold leading-tight text-txt">{p.channel_name}</h1>
+          <p class="text-sm text-muted">@{p.channel_address}</p>
+          <Show when={p.pdesc}>
+            <p class="text-xs text-muted mt-0.5 italic">{p.pdesc}</p>
           </Show>
         </div>
+        <Show when={!props.isOwner}>
+          <FollowButton nick={p.channel_address} connected={p.is_connected} isVisitor={props.isVisitor} />
+        </Show>
+      </div>
+    </>
+  );
+}
 
+// ─── Compact card (shown on /channel/:nick) ──────────────────────────────────
+
+function CompactCard(props: { p: ChannelProfile; isOwner: boolean; isVisitor: boolean }) {
+  const { p } = props;
+  const { t } = useI18n();
+
+  return (
+    <div class="rounded-2xl overflow-hidden bg-surface border border-rim shadow-sm">
+      <ProfileHeader p={p} isOwner={props.isOwner} isVisitor={props.isVisitor} />
+
+      <div class="px-5 pb-5">
+        {/* Location + gender */}
+        <Show when={p.location || p.gender}>
+          <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
+            <Show when={p.location}>
+              <span class="flex items-center gap-1">
+                <MdFillLocation_on size={14} /> {p.location}
+              </span>
+            </Show>
+            <Show when={p.gender}>
+              <span>{p.gender}</span>
+            </Show>
+          </div>
+        </Show>
+
+        {/* Keywords */}
+        <Show when={p.keywords.length > 0}>
+          <div class="mt-3 flex flex-wrap gap-1.5">
+            <For each={p.keywords}>
+              {(tag) => (
+                <span class="px-2 py-0.5 text-xs rounded-full bg-overlay text-muted">#{tag}</span>
+              )}
+            </For>
+          </div>
+        </Show>
+
+        {/* Contact info */}
+        <Show when={p.homepage || p.contact}>
+          <div class="mt-3 space-y-1">
+            <Show when={p.homepage}>
+              <a
+                href={p.homepage}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="flex items-center gap-1 text-xs text-muted hover:text-accent transition-colors"
+              >
+                <MdFillPublic size={13} />
+                {p.homepage.replace(/^https?:\/\//, "")}
+              </a>
+            </Show>
+            <Show when={p.contact}>
+              <p class="text-xs text-muted">{p.contact}</p>
+            </Show>
+          </div>
+        </Show>
+
+        {/* View full profile */}
+        <div class="mt-3 flex justify-end">
+          <A
+            href={`/profile/${p.channel_address}`}
+            class="text-xs text-muted hover:text-accent transition-colors"
+          >
+            {t("channel.more_details")} →
+          </A>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Full card (shown on /profile/:nick) ─────────────────────────────────────
+
+function FullCard(props: { p: ChannelProfile; isOwner: boolean; isVisitor: boolean }) {
+  const { p } = props;
+  const { t } = useI18n();
+
+  return (
+    <div class="rounded-2xl overflow-hidden bg-surface border border-rim shadow-sm">
+      <ProfileHeader p={p} isOwner={props.isOwner} isVisitor={props.isVisitor} />
+
+      <div class="px-5 pb-6 space-y-5 mt-4">
         {/* About */}
         <Show when={p.about}>
           <div
-            class="mt-3 text-sm text-txt leading-relaxed prose prose-sm dark:prose-invert max-w-none
-                     prose-a:text-accent prose-a:no-underline hover:prose-a:underline"
+            class="text-sm text-txt leading-relaxed prose prose-sm dark:prose-invert max-w-none
+                   prose-a:text-accent prose-a:no-underline hover:prose-a:underline"
             innerHTML={p.about}
           />
         </Show>
 
-        {/* Basic meta */}
-        <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
+        {/* Meta bar */}
+        <div class="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted">
           <Show when={p.location}>
             <span class="flex items-center gap-1">
               <MdFillLocation_on size={14} /> {p.location}
             </span>
           </Show>
           <Show when={p.homepage}>
-            <a 
+            <a
               href={p.homepage}
               target="_blank"
               rel="noopener noreferrer"
@@ -166,112 +234,104 @@ function ProfileCard(props: {
               <MdFillPublic size={13} /> {p.homepage.replace(/^https?:\/\//, "")}
             </a>
           </Show>
-          <Show when={p.connections > 0}>
-            <span>
-              <strong class="text-txt">{p.connections}</strong> {t("channel.connections")}
-            </span>
-          </Show>
         </div>
 
         {/* Keywords */}
         <Show when={p.keywords.length > 0}>
-          <div class="mt-3 flex flex-wrap gap-1.5">
+          <div class="flex flex-wrap gap-1.5">
             <For each={p.keywords}>
               {(tag) => (
-                <span class="px-2 py-0.5 text-xs rounded-full bg-overlay text-muted">
-                  #{tag}
-                </span>
+                <span class="px-2 py-0.5 text-xs rounded-full bg-overlay text-muted">#{tag}</span>
               )}
             </For>
           </div>
         </Show>
 
-        {/* Expanded details */}
-        <Show when={expanded()}>
-          <div class="mt-4 pt-4 border-t border-rim space-y-4">
-            {/* Personal */}
+        {/* Field sections */}
+        <Show when={
+          p.gender || p.marital || p.sexual || (p.dob && p.dob !== "0000-00-00") || p.hometown ||
+          p.politic || p.religion || p.interest || p.romance || p.likes || p.dislikes ||
+          p.music || p.book || p.tv || p.film || p.work || p.education || p.contact || p.channels
+        }>
+          <div class="border-t border-rim pt-5 space-y-5">
             <Show when={p.gender || p.marital || p.sexual || (p.dob && p.dob !== "0000-00-00") || p.hometown}>
-              <FieldGroup label={t("channel.group_personal")}>
-                <ProfileField label={t("channel.field_gender")} value={p.gender} />
-                <ProfileField label={t("channel.field_born")} value={p.dob && p.dob !== "0000-00-00" ? p.dob : ""} />
-                <ProfileField label={t("channel.field_hometown")} value={p.hometown} />
-                <ProfileField label={t("channel.field_relationship")} value={p.marital} />
-                <ProfileField label={t("channel.field_sexual")} value={p.sexual} />
-              </FieldGroup>
+              <FieldSection label={t("channel.group_personal")}>
+                <Field label={t("channel.field_gender")}       value={p.gender} />
+                <Field label={t("channel.field_born")}         value={p.dob && p.dob !== "0000-00-00" ? p.dob : ""} />
+                <Field label={t("channel.field_hometown")}     value={p.hometown} />
+                <Field label={t("channel.field_relationship")} value={p.marital} />
+                <Field label={t("channel.field_sexual")}       value={p.sexual} />
+              </FieldSection>
             </Show>
 
-            {/* Beliefs */}
             <Show when={p.politic || p.religion}>
-              <FieldGroup label={t("channel.group_beliefs")}>
-                <ProfileField label={t("channel.field_politics")} value={p.politic} />
-                <ProfileField label={t("channel.field_religion")} value={p.religion} />
-              </FieldGroup>
+              <FieldSection label={t("channel.group_beliefs")}>
+                <Field label={t("channel.field_politics")}  value={p.politic} />
+                <Field label={t("channel.field_religion")}  value={p.religion} />
+              </FieldSection>
             </Show>
 
-            {/* Interests */}
             <Show when={p.interest || p.romance || p.likes || p.dislikes}>
-              <FieldGroup label={t("channel.group_interests")}>
-                <ProfileField label={t("channel.field_hobbies")} value={p.interest} />
-                <ProfileField label={t("channel.field_romance")} value={p.romance} />
-                <ProfileField label={t("channel.field_likes")} value={p.likes} />
-                <ProfileField label={t("channel.field_dislikes")} value={p.dislikes} />
-              </FieldGroup>
+              <FieldSection label={t("channel.group_interests")}>
+                <Field label={t("channel.field_hobbies")}   value={p.interest} />
+                <Field label={t("channel.field_romance")}   value={p.romance} />
+                <Field label={t("channel.field_likes")}     value={p.likes} />
+                <Field label={t("channel.field_dislikes")}  value={p.dislikes} />
+              </FieldSection>
             </Show>
 
-            {/* Culture */}
             <Show when={p.music || p.book || p.tv || p.film}>
-              <FieldGroup label={t("channel.group_culture")}>
-                <ProfileField label={t("channel.field_music")} value={p.music} />
-                <ProfileField label={t("channel.field_books")} value={p.book} />
-                <ProfileField label={t("channel.field_television")} value={p.tv} />
-                <ProfileField label={t("channel.field_film")} value={p.film} />
-              </FieldGroup>
+              <FieldSection label={t("channel.group_culture")}>
+                <Field label={t("channel.field_music")}      value={p.music} />
+                <Field label={t("channel.field_books")}      value={p.book} />
+                <Field label={t("channel.field_television")} value={p.tv} />
+                <Field label={t("channel.field_film")}       value={p.film} />
+              </FieldSection>
             </Show>
 
-            {/* Work & Education */}
             <Show when={p.work || p.education}>
-              <FieldGroup label={t("channel.group_work")}>
-                <ProfileField label={t("channel.field_work")} value={p.work} />
-                <ProfileField label={t("channel.field_education")} value={p.education} />
-              </FieldGroup>
+              <FieldSection label={t("channel.group_work")}>
+                <Field label={t("channel.field_work")}      value={p.work} />
+                <Field label={t("channel.field_education")} value={p.education} />
+              </FieldSection>
             </Show>
 
-            {/* Contact & Social */}
             <Show when={p.contact || p.channels}>
-              <FieldGroup label={t("channel.group_contact")}>
-                <ProfileField label={t("channel.field_contact")} value={p.contact} />
-                <ProfileField label={t("channel.field_other_channels")} value={p.channels} />
-              </FieldGroup>
+              <FieldSection label={t("channel.group_contact")}>
+                <Field label={t("channel.field_contact")}        value={p.contact} />
+                <Field label={t("channel.field_other_channels")} value={p.channels} />
+              </FieldSection>
             </Show>
           </div>
-        </Show>
-
-        {/* Expand toggle */}
-        <Show when={hasDetails()}>
-          <button
-            onClick={() => setExpanded((e) => !e)}
-            class="mt-4 w-full flex items-center justify-center gap-1 text-xs text-muted hover:text-accent transition-colors py-1"
-          >
-            <Show when={!expanded()} fallback={<><MdFillExpand_less size={16} /> {t("channel.show_less")}</>}>
-              <MdFillExpand_more size={16} /> {t("channel.more_details")}
-            </Show>
-          </button>
         </Show>
       </div>
     </div>
   );
 }
 
-function FieldGroup(props: { label: string; children: any }) {
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function FieldSection(props: { label: string; children: any }) {
   return (
     <div>
-      <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
+      <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-2.5">
         {props.label}
       </p>
-      <div class="grid grid-cols-1 gap-1.5">
+      <div class="grid grid-cols-1 gap-2">
         {props.children}
       </div>
     </div>
+  );
+}
+
+function Field(props: { label: string; value: string }) {
+  return (
+    <Show when={props.value}>
+      <div class="flex gap-3">
+        <span class="text-xs font-medium text-muted w-28 shrink-0 pt-px">{props.label}</span>
+        <span class="text-xs text-txt leading-relaxed">{props.value}</span>
+      </div>
+    </Show>
   );
 }
 

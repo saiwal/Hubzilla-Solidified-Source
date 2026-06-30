@@ -1,6 +1,6 @@
 import { For, type Component } from "solid-js";
 import {
-  MdFillAll_inbox, MdFillApps,
+  MdFillApps,
   MdFillFormat_list_bulleted, MdFillShort_text,
 } from "solid-icons/md";
 import type { ViewMode } from "@/shared/stream/types";
@@ -9,10 +9,9 @@ import { useI18n } from "@/i18n";
 type IconType = Component<{ size?: number; class?: string }>;
 
 const ALL_VIEWS: { id: ViewMode; key: string; icon: IconType }[] = [
-  { id: "feed",    key: "feed",  icon: MdFillShort_text },
-  { id: "masonry", key: "grid",  icon: MdFillApps },
-  { id: "list",    key: "list",  icon: MdFillFormat_list_bulleted },
-  { id: "inbox",   key: "inbox", icon: MdFillAll_inbox },
+  { id: "feed",    key: "feed", icon: MdFillShort_text },
+  { id: "masonry", key: "grid", icon: MdFillApps },
+  { id: "list",    key: "list", icon: MdFillFormat_list_bulleted },
 ];
 
 export default function ViewSwitcher(props: {

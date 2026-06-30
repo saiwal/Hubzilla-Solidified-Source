@@ -130,7 +130,7 @@ function SubPageNav(props: {
             <A
               href={`${props.base}/${item.path}`}
               class={[
-                "flex items-center gap-3 mx-2 px-3 py-2 rounded-full text-sm",
+                "flex items-center gap-3 mx-2 px-3 py-2 rounded-xl text-sm",
                 "transition-colors select-none",
                 active()
                   ? "bg-elevated text-txt font-medium"

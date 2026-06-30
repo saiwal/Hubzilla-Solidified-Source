@@ -8,6 +8,8 @@ export const channel: RawDictionary["channel"] = {
   clear:            "साफ़ करें",
   new_post:         "पोस्ट",
   new_posts:        "पोस्ट",
+  search:             "खोजें",
+  search_placeholder: "पोस्ट खोजें…",
   edit_profile:     "प्रोफ़ाइल संपादित करें",
   connections:      "कनेक्शन",
   more_details:     "और विवरण",

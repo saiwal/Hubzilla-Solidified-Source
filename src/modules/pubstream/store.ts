@@ -7,6 +7,8 @@ import { buildThreadTree } from "@/shared/lib/thread";
 import type { ThreadNode } from "@/shared/lib/thread";
 import { bbcodeToHtml } from "@/shared/lib/bbcode";
 import { sanitizeHtml } from "@/shared/lib/sanitize";
+import { storageGet, storageSet } from "@/shared/lib/storage";
+import type { ViewMode } from "@/shared/stream/types";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 const PAGE_LIMIT = 20;
@@ -22,8 +24,16 @@ const [error,    setError]    = createSignal<string | null>(null);
 const [disabled, setDisabled] = createSignal(false);
 const [meta,     setMeta]     = createSignal<PubstreamMeta | null>(null);
 
+// ── viewMode ───────────────────────────────────────────────────────────────
+const [viewMode, setViewMode] = createSignal<ViewMode>("masonry");
+storageGet<ViewMode>("pubstream:viewMode", "masonry").then(setViewMode);
+export function changeView(v: ViewMode) {
+  storageSet("pubstream:viewMode", v);
+  setViewMode(v);
+}
+
 export {
-  threads, loading, hasMore, page, error, disabled, meta, posts,
+  threads, loading, hasMore, page, error, disabled, meta, posts, viewMode,
 };
 
 // ── Helpers ────────────────────────────────────────────────────────────────

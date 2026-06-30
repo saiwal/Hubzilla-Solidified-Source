@@ -4,7 +4,9 @@ import { fetchDisplaySettings, saveDisplaySettings } from "../../api/api";
 import { useSectionForm } from "../../store/useSectionForm";
 import { applyTypography, type FontSize, type FontFamily } from "@/shared/lib/typography";
 import { useThreadMode, setThreadMode } from "@/shared/store/thread-mode";
+import { useListBehavior, setListBehavior, type ListBehavior } from "@/shared/store/list-behavior";
 import { useScrollStyle, setScrollStyle, type ScrollStyle } from "@/shared/store/scroll-style";
+import { applyCornerRadius, type CornerRadius } from "@/shared/lib/corner-radius";
 import { useBgUrl, useBgFit, setBgUrl, setBgFit } from "@/shared/lib/background";
 import PATTERN_PRESETS from "virtual:public-listing/patterns";
 import BG_PRESETS from "virtual:public-listing/bg";
@@ -16,12 +18,16 @@ import { MdFillCheck } from "solid-icons/md";
 export default function DisplaySection() {
   const { t } = useI18n();
   const threadMode = useThreadMode();
+  const listBehavior = useListBehavior();
   const scrollStyle = useScrollStyle();
   const { customColors, updateCustomColors } = useTheme();
 
   const [previewSize, setPreviewSize] = createSignal<FontSize>("medium");
   const [previewFamily, setPreviewFamily] = createSignal<FontFamily>("system");
   const [previewScheme, setPreviewScheme] = createSignal<ThemeId>("light");
+  const [cornerRadius, setCornerRadius] = createSignal<CornerRadius>(
+    (localStorage.getItem("hz-corner-radius") as CornerRadius) ?? "default"
+  );
 
   const { data, saving, handleSubmit } = useSectionForm({
     fetcher: fetchDisplaySettings,
@@ -255,6 +261,71 @@ export default function DisplaySection() {
             </select>
           </Field>
 
+
+          {/* Corner roundness */}
+          <Field label={t("settings.corner_radius")} hint={t("settings.corner_radius_hint")}>
+            <div class="flex gap-2 flex-wrap">
+              <For each={[
+                { value: "none",    labelKey: "settings.corner_radius_none"    },
+                { value: "sm",      labelKey: "settings.corner_radius_sm"      },
+                { value: "default", labelKey: "settings.corner_radius_default" },
+                { value: "lg",      labelKey: "settings.corner_radius_lg"      },
+                { value: "xl",      labelKey: "settings.corner_radius_xl"      },
+              ] as const}>
+                {(opt) => {
+                  const previewRadius: Record<string, string> = {
+                    none: "0px", sm: "4px", default: "8px", lg: "12px", xl: "18px",
+                  };
+                  const selected = () => cornerRadius() === opt.value;
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCornerRadius(opt.value as CornerRadius);
+                        applyCornerRadius(opt.value as CornerRadius);
+                      }}
+                      class={`flex flex-col items-center gap-1.5 px-3 py-2 border rounded-lg
+                        transition-colors cursor-pointer text-xs
+                        ${selected()
+                          ? "border-accent bg-accent/10 text-accent"
+                          : "border-rim bg-surface text-muted hover:border-rim-strong hover:text-txt"
+                        }`}
+                    >
+                      <span
+                        class="w-8 h-8 border-2 bg-elevated shrink-0"
+                        style={{
+                          "border-color": selected() ? "var(--color-accent)" : "var(--color-rim-strong)",
+                          "border-radius": previewRadius[opt.value],
+                        }}
+                      />
+                      <span>{t(opt.labelKey)}</span>
+                    </button>
+                  );
+                }}
+              </For>
+            </div>
+          </Field>
+
+          {/* List view behavior */}
+          <Field label={t("settings.list_view_behavior")} hint={t("settings.list_view_behavior_hint")}>
+            <div class="flex gap-4">
+              {(["list", "inbox"] as const).map((mode) => (
+                <label class="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="list_behavior"
+                    value={mode}
+                    checked={listBehavior() === mode}
+                    onChange={() => setListBehavior(mode as ListBehavior)}
+                    class="accent-accent cursor-pointer"
+                  />
+                  <span class="text-sm text-txt">
+                    {mode === "list" ? t("settings.list_view_behavior_list") : t("settings.list_view_behavior_inbox")}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </Field>
 
           {/* Comment view mode */}
           <Field label={t("settings.comment_view")} hint={t("settings.comment_view_hint")}>
