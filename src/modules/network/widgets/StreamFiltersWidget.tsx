@@ -10,9 +10,10 @@ import {
   MdFillGroup,
   MdFillKeyboard_arrow_down,
   MdFillKeyboard_arrow_right,
-  MdFillLabel,
+  MdFillTag,
   MdFillDate_range,
   MdFillPeople,
+  MdFillPoll,
 } from "solid-icons/md";
 import { createSignal, createEffect, createResource, For, Show } from "solid-js";
 import { useI18n } from "@/i18n";
@@ -27,6 +28,7 @@ const CHIPS = [
   { key: "conv", labelKey: "network.conversations",    Icon: MdFillPerson        },
   { key: "dm",   labelKey: "network.direct_messages",  Icon: MdFillMail          },
   { key: "event",labelKey: "network.events",           Icon: MdFillEvent         },
+  { key: "poll",labelKey: "network.polls",             Icon: MdFillPoll          },
 ] as const;
 
 const str = (v: string | string[] | undefined): string =>
@@ -124,6 +126,7 @@ function buildParams(params: Record<string, string | string[] | undefined>): Net
   if (params.conv  === "1") p.conv  = 1;
   if (params.dm    === "1") p.dm    = 1;
   if (params.event === "1") p.event = 1;
+  if (params.poll === "1") p.poll = 1;
   if (params.dbegin) p.dbegin = String(params.dbegin);
   if (params.dend)   p.dend   = String(params.dend);
   if (params.cmin)   p.cmin   = Number(params.cmin);
@@ -349,7 +352,7 @@ export default function StreamFiltersWidget() {
             class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm
                    transition-colors text-left text-muted hover:bg-elevated hover:text-txt"
           >
-            <MdFillLabel size={15} class="shrink-0" />
+            <MdFillTag size={15} class="shrink-0" />
             <span class="flex-1">{t("network.tag")}</span>
             <Show when={!!tag()}>
               <span class="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />

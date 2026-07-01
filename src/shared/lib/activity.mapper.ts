@@ -26,15 +26,41 @@ export function shouldDisplayActivity(activity: any): boolean {
   return true;
 }
 
+// A wall-to-wall post is entirely wrapped in [share ... auth='true' ...]...[/share].
+// The JSON `author` is the channel owner (wall recipient); the real author is in the tag.
+function extractWallPost(rawBody: string): {
+  isWall: boolean;
+  author?: { name: string; avatar: string; url: string };
+  inner: string;
+} {
+  const m = rawBody.match(/^\s*\[share([^\]]*auth='true'[^\]]*)\]([\s\S]*)\[\/share\]\s*$/i);
+  if (!m) return { isWall: false, inner: rawBody };
+
+  const attrs = m[1];
+  const getAttr = (name: string) => {
+    const am = attrs.match(new RegExp(`${name}='(.*?)'`, "i"));
+    return am ? decodeURIComponent(am[1].replace(/\+/g, " ")) : "";
+  };
+
+  return {
+    isWall: true,
+    author: { name: getAttr("author"), avatar: getAttr("avatar"), url: getAttr("profile") },
+    inner: m[2].trim(),
+  };
+}
+
 export function mapActivityToPost(activity: any): Post {
   const rawBody: string = activity.body ?? "";
-  let body = "";
 
+  const wallInfo = extractWallPost(rawBody);
+  const bodySource = wallInfo.isWall ? wallInfo.inner : rawBody;
+
+  let body = "";
   try {
-    const converted = bbcodeToHtml(rawBody, { oembedResolver });
+    const converted = bbcodeToHtml(bodySource, { oembedResolver });
     body = sanitizeHtml(typeof converted === "string" ? converted : "");
   } catch (err) {
-    console.error("Body parse failed", rawBody, err);
+    console.error("Body parse failed", bodySource, err);
     body = "";
   }
 
@@ -69,12 +95,13 @@ export function mapActivityToPost(activity: any): Post {
     body,
     summary,
     title: activity.title ?? "",
-    authorName: activity.author?.name ?? "",
-    authorAvatar: activity.author?.photo?.src ?? "",
-    authorUrl: activity.author?.url ?? "",
-    authorAddress: activity.author?.address ?? "",
-    authorNetwork: activity.author?.network ?? "",
-    via: activity.owner ? {
+    authorName:    wallInfo.isWall ? wallInfo.author!.name   : (activity.author?.name ?? ""),
+    authorAvatar:  wallInfo.isWall ? wallInfo.author!.avatar : (activity.author?.photo?.src ?? ""),
+    authorUrl:     wallInfo.isWall ? wallInfo.author!.url    : (activity.author?.url ?? ""),
+    authorAddress: wallInfo.isWall ? "" : (activity.author?.address ?? ""),
+    authorNetwork: wallInfo.isWall ? "" : (activity.author?.network ?? ""),
+    wallPost: wallInfo.isWall || undefined,
+    via: !wallInfo.isWall && activity.owner ? {
       name: activity.owner.name ?? "",
       address: activity.owner.address ?? "",
       url: activity.owner.url ?? "",

@@ -4,16 +4,15 @@ import {
   loadDirectory, loadMoreDirectory,
 } from "../../people/store";
 import {
-  network, setNetwork, safe, setSafe,
+  safe, setSafe,
   pubforums, setPubforums, globalDir, setGlobalDir,
-  type NetworkFilter,
 } from "../../people/filters";
 import DirectoryCard from "../DirectoryCard";
 import DirectoryEntryModal from "../DirectoryEntryModal";
-import type { DirectoryParams, DirectoryEntry } from "../../people/api";
+import type { DirectoryEntry } from "../../people/api";
 import { useI18n } from "@/i18n";
 
-type Order = DirectoryParams["order"];
+type Order = "date" | "rdate" | "alphabetic" | "ralpha";
 
 export default function DirectorySection() {
   const { t } = useI18n();
@@ -27,7 +26,6 @@ export default function DirectorySection() {
       search: appliedSearch(),
       order: order(),
       global: globalDir(),
-      network: network() === "all" ? undefined : (network() as "zot6" | "activitypub"),
       safe: safe(),
       pubforums: pubforums(),
     });
@@ -75,18 +73,6 @@ export default function DirectorySection() {
           <option value="rdate">{t("directory.sort_oldest")}</option>
           <option value="alphabetic">{t("directory.sort_az")}</option>
           <option value="ralpha">{t("directory.sort_za")}</option>
-        </select>
-
-        {/* Network */}
-        <select
-          value={network()}
-          onChange={(e) => setNetwork(e.currentTarget.value as NetworkFilter)}
-          class="px-3 py-1.5 rounded-lg border border-rim bg-surface text-txt text-sm
-                 focus:outline-none hover:border-rim-strong transition-colors"
-        >
-          <option value="all">{t("directory.network_all")}</option>
-          <option value="zot6">{t("directory.network_zot6")}</option>
-          <option value="activitypub">{t("directory.network_activitypub")}</option>
         </select>
 
         {/* Divider */}

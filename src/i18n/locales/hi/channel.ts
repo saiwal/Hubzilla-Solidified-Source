@@ -10,6 +10,7 @@ export const channel: RawDictionary["channel"] = {
   new_posts:        "पोस्ट",
   search:             "खोजें",
   search_placeholder: "पोस्ट खोजें…",
+  compose:            "नई पोस्ट",
   edit_profile:     "प्रोफ़ाइल संपादित करें",
   connections:      "कनेक्शन",
   more_details:     "और विवरण",

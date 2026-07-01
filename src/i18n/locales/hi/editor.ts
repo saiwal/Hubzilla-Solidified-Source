@@ -140,4 +140,5 @@ export const editor: RawDictionary["editor"] = {
   poll_add_answer:          "+ विकल्प जोड़ें",
   poll_remove_answer:       "हटाएँ",
   poll_expires_label:       "समाप्ति",
+  posting_to_wall:          "वॉल पर पोस्ट हो रही है",
 };

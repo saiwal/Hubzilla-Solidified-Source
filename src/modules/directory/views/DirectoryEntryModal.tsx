@@ -38,13 +38,20 @@ const DirectoryEntryModal: Component<Props> = (props) => {
             class="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-2xl bg-surface shadow-2xl overflow-hidden focus:outline-none"
           >
 
+            {/* ── Cover banner ── */}
+            <Show when={e()!.cover}>
+              <div class="h-28 overflow-hidden bg-overlay shrink-0">
+                <img src={e()!.cover!} alt="" aria-hidden="true" class="w-full h-full object-cover"/>
+              </div>
+            </Show>
+
             {/* ── Header ── */}
-            <div class="flex items-start gap-4 p-5 border-b border-rim">
+            <div class={`flex items-start gap-4 px-5 pb-4 border-b border-rim ${e()!.cover ? '-mt-8 pt-2' : 'pt-5'}`}>
               <a href={e()!.profile_url} target="_blank" rel="noopener noreferrer" class="shrink-0">
                 <img
                   src={e()!.photo}
                   alt={e()!.name}
-                  class="w-16 h-16 rounded-full object-cover ring-2 ring-rim bg-overlay"
+                  class={`w-16 h-16 rounded-full object-cover bg-overlay ${e()!.cover ? 'ring-[3px] ring-surface shadow-md' : 'ring-2 ring-rim'}`}
                 />
               </a>
               <div class="flex-1 min-w-0 pt-0.5">

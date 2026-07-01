@@ -23,6 +23,7 @@ const [albumName, setAlbumName]   = createSignal('');
 const [detail, setDetail]         = createSignal<PhotoDetail | null>(null);
 const [loading, setLoading]       = createSignal(false);
 const [albumsLoading, setAlbumsLoading] = createSignal(false);
+const [albumsError, setAlbumsError] = createSignal<'denied' | null>(null);
 const [nick, setNick]             = createSignal('');
 
 // ─── Loaders ──────────────────────────────────────────────────────────────────
@@ -44,10 +45,13 @@ export async function loadSummary(nickname: string, start = 0) {
 
 export async function loadAlbums(nickname: string) {
   setAlbumsLoading(true);
+  setAlbumsError(null);
   try {
     const items = await fetchAlbums(nickname);
     setAlbums(items);
-  } catch (err) {
+  } catch (err: unknown) {
+    const status = (err as { error?: { status?: number } })?.error?.status;
+    if (status === 403) setAlbumsError('denied');
     console.error('loadAlbums failed', err);
   } finally {
     setAlbumsLoading(false);
@@ -209,4 +213,4 @@ export async function toggleNsfwAction(nick: string, resourceId: string, is_nsfw
   setDetail(prev => prev ? { ...prev, is_nsfw } : prev);
 }
 
-export { photos, albums, recentPhotos, albumName, detail, loading, albumsLoading, nick };
+export { photos, albums, recentPhotos, albumName, detail, loading, albumsLoading, albumsError, nick };

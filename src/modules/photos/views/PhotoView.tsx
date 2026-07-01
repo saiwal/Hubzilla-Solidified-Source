@@ -5,7 +5,7 @@ import { useParams, useNavigate, useLocation } from "@solidjs/router";
 import { useI18n } from "@/i18n";
 import { useAuth } from "@/shared/store/auth-store";
 import {
-  photos, albums, albumName, detail, loading, albumsLoading,
+  photos, albums, albumName, detail, loading, albumsLoading, albumsError,
   loadSummary, loadAlbum, loadImage, loadAlbums,
   handleLike, handleDislike, addComment, handleCommentReaction,
   createNewAlbum, deletePhotoAction, batchDeleteAction, deleteAlbumAction, renamePhotoAction,
@@ -228,8 +228,13 @@ function SummaryView() {
         <AlbumSkeleton mode={viewMode()} />
       </Show>
 
+      {/* Permission denied */}
+      <Show when={!albumsLoading() && albumsError() === 'denied'}>
+        <p class="text-sm text-muted py-8 text-center">{t("photos.not_accessible")}</p>
+      </Show>
+
       {/* Empty */}
-      <Show when={!albumsLoading() && sortedAlbums().length === 0}>
+      <Show when={!albumsLoading() && !albumsError() && sortedAlbums().length === 0}>
         <p class="text-sm text-muted py-8 text-center">{t("photos.no_albums")}</p>
       </Show>
 

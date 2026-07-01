@@ -9,6 +9,7 @@ import {
   loadingMore,
   hasMore,
   newPosts,
+  profileUid,
   loadChannel,
   loadMore,
   flushNewPosts,
@@ -31,7 +32,10 @@ import type { ChannelParams } from "../api";
 import ProfileView from "./ProfileView";
 import { ViewSwitcher } from "@/shared/stream/filters";
 import { viewMode, changeView } from "../store";
-import { MdFillSearch, MdFillClose } from "solid-icons/md";
+import { MdFillSearch, MdFillClose, MdFillCreate } from "solid-icons/md";
+import { lazy } from "solid-js";
+import { useAuth } from "@/shared/store/auth-store";
+const PostComposer = lazy(() => import("@/shared/editor/composers/PostComposer"));
 
 const handlers: StreamHandlers = {
   onLike:          handleLike,
@@ -58,6 +62,11 @@ export default function ChannelView() {
 
   const [searchOpen, setSearchOpen] = createSignal(!!searchParams.search);
   const [searchInput, setSearchInput] = createSignal(currentSearch());
+  const [composeOpen, setComposeOpen] = createSignal(false);
+  const [composeEverOpened, setComposeEverOpened] = createSignal(false);
+  const openCompose = () => { setComposeEverOpened(true); setComposeOpen(true); };
+  const auth = useAuth();
+  const isVisitor = () => (auth()?.uid ?? 0) > 0 && auth()!.uid !== profileUid();
 
   const submitSearch = (e?: Event) => {
     e?.preventDefault();
@@ -127,7 +136,16 @@ export default function ChannelView() {
           available={["feed", "masonry", "list"]}
         />
 
-        <div class="flex-1 flex justify-end">
+        <div class="flex-1 flex justify-end items-center gap-1.5">
+          <Show when={profileUid() > 0}>
+            <button
+              title={t("channel.compose")}
+              onClick={openCompose}
+              class="p-1.5 rounded-lg border border-rim bg-surface text-muted hover:bg-elevated hover:text-txt transition-colors"
+            >
+              <MdFillCreate size={15} />
+            </button>
+          </Show>
           <Show
             when={searchOpen()}
             fallback={
@@ -263,6 +281,15 @@ export default function ChannelView() {
         <p class="text-center text-xs text-muted py-6">{t("channel.all_caught_up")}</p>
       </Show>
 
+      <Show when={composeEverOpened()}>
+        <PostComposer
+          open={composeOpen()}
+          onClose={() => setComposeOpen(false)}
+          profileUid={profileUid()}
+          hideAcl={isVisitor()}
+          onPosted={() => loadChannel(params.nick ?? "")}
+        />
+      </Show>
     </>
   );
 }

@@ -13,6 +13,7 @@ export const photos: RawDictionary["photos"] = {
   see_all:          "सभी देखें",
   albums:           "एल्बम",
   no_albums:        "अभी तक कोई एल्बम नहीं।",
+  not_accessible:   "फ़ोटो सार्वजनिक रूप से उपलब्ध नहीं हैं।",
   photos_count:     "फ़ोटो",
   sort_by:          "क्रम",
   sort_name:        "नाम",

@@ -20,6 +20,7 @@ export interface DirectoryEntry {
   is_connected: boolean;
   connect_url: string;
   profile_url: string;
+  cover: string | null;
   common_count: number | null;
   ignore_url: string | null;
 }
@@ -45,7 +46,6 @@ export interface DirectoryParams {
   keywords?: string;
   order?: "date" | "rdate" | "alphabetic" | "ralpha";
   global?: 0 | 1;
-  network?: "zot6" | "activitypub";
   safe?: 0 | 1;
   pubforums?: 0 | 1;
   suggest?: 0 | 1;
@@ -60,7 +60,6 @@ export async function fetchDirectory(
   if (params.keywords)             q.set("keywords",  params.keywords);
   if (params.order)                q.set("order",     params.order);
   if (params.global !== undefined) q.set("global",    String(params.global));
-  if (params.network)              q.set("network",   params.network);
   if (params.safe)                 q.set("safe",      String(params.safe));
   if (params.pubforums)            q.set("pubforums", String(params.pubforums));
   if (params.suggest !== undefined) q.set("suggest",  String(params.suggest));

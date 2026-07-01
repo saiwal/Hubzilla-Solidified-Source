@@ -34,6 +34,7 @@ import {
   MdFillRss_feed,
   MdFillNote,
   MdFillHardware,
+  MdFillVideogame_asset,
 } from "solid-icons/md";
 
 
@@ -75,8 +76,9 @@ const ICON_MAP: Record<string, (size: number) => JSX.Element> = {
   admin: (s) => <MdFillAdmin_panel_settings size={s} />,
   person: (s) => <MdFillPerson size={s} />,
   edit: (s) => <MdFillEdit size={s} />,
-  notes: (s) => <MdFillNote size={s} />,
+  notepad: (s) => <MdFillNote size={s} />,
   tools: (s) => <MdFillHardware size={s} />,
+	games: (s) => <MdFillVideogame_asset size={s}/>,
 };
 
 export function getNavIcon(token?: string, size = 20): JSX.Element {

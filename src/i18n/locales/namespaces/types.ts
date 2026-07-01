@@ -580,6 +580,7 @@ export type RawDictionary = {
     poll_add_answer:          string;
     poll_remove_answer:       string;
     poll_expires_label:       string;
+    posting_to_wall:          string;
   };
   profiles: {
     title:             string;
@@ -1080,6 +1081,7 @@ export type RawDictionary = {
     connected:          string;
     search:             string;
     search_placeholder: string;
+    compose:            string;
     group_personal:   string;
     group_beliefs:    string;
     group_interests:  string;
@@ -1119,6 +1121,7 @@ export type RawDictionary = {
     see_all:          string;
     albums:           string;
     no_albums:        string;
+    not_accessible:   string;
     photos_count:     string;
     sort_by:          string;
     sort_name:        string;

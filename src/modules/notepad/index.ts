@@ -8,7 +8,7 @@ registerModule({
   ],
   navItem: {
     label: () => useI18n().t("notepad.title"),
-    icon: "note",
+    icon: "notepad",
     path: "/notepad",
     href: "/notepad",
 		hidden: false,

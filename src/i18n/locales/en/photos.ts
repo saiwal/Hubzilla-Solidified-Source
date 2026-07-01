@@ -14,6 +14,7 @@ export const photos: RawDictionary["photos"] = {
   see_all:          "See all",
   albums:           "Albums",
   no_albums:        "No albums yet.",
+  not_accessible:   "Photos are not publicly accessible.",
   photos_count:     "photos",
   sort_by:          "Sort",
   sort_name:        "Name",

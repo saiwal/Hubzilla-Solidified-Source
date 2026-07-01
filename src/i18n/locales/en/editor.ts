@@ -149,4 +149,5 @@ export const editor = {
   poll_add_answer:          "+ Add option",
   poll_remove_answer:       "Remove option",
   poll_expires_label:       "Expires in",
+  posting_to_wall:          "Posting to wall",
 } as const;

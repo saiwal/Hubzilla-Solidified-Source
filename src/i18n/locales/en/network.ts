@@ -12,9 +12,9 @@ export const network: RawDictionary["network"] = {
   inbox:                "Inbox",
   // Filter toggle buttons
   refresh:              "Refresh",
-  starred:              "Starred",
+  starred:              "Starred Posts",
   following:            "Following",
-  conversations:        "Conversations",
+  conversations:        "Personal Posts",
   direct_messages:      "Direct messages",
   events:               "Events",
   // Connection filter
@@ -48,7 +48,7 @@ export const network: RawDictionary["network"] = {
   load_more:            "Load more",
   all_caught_up:        "You're all caught up",
   // Folders
-  folder:                  "Folder",
+  folder:                  "Saved Folders",
   folder_all:              "All",
   // Saved searches
   saved_searches:          "Saved searches",

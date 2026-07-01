@@ -59,6 +59,9 @@ export interface ComposerProps {
   initialAclMode?: AclMode;
   initialAllowEntries?: Set<string>;
   parentId?: number;
+  /** Hide the ACL picker and lock scope to "connections" (channel owner's default).
+   *  Use when the poster is a visitor — they don't control the wall's privacy. */
+  hideAcl?: boolean;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -77,7 +80,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
 
   // ── Local ACL state (not in store — ACL is post-specific) ─────────────────
   const [aclMode, setAclMode] = createSignal<AclMode>(
-    props.initialAclMode ?? "connections",
+    props.hideAcl ? "connections" : (props.initialAclMode ?? "connections"),
   );
   const [allowEntries, setAllowEntries] = createSignal<Set<string>>(
     new Set<string>(props.initialAllowEntries),
@@ -197,7 +200,17 @@ const PostComposer: Component<ComposerProps> = (props) => {
         redirect: "manual",
         body: fd,
       });
-      if (res.type !== "opaqueredirect" && !res.ok) throw new Error(`HTTP ${res.status}`);
+
+      // Wall-to-wall posts (visitor → channel owner) cause Hubzilla to redirect
+      // rather than return JSON. The post was created — treat redirect as success.
+      if (res.type === "opaqueredirect") {
+        props.onPosted?.(0);
+        attach.clear();
+        props.onClose();
+        return;
+      }
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = (await res.json().catch(() => ({}))) as {
         success?: number;
         cancel?: number;
@@ -621,15 +634,22 @@ const PostComposer: Component<ComposerProps> = (props) => {
 
             {/* ── Footer ── */}
             <footer class="flex flex-wrap items-center gap-2 px-3.5 py-2.5 border-t border-rim bg-elevated shrink-0">
-              {/* ACL Picker */}
-              <AclPicker
-                mode={aclMode()}
-                onModeChange={setAclMode}
-                allowEntries={allowEntries()}
-                denyEntries={denyEntries()}
-                onToggle={toggleEntry}
-                onClear={clearEntries}
-              />
+              {/* ACL Picker — hidden for visitors posting to another channel's wall */}
+              <Show
+                when={!props.hideAcl}
+                fallback={
+                  <span class="text-xs text-muted px-1">{t("editor.posting_to_wall")}</span>
+                }
+              >
+                <AclPicker
+                  mode={aclMode()}
+                  onModeChange={setAclMode}
+                  allowEntries={allowEntries()}
+                  denyEntries={denyEntries()}
+                  onToggle={toggleEntry}
+                  onClear={clearEntries}
+                />
+              </Show>
 
               {/* Expiry — gated behind Settings → Features → Content Expiration */}
               <Show when={isFeatureEnabled("content_expire") && !props.parentId}>
