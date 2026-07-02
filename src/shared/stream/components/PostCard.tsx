@@ -36,6 +36,7 @@ import {
   MdFillAdd,
   MdFillUnfold_more,
   MdFillMore_vert,
+  MdOutlineSend,
 } from "solid-icons/md";
 import { useI18n } from "@/i18n";
 import { BiRegularLinkExternal, BiSolidShareAlt } from "solid-icons/bi";
@@ -130,6 +131,9 @@ export default function PostCard(props: {
   const [folderPickerLoading, setFolderPickerLoading] = createSignal(false);
   const [folderSaving, setFolderSaving] = createSignal<string | null>(null);
   const [newFolderInput, setNewFolderInput] = createSignal("");
+  const [showDeliveryReport, setShowDeliveryReport] = createSignal(false);
+  const [deliveryReportLoading, setDeliveryReportLoading] = createSignal(false);
+  const [deliveryReportData, setDeliveryReportData] = createSignal<DeliveryEntry[] | null>(null);
   let repeatDropdownRef!: HTMLDivElement;
   let repeatDropdownPortalRef!: HTMLDivElement;
   let moreDropdownRef!: HTMLDivElement;
@@ -171,6 +175,13 @@ export default function PostCard(props: {
   const canReshare = () => auth()?.isLocal === true && !!props.post.iid;
 
   const canViewSource = () => auth()?.isLocal === true && !!props.post.iid;
+
+  const canDeliveryReport = () => {
+    const a = auth();
+    if (!a?.isLocal || !a.nick) return false;
+    const viewerAddr = `${a.nick}@${window.location.hostname}`;
+    return !!props.post.authorAddress && props.post.authorAddress === viewerAddr;
+  };
 
   // Delete: viewer must be a local user and the post's author address must
   // match their own channel address (nick@hostname)
@@ -400,6 +411,23 @@ export default function PostCard(props: {
     }
   }
 
+  async function toggleDeliveryReport() {
+    if (showDeliveryReport()) { setShowDeliveryReport(false); return; }
+    setShowDeliveryReport(true);
+    if (deliveryReportData()) return;
+    setDeliveryReportLoading(true);
+    try {
+      const res = await fetch(`/api/item/${encodeURIComponent(props.post.uuid)}/delivery`, { credentials: "include" });
+      if (!res.ok) throw new Error(`${res.status}`);
+      const json = await res.json();
+      setDeliveryReportData(json?.data ?? []);
+    } catch {
+      setDeliveryReportData([]);
+    } finally {
+      setDeliveryReportLoading(false);
+    }
+  }
+
   function onDeleteClick() {
     if (!deleteConfirming()) {
       setDeleteConfirming(true);
@@ -518,6 +546,7 @@ export default function PostCard(props: {
                    prose-a:text-accent prose-a:no-underline hover:prose-a:underline
                    prose-blockquote:not-italic prose-blockquote:border-accent
                    prose-code:bg-overlay prose-code:px-1 prose-code:rounded prose-code:text-xs prose-code:text-txt
+                   prose-code:before:content-none prose-code:after:content-none
                    prose-img:rounded-lg prose-img:my-1 break-words
                    prose-p:my-1 prose-p:leading-snug"
             innerHTML={props.post.body}
@@ -659,7 +688,7 @@ export default function PostCard(props: {
           </button>
 
           <Show when={
-            canDelete() || canFollow() || canViewSource() ||
+            canDelete() || canFollow() || canViewSource() || canDeliveryReport() ||
             (props.post.likeCount > 0 || props.post.dislikeCount > 0 || props.post.repeatCount > 0) ||
             !!props.post.permalink
           }>
@@ -726,6 +755,16 @@ export default function PostCard(props: {
                     <span>{t("post.source")}</span>
                   </a>
                 </Show>
+                <Show when={canDeliveryReport()}>
+                  <button
+                    onClick={() => { toggleDeliveryReport(); setMoreDropdownOpen(false); }}
+                    class={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-overlay transition-colors text-left
+                           ${showDeliveryReport() ? "text-accent" : "text-txt"}`}
+                  >
+                    <MdOutlineSend size={13} />
+                    <span>{t("post.delivery_report")}</span>
+                  </button>
+                </Show>
                 <Show when={canDelete()}>
                   <button
                     onClick={onDeleteClick}
@@ -768,6 +807,9 @@ export default function PostCard(props: {
         </Show>
         <Show when={showSource()}>
           <PostSource loading={sourceLoading()} data={sourceData()} />
+        </Show>
+        <Show when={showDeliveryReport()}>
+          <DeliveryReport loading={deliveryReportLoading()} data={deliveryReportData()} />
         </Show>
         <Show when={showFolderPicker()}>
           <FolderPicker
@@ -901,6 +943,7 @@ export default function PostCard(props: {
                  prose-a:text-accent prose-a:no-underline hover:prose-a:underline
                  prose-blockquote:not-italic prose-blockquote:border-accent
                  prose-code:bg-overlay prose-code:px-1 prose-code:rounded prose-code:text-sm prose-code:text-txt
+                 prose-code:before:content-none prose-code:after:content-none
                  prose-img:rounded-lg prose-img:my-2 break-words text-muted"
           innerHTML={props.post.body}
         />
@@ -1127,6 +1170,16 @@ export default function PostCard(props: {
                 <span>{t("post.refresh")}</span>
               </button>
             </Show>
+            <Show when={canDeliveryReport()}>
+              <button
+                onClick={() => { toggleDeliveryReport(); setMoreDropdownOpen(false); }}
+                class={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-overlay transition-colors text-left
+                       ${showDeliveryReport() ? "text-accent" : "text-txt"}`}
+              >
+                <MdOutlineSend size={15} />
+                <span>{t("post.delivery_report")}</span>
+              </button>
+            </Show>
             <Show when={canDelete()}>
               <button
                 onClick={onDeleteClick}
@@ -1163,6 +1216,9 @@ export default function PostCard(props: {
       </Show>
       <Show when={showSource()}>
         <PostSource loading={sourceLoading()} data={sourceData()} />
+      </Show>
+      <Show when={showDeliveryReport()}>
+        <DeliveryReport loading={deliveryReportLoading()} data={deliveryReportData()} />
       </Show>
       <Show when={showFolderPicker()}>
         <FolderPicker
@@ -1445,6 +1501,60 @@ function FolderPicker(props: {
             <span>{t("post.add_folder")}</span>
           </button>
         </div>
+      </Show>
+    </div>
+  );
+}
+
+interface DeliveryEntry {
+  name: string;
+  result: string;
+  time: string;
+}
+
+function DeliveryReport(props: { loading: boolean; data: DeliveryEntry[] | null }) {
+  const { t, locale } = useI18n();
+
+  const resultClass = (result: string) => {
+    if (result === "posted" || result === "accepted for delivery") return "text-green-500";
+    if (result === "queued") return "text-yellow-500";
+    if (result.includes("denied") || result.includes("not found")) return "text-red-500";
+    return "text-muted";
+  };
+
+  return (
+    <div class="mt-3 pt-3 border-t border-rim text-xs">
+      <Show when={props.loading}>
+        <div class="text-muted animate-pulse">{t("post.loading")}</div>
+      </Show>
+      <Show when={!props.loading && props.data}>
+        <Show
+          when={(props.data?.length ?? 0) > 0}
+          fallback={<div class="text-muted">{t("post.delivery_no_data")}</div>}
+        >
+          <table class="w-full">
+            <thead>
+              <tr class="text-muted border-b border-rim">
+                <th class="text-left pb-1.5 font-medium pr-3">Recipient</th>
+                <th class="text-left pb-1.5 font-medium pr-3">Status</th>
+                <th class="text-left pb-1.5 font-medium">Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              <For each={props.data!}>
+                {(entry) => (
+                  <tr class="border-b border-rim/40 last:border-0">
+                    <td class="py-1.5 pr-3 text-txt max-w-[10rem] truncate">{entry.name}</td>
+                    <td class={`py-1.5 pr-3 font-mono ${resultClass(entry.result)}`}>{entry.result}</td>
+                    <td class="py-1.5 text-muted whitespace-nowrap">
+                      {new Date(entry.time + "Z").toLocaleString(locale())}
+                    </td>
+                  </tr>
+                )}
+              </For>
+            </tbody>
+          </table>
+        </Show>
       </Show>
     </div>
   );

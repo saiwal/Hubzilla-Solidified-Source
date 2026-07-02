@@ -88,6 +88,13 @@ export const directory: RawDictionary["directory"] = {
   no_role:              "No role",
   role_assign_hint:     "use the dropdown on each card to assign a role",
   edit_connection:      "Edit connection",
+  manage_roles:         "Manage roles",
+  create_role:          "New role",
+  role_name_placeholder: "Role name…",
+  creating_role:        "Creating…",
+  system_role:          "Built-in",
+  no_custom_roles:      "No custom roles yet.",
+  delete_role:          "Delete role",
   // PrivacyGroupsView
   privacy_groups_title: "Privacy Groups",
   privacy_groups_desc:  "Group your connections to control who sees each post.",

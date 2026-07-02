@@ -8,7 +8,7 @@
  * - Expiry picker
  * - Draft auto-save to IndexedDB (via createComposerStore)
  * - Ctrl+Enter to post, Escape to close
- * - Submits to POST /item (Hubzilla Item::post())
+ * - Submits to POST /api/item (SPA Item handler) with JSON body + CSRF token
  */
 
 import {
@@ -43,6 +43,7 @@ import { currentNick, isFeatureEnabled } from "@/shared/store/auth-store";
 import { bbcodeToInsert } from "../attachments/insertHelpers";
 import type { FileAcl } from "@/modules/files/api";
 import { useI18n } from "@/i18n";
+import { getCsrfToken } from "@/shared/lib/csrf";
 void helpable;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -138,92 +139,83 @@ const PostComposer: Component<ComposerProps> = (props) => {
         .join("\n");
       const augmentedBody = fileTags ? `${body}\n${fileTags}` : body;
 
-      const fd = new FormData();
-      fd.append("body", augmentedBody);
-      fd.append("mimetype", meta.mimetype ?? "text/bbcode");
-      fd.append("obj_type", "Note");
-      fd.append("profile_uid", String(props.profileUid));
-      fd.append("type", props.parentId ? "net-comment" : "wall");
-      if (props.parentId) fd.append("parent", String(props.parentId));
-      if (meta.title) fd.append("title", meta.title);
-      if (meta.summary) fd.append("summary", meta.summary);
-      if (meta.category) fd.append("category", meta.category);
-      if (expiry()) fd.append("expire", expiry());
-      fd.append("return", "");
+      const csrf = await getCsrfToken();
+
+      // ── Build ACL scope ──
+      const mode = aclMode();
+      const payload: Record<string, unknown> = {
+        body: augmentedBody,
+        mimetype: meta.mimetype ?? "text/bbcode",
+        profile_uid: props.profileUid,
+      };
+      if (meta.title) payload.title = meta.title;
+      if (meta.summary) payload.summary = meta.summary;
+      if (meta.category) payload.category = meta.category;
+      if (expiry()) payload.expire = expiry();
+
+      if (mode === "public") {
+        payload.scope = "public";
+      } else if (mode === "connections") {
+        payload.scope = "contacts";
+      } else {
+        // Custom — require at least one allow entry
+        if (allowEntries().size === 0) {
+          throw new Error("Select at least one connection or group to allow.");
+        }
+        payload.scope = "custom";
+        const contactAllow: string[] = [];
+        const groupAllow: string[] = [];
+        const contactDeny: string[] = [];
+        const groupDeny: string[] = [];
+        for (const key of allowEntries()) {
+          const [type, ...rest] = key.split(":");
+          const xid = rest.join(":");
+          if (type === "c") contactAllow.push(xid);
+          if (type === "g") groupAllow.push(xid);
+        }
+        for (const key of denyEntries()) {
+          const [type, ...rest] = key.split(":");
+          const xid = rest.join(":");
+          if (type === "c") contactDeny.push(xid);
+          if (type === "g") groupDeny.push(xid);
+        }
+        payload.contact_allow = contactAllow;
+        payload.group_allow = groupAllow;
+        payload.contact_deny = contactDeny;
+        payload.group_deny = groupDeny;
+      }
 
       // ── Poll ──
       if (pollEnabled()) {
         const answers = pollAnswers().filter((a) => a.trim());
         if (answers.length < 2)
           throw new Error("At least 2 poll options are required.");
-        for (const a of answers) fd.append("poll_answers[]", a);
-        fd.append("poll_expire_value", pollExpireValue());
-        fd.append("poll_expire_unit", pollExpireUnit());
+        payload.poll_answers = answers;
+        payload.poll_expire_value = pollExpireValue();
+        payload.poll_expire_unit = pollExpireUnit();
       }
 
-      // ── ACL ──
-      const mode = aclMode();
-      if (mode === "public") {
-        fd.append("contact_allow", "");
-        fd.append("group_allow", "");
-        fd.append("contact_deny", "");
-        fd.append("group_deny", "");
-        fd.append("public_policy", "");
-      } else if (mode === "connections") {
-        fd.append("contact_allow", "");
-        fd.append("group_allow", "");
-        fd.append("contact_deny", "");
-        fd.append("group_deny", "");
-        fd.append("public_policy", "contacts");
-      } else {
-        // Custom — require at least one allow entry
-        if (allowEntries().size === 0) {
-          throw new Error("Select at least one connection or group to allow.");
-        }
-        for (const key of allowEntries()) {
-          const [type, ...rest] = key.split(":");
-          const xid = rest.join(":");
-          if (type === "c") fd.append("contact_allow[]", xid);
-          if (type === "g") fd.append("group_allow[]", xid);
-        }
-        for (const key of denyEntries()) {
-          const [type, ...rest] = key.split(":");
-          const xid = rest.join(":");
-          if (type === "c") fd.append("contact_deny[]", xid);
-          if (type === "g") fd.append("group_deny[]", xid);
-        }
-      }
-
-      const res = await fetch("/item", {
+      const res = await fetch("/api/item", {
         method: "POST",
         credentials: "include",
-        redirect: "manual",
-        body: fd,
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrf,
+        },
+        body: JSON.stringify(payload),
       });
-
-      // Wall-to-wall posts (visitor → channel owner) cause Hubzilla to redirect
-      // rather than return JSON. The post was created — treat redirect as success.
-      if (res.type === "opaqueredirect") {
-        props.onPosted?.(0);
-        attach.clear();
-        props.onClose();
-        return;
-      }
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = (await res.json().catch(() => ({}))) as {
-        success?: number;
-        cancel?: number;
-        id?: number;
+        success?: boolean;
+        iid?: number;
+        mid?: string;
       };
-      if (json.cancel) {
-        throw new Error("Post cancelled by server (duplicate or plugin).");
-      }
       if (!json.success) {
         throw new Error("Server reported failure. Check Hubzilla logs.");
       }
 
-      props.onPosted?.(json.id ?? 0);
+      props.onPosted?.(json.iid ?? 0);
       attach.clear();
       props.onClose();
     },

@@ -98,6 +98,7 @@ export async function deleteConnection(abookId: number): Promise<void> {
 export interface Permcat {
   name: string;
   label: string;
+  system: boolean;
 }
 
 export interface PermEntry {
@@ -118,6 +119,26 @@ export async function fetchPermcats(): Promise<Permcat[]> {
   if (!res.ok) throw new Error(`permcats HTTP ${res.status}`);
   const body = await res.json();
   return body.data as Permcat[];
+}
+
+export async function createPermcat(name: string): Promise<Permcat> {
+  const res = await apiFetch("/api/connections/permcats", {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.error?.message ?? `create permcat HTTP ${res.status}`);
+  }
+  const body = await res.json();
+  return body.data as Permcat;
+}
+
+export async function deletePermcat(name: string): Promise<void> {
+  const res = await apiFetch(`/api/connections/permcats/${encodeURIComponent(name)}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error(`delete permcat HTTP ${res.status}`);
 }
 
 export async function fetchConnectionPerms(abookId: number): Promise<ConnectionPerms> {

@@ -6,9 +6,16 @@ import {
   Show,
 } from "solid-js";
 import { A } from "@solidjs/router";
-import { fetchConnections } from "../../connections/api";
-import type { Connection } from "../../connections/api";
+import {
+  fetchConnections,
+  fetchPermcats,
+  createPermcat,
+  deletePermcat,
+  updateConnection,
+} from "../../connections/api";
+import type { Connection, Permcat } from "../../connections/api";
 import { useI18n } from "@/i18n";
+import { MdFillAdd, MdFillClose } from "solid-icons/md";
 
 // ── API ───────────────────────────────────────────────────────────────────────
 
@@ -25,35 +32,134 @@ async function fetchAllConnections(): Promise<Connection[]> {
   return all;
 }
 
-function getFormSecurityToken(): string {
-  return (
-    document.querySelector<HTMLMetaElement>('meta[name="form_security_token"]')
-      ?.content ?? ""
-  );
-}
-
-async function assignRole(abookId: number, role: string): Promise<void> {
-  const fd = new FormData();
-  fd.append("permcat", role);
-  const token = getFormSecurityToken();
-  if (token) fd.append("form_security_token", token);
-  await fetch(`/contactedit/${abookId}`, {
-    method: "POST",
-    credentials: "include",
-    body: fd,
-  });
-}
-
 // ── Constants ─────────────────────────────────────────────────────────────────
-
-// Built-in Hubzilla permcat roles always available
-const BUILTIN_ROLES = ["contributor", "muted"];
 
 const NETWORK_LABELS: Record<string, string> = {
   zot6:        "Zot",
   activitypub: "AP",
   rss:         "RSS",
 };
+
+// ── Manage Roles Panel ────────────────────────────────────────────────────────
+
+function ManageRolesPanel(props: {
+  permcats: Permcat[];
+  onCreated: (role: Permcat) => void;
+  onDeleted: (name: string) => void;
+}) {
+  const { t } = useI18n();
+  const [creating, setCreating] = createSignal(false);
+  const [newName, setNewName] = createSignal("");
+  const [busy, setBusy] = createSignal(false);
+  const [deletingName, setDeletingName] = createSignal<string | null>(null);
+
+  const customRoles = () => props.permcats.filter((p) => !p.system && p.name !== "default");
+
+  async function handleCreate(e: Event) {
+    e.preventDefault();
+    const name = newName().trim();
+    if (!name) return;
+    setBusy(true);
+    try {
+      const role = await createPermcat(name);
+      props.onCreated(role);
+      setNewName("");
+      setCreating(false);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleDelete(name: string) {
+    if (!confirm(`Delete role "${name}"?`)) return;
+    setDeletingName(name);
+    try {
+      await deletePermcat(name);
+      props.onDeleted(name);
+    } finally {
+      setDeletingName(null);
+    }
+  }
+
+  return (
+    <div class="rounded-lg border border-rim bg-surface px-3 py-2.5">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-xs font-medium text-muted shrink-0">
+          {t("directory.manage_roles")}
+        </span>
+
+        {/* Custom role chips */}
+        <Show
+          when={customRoles().length > 0}
+          fallback={
+            <Show when={!creating()}>
+              <span class="text-xs text-muted italic">{t("directory.no_custom_roles")}</span>
+            </Show>
+          }
+        >
+          <For each={customRoles()}>
+            {(role) => (
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-overlay text-txt border border-rim">
+                {role.label}
+                <button
+                  onClick={() => handleDelete(role.name)}
+                  disabled={deletingName() === role.name}
+                  title={t("directory.delete_role")}
+                  class="text-muted hover:text-red-500 disabled:opacity-40 transition-colors leading-none"
+                >
+                  <MdFillClose size={11} />
+                </button>
+              </span>
+            )}
+          </For>
+        </Show>
+
+        {/* Create form or button */}
+        <Show
+          when={creating()}
+          fallback={
+            <button
+              onClick={() => setCreating(true)}
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs
+                     border border-dashed border-rim text-muted hover:text-txt hover:border-rim-strong
+                     transition-colors"
+            >
+              <MdFillAdd size={12} />
+              {t("directory.create_role")}
+            </button>
+          }
+        >
+          <form onSubmit={handleCreate} class="inline-flex items-center gap-1.5">
+            <input
+              autofocus
+              type="text"
+              placeholder={t("directory.role_name_placeholder")}
+              value={newName()}
+              onInput={(e) => setNewName(e.currentTarget.value)}
+              class="text-xs px-2 py-1 rounded-lg border border-rim bg-overlay text-txt w-32
+                     focus:outline-none focus:border-accent"
+            />
+            <button
+              type="submit"
+              disabled={busy() || !newName().trim()}
+              class="text-xs px-2.5 py-1 rounded-lg bg-accent text-accent-fg
+                     disabled:opacity-50 hover:opacity-90 transition-opacity"
+            >
+              {busy() ? t("directory.creating_role") : t("directory.create_role")}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setCreating(false); setNewName(""); }}
+              class="text-xs px-2.5 py-1 rounded-lg border border-rim text-muted hover:text-txt transition-colors"
+            >
+              ×
+            </button>
+          </form>
+        </Show>
+      </div>
+    </div>
+  );
+}
 
 // ── Connection card with inline role selector ─────────────────────────────────
 
@@ -71,7 +177,7 @@ function RoleCard(props: {
     const newRole = select.value;
     if (newRole === props.conn.role) return;
     setBusy(true);
-    await assignRole(props.conn.id, newRole);
+    await updateConnection(props.conn.id, { role: newRole });
     setBusy(false);
     props.onRoleChanged(newRole);
   }
@@ -162,40 +268,42 @@ function Skeleton() {
 // ── Section ───────────────────────────────────────────────────────────────────
 
 export default function ContactRolesSection() {
-  const [connections, { mutate }] = createResource(fetchAllConnections);
+  const [connections, { mutate: mutateConns }] = createResource(fetchAllConnections);
+  const [permcats, { mutate: mutatePermcats }] = createResource(fetchPermcats);
   const [activeRole, setActiveRole] = createSignal<string | null>(null);
 
-  // All distinct roles in use, plus built-in ones, deduplicated
+  // Role options for the per-connection dropdown (excludes "default" — "" covers that)
   const roleOptions = createMemo<{ name: string; label: string }[]>(() => {
-    const inUse = new Set((connections() ?? []).map((c) => c.role ?? ""));
-    const names = ["", ...BUILTIN_ROLES, ...inUse].filter(
-      (v, i, a) => a.indexOf(v) === i,
-    );
-    return names.map((name) => ({
-      name,
-      label: name
-        ? name.charAt(0).toUpperCase() + name.slice(1)
-        : "No role",
-    }));
+    const cats = (permcats() ?? []).filter((p) => p.name !== "default");
+    return [
+      { name: "", label: "No role" },
+      ...cats.map((p) => ({ name: p.name, label: p.label })),
+    ];
   });
 
-  // Role pill tabs — only show roles that have at least one connection
+  // Role filter pills — driven by permcats so new roles appear and deleted ones vanish immediately
   const rolePills = createMemo(() => {
     const data = connections() ?? [];
+    const cats = (permcats() ?? []).filter((p) => p.name !== "default");
+
     const counts = new Map<string, number>();
     for (const c of data) {
       const key = c.role ?? "";
       counts.set(key, (counts.get(key) ?? 0) + 1);
     }
+
+    const noRoleCount = counts.get("") ?? 0;
+
     return [
       { name: null as string | null, label: "All", count: data.length },
-      ...[...counts.entries()]
-        .sort((a, b) => b[1] - a[1])
-        .map(([name, count]) => ({
-          name: name as string | null,
-          label: name ? name.charAt(0).toUpperCase() + name.slice(1) : "No role",
-          count,
-        })),
+      ...(noRoleCount > 0
+        ? [{ name: "" as string | null, label: "No role", count: noRoleCount }]
+        : []),
+      ...cats.map((p) => ({
+        name: p.name as string | null,
+        label: p.label,
+        count: counts.get(p.name) ?? 0,
+      })),
     ];
   });
 
@@ -209,13 +317,33 @@ export default function ContactRolesSection() {
   });
 
   function handleRoleChanged(conn: Connection, newRole: string) {
-    mutate((prev) =>
+    mutateConns((prev) =>
       prev?.map((c) => (c.id === conn.id ? { ...c, role: newRole } : c))
     );
   }
 
+  function handlePermcatCreated(role: Permcat) {
+    mutatePermcats((prev) => [...(prev ?? []), role]);
+  }
+
+  function handlePermcatDeleted(name: string) {
+    mutatePermcats((prev) => (prev ?? []).filter((p) => p.name !== name));
+    // Locally unset this role from any connections that had it
+    mutateConns((prev) => prev?.map((c) => c.role === name ? { ...c, role: "" } : c));
+    if (activeRole() === name) setActiveRole(null);
+  }
+
   return (
     <div class="px-4 md:px-6 py-6 space-y-4">
+      {/* Role management panel */}
+      <Show when={!permcats.loading}>
+        <ManageRolesPanel
+          permcats={permcats() ?? []}
+          onCreated={handlePermcatCreated}
+          onDeleted={handlePermcatDeleted}
+        />
+      </Show>
+
       <Show when={!connections.loading} fallback={<Skeleton />}>
         <Show
           when={(connections() ?? []).length > 0}

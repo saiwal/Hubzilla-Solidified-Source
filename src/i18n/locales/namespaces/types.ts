@@ -440,6 +440,7 @@ export type RawDictionary = {
     // Folder save
     save_to_folder: string; new_folder_placeholder: string; add_folder: string; no_folders_yet: string;
     expand_all: string;
+    delivery_report: string; delivery_no_data: string;
   };
   editor: {
     // PostComposer
@@ -981,6 +982,13 @@ export type RawDictionary = {
     no_role:              string;
     role_assign_hint:     string;
     edit_connection:      string;
+    manage_roles:         string;
+    create_role:          string;
+    role_name_placeholder: string;
+    creating_role:        string;
+    system_role:          string;
+    no_custom_roles:      string;
+    delete_role:          string;
     privacy_groups_title: string;
     privacy_groups_desc:  string;
     no_privacy_groups:    string;
@@ -1580,6 +1588,7 @@ export type RawDictionary = {
   cart: {
     catalog_tab:      string;
     cart_tab:         string;
+    orders_tab:       string;
     no_items:         string;
     add_to_cart:      string;
     in_cart:          string;
@@ -1595,6 +1604,73 @@ export type RawDictionary = {
     item_plural:      string;
     no_items_yet:     string;
     view_cart:        string;
+    // qty stepper
+    qty:              string;
+    // orders (seller)
+    no_orders:        string;
+    order_hash:       string;
+    order_buyer:      string;
+    order_date:       string;
+    order_total:      string;
+    order_paid:       string;
+    order_unpaid:     string;
+    order_fulfilled:  string;
+    order_pending:    string;
+    order_exception:  string;
+    mark_paid:        string;
+    back_to_orders:   string;
+    order_notes:      string;
+    add_note:         string;
+    note_placeholder: string;
+    order_items:      string;
+    fulfill_item:     string;
+    cancel_item:      string;
+    item_fulfilled:   string;
+    item_pending:     string;
+    item_exception:   string;
+    // payment
+    payment_options:     string;
+    pay_with_paypal:     string;
+    contact_seller:      string;
+    payment_success:     string;
+    payment_processing:  string;
+    order_placed:        string;
+    order_placed_note:   string;
+    // payment settings (seller)
+    payment_settings:    string;
+    provider_enabled:    string;
+    paypal_client_id:    string;
+    paypal_secret:       string;
+    paypal_mode:         string;
+    paypal_sandbox:      string;
+    paypal_live:         string;
+    manual_instructions: string;
+    save_settings:       string;
+    settings_saved:      string;
+    paid_via:            string;
+    payment_failed:      string;
+    // razorpay
+    pay_with_razorpay:   string;
+    razorpay_key_id:     string;
+    razorpay_key_secret: string;
+    razorpay_currency:   string;
+    // upi
+    pay_via_upi:         string;
+    upi_id_label:        string;
+    upi_display_name:    string;
+    upi_any_app:         string;
+    upi_confirm_note:    string;
+    i_have_paid:         string;
+    copy:                string;
+    // cashfree
+    pay_with_cashfree:          string;
+    cashfree_app_id:            string;
+    cashfree_secret_key:        string;
+    cashfree_mode:              string;
+    cashfree_sandbox:           string;
+    cashfree_production:        string;
+    cashfree_phone_placeholder: string;
+    cashfree_phone_required:    string;
   };
   bookmarks: {
     title:            string;

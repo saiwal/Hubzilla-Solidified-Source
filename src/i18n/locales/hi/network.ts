@@ -48,4 +48,5 @@ export const network: RawDictionary["network"] = {
   delete_saved_search:     "सहेजी गई खोज हटाएँ",
   // Privacy group filter
   privacy_groups:          "गोपनीयता समूह",
+  polls:                   "Polls",
 };

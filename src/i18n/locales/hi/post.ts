@@ -57,4 +57,7 @@ export const post: RawDictionary["post"] = {
   add_folder:            "जोड़ें",
   no_folders_yet:        "अभी कोई फ़ोल्डर नहीं — नीचे नाम टाइप करके बनाएँ",
   expand_all:            "सभी थ्रेड विस्तृत करें",
+  // Delivery report
+  delivery_report:       "डिलीवरी रिपोर्ट",
+  delivery_no_data:      "कोई डिलीवरी रिकॉर्ड नहीं मिला।",
 };

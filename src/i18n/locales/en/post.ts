@@ -65,4 +65,7 @@ export const post: RawDictionary["post"] = {
   add_folder:            "Add",
   no_folders_yet:        "No folders yet — type a name below to create one",
   expand_all:            "Expand all threads",
+  // Delivery report
+  delivery_report:       "Delivery report",
+  delivery_no_data:      "No delivery records found.",
 };

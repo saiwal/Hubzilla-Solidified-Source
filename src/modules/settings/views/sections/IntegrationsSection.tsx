@@ -13,6 +13,7 @@ import {
   MdFillArrow_downward,
 } from "solid-icons/md";
 import { navOrder, setNavOrder } from "@/shared/store/nav-order";
+import { refetchNavData } from "@/shared/store/nav-store";
 import { useI18n } from "@/i18n";
 
 interface AppEntry {
@@ -168,6 +169,7 @@ export default function IntegrationsSection() {
         }).catch(() => {});
       }
       await refetch();
+      if (action === "install" || action === "uninstall") refetchNavData();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Unknown error");
     } finally {

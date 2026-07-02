@@ -1,42 +1,70 @@
-import { createSignal, createMemo } from 'solid-js';
-import type { CatalogItem } from './api';
-import { toast } from "@/shared/store/toast";
-import { fetchCatalog, addItem as apiAdd, removeItem as apiRemove } from './api';
+import { createMemo, createSignal } from 'solid-js';
+import type { CatalogItem, Order, OrderItem, SellerOrder, PaymentConfig, PaymentSettings } from './api';
+import {
+  fetchCatalog, fetchOrder,
+  addItem as apiAdd, removeItem as apiRemove, setItemQty as apiSetQty,
+  checkout as apiCheckout,
+  fetchPaymentConfig, fetchPaymentSettings as apiFetchSettings,
+  savePaymentSettings as apiSaveSettings,
+  paypalCreateOrder as apiPaypalCreate, paypalCapture as apiPaypalCapture,
+  razorpayCreateOrder as apiRzpCreate, razorpayVerify as apiRzpVerify,
+  cashfreeCreateOrder as apiCfCreate, cashfreeVerify as apiCfVerify,
+  fetchSellerOrders, fetchSellerOrder,
+  markOrderPaid as apiMarkPaid, addOrderNote as apiAddNote,
+  fulfillOrderItem as apiFulfill, cancelOrderItem as apiCancel,
+} from './api';
+import { toast } from '@/shared/store/toast';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
-const [catalog, setCatalog] = createSignal<CatalogItem[]>([]);
-const [loading, setLoading]  = createSignal(false);
-const [error, setError]      = createSignal<string | null>(null);
-const [nick, setNick]        = createSignal('');
+const [nick, setNick]                             = createSignal('');
+const [catalog, setCatalog]                       = createSignal<CatalogItem[]>([]);
+const [order, setOrder]                           = createSignal<Order | null>(null);
+const [loading, setLoading]                       = createSignal(false);
+const [error, setError]                           = createSignal<string | null>(null);
+const [paymentConfig, setPaymentConfig]           = createSignal<PaymentConfig | null>(null);
+const [paymentSettings, setPaymentSettings]       = createSignal<PaymentSettings | null>(null);
+const [paymentSettingsLoading, setPaymentSettingsLoading] = createSignal(false);
+const [sellerOrders, setSellerOrders]             = createSignal<SellerOrder[]>([]);
+const [ordersLoading, setOrdersLoading]           = createSignal(false);
+const [selectedOrder, setSelectedOrder]           = createSignal<SellerOrder | null>(null);
+const [orderDetailLoading, setOrderDetailLoading] = createSignal(false);
 
 // ── Derived ───────────────────────────────────────────────────────────────────
 
-export const cartItems = createMemo(() => catalog().filter(i => i.orderQty > 0));
+export const cartItems = createMemo<OrderItem[]>(() => order()?.items ?? []);
 
 export const cartCount = createMemo(() =>
-  cartItems().reduce((n, i) => n + i.orderQty, 0)
+  cartItems().reduce((n, i) => n + i.qty, 0)
 );
 
-export const cartSubtotal = createMemo(() => {
-  const total = cartItems().reduce((sum, item) => {
-    const price = parseFloat(item.price.replace(/[^0-9.]/g, '')) || 0;
-    return sum + price * item.orderQty;
-  }, 0);
-  return total.toFixed(2);
+export const cartSubtotal = createMemo(() => order()?.subtotal ?? '0.00');
+
+export const isCheckedOut = createMemo(() => order()?.checked_out ?? false);
+
+export const catalogWithQty = createMemo(() => {
+  const qtyMap: Record<string, number> = {};
+  for (const i of cartItems()) qtyMap[i.sku] = (qtyMap[i.sku] ?? 0) + i.qty;
+  return catalog().map(c => ({ ...c, in_order: qtyMap[c.sku] ?? 0 }));
 });
 
-// ── Actions ───────────────────────────────────────────────────────────────────
+// ── Load ──────────────────────────────────────────────────────────────────────
 
 export async function loadCatalog(nickname: string) {
   setNick(nickname);
   setLoading(true);
   setError(null);
   try {
-    const items = await fetchCatalog(nickname);
-    setCatalog(items);
+    const [cat, ord, pc] = await Promise.all([
+      fetchCatalog(nickname),
+      fetchOrder(nickname),
+      fetchPaymentConfig(nickname),
+    ]);
+    setCatalog(cat);
+    setOrder(ord);
+    setPaymentConfig(pc);
   } catch (err) {
-    const msg = 'Failed to load catalog. Make sure the cart addon is enabled for this channel.';
+    const msg = 'Failed to load store. Make sure the cart addon is enabled for this channel.';
     setError(msg);
     toast.error(msg);
     console.error('[cart] loadCatalog failed', err);
@@ -45,34 +73,232 @@ export async function loadCatalog(nickname: string) {
   }
 }
 
+// ── Item mutations ────────────────────────────────────────────────────────────
+
 export async function addItem(sku: string) {
   const n = nick();
   if (!n) return;
-  // Optimistic update
-  setCatalog(prev =>
-    prev.map(item => item.sku === sku ? { ...item, orderQty: item.orderQty + 1 } : item)
-  );
+  setOrder(prev => {
+    if (!prev) return prev;
+    const existing = prev.items.find(i => i.sku === sku);
+    const items = existing
+      ? prev.items.map(i => i.sku === sku ? { ...i, qty: i.qty + 1 } : i)
+      : [...prev.items, _catalogItemToOrder(sku, catalog())];
+    return { ...prev, items };
+  });
   try {
-    await apiAdd(n, sku);
-  } catch (err) {
-    console.error('[cart] addItem failed', err);
-    // Re-fetch to get accurate state on error
-    await loadCatalog(n);
+    setOrder(await apiAdd(n, sku));
+  } catch {
+    setOrder(await fetchOrder(n).catch(() => null));
   }
 }
 
 export async function removeItem(sku: string) {
   const n = nick();
   if (!n) return;
-  setCatalog(prev =>
-    prev.map(item => item.sku === sku ? { ...item, orderQty: 0 } : item)
-  );
+  setOrder(prev => prev ? { ...prev, items: prev.items.filter(i => i.sku !== sku) } : prev);
   try {
-    await apiRemove(n, sku);
-  } catch (err) {
-    console.error('[cart] removeItem failed', err);
-    await loadCatalog(n);
+    setOrder(await apiRemove(n, sku));
+  } catch {
+    setOrder(await fetchOrder(n).catch(() => null));
   }
 }
 
-export { catalog, loading, error, nick };
+export async function setItemQty(sku: string, qty: number) {
+  const n = nick();
+  if (!n) return;
+  if (qty <= 0) { await removeItem(sku); return; }
+  setOrder(prev => prev ? { ...prev, items: prev.items.map(i => i.sku === sku ? { ...i, qty } : i) } : prev);
+  try {
+    setOrder(await apiSetQty(n, sku, qty));
+  } catch {
+    setOrder(await fetchOrder(n).catch(() => null));
+  }
+}
+
+// ── Checkout ──────────────────────────────────────────────────────────────────
+
+export async function checkout(paymentHint = '') {
+  const n = nick();
+  if (!n) return;
+  try {
+    await apiCheckout(n, paymentHint);
+    setOrder(prev => prev ? { ...prev, checked_out: true } : prev);
+    toast.success('Order placed! The seller will be in touch.');
+  } catch (err) {
+    toast.error(err instanceof Error ? err.message : 'Checkout failed.');
+  }
+}
+
+// ── PayPal ────────────────────────────────────────────────────────────────────
+
+export async function paypalCreateOrder(): Promise<string> {
+  const n    = nick();
+  const hash = order()?.hash;
+  if (!n || !hash) throw new Error('No active order');
+  const { paypal_order_id } = await apiPaypalCreate(n, hash);
+  return paypal_order_id;
+}
+
+// ── Razorpay ──────────────────────────────────────────────────────────────────
+
+export async function razorpayCreateOrder(): Promise<{ razorpay_order_id: string; key_id: string; amount: number; currency: string }> {
+  const n    = nick();
+  const hash = order()?.hash;
+  if (!n || !hash) throw new Error('No active order');
+  return apiRzpCreate(n, hash);
+}
+
+export async function razorpayVerify(rzpOrderId: string, rzpPaymentId: string, rzpSignature: string) {
+  const n    = nick();
+  const hash = order()?.hash;
+  if (!n || !hash) throw new Error('No active order');
+  await apiRzpVerify(n, rzpOrderId, rzpPaymentId, rzpSignature, hash);
+  setOrder(prev => prev ? { ...prev, checked_out: true, paid: true } : prev);
+  toast.success('Payment successful!');
+}
+
+export async function cashfreeCreateOrder(customerPhone: string): Promise<{ payment_session_id: string; mode: string }> {
+  const n    = nick();
+  const hash = order()?.hash;
+  if (!n || !hash) throw new Error('No active order');
+  return apiCfCreate(n, hash, customerPhone);
+}
+
+export async function cashfreeVerify() {
+  const n    = nick();
+  const hash = order()?.hash;
+  if (!n || !hash) throw new Error('No active order');
+  await apiCfVerify(n, hash);
+  setOrder(prev => prev ? { ...prev, checked_out: true, paid: true } : prev);
+  toast.success('Payment successful!');
+}
+
+export async function paypalCapture(paypalOrderId: string) {
+  const n    = nick();
+  const hash = order()?.hash;
+  if (!n || !hash) throw new Error('No active order');
+  await apiPaypalCapture(n, paypalOrderId, hash);
+  setOrder(prev => prev ? { ...prev, checked_out: true, paid: true } : prev);
+  toast.success('Payment successful!');
+}
+
+// ── Payment settings (seller) ─────────────────────────────────────────────────
+
+export async function loadPaymentSettings() {
+  const n = nick();
+  if (!n) return;
+  setPaymentSettingsLoading(true);
+  try {
+    setPaymentSettings(await apiFetchSettings(n));
+  } catch (err) {
+    toast.error('Failed to load payment settings.');
+    console.error('[cart] loadPaymentSettings failed', err);
+  } finally {
+    setPaymentSettingsLoading(false);
+  }
+}
+
+export async function savePaymentSettings(settings: PaymentSettings) {
+  const n = nick();
+  if (!n) return;
+  try {
+    const updated = await apiSaveSettings(n, settings);
+    setPaymentSettings(updated);
+    // Refresh public config so PayPal button appears/disappears immediately
+    setPaymentConfig(await fetchPaymentConfig(n));
+    toast.success('Settings saved.');
+  } catch (err) {
+    toast.error('Failed to save settings.');
+    console.error('[cart] savePaymentSettings failed', err);
+  }
+}
+
+// ── Seller order actions ──────────────────────────────────────────────────────
+
+export async function loadSellerOrders() {
+  const n = nick();
+  if (!n) return;
+  setOrdersLoading(true);
+  try {
+    setSellerOrders(await fetchSellerOrders(n));
+  } catch {
+    toast.error('Failed to load orders.');
+  } finally {
+    setOrdersLoading(false);
+  }
+}
+
+export async function loadSellerOrder(hash: string) {
+  const n = nick();
+  if (!n) return;
+  setOrderDetailLoading(true);
+  try {
+    setSelectedOrder(await fetchSellerOrder(n, hash));
+  } catch {
+    toast.error('Failed to load order.');
+  } finally {
+    setOrderDetailLoading(false);
+  }
+}
+
+export async function markOrderPaid(hash: string) {
+  const n = nick();
+  if (!n) return;
+  try {
+    const updated = await apiMarkPaid(n, hash);
+    setSelectedOrder(updated);
+    setSellerOrders(prev => prev.map(o => o.hash === hash ? updated : o));
+    toast.success('Order marked as paid.');
+  } catch {
+    toast.error('Failed to mark order paid.');
+  }
+}
+
+export async function addOrderNote(hash: string, text: string) {
+  const n = nick();
+  if (!n || !text.trim()) return;
+  try {
+    setSelectedOrder(await apiAddNote(n, hash, text));
+  } catch {
+    toast.error('Failed to add note.');
+  }
+}
+
+export async function fulfillItem(hash: string, itemId: number) {
+  const n = nick();
+  if (!n) return;
+  try {
+    setSelectedOrder(await apiFulfill(n, hash, itemId));
+    toast.success('Item fulfilled.');
+  } catch {
+    toast.error('Failed to fulfill item.');
+  }
+}
+
+export async function cancelItem(hash: string, itemId: number) {
+  const n = nick();
+  if (!n) return;
+  try {
+    setSelectedOrder(await apiCancel(n, hash, itemId));
+    toast.success('Item cancelled.');
+  } catch {
+    toast.error('Failed to cancel item.');
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function _catalogItemToOrder(sku: string, cat: CatalogItem[]): OrderItem {
+  const c = cat.find(i => i.sku === sku);
+  return { id: 0, sku, desc: c?.desc ?? sku, qty: 1, price_raw: c?.price_raw ?? 0, price: c?.price ?? '' };
+}
+
+// ── Exports ───────────────────────────────────────────────────────────────────
+
+export {
+  nick, catalog, order, loading, error,
+  paymentConfig, paymentSettings, paymentSettingsLoading,
+  sellerOrders, ordersLoading, selectedOrder, orderDetailLoading,
+  setSelectedOrder,
+};

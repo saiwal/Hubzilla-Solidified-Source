@@ -30,7 +30,7 @@ export { setNavNick };
 // Reactive to navNick: fetches /api/nav?channel_nick=<nick> when nick is set,
 // /api/nav otherwise. Includes channel_tabs in the response when nick is present.
 
-const [navData] = createResource<NavApiResponse, string>(
+const [navData, { refetch: refetchNavData }] = createResource<NavApiResponse, string>(
   navNick,
   (nick) => fetchNavApi(nick || undefined),
 );
@@ -38,6 +38,8 @@ const [navData] = createResource<NavApiResponse, string>(
 export function useNavData() {
   return navData;
 }
+
+export { refetchNavData };
 
 // ── Derived: pinned / featured apps ──────────────────────────────────────────
 

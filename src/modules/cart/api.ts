@@ -1,68 +1,207 @@
+import { apiFetch } from '@/shared/lib/fetch';
+
 export interface CatalogItem {
   sku: string;
   desc: string;
+  price_raw: number;
   price: string;
-  photoUrl: string | null;
-  orderQty: number;
+  photo_url: string | null;
+  type: string;
+}
+
+export interface OrderItem {
+  id: number;
+  sku: string;
+  desc: string;
+  qty: number;
+  price_raw: number;
+  price: string;
+  // seller-only
+  fulfilled?: boolean;
+  confirmed?: boolean;
+  exception?: boolean;
+  notes?: string[];
+}
+
+export interface Order {
+  hash: string | null;
+  items: OrderItem[];
+  subtotal_raw: number;
+  subtotal: string;
+  currency: string;
+  checked_out: boolean;
+  paid: boolean;
+}
+
+export interface SellerOrder extends Order {
+  buyer: string;
+  buyer_name: string;
+  payment: { provider: string; txn_id: string } | null;
+  flags: { confirmed: boolean; fulfilled: boolean; exception: boolean };
+  notes: string[];
+}
+
+export interface PaymentProvider {
+  id: string;
+  label: string;
+  enabled: boolean;
+  // PayPal
+  client_id?: string;
+  // Razorpay
+  key_id?: string;
+  currency?: string;
+  // Cashfree
+  app_id?: string;
+  mode?: 'sandbox' | 'production';
+  // UPI
+  upi_id?: string;
+  display_name?: string;
+}
+
+export interface PaymentConfig {
+  providers: PaymentProvider[];
+  currency: string;
+}
+
+export interface PaymentSettings {
+  paypal: {
+    enabled: boolean;
+    client_id: string;
+    secret: string;
+    mode: 'sandbox' | 'live';
+  };
+  razorpay: {
+    enabled: boolean;
+    key_id: string;
+    key_secret: string;
+    currency: string;
+  };
+  cashfree: {
+    enabled: boolean;
+    app_id: string;
+    secret_key: string;
+    mode: 'sandbox' | 'production';
+  };
+  upi: {
+    enabled: boolean;
+    upi_id: string;
+    display_name: string;
+  };
+  manual: {
+    enabled: boolean;
+    instructions: string;
+  };
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+async function cartGet<T>(path: string): Promise<T> {
+  const res = await apiFetch(`/api/cart/${path}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as { error?: { message?: string } };
+    throw new Error(err?.error?.message ?? `Cart error ${res.status}`);
+  }
+  return (await res.json()).data as T;
+}
+
+async function cartPost<T>(path: string, body: Record<string, unknown> = {}): Promise<T> {
+  const res = await apiFetch(`/api/cart/${path}`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as { error?: { message?: string } };
+    throw new Error(err?.error?.message ?? `Cart error ${res.status}`);
+  }
+  return (await res.json()).data as T;
 }
 
 // ── Catalog ───────────────────────────────────────────────────────────────────
 
-export async function fetchCatalog(nick: string): Promise<CatalogItem[]> {
-  const res = await fetch(`/cart/${nick}/catalog`, { credentials: 'include' });
-  if (!res.ok) throw new Error(`Cart error: ${res.status}`);
-  const html = await res.text();
-  return parseCatalogHtml(html);
-}
+export const fetchCatalog = (nick: string) =>
+  cartGet<CatalogItem[]>(`${nick}/catalog`);
 
-function parseCatalogHtml(html: string): CatalogItem[] {
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  const table = doc.querySelector('table');
-  if (!table) return [];
+// ── Order ─────────────────────────────────────────────────────────────────────
 
-  const rows = Array.from(table.querySelectorAll('tr')).slice(1); // skip header row
-  return rows.flatMap(row => {
-    const cells = row.querySelectorAll('td');
-    if (cells.length < 4) return [];
+export const fetchOrder = (nick: string) =>
+  cartGet<Order>(`${nick}/order`);
 
-    const addBtn = cells[0].querySelector('button[name="add"]') as HTMLButtonElement | null;
-    const sku = addBtn?.value?.trim() ?? '';
-    if (!sku) return [];
+export const addItem = (nick: string, sku: string, qty = 1) =>
+  cartPost<Order>(`${nick}/item`, { sku, qty });
 
-    const img = cells[1].querySelector('img') as HTMLImageElement | null;
-    const photoUrl = img?.getAttribute('src') ?? null;
-    const desc = cells[2].textContent?.trim() ?? '';
-    const price = cells[3].textContent?.trim() ?? '';
+export const removeItem = (nick: string, sku: string) =>
+  cartPost<Order>(`${nick}/item/remove`, { sku });
 
-    // cells[4]: "<i class='bi bi-cart'></i> 2" or empty
-    const qtyRaw = cells[4]?.textContent?.trim() ?? '';
-    const orderQty = parseInt(qtyRaw.replace(/\D/g, ''), 10) || 0;
+export const setItemQty = (nick: string, sku: string, qty: number) =>
+  cartPost<Order>(`${nick}/item/qty`, { sku, qty });
 
-    return [{ sku, desc, price, photoUrl, orderQty }];
-  });
-}
+export const checkout = (nick: string, paymentHint = '') =>
+  cartPost<{ checked_out: boolean; order_hash: string }>(`${nick}/checkout`, { payment_hint: paymentHint });
 
-// ── Mutations (form-encoded, matching Hubzilla cart_post handler) ─────────────
+// ── Payment ───────────────────────────────────────────────────────────────────
 
-async function cartPost(nick: string, params: Record<string, string>): Promise<void> {
-  const form = new URLSearchParams(params);
-  await fetch(`/cart/${nick}`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: form.toString(),
-    redirect: 'follow',
-  });
-}
+export const fetchPaymentConfig = (nick: string) =>
+  cartGet<PaymentConfig>(`${nick}/payment-config`);
 
-export function addItem(nick: string, sku: string, qty = 1): Promise<void> {
-  return cartPost(nick, { cart_posthook: 'add_item', add: sku, qty: String(qty) });
-}
+export const fetchPaymentSettings = (nick: string) =>
+  cartGet<PaymentSettings>(`${nick}/payment-settings`);
 
-export function removeItem(nick: string, sku: string): Promise<void> {
-  return cartPost(nick, { cart_posthook: 'update_item', delsku: sku });
-}
+export const savePaymentSettings = (nick: string, settings: Partial<PaymentSettings>) =>
+  cartPost<PaymentSettings>(`${nick}/payment-settings`, settings as Record<string, unknown>);
 
-export function updateItemQty(nick: string, itemId: number, qty: number): Promise<void> {
-  return cartPost(nick, { cart_posthook: 'update_item', [`qty-${itemId}`]: String(qty) });
-}
+export const paypalCreateOrder = (nick: string, orderHash: string) =>
+  cartPost<{ paypal_order_id: string }>(`${nick}/paypal/create-order`, { order_hash: orderHash });
+
+export const paypalCapture = (nick: string, paypalOrderId: string, orderHash: string) =>
+  cartPost<{ paid: boolean; order_hash: string; txn_id: string }>(
+    `${nick}/paypal/capture`,
+    { paypal_order_id: paypalOrderId, order_hash: orderHash }
+  );
+
+export const razorpayCreateOrder = (nick: string, orderHash: string) =>
+  cartPost<{ razorpay_order_id: string; key_id: string; amount: number; currency: string }>(
+    `${nick}/razorpay/create-order`, { order_hash: orderHash }
+  );
+
+export const cashfreeCreateOrder = (nick: string, orderHash: string, customerPhone: string) =>
+  cartPost<{ payment_session_id: string; mode: string }>(
+    `${nick}/cashfree/create-order`, { order_hash: orderHash, customer_phone: customerPhone }
+  );
+
+export const cashfreeVerify = (nick: string, orderHash: string) =>
+  cartPost<{ paid: boolean; order_hash: string; txn_id: string }>(
+    `${nick}/cashfree/verify`, { order_hash: orderHash }
+  );
+
+export const razorpayVerify = (
+  nick: string,
+  rzpOrderId: string,
+  rzpPaymentId: string,
+  rzpSignature: string,
+  orderHash: string,
+) =>
+  cartPost<{ paid: boolean; order_hash: string; txn_id: string }>(
+    `${nick}/razorpay/verify`,
+    { razorpay_order_id: rzpOrderId, razorpay_payment_id: rzpPaymentId,
+      razorpay_signature: rzpSignature, order_hash: orderHash }
+  );
+
+// ── Seller orders ─────────────────────────────────────────────────────────────
+
+export const fetchSellerOrders = (nick: string) =>
+  cartGet<SellerOrder[]>(`${nick}/orders`);
+
+export const fetchSellerOrder = (nick: string, hash: string) =>
+  cartGet<SellerOrder>(`${nick}/orders/${hash}`);
+
+export const markOrderPaid = (nick: string, hash: string) =>
+  cartPost<SellerOrder>(`${nick}/orders/${hash}/markpaid`);
+
+export const addOrderNote = (nick: string, hash: string, text: string) =>
+  cartPost<SellerOrder>(`${nick}/orders/${hash}/note`, { text });
+
+export const fulfillOrderItem = (nick: string, hash: string, itemId: number) =>
+  cartPost<SellerOrder>(`${nick}/orders/${hash}/items/${itemId}/fulfill`);
+
+export const cancelOrderItem = (nick: string, hash: string, itemId: number) =>
+  cartPost<SellerOrder>(`${nick}/orders/${hash}/items/${itemId}/cancel`);

@@ -6,6 +6,7 @@ import { motion } from "solid-motionone";
 import PostComposer from "@/shared/editor/composers/PostComposer";
 import AclPicker, { entryKey, type AclMode, type AclEntry } from "@/shared/editor/components/AclPicker";
 import { storageGet, storageSet, storageDel } from "@/shared/lib/storage";
+import { getCsrfToken } from "@/shared/lib/csrf";
 import { useMention, getTextareaMentionQuery } from "@/shared/editor/mention/useMention";
 import MentionPopup from "@/shared/editor/mention/MentionPopup";
 import { useI18n } from "@/i18n";
@@ -124,52 +125,56 @@ function HqComposer() {
     if (!body().trim()) return;
     setSubmitting(true);
 
-    const fd = new FormData();
-    fd.append("body", body());
-    fd.append("mimetype", "text/bbcode");
-    fd.append("obj_type", "Note");
-    fd.append("profile_uid", String(auth()!.uid));
-    fd.append("type", "wall");
-    fd.append("return", "");
-
     const mode = aclMode();
+    const payload: Record<string, unknown> = {
+      body: body(),
+      mimetype: "text/bbcode",
+      profile_uid: auth()!.uid,
+    };
+
     if (mode === "public") {
-      fd.append("contact_allow", "");
-      fd.append("group_allow", "");
-      fd.append("contact_deny", "");
-      fd.append("group_deny", "");
-      fd.append("public_policy", "");
+      payload.scope = "public";
     } else if (mode === "connections") {
-      fd.append("contact_allow", "");
-      fd.append("group_allow", "");
-      fd.append("contact_deny", "");
-      fd.append("group_deny", "");
-      fd.append("public_policy", "contacts");
+      payload.scope = "contacts";
     } else {
       if (allowKeys().size === 0) {
         toast.error("Select at least one connection to allow.");
         setSubmitting(false);
         return;
       }
+      payload.scope = "custom";
+      const contactAllow: string[] = [];
+      const groupAllow: string[] = [];
+      const contactDeny: string[] = [];
+      const groupDeny: string[] = [];
       for (const key of allowKeys()) {
         const [type, ...rest] = key.split(":");
         const xid = rest.join(":");
-        if (type === "c") fd.append("contact_allow[]", xid);
-        if (type === "g") fd.append("group_allow[]", xid);
+        if (type === "c") contactAllow.push(xid);
+        if (type === "g") groupAllow.push(xid);
       }
       for (const key of denyKeys()) {
         const [type, ...rest] = key.split(":");
         const xid = rest.join(":");
-        if (type === "c") fd.append("contact_deny[]", xid);
-        if (type === "g") fd.append("group_deny[]", xid);
+        if (type === "c") contactDeny.push(xid);
+        if (type === "g") groupDeny.push(xid);
       }
+      payload.contact_allow = contactAllow;
+      payload.group_allow = groupAllow;
+      payload.contact_deny = contactDeny;
+      payload.group_deny = groupDeny;
     }
 
     try {
-      const res = await fetch("/item", { method: "POST", credentials: "include", body: fd });
+      const csrf = await getCsrfToken();
+      const res = await fetch("/api/item", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf },
+        body: JSON.stringify(payload),
+      });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json().catch(() => ({})) as { success?: number; cancel?: number };
-      if (json.cancel) { toast.error("Cancelled by server."); return; }
+      const json = await res.json().catch(() => ({})) as { success?: boolean };
       if (!json.success) { toast.error("Server reported failure."); return; }
       resetComposer();
     } catch (e) {
