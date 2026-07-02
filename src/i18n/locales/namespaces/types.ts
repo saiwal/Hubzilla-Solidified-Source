@@ -865,6 +865,7 @@ export type RawDictionary = {
     conversations:        string;
     direct_messages:      string;
     events:               string;
+    polls:                string;
     filter_by_connection: string;
     connection_placeholder: string;
     remove:               string;

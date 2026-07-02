@@ -17,6 +17,7 @@ export const network: RawDictionary["network"] = {
   conversations:        "Personal Posts",
   direct_messages:      "Direct messages",
   events:               "Events",
+  polls:                "Polls",
   // Connection filter
   filter_by_connection: "Filter by connection",
   connection_placeholder: "Connection…",
@@ -30,7 +31,7 @@ export const network: RawDictionary["network"] = {
   // Advanced filters
   more_filters:         "More filters",
   clear_filters:        "Clear filters",
-  tag:                  "Tag",
+  tag:                  "Tags",
   tag_placeholder:      "e.g. solidjs",
   date_range:           "Date range",
   date_from:            "From",

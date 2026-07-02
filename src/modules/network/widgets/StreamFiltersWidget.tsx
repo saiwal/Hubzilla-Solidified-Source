@@ -28,7 +28,7 @@ const CHIPS = [
   { key: "conv", labelKey: "network.conversations",    Icon: MdFillPerson        },
   { key: "dm",   labelKey: "network.direct_messages",  Icon: MdFillMail          },
   { key: "event",labelKey: "network.events",           Icon: MdFillEvent         },
-  { key: "poll",labelKey: "network.polls",             Icon: MdFillPoll          },
+  { key: "poll", labelKey: "network.polls",            Icon: MdFillPoll          },
 ] as const;
 
 const str = (v: string | string[] | undefined): string =>
@@ -126,7 +126,7 @@ function buildParams(params: Record<string, string | string[] | undefined>): Net
   if (params.conv  === "1") p.conv  = 1;
   if (params.dm    === "1") p.dm    = 1;
   if (params.event === "1") p.event = 1;
-  if (params.poll === "1") p.poll = 1;
+  if (params.poll  === "1") p.poll  = 1;
   if (params.dbegin) p.dbegin = String(params.dbegin);
   if (params.dend)   p.dend   = String(params.dend);
   if (params.cmin)   p.cmin   = Number(params.cmin);
@@ -174,7 +174,7 @@ export default function StreamFiltersWidget() {
   const hasAnyFilter = () =>
     (str(searchParams.order) || "created") !== "created" || !!searchParams.search ||
     searchParams.star === "1" || searchParams.pf === "1" ||
-    searchParams.conv === "1" || searchParams.dm === "1" || searchParams.event === "1" ||
+    searchParams.conv === "1" || searchParams.dm === "1" || searchParams.event === "1" || searchParams.poll === "1" ||
     !!(tag() || file() || dbegin() || dend() || cmin() || cmax()) ||
     !!(searchParams.cid || searchParams.gid);
 
@@ -187,7 +187,7 @@ export default function StreamFiltersWidget() {
     setSearchParams(
       {
         order: undefined, search: undefined, tag: undefined, file: undefined,
-        star: undefined, pf: undefined, conv: undefined, dm: undefined, event: undefined,
+        star: undefined, pf: undefined, conv: undefined, dm: undefined, event: undefined, poll: undefined,
         dbegin: undefined, dend: undefined,
         cmin: undefined, cmax: undefined,
         cid: undefined, gid: undefined, xchan_label: undefined,
