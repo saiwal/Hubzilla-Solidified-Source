@@ -2,7 +2,7 @@ import type { RawDictionary } from "../namespaces/types";
 
 export const webpages: RawDictionary["webpages"] = {
   title:            "Webpages",
-  new_page:         "+ New Page",
+  new_page:         "New Page",
   col_title:        "Title",
   col_page_link:    "Page Link",
   col_last_edited:  "Last edited",
