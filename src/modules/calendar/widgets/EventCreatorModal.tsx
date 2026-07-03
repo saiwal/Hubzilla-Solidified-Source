@@ -1,13 +1,17 @@
 import { createSignal, createResource, Show, For, onMount, onCleanup } from "solid-js";
 import { toast } from "@/shared/store/toast";
-import { createEvent } from "../api";
+import { createEvent, editEvent } from "../api";
+import type { CalEvent } from "../api";
 import { fetchCdavCalendars } from "../api/cdav";
 import { useI18n } from "@/i18n";
 
 interface Props {
   onClose: () => void;
   onCreated?: () => void;
+  onEdited?: () => void;
   defaultDate?: string; // YYYY-MM-DD, pre-fills start date
+  /** When provided, the modal is in edit mode */
+  event?: CalEvent;
 }
 
 interface CalendarOption {
@@ -21,17 +25,33 @@ function todayDate() {
   return new Date().toISOString().slice(0, 10);
 }
 
+// All-day events store a calendar date with no timezone adjustment — use the
+// raw date string. Timed events come back with a server-timezone offset, so
+// convert to browser-local to match what the display shows.
+function isoToDate(iso: string, allDay = false) {
+  if (allDay) return iso.slice(0, 10);
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function isoToTime(iso: string) {
+  const d = new Date(iso);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
 export default function EventCreatorModal(props: Props) {
   const { t } = useI18n();
-  const [title, setTitle] = createSignal("");
-  const [allDay, setAllDay] = createSignal(false);
-  const [startDate, setStartDate] = createSignal(props.defaultDate ?? todayDate());
-  const [startTime, setStartTime] = createSignal("09:00");
-  const [nofinish, setNofinish] = createSignal(false);
-  const [endDate, setEndDate] = createSignal(props.defaultDate ?? todayDate());
-  const [endTime, setEndTime] = createSignal("10:00");
-  const [location, setLocation] = createSignal("");
-  const [description, setDescription] = createSignal("");
+  const ev = props.event;
+  const isEdit = !!ev;
+
+  const [title, setTitle] = createSignal(ev?.title ?? "");
+  const [allDay, setAllDay] = createSignal(ev?.allDay ?? false);
+  const [startDate, setStartDate] = createSignal(ev ? isoToDate(ev.start, ev.allDay) : (props.defaultDate ?? todayDate()));
+  const [startTime, setStartTime] = createSignal(ev && !ev.allDay ? isoToTime(ev.start) : "09:00");
+  const [nofinish, setNofinish] = createSignal(ev?.nofinish ?? false);
+  const [endDate, setEndDate] = createSignal(ev?.end ? isoToDate(ev.end, ev.allDay) : (props.defaultDate ?? todayDate()));
+  const [endTime, setEndTime] = createSignal(ev?.end && !ev.allDay ? isoToTime(ev.end) : "10:00");
+  const [location, setLocation] = createSignal(ev?.location ?? "");
+  const [description, setDescription] = createSignal(ev?.description ?? "");
   const [submitting, setSubmitting] = createSignal(false);
   const [selectedCalIdx, setSelectedCalIdx] = createSignal(0);
 
@@ -74,31 +94,47 @@ export default function EventCreatorModal(props: Props) {
     setSubmitting(true);
 
     try {
+      // All-day: send a bare UTC midnight so PHP stores the calendar date unchanged.
+      // Timed: new Date("YYYY-MM-DDTHH:MM:SS") is parsed as LOCAL time by the JS
+      // engine, so toISOString() gives the correct UTC equivalent.
       const startIso = allDay()
         ? `${startDate()}T00:00:00Z`
-        : `${startDate()}T${startTime()}:00Z`;
+        : new Date(`${startDate()}T${startTime()}:00`).toISOString();
 
       const endIso = !nofinish() && endDate()
         ? allDay()
           ? `${endDate()}T00:00:00Z`
-          : `${endDate()}T${endTime()}:00Z`
+          : new Date(`${endDate()}T${endTime()}:00`).toISOString()
         : undefined;
 
-      const selectedCal = calendarOptions()[selectedCalIdx()];
-
-      await createEvent({
-        title: title().trim(),
-        description: description().trim() || undefined,
-        location: location().trim() || undefined,
-        start: startIso,
-        end: endIso,
-        allDay: allDay(),
-        nofinish: nofinish(),
-        calendarId: selectedCal?.calendarId,
-        calendarInstanceId: selectedCal?.calendarInstanceId,
-      });
-
-      props.onCreated?.();
+      if (isEdit && ev) {
+        await editEvent(ev.id, {
+          title: title().trim(),
+          description: description().trim() || undefined,
+          location: location().trim() || undefined,
+          start: startIso,
+          end: endIso,
+          allDay: allDay(),
+          nofinish: nofinish(),
+          calendarId: ev.calendarId,
+          uri: ev.uri,
+        });
+        props.onEdited?.();
+      } else {
+        const selectedCal = calendarOptions()[selectedCalIdx()];
+        await createEvent({
+          title: title().trim(),
+          description: description().trim() || undefined,
+          location: location().trim() || undefined,
+          start: startIso,
+          end: endIso,
+          allDay: allDay(),
+          nofinish: nofinish(),
+          calendarId: selectedCal?.calendarId,
+          calendarInstanceId: selectedCal?.calendarInstanceId,
+        });
+        props.onCreated?.();
+      }
       props.onClose();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("calendar.failed_create"));
@@ -121,7 +157,9 @@ export default function EventCreatorModal(props: Props) {
 
         {/* Header */}
         <div class="flex items-center justify-between px-5 pt-5 pb-4 border-b border-rim shrink-0">
-          <h2 class="text-base font-semibold text-txt">{t("calendar.new_event")}</h2>
+          <h2 class="text-base font-semibold text-txt">
+            {isEdit ? t("calendar.edit_event") : t("calendar.new_event")}
+          </h2>
           <button
             type="button"
             onClick={props.onClose}
@@ -137,8 +175,8 @@ export default function EventCreatorModal(props: Props) {
         {/* Form */}
         <form onSubmit={handleSubmit} class="flex-1 p-5 flex flex-col gap-4 overflow-y-auto min-h-0">
 
-          {/* Calendar picker — only shown when there are multiple options */}
-          <Show when={calendarOptions().length > 1}>
+          {/* Calendar picker — only shown when creating and multiple options exist */}
+          <Show when={!isEdit && calendarOptions().length > 1}>
             <div class="flex flex-col gap-1">
               <label class="text-xs font-medium text-muted">{t("calendar.calendar_label")}</label>
               <div class="relative">
@@ -293,7 +331,9 @@ export default function EventCreatorModal(props: Props) {
               class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-accent text-accent-fg
                      hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
             >
-              {submitting() ? t("calendar.creating") : t("calendar.create_event")}
+              {submitting()
+                ? (isEdit ? t("calendar.saving") : t("calendar.creating"))
+                : (isEdit ? t("calendar.save_event") : t("calendar.create_event"))}
             </button>
           </div>
         </form>

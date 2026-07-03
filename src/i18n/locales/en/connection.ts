@@ -4,7 +4,7 @@ export const connection: RawDictionary["connection"] = {
   close:          "Close",
   role:           "Role",
   role_loading:   "Loading roles…",
-  no_role:        "No role",
+  no_role:        "Default",
   closeness:      "Closeness",
   distant:        "Distant",
   close_label:    "Close",

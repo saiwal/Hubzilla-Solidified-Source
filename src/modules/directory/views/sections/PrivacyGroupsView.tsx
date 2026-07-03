@@ -20,6 +20,7 @@ import {
   MdFillVisibility_off,
   MdFillStar,
   MdFillStar_border,
+  MdFillClose,
 } from "solid-icons/md";
 import SubPageContent from "@/shared/views/SubPageContent";
 import {
@@ -34,7 +35,7 @@ import type { PrivacyGroup } from "../../groups/api";
 
 // ── Inline create form ────────────────────────────────────────────────────────
 
-const CreateForm: Component = () => {
+const CreateForm: Component<{ onDone: () => void }> = (props) => {
   const { t } = useI18n();
   const [name, setName] = createSignal("");
   const [visible, setVisible] = createSignal(false);
@@ -48,19 +49,39 @@ const CreateForm: Component = () => {
     setBusy(false);
     setName("");
     setVisible(false);
+    props.onDone();
   }
 
   return (
-    <div class="flex flex-col sm:flex-row gap-2">
-      <input
-        type="text"
-        placeholder={t("directory.group_name_placeholder")}
-        value={name()}
-        onInput={(e) => setName(e.currentTarget.value)}
-        class="flex-1 bg-surface border border-rim text-txt rounded-lg px-3 py-2 text-sm
-               hover:border-rim-strong focus:outline-none focus:border-accent"
-      />
-      <label class="flex items-center gap-2 text-sm text-muted cursor-pointer select-none px-1">
+    <div class="rounded-lg border border-accent/30 bg-accent/5 p-3 space-y-2">
+      <div class="flex gap-2">
+        <input
+          autofocus
+          type="text"
+          placeholder={t("directory.group_name_placeholder")}
+          value={name()}
+          onInput={(e) => setName(e.currentTarget.value)}
+          onKeyDown={(e) => e.key === "Escape" && props.onDone()}
+          class="flex-1 bg-surface border border-rim text-txt rounded-lg px-3 py-1.5 text-sm
+                 hover:border-rim-strong focus:outline-none focus:border-accent"
+        />
+        <button
+          onClick={submit}
+          disabled={busy() || !name().trim()}
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-accent-fg
+                 text-sm font-medium disabled:opacity-50 hover:opacity-90 transition-opacity shrink-0"
+        >
+          {busy() ? t("directory.creating") : t("directory.create")}
+        </button>
+        <button
+          onClick={props.onDone}
+          class="p-1.5 rounded-lg text-muted hover:text-txt hover:bg-overlay transition-colors shrink-0"
+          title="Cancel"
+        >
+          <MdFillClose size={16} />
+        </button>
+      </div>
+      <label class="flex items-center gap-2 text-xs text-muted cursor-pointer select-none">
         <input
           type="checkbox"
           checked={visible()}
@@ -69,15 +90,6 @@ const CreateForm: Component = () => {
         />
         {t("directory.members_visible")}
       </label>
-      <button
-        onClick={submit}
-        disabled={busy() || !name().trim()}
-        class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-accent text-accent-fg
-               text-sm font-medium disabled:opacity-50 hover:opacity-90 transition-opacity shrink-0"
-      >
-        <MdFillAdd size={16} />
-        {busy() ? t("directory.creating") : t("directory.create")}
-      </button>
     </div>
   );
 };
@@ -164,14 +176,31 @@ const GroupRow: Component<{ group: PrivacyGroup }> = (props) => {
 
 const PrivacyGroupsView: Component = () => {
   const { t } = useI18n();
+  const [showCreate, setShowCreate] = createSignal(false);
   onMount(() => loadGroups());
 
   return (
     <SubPageContent
       title={t("directory.privacy_groups_title")}
       description={t("directory.privacy_groups_desc")}
-      action={<CreateForm />}
+      action={
+        <button
+          onClick={() => setShowCreate((v) => !v)}
+          class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+            showCreate()
+              ? "border-accent text-accent bg-accent/10"
+              : "border-rim text-muted hover:border-rim-strong hover:text-txt"
+          }`}
+        >
+          <MdFillAdd size={15} />
+          {t("directory.create")}
+        </button>
+      }
     >
+      <Show when={showCreate()}>
+        <CreateForm onDone={() => setShowCreate(false)} />
+      </Show>
+
       <Show
         when={!loading()}
         fallback={
@@ -185,9 +214,11 @@ const PrivacyGroupsView: Component = () => {
         <Show
           when={groups().length > 0}
           fallback={
-            <p class="text-muted text-sm text-center py-10">
-              {t("directory.no_privacy_groups")}
-            </p>
+            <Show when={!showCreate()}>
+              <p class="text-muted text-sm text-center py-10">
+                {t("directory.no_privacy_groups")}
+              </p>
+            </Show>
           }
         >
           <div class="space-y-2">

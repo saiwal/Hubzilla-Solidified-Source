@@ -87,6 +87,59 @@ export async function createEvent(
   return json.data as { id: number; uri: string };
 }
 
+export interface EditEventInput {
+  title: string;
+  description?: string;
+  location?: string;
+  start: string;
+  end?: string;
+  allDay?: boolean;
+  nofinish?: boolean;
+  /** For CalDAV events — identifies the target object */
+  calendarId?: number;
+  uri?: string;
+}
+
+export async function editEvent(
+  eventId: number,
+  input: EditEventInput,
+): Promise<void> {
+  const token = await getCsrfToken();
+  const res = await fetch(`/api/cal/${eventId}/edit`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRF-Token": token,
+    },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as { error?: { message?: string } };
+    throw new Error(err?.error?.message ?? `HTTP ${res.status}`);
+  }
+}
+
+export async function deleteEvent(
+  eventId: number,
+  opts?: { calendarId?: number; uri?: string },
+): Promise<void> {
+  const token = await getCsrfToken();
+  const res = await fetch(`/api/cal/${eventId}/delete`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRF-Token": token,
+    },
+    body: JSON.stringify(opts ?? {}),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as { error?: { message?: string } };
+    throw new Error(err?.error?.message ?? `HTTP ${res.status}`);
+  }
+}
+
 export interface ImportResult {
   imported: number;
   failed: number;

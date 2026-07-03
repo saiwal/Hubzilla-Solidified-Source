@@ -135,7 +135,8 @@ export async function createPermcat(name: string): Promise<Permcat> {
 }
 
 export async function deletePermcat(name: string): Promise<void> {
-  const res = await apiFetch(`/api/connections/permcats/${encodeURIComponent(name)}`, {
+  const q = new URLSearchParams({ name });
+  const res = await apiFetch(`/api/connections/permcats?${q}`, {
     method: "DELETE",
   });
   if (!res.ok) throw new Error(`delete permcat HTTP ${res.status}`);

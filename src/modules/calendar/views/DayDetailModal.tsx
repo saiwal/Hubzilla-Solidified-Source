@@ -4,10 +4,14 @@ import {
   MdFillAdd,
   MdFillLocation_on,
   MdFillOpen_in_new,
+  MdFillEdit,
+  MdFillDelete,
 } from "solid-icons/md";
 import DOMPurify from "dompurify";
 import { useI18n } from "@/i18n";
+import { toast } from "@/shared/store/toast";
 import type { CalEvent } from "../api";
+import { deleteEvent } from "../api";
 import EventCreatorModal from "../widgets/EventCreatorModal";
 
 function fmtTime(iso: string, allDay: boolean) {
@@ -32,12 +36,15 @@ interface Props {
   events: CalEvent[];
   onClose: () => void;
   onEventCreated?: () => void;
+  onEventEdited?: () => void;
+  onEventDeleted?: () => void;
 }
 
 export default function DayDetailModal(props: Props) {
   const { t } = useI18n();
   const [activeEventId, setActiveEventId] = createSignal<number | null>(null);
   const [showCreator, setShowCreator] = createSignal(false);
+  const [editingEvent, setEditingEvent] = createSignal<CalEvent | null>(null);
 
   function onKeyDown(e: KeyboardEvent) {
     if (e.key === "Escape" && !showCreator()) props.onClose();
@@ -146,7 +153,14 @@ export default function DayDetailModal(props: Props) {
                     </button>
 
                     <Show when={activeEventId() === ev.id}>
-                      <EventDetailPanel event={ev} />
+                      <EventDetailPanel
+                        event={ev}
+                        onEdit={() => setEditingEvent(ev)}
+                        onDeleted={() => {
+                          setActiveEventId(null);
+                          props.onEventDeleted?.();
+                        }}
+                      />
                     </Show>
                   </div>
                 )}
@@ -166,15 +180,41 @@ export default function DayDetailModal(props: Props) {
           }}
         />
       </Show>
+
+      <Show when={editingEvent() !== null}>
+        <EventCreatorModal
+          event={editingEvent()!}
+          onClose={() => setEditingEvent(null)}
+          onEdited={() => {
+            setEditingEvent(null);
+            props.onEventEdited?.();
+          }}
+        />
+      </Show>
     </>
   );
 }
 
-function EventDetailPanel(props: { event: CalEvent }) {
+function EventDetailPanel(props: { event: CalEvent; onEdit: () => void; onDeleted: () => void }) {
   const ev = props.event;
   const { t } = useI18n();
+  const [confirming, setConfirming] = createSignal(false);
+  const [deleting, setDeleting] = createSignal(false);
   const sanitized = () =>
     ev.description ? DOMPurify.sanitize(ev.description) : "";
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      await deleteEvent(ev.id, { calendarId: ev.calendarId, uri: ev.uri });
+      props.onDeleted();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("calendar.failed_delete"));
+      setConfirming(false);
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   return (
     <div class="mt-1 ml-3 bg-base border border-rim/60 rounded-xl p-3.5 space-y-2">
@@ -202,17 +242,59 @@ function EventDetailPanel(props: { event: CalEvent }) {
         />
       </Show>
 
-      <Show when={ev.plink}>
-        <a
-          href={ev.plink}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center gap-1 text-xs text-accent hover:underline"
-        >
-          <MdFillOpen_in_new size={12} />
-          {t("calendar.view_source")}
-        </a>
-      </Show>
+      <div class="flex items-center gap-3 pt-0.5">
+        <Show when={ev.plink}>
+          <a
+            href={ev.plink}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1 text-xs text-accent hover:underline"
+          >
+            <MdFillOpen_in_new size={12} />
+            {t("calendar.view_source")}
+          </a>
+        </Show>
+        <Show when={ev.rw}>
+          <button
+            type="button"
+            onClick={props.onEdit}
+            class="inline-flex items-center gap-1 text-xs text-muted hover:text-txt transition-colors"
+          >
+            <MdFillEdit size={12} />
+            {t("calendar.edit_event")}
+          </button>
+          <Show
+            when={confirming()}
+            fallback={
+              <button
+                type="button"
+                onClick={() => setConfirming(true)}
+                class="inline-flex items-center gap-1 text-xs text-muted hover:text-error transition-colors"
+              >
+                <MdFillDelete size={12} />
+                {t("calendar.delete_event")}
+              </button>
+            }
+          >
+            <span class="text-xs text-muted">{t("calendar.delete_event_confirm")}</span>
+            <button
+              type="button"
+              disabled={deleting()}
+              onClick={handleDelete}
+              class="text-xs font-medium text-error hover:underline disabled:opacity-50"
+            >
+              {deleting() ? t("calendar.deleting_event") : t("calendar.delete_event")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirming(false)}
+              class="text-xs text-muted hover:text-txt transition-colors"
+            >
+              {t("calendar.cancel")}
+            </button>
+          </Show>
+        </Show>
+      </div>
     </div>
   );
 }

@@ -243,14 +243,17 @@ export default function ConnectionEditorModal(props: Props) {
                     }
                   >
                     <select
-                      value={role()}
                       onChange={(e) => setRole(e.currentTarget.value)}
                       class="w-full px-3 py-2 rounded-lg border border-rim bg-surface text-txt text-sm
                              focus:outline-none hover:border-rim-strong transition-colors"
                     >
-                      <option value="">{t("connection.no_role")}</option>
+                      <option value="" selected={role() === ""}>{t("connection.no_role")}</option>
                       <For each={permcats()}>
-                        {(pc) => <option value={pc.name}>{pc.label}</option>}
+                        {(pc) => (
+                          <option value={pc.name} selected={pc.name === role()}>
+                            {pc.label}
+                          </option>
+                        )}
                       </For>
                     </select>
                   </Show>

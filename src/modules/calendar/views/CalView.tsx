@@ -202,6 +202,8 @@ export default function CalView() {
           events={activeDayEvs()}
           onClose={() => { setShowModal(false); setActiveDay(null); }}
           onEventCreated={refreshCurrent}
+          onEventEdited={refreshCurrent}
+          onEventDeleted={refreshCurrent}
         />
       </Show>
 

@@ -23,6 +23,12 @@ export const calendar: RawDictionary["calendar"] = {
   creating:         "बनाया जा रहा है…",
   create_event:     "कार्यक्रम बनाएँ",
   failed_create:    "कार्यक्रम बनाने में विफल",
+  edit_event:       "कार्यक्रम संपादित करें",
+  save_event:       "परिवर्तन सहेजें",
+  delete_event:     "कार्यक्रम हटाएं",
+  delete_event_confirm: "यह कार्यक्रम हटाएं? यह पूर्ववत नहीं किया जा सकता।",
+  deleting_event:   "हटाया जा रहा है…",
+  failed_delete:    "कार्यक्रम हटाने में विफल",
   // day modal
   add_event_here:   "इस दिन के लिए कार्यक्रम जोड़ें",
   // actions widget / header toolbar

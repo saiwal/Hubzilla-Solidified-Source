@@ -5,7 +5,6 @@ import {
   For,
   Show,
 } from "solid-js";
-import { A } from "@solidjs/router";
 import {
   fetchConnections,
   fetchPermcats,
@@ -15,7 +14,9 @@ import {
 } from "../../connections/api";
 import type { Connection, Permcat } from "../../connections/api";
 import { useI18n } from "@/i18n";
-import { MdFillAdd, MdFillClose } from "solid-icons/md";
+import { MdFillAdd, MdFillClose, MdOutlineEdit } from "solid-icons/md";
+import ConnectionEditorModal from "@/shared/views/ConnectionEditorModal";
+import SubPageContent from "@/shared/views/SubPageContent";
 
 // ── API ───────────────────────────────────────────────────────────────────────
 
@@ -40,20 +41,15 @@ const NETWORK_LABELS: Record<string, string> = {
   rss:         "RSS",
 };
 
-// ── Manage Roles Panel ────────────────────────────────────────────────────────
+// ── Inline create-role form ───────────────────────────────────────────────────
 
-function ManageRolesPanel(props: {
-  permcats: Permcat[];
+function CreateRoleForm(props: {
   onCreated: (role: Permcat) => void;
-  onDeleted: (name: string) => void;
+  onDone: () => void;
 }) {
   const { t } = useI18n();
-  const [creating, setCreating] = createSignal(false);
   const [newName, setNewName] = createSignal("");
   const [busy, setBusy] = createSignal(false);
-  const [deletingName, setDeletingName] = createSignal<string | null>(null);
-
-  const customRoles = () => props.permcats.filter((p) => !p.system && p.name !== "default");
 
   async function handleCreate(e: Event) {
     e.preventDefault();
@@ -64,99 +60,201 @@ function ManageRolesPanel(props: {
       const role = await createPermcat(name);
       props.onCreated(role);
       setNewName("");
-      setCreating(false);
+      props.onDone();
     } finally {
       setBusy(false);
     }
   }
 
-  async function handleDelete(name: string) {
-    if (!confirm(`Delete role "${name}"?`)) return;
-    setDeletingName(name);
+  return (
+    <div class="rounded-lg border border-accent/30 bg-accent/5 p-3">
+      <form onSubmit={handleCreate} class="flex gap-2">
+        <input
+          autofocus
+          type="text"
+          placeholder={t("directory.role_name_placeholder")}
+          value={newName()}
+          onInput={(e) => setNewName(e.currentTarget.value)}
+          onKeyDown={(e) => e.key === "Escape" && props.onDone()}
+          class="flex-1 text-sm px-3 py-1.5 rounded-lg border border-rim bg-surface text-txt
+                 focus:outline-none focus:border-accent hover:border-rim-strong"
+        />
+        <button
+          type="submit"
+          disabled={busy() || !newName().trim()}
+          class="px-3 py-1.5 rounded-lg bg-accent text-accent-fg text-sm font-medium
+                 disabled:opacity-50 hover:opacity-90 transition-opacity shrink-0"
+        >
+          {busy() ? t("directory.creating_role") : t("directory.create_role")}
+        </button>
+        <button
+          type="button"
+          onClick={props.onDone}
+          class="p-1.5 rounded-lg text-muted hover:text-txt hover:bg-overlay transition-colors shrink-0"
+        >
+          <MdFillClose size={16} />
+        </button>
+      </form>
+    </div>
+  );
+}
+
+// ── Custom role split-button pill ─────────────────────────────────────────────
+
+function CustomRolePill(props: {
+  name: string;
+  label: string;
+  count: number;
+  active: boolean;
+  onSelect: () => void;
+  onDeleted: (name: string) => void;
+  onRenamed: (oldName: string, newPermcat: Permcat) => void;
+}) {
+  const [open, setOpen] = createSignal(false);
+  const [renaming, setRenaming] = createSignal(false);
+  const [newName, setNewName] = createSignal("");
+  const [busy, setBusy] = createSignal(false);
+  const [renameError, setRenameError] = createSignal<string | null>(null);
+
+  function startRename() {
+    setOpen(false);
+    setNewName(props.label);
+    setRenameError(null);
+    setRenaming(true);
+  }
+
+  async function commitRename(e: Event) {
+    e.preventDefault();
+    const name = newName().trim();
+    if (!name || name === props.label) { setRenaming(false); return; }
+    setBusy(true);
+    setRenameError(null);
     try {
-      await deletePermcat(name);
-      props.onDeleted(name);
+      const created = await createPermcat(name);
+      try {
+        await deletePermcat(props.name);
+      } catch {
+        // Rollback the just-created permcat so we don't leave both behind
+        await deletePermcat(created.name).catch(() => {});
+        throw new Error("Delete old role failed — rename reverted");
+      }
+      props.onRenamed(props.name, created);
+      setRenaming(false);
+    } catch (err) {
+      setRenameError(err instanceof Error ? err.message : "Rename failed");
     } finally {
-      setDeletingName(null);
+      setBusy(false);
     }
   }
 
+  async function handleDelete() {
+    setOpen(false);
+    if (!confirm(`Delete role "${props.label}"?`)) return;
+    setBusy(true);
+    try {
+      await deletePermcat(props.name);
+      props.onDeleted(props.name);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const activeBase = "bg-accent text-accent-fg border-accent";
+  const idleBase   = "bg-overlay text-muted border-rim";
+  const divider    = () => props.active ? "bg-white/20" : "bg-rim";
+
   return (
-    <div class="rounded-lg border border-rim bg-surface px-3 py-2.5">
-      <div class="flex items-center gap-2 flex-wrap">
-        <span class="text-xs font-medium text-muted shrink-0">
-          {t("directory.manage_roles")}
-        </span>
-
-        {/* Custom role chips */}
-        <Show
-          when={customRoles().length > 0}
-          fallback={
-            <Show when={!creating()}>
-              <span class="text-xs text-muted italic">{t("directory.no_custom_roles")}</span>
+    <div class="relative">
+      <Show
+        when={!renaming()}
+        fallback={
+          <div class="flex flex-col gap-1">
+            <form
+              onSubmit={commitRename}
+              class={`flex items-center rounded-full border overflow-hidden bg-surface ${
+                renameError() ? "border-red-400" : "border-accent"
+              }`}
+            >
+              <input
+                autofocus
+                value={newName()}
+                onInput={(e) => setNewName(e.currentTarget.value)}
+                onKeyDown={(e) => e.key === "Escape" && setRenaming(false)}
+                class="text-sm px-3 py-1 bg-transparent text-txt w-28 focus:outline-none"
+              />
+              <button
+                type="submit"
+                disabled={busy()}
+                class="px-2 py-1 text-xs text-accent hover:bg-overlay transition-colors disabled:opacity-50"
+              >
+                ✓
+              </button>
+              <button
+                type="button"
+                onClick={() => setRenaming(false)}
+                class="px-2 py-1 text-xs text-muted hover:bg-overlay transition-colors"
+              >
+                ×
+              </button>
+            </form>
+            <Show when={renameError()}>
+              <p class="text-xs text-red-500 px-1">{renameError()}</p>
             </Show>
-          }
-        >
-          <For each={customRoles()}>
-            {(role) => (
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-overlay text-txt border border-rim">
-                {role.label}
-                <button
-                  onClick={() => handleDelete(role.name)}
-                  disabled={deletingName() === role.name}
-                  title={t("directory.delete_role")}
-                  class="text-muted hover:text-red-500 disabled:opacity-40 transition-colors leading-none"
-                >
-                  <MdFillClose size={11} />
-                </button>
-              </span>
-            )}
-          </For>
-        </Show>
+          </div>
+        }
+      >
+        <div class={`flex items-center rounded-full text-sm border transition-colors overflow-hidden ${
+          props.active ? activeBase : idleBase
+        }`}>
+          {/* Filter side */}
+          <button
+            onClick={props.onSelect}
+            disabled={busy()}
+            class="flex items-center gap-1.5 px-3 py-1 disabled:opacity-50"
+          >
+            {props.label}
+            <span class={`text-xs font-medium tabular-nums ${props.active ? "opacity-80" : ""}`}>
+              {props.count}
+            </span>
+          </button>
 
-        {/* Create form or button */}
-        <Show
-          when={creating()}
-          fallback={
-            <button
-              onClick={() => setCreating(true)}
-              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs
-                     border border-dashed border-rim text-muted hover:text-txt hover:border-rim-strong
-                     transition-colors"
-            >
-              <MdFillAdd size={12} />
-              {t("directory.create_role")}
-            </button>
-          }
-        >
-          <form onSubmit={handleCreate} class="inline-flex items-center gap-1.5">
-            <input
-              autofocus
-              type="text"
-              placeholder={t("directory.role_name_placeholder")}
-              value={newName()}
-              onInput={(e) => setNewName(e.currentTarget.value)}
-              class="text-xs px-2 py-1 rounded-lg border border-rim bg-overlay text-txt w-32
-                     focus:outline-none focus:border-accent"
-            />
-            <button
-              type="submit"
-              disabled={busy() || !newName().trim()}
-              class="text-xs px-2.5 py-1 rounded-lg bg-accent text-accent-fg
-                     disabled:opacity-50 hover:opacity-90 transition-opacity"
-            >
-              {busy() ? t("directory.creating_role") : t("directory.create_role")}
-            </button>
-            <button
-              type="button"
-              onClick={() => { setCreating(false); setNewName(""); }}
-              class="text-xs px-2.5 py-1 rounded-lg border border-rim text-muted hover:text-txt transition-colors"
-            >
-              ×
-            </button>
-          </form>
-        </Show>
-      </div>
+          {/* Divider */}
+          <div class={`w-px self-stretch ${divider()}`} />
+
+          {/* Dropdown trigger */}
+          <button
+            onClick={() => setOpen((v) => !v)}
+            disabled={busy()}
+            class={`px-1.5 py-1 transition-colors disabled:opacity-50 ${
+              props.active ? "hover:bg-white/10" : "hover:bg-surface"
+            }`}
+            aria-label="Role actions"
+          >
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
+      </Show>
+
+      {/* Dropdown menu */}
+      <Show when={open()}>
+        <div class="fixed inset-0 z-[9]" onClick={() => setOpen(false)} />
+        <div class="absolute top-full left-0 mt-1 bg-surface border border-rim rounded-lg shadow-lg z-10 py-1 min-w-[110px]">
+          <button
+            onClick={startRename}
+            class="w-full text-left px-3 py-1.5 text-xs text-txt hover:bg-overlay transition-colors"
+          >
+            Rename
+          </button>
+          <button
+            onClick={handleDelete}
+            class="w-full text-left px-3 py-1.5 text-xs text-red-500 hover:bg-overlay transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      </Show>
     </div>
   );
 }
@@ -167,15 +265,17 @@ function RoleCard(props: {
   conn: Connection;
   roleOptions: { name: string; label: string }[];
   onRoleChanged: (newRole: string) => void;
+  onDeleted: () => void;
 }) {
   const [busy, setBusy] = createSignal(false);
+  const [editOpen, setEditOpen] = createSignal(false);
   const { t } = useI18n();
   const networkLabel = () => NETWORK_LABELS[props.conn.network] ?? props.conn.network;
 
   async function handleRoleChange(e: Event) {
     const select = e.currentTarget as HTMLSelectElement;
     const newRole = select.value;
-    if (newRole === props.conn.role) return;
+    if (newRole === (props.conn.role ?? "")) return;
     setBusy(true);
     await updateConnection(props.conn.id, { role: newRole });
     setBusy(false);
@@ -183,6 +283,7 @@ function RoleCard(props: {
   }
 
   return (
+    <>
     <div class="rounded-lg border border-rim bg-surface flex items-center gap-3 p-3">
       <a href={props.conn.url} target="_blank" rel="noopener" class="shrink-0">
         <img
@@ -218,7 +319,6 @@ function RoleCard(props: {
 
       {/* Role selector */}
       <select
-        value={props.conn.role}
         onChange={handleRoleChange}
         disabled={busy()}
         class="text-xs px-2 py-1.5 rounded-lg border border-rim bg-surface text-txt
@@ -226,21 +326,34 @@ function RoleCard(props: {
                disabled:opacity-50 shrink-0"
       >
         <For each={props.roleOptions}>
-          {(r) => <option value={r.name}>{r.label}</option>}
+          {(r) => (
+            <option value={r.name} selected={r.name === (props.conn.role ?? "")}>
+              {r.label}
+            </option>
+          )}
         </For>
       </select>
 
-      <A
-        href={`/abook/${props.conn.id}`}
+      <button
+        onClick={() => setEditOpen(true)}
         class="p-1.5 rounded text-muted hover:text-txt hover:bg-overlay transition-colors shrink-0"
-        title="Edit connection"
+        title={t("directory.edit")}
       >
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586a2 2 0 00-2.828-2.828l-8.586 8.586V15h2.828z" />
-        </svg>
-      </A>
+        <MdOutlineEdit size={14} />
+      </button>
     </div>
+
+    <Show when={editOpen()}>
+      <ConnectionEditorModal
+        connection={props.conn}
+        authorName={props.conn.name}
+        authorAvatar={props.conn.photo}
+        onSaved={() => { setEditOpen(false); props.onDeleted(); }}
+        onClose={() => setEditOpen(false)}
+        onDeleted={() => { setEditOpen(false); props.onDeleted(); }}
+      />
+    </Show>
+    </>
   );
 }
 
@@ -267,24 +380,31 @@ function Skeleton() {
 
 // ── Section ───────────────────────────────────────────────────────────────────
 
+type RolePill = {
+  name: string | null;
+  label: string;
+  count: number;
+  system: boolean;
+};
+
 export default function ContactRolesSection() {
-  const [connections, { mutate: mutateConns }] = createResource(fetchAllConnections);
+  const { t } = useI18n();
+  const [connections, { mutate: mutateConns, refetch: refetchConns }] = createResource(fetchAllConnections);
   const [permcats, { mutate: mutatePermcats }] = createResource(fetchPermcats);
   const [activeRole, setActiveRole] = createSignal<string | null>(null);
+  const [showCreate, setShowCreate] = createSignal(false);
 
-  // Role options for the per-connection dropdown (excludes "default" — "" covers that)
   const roleOptions = createMemo<{ name: string; label: string }[]>(() => {
-    const cats = (permcats() ?? []).filter((p) => p.name !== "default");
+    const cats = permcats() ?? [];
     return [
       { name: "", label: "No role" },
       ...cats.map((p) => ({ name: p.name, label: p.label })),
     ];
   });
 
-  // Role filter pills — driven by permcats so new roles appear and deleted ones vanish immediately
-  const rolePills = createMemo(() => {
+  const rolePills = createMemo<RolePill[]>(() => {
     const data = connections() ?? [];
-    const cats = (permcats() ?? []).filter((p) => p.name !== "default");
+    const cats = permcats() ?? [];
 
     const counts = new Map<string, number>();
     for (const c of data) {
@@ -295,14 +415,15 @@ export default function ContactRolesSection() {
     const noRoleCount = counts.get("") ?? 0;
 
     return [
-      { name: null as string | null, label: "All", count: data.length },
+      { name: null,  label: "All",     count: data.length,  system: true },
       ...(noRoleCount > 0
-        ? [{ name: "" as string | null, label: "No role", count: noRoleCount }]
+        ? [{ name: "" as string | null, label: "No role", count: noRoleCount, system: true }]
         : []),
       ...cats.map((p) => ({
-        name: p.name as string | null,
-        label: p.label,
-        count: counts.get(p.name) ?? 0,
+        name:   p.name as string | null,
+        label:  p.label,
+        count:  counts.get(p.name) ?? 0,
+        system: p.system,
       })),
     ];
   });
@@ -328,22 +449,43 @@ export default function ContactRolesSection() {
 
   function handlePermcatDeleted(name: string) {
     mutatePermcats((prev) => (prev ?? []).filter((p) => p.name !== name));
-    // Locally unset this role from any connections that had it
-    mutateConns((prev) => prev?.map((c) => c.role === name ? { ...c, role: "" } : c));
+    mutateConns((prev) => prev?.map((c) => c.role === name ? { ...c, role: "default" } : c));
     if (activeRole() === name) setActiveRole(null);
   }
 
+  function handlePermcatRenamed(oldName: string, newPermcat: Permcat) {
+    mutatePermcats((prev) => prev?.map((p) => p.name === oldName ? newPermcat : p));
+    mutateConns((prev) => prev?.map((c) => c.role === oldName ? { ...c, role: newPermcat.name } : c));
+    if (activeRole() === oldName) setActiveRole(newPermcat.name);
+  }
+
   return (
-    <div class="px-4 md:px-6 py-6 space-y-4">
-      {/* Role management panel */}
-      <Show when={!permcats.loading}>
-        <ManageRolesPanel
-          permcats={permcats() ?? []}
+    <SubPageContent
+      title={t("directory.contact_roles_title")}
+      description={t("directory.contact_roles_desc")}
+      action={
+        <button
+          onClick={() => setShowCreate((v) => !v)}
+          class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+            showCreate()
+              ? "border-accent text-accent bg-accent/10"
+              : "border-rim text-muted hover:border-rim-strong hover:text-txt"
+          }`}
+        >
+          <MdFillAdd size={15} />
+          {t("directory.create_role")}
+        </button>
+      }
+    >
+      {/* Create form */}
+      <Show when={showCreate()}>
+        <CreateRoleForm
           onCreated={handlePermcatCreated}
-          onDeleted={handlePermcatDeleted}
+          onDone={() => setShowCreate(false)}
         />
       </Show>
 
+      {/* Connection list */}
       <Show when={!connections.loading} fallback={<Skeleton />}>
         <Show
           when={(connections() ?? []).length > 0}
@@ -351,25 +493,40 @@ export default function ContactRolesSection() {
             <p class="py-8 text-center text-sm text-muted">No connections found.</p>
           }
         >
-          {/* ── Role filter pills ── */}
+          {/* Role filter pills — custom roles get a split button */}
           <div class="flex flex-wrap gap-1.5">
             <For each={rolePills()}>
               {(pill) => (
-                <button
-                  onClick={() => setActiveRole(pill.name)}
-                  class={`px-3 py-1 rounded-full text-sm transition-colors flex items-center gap-1.5 ${
-                    selected() === pill.name
-                      ? "bg-accent text-accent-fg"
-                      : "bg-overlay text-muted hover:bg-surface"
-                  }`}
+                <Show
+                  when={!pill.system && pill.name !== null && pill.name !== ""}
+                  fallback={
+                    <button
+                      onClick={() => setActiveRole(pill.name)}
+                      class={`px-3 py-1 rounded-full text-sm transition-colors flex items-center gap-1.5 ${
+                        selected() === pill.name
+                          ? "bg-accent text-accent-fg"
+                          : "bg-overlay text-muted hover:bg-surface"
+                      }`}
+                    >
+                      {pill.label}
+                      <span class={`text-xs font-medium tabular-nums ${
+                        selected() === pill.name ? "opacity-80" : "text-muted"
+                      }`}>
+                        {pill.count}
+                      </span>
+                    </button>
+                  }
                 >
-                  {pill.label}
-                  <span class={`text-xs font-medium tabular-nums ${
-                    selected() === pill.name ? "opacity-80" : "text-muted"
-                  }`}>
-                    {pill.count}
-                  </span>
-                </button>
+                  <CustomRolePill
+                    name={pill.name!}
+                    label={pill.label}
+                    count={pill.count}
+                    active={selected() === pill.name}
+                    onSelect={() => setActiveRole(pill.name)}
+                    onDeleted={handlePermcatDeleted}
+                    onRenamed={handlePermcatRenamed}
+                  />
+                </Show>
               )}
             </For>
           </div>
@@ -377,11 +534,10 @@ export default function ContactRolesSection() {
           <p class="text-sm text-muted">
             {filtered().length} connection{filtered().length !== 1 ? "s" : ""}
             {selected() !== null && (
-              <> — use the dropdown on each card to assign a role</>
+              <> — {t("directory.role_assign_hint")}</>
             )}
           </p>
 
-          {/* ── Connection list ── */}
           <div class="space-y-2">
             <For each={filtered()}>
               {(conn) => (
@@ -389,12 +545,13 @@ export default function ContactRolesSection() {
                   conn={conn}
                   roleOptions={roleOptions()}
                   onRoleChanged={(newRole) => handleRoleChanged(conn, newRole)}
+                  onDeleted={() => refetchConns()}
                 />
               )}
             </For>
           </div>
         </Show>
       </Show>
-    </div>
+    </SubPageContent>
   );
 }

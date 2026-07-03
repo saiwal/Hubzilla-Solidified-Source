@@ -982,7 +982,8 @@ export type RawDictionary = {
     no_role:              string;
     role_assign_hint:     string;
     edit_connection:      string;
-    manage_roles:         string;
+    contact_roles_title:  string;
+    contact_roles_desc:   string;
     create_role:          string;
     role_name_placeholder: string;
     creating_role:        string;
@@ -1244,6 +1245,12 @@ export type RawDictionary = {
     creating:         string;
     create_event:     string;
     failed_create:    string;
+    edit_event:       string;
+    save_event:       string;
+    delete_event:     string;
+    delete_event_confirm: string;
+    deleting_event:   string;
+    failed_delete:    string;
     // day modal
     add_event_here:   string;
     // actions widget / header toolbar

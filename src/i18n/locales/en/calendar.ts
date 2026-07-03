@@ -24,6 +24,12 @@ export const calendar: RawDictionary["calendar"] = {
   creating:         "Creating…",
   create_event:     "Create Event",
   failed_create:    "Failed to create event",
+  edit_event:       "Edit Event",
+  save_event:       "Save Changes",
+  delete_event:     "Delete Event",
+  delete_event_confirm: "Delete this event? This cannot be undone.",
+  deleting_event:   "Deleting…",
+  failed_delete:    "Failed to delete event",
   // day modal
   add_event_here:   "Add an event for this day",
   // actions widget / header toolbar
