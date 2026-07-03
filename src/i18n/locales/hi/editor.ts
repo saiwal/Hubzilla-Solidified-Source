@@ -141,4 +141,28 @@ export const editor: RawDictionary["editor"] = {
   poll_remove_answer:       "हटाएँ",
   poll_expires_label:       "समाप्ति",
   posting_to_wall:          "वॉल पर पोस्ट हो रही है",
+
+  // Encryption
+  encrypt_toggle:              "एन्क्रिप्ट",
+  encrypt_panel_title:         "पोस्ट एन्क्रिप्ट करें",
+  encrypt_password_label:      "पासवर्ड",
+  encrypt_password_placeholder: "पासवर्ड दर्ज करें",
+  encrypt_confirm_label:       "पासवर्ड की पुष्टि करें",
+  encrypt_confirm_placeholder: "पासवर्ड दोबारा दर्ज करें",
+  encrypt_hint_label:          "संकेत (वैकल्पिक)",
+  encrypt_hint_placeholder:    "पाठक को पासवर्ड पूछते समय दिखाया जाएगा",
+  encrypt_btn:                 "एन्क्रिप्ट करें",
+  encrypt_encrypting:          "एन्क्रिप्ट हो रहा है…",
+  encrypt_cancel:              "रद्द करें",
+  encrypt_badge:               "एन्क्रिप्टेड",
+  encrypt_error_empty:         "एन्क्रिप्ट करने के लिए कुछ लिखें।",
+  encrypt_error_already:       "पोस्ट पहले से एन्क्रिप्टेड है।",
+  encrypt_error_no_password:   "पासवर्ड दर्ज करें।",
+  encrypt_error_mismatch:      "पासवर्ड मेल नहीं खाते।",
+
+  // Decryption
+  decrypt_passphrase:          "पासफ़्रेज़ दर्ज करें",
+  decrypt_btn:                 "डिक्रिप्ट करें",
+  decrypt_cancel:              "रद्द करें",
+  decrypt_decrypting:          "डिक्रिप्ट हो रहा है…",
 };

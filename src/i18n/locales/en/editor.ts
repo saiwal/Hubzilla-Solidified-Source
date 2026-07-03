@@ -150,4 +150,28 @@ export const editor = {
   poll_remove_answer:       "Remove option",
   poll_expires_label:       "Expires in",
   posting_to_wall:          "Posting to wall",
+
+  // Encryption (PostComposer)
+  encrypt_toggle:              "Encrypt",
+  encrypt_panel_title:         "Encrypt post",
+  encrypt_password_label:      "Password",
+  encrypt_password_placeholder: "Enter password",
+  encrypt_confirm_label:       "Confirm password",
+  encrypt_confirm_placeholder: "Confirm password",
+  encrypt_hint_label:          "Hint (optional)",
+  encrypt_hint_placeholder:    "Shown to reader when asking for password",
+  encrypt_btn:                 "Encrypt",
+  encrypt_encrypting:          "Encrypting…",
+  encrypt_cancel:              "Cancel",
+  encrypt_badge:               "Encrypted",
+  encrypt_error_empty:         "Nothing to encrypt — write something first.",
+  encrypt_error_already:       "Post is already encrypted.",
+  encrypt_error_no_password:   "Enter a password.",
+  encrypt_error_mismatch:      "Passwords do not match.",
+
+  // Decryption (PostCard)
+  decrypt_passphrase:          "Enter passphrase",
+  decrypt_btn:                 "Decrypt",
+  decrypt_cancel:              "Cancel",
+  decrypt_decrypting:          "Decrypting…",
 } as const;

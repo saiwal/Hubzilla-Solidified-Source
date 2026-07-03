@@ -582,6 +582,26 @@ export type RawDictionary = {
     poll_remove_answer:       string;
     poll_expires_label:       string;
     posting_to_wall:          string;
+    encrypt_toggle:              string;
+    encrypt_panel_title:         string;
+    encrypt_password_label:      string;
+    encrypt_password_placeholder: string;
+    encrypt_confirm_label:       string;
+    encrypt_confirm_placeholder: string;
+    encrypt_hint_label:          string;
+    encrypt_hint_placeholder:    string;
+    encrypt_btn:                 string;
+    encrypt_encrypting:          string;
+    encrypt_cancel:              string;
+    encrypt_badge:               string;
+    encrypt_error_empty:         string;
+    encrypt_error_already:       string;
+    encrypt_error_no_password:   string;
+    encrypt_error_mismatch:      string;
+    decrypt_passphrase:          string;
+    decrypt_btn:                 string;
+    decrypt_cancel:              string;
+    decrypt_decrypting:          string;
   };
   profiles: {
     title:             string;

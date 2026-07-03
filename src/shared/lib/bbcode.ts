@@ -1035,16 +1035,20 @@ export function bbcode(text: string, options: BbcodeOptions = {}): string {
   );
 
   // ------------------------------------------------------------------
-  // [crypt] — render as a locked icon placeholder
+  // [crypt] — render a decrypt button; PostCard wires up the click handler
+  // via event delegation using the data-crypt-payload attribute.
   // ------------------------------------------------------------------
-  text = text.replace(/\[crypt\]([\s\S]*?)\[\/crypt\]/gi, (_m, payload) => {
-    const id = randomString(32);
-    return `<div id="${id}" class="encrypted-content"><span class="cursor-pointer" onclick="sodium_decrypt('${payload}','#${id}')" title="Encrypted content">🔒</span></div>`;
-  });
-  text = text.replace(/\[crypt (.*?)\]([\s\S]*?)\[\/crypt\]/gi, (_m, _attrs, payload) => {
-    const id = randomString(32);
-    return `<div id="${id}" class="encrypted-content"><span class="cursor-pointer" onclick="sodium_decrypt('${payload}','#${id}')" title="Encrypted content">🔒</span></div>`;
-  });
+  function makeCryptHtml(payload: string): string {
+    // Escape payload for HTML attribute (base64 is safe but guard against edge cases)
+    const safe = payload.replace(/"/g, "&quot;");
+    return `<button class="hz-decrypt-btn" data-crypt-payload="${safe}" type="button">🔒 Encrypted content</button>`;
+  }
+  text = text.replace(/\[crypt\]([\s\S]*?)\[\/crypt\]/gi, (_m, payload) =>
+    makeCryptHtml((payload as string).trim()),
+  );
+  text = text.replace(/\[crypt (.*?)\]([\s\S]*?)\[\/crypt\]/gi, (_m, _attrs, payload) =>
+    makeCryptHtml((payload as string).trim()),
+  );
 
   // ------------------------------------------------------------------
   // [app] / [element] — strip tags, emit placeholder

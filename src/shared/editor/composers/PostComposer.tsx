@@ -44,6 +44,7 @@ import { bbcodeToInsert } from "../attachments/insertHelpers";
 import type { FileAcl } from "@/modules/files/api";
 import { useI18n } from "@/i18n";
 import { getCsrfToken } from "@/shared/lib/csrf";
+import { encryptBody, isEncryptedBody } from "@/shared/lib/postCrypto";
 void helpable;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -98,6 +99,14 @@ const PostComposer: Component<ComposerProps> = (props) => {
   const [pollAnswers, setPollAnswers] = createSignal<string[]>(["", ""]);
   const [pollExpireValue, setPollExpireValue] = createSignal("1");
   const [pollExpireUnit, setPollExpireUnit] = createSignal("Days");
+
+  // ── Encrypt state ───────────────────────────────────────────────────────────
+  const [encryptOpen, setEncryptOpen] = createSignal(false);
+  const [encryptPassword, setEncryptPassword] = createSignal("");
+  const [encryptConfirm, setEncryptConfirm] = createSignal("");
+  const [encryptHint, setEncryptHint] = createSignal("");
+  const [encrypting, setEncrypting] = createSignal(false);
+  const [encryptError, setEncryptError] = createSignal("");
 
   // ── Sync ACL to attachment store ───────────────────────────────────────────
   createEffect(() => {
@@ -291,6 +300,32 @@ const PostComposer: Component<ComposerProps> = (props) => {
     setPollAnswers((prev) => prev.filter((_, j) => j !== i));
   }
 
+  // ── Encrypt ────────────────────────────────────────────────────────────────
+  async function doEncrypt() {
+    const body = store.body().trim();
+    if (!body) { setEncryptError(t("editor.encrypt_error_empty")); return; }
+    if (isEncryptedBody(body)) { setEncryptError(t("editor.encrypt_error_already")); return; }
+    const pw = encryptPassword().trim();
+    const confirm = encryptConfirm().trim();
+    if (!pw) { setEncryptError(t("editor.encrypt_error_no_password")); return; }
+    if (pw !== confirm) { setEncryptError(t("editor.encrypt_error_mismatch")); return; }
+
+    setEncrypting(true);
+    setEncryptError("");
+    try {
+      const encrypted = await encryptBody(body, pw, encryptHint().trim());
+      store.setBody(encrypted);
+      setEncryptOpen(false);
+      setEncryptPassword("");
+      setEncryptConfirm("");
+      setEncryptHint("");
+    } catch (err) {
+      setEncryptError(err instanceof Error ? err.message : "Encryption failed");
+    } finally {
+      setEncrypting(false);
+    }
+  }
+
   // ── Reset ──────────────────────────────────────────────────────────────────
   function resetAll() {
     store.reset();
@@ -304,6 +339,11 @@ const PostComposer: Component<ComposerProps> = (props) => {
     setPollExpireValue("1");
     setPollExpireUnit("Days");
     setPendingCategory("");
+    setEncryptOpen(false);
+    setEncryptPassword("");
+    setEncryptConfirm("");
+    setEncryptHint("");
+    setEncryptError("");
   }
 
   // ── Mention + emoji autocomplete ──────────────────────────────────────────
@@ -624,6 +664,70 @@ const PostComposer: Component<ComposerProps> = (props) => {
               </div>
             </Show>
 
+            {/* ── Encrypt panel ── */}
+            <Show when={encryptOpen()}>
+              <div class="px-4 py-3 border-t border-rim bg-elevated/40 shrink-0 space-y-2">
+                <span class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1">
+                  {t("editor.encrypt_panel_title")}
+                </span>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div class="flex flex-col gap-0.5">
+                    <label class="text-xs text-muted">{t("editor.encrypt_password_label")}</label>
+                    <input
+                      type="password"
+                      placeholder={t("editor.encrypt_password_placeholder")}
+                      value={encryptPassword()}
+                      onInput={(e) => setEncryptPassword(e.currentTarget.value)}
+                      class="bg-transparent border border-rim rounded px-2.5 py-1 text-sm text-txt
+                             placeholder:text-muted outline-none focus:border-rim-strong transition-colors"
+                    />
+                  </div>
+                  <div class="flex flex-col gap-0.5">
+                    <label class="text-xs text-muted">{t("editor.encrypt_confirm_label")}</label>
+                    <input
+                      type="password"
+                      placeholder={t("editor.encrypt_confirm_placeholder")}
+                      value={encryptConfirm()}
+                      onInput={(e) => setEncryptConfirm(e.currentTarget.value)}
+                      class="bg-transparent border border-rim rounded px-2.5 py-1 text-sm text-txt
+                             placeholder:text-muted outline-none focus:border-rim-strong transition-colors"
+                    />
+                  </div>
+                </div>
+                <div class="flex flex-col gap-0.5">
+                  <label class="text-xs text-muted">{t("editor.encrypt_hint_label")}</label>
+                  <input
+                    type="text"
+                    placeholder={t("editor.encrypt_hint_placeholder")}
+                    value={encryptHint()}
+                    onInput={(e) => setEncryptHint(e.currentTarget.value)}
+                    class="w-full bg-transparent border border-rim rounded px-2.5 py-1 text-sm text-txt
+                           placeholder:text-muted outline-none focus:border-rim-strong transition-colors"
+                  />
+                </div>
+                <Show when={encryptError()}>
+                  <p class="text-red-400 text-xs">{encryptError()}</p>
+                </Show>
+                <div class="flex gap-2 pt-1">
+                  <button
+                    type="button"
+                    disabled={encrypting()}
+                    onClick={() => void doEncrypt()}
+                    class="px-3 py-1 rounded-md text-xs font-semibold bg-accent text-accent-fg hover:opacity-90 disabled:opacity-40 transition-opacity"
+                  >
+                    {encrypting() ? t("editor.encrypt_encrypting") : t("editor.encrypt_btn")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setEncryptOpen(false); setEncryptError(""); }}
+                    class="px-3 py-1 rounded-md text-xs text-muted hover:text-txt hover:bg-elevated transition-colors"
+                  >
+                    {t("editor.encrypt_cancel")}
+                  </button>
+                </div>
+              </div>
+            </Show>
+
             {/* ── Footer ── */}
             <footer class="flex flex-wrap items-center gap-2 px-3.5 py-2.5 border-t border-rim bg-elevated shrink-0">
               {/* ACL Picker — hidden for visitors posting to another channel's wall */}
@@ -675,6 +779,36 @@ const PostComposer: Component<ComposerProps> = (props) => {
                   </svg>
                   {t("editor.poll_toggle")}
                 </button>
+              </Show>
+
+              {/* Encrypt toggle — gated behind Settings → Features → Content Encryption */}
+              <Show when={isFeatureEnabled("content_encrypt") && !props.parentId}>
+                <Show
+                  when={!isEncryptedBody(store.body())}
+                  fallback={
+                    <span class="hidden sm:flex items-center gap-1 px-2 py-1 rounded-md text-xs border bg-yellow-500/10 text-yellow-500 border-yellow-500/30">
+                      🔒 {t("editor.encrypt_badge")}
+                    </span>
+                  }
+                >
+                  <button
+                    type="button"
+                    onClick={() => { setEncryptOpen((o) => !o); setEncryptError(""); }}
+                    title={t("editor.encrypt_toggle")}
+                    class={
+                      "hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-md text-xs border transition-colors " +
+                      (encryptOpen()
+                        ? "bg-accent/10 text-accent border-accent/30"
+                        : "text-muted hover:text-txt hover:bg-elevated border-rim")
+                    }
+                  >
+                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    </svg>
+                    {t("editor.encrypt_toggle")}
+                  </button>
+                </Show>
               </Show>
 
               {/* Character count + draft controls + reset + submit */}
