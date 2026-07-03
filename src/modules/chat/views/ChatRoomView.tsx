@@ -42,6 +42,7 @@ import formatPostDate from "@/shared/lib/date";
 import ChatComposer from "../ChatComposer";
 import DOMPurify from "dompurify";
 import { bbcode } from "@/shared/lib/bbcode";
+import { decryptPayload, getPayloadHint } from "@/shared/lib/postCrypto";
 
 export default function ChatRoomView() {
 	const params = useParams<{ nick: string; roomId: string }>();
@@ -110,6 +111,65 @@ export default function ChatRoomView() {
 		if (n && r) exitRoom(n, r);
 	});
 
+	// Inline decrypt form for one-off clicks (when no session password is active).
+	// On success we write into decryptedBodies so Solid's reactive render handles display,
+	// making the result persist through polls / re-renders instead of being wiped by innerHTML.
+	function handleBubbleClick(e: MouseEvent) {
+		const btn = (e.target as HTMLElement).closest<HTMLElement>("[data-crypt-payload]");
+		if (!btn) return;
+		e.stopPropagation();
+
+		const payload = btn.dataset.cryptPayload ?? "";
+		const msgId   = parseInt(
+			(e.currentTarget as HTMLElement).dataset.msgId ?? "",
+		);
+		const hint = getPayloadHint(payload);
+
+		const form = document.createElement("form");
+		form.className = "hz-decrypt-form flex flex-col gap-1.5 mt-1";
+		form.innerHTML = `
+			<span class="text-[11px] text-muted">🔒 ${DOMPurify.sanitize(hint || "Enter passphrase")}</span>
+			<div class="flex items-center gap-1.5">
+				<input type="password" placeholder="Passphrase" autofocus
+					class="hz-decrypt-input flex-1 bg-surface border border-rim rounded px-2 py-0.5 text-xs text-txt outline-none focus:border-rim-strong" />
+				<button type="submit" class="px-2 py-0.5 rounded bg-accent text-accent-fg text-xs font-semibold hover:opacity-90 whitespace-nowrap">
+					Decrypt
+				</button>
+				<button type="button" class="hz-decrypt-cancel px-1.5 py-0.5 rounded text-muted hover:text-txt text-xs">
+					✕
+				</button>
+			</div>
+			<span class="hz-decrypt-error text-[11px] text-red-400 hidden"></span>
+		`;
+
+		btn.replaceWith(form);
+		form.querySelector<HTMLInputElement>(".hz-decrypt-input")?.focus();
+		form.querySelector(".hz-decrypt-cancel")?.addEventListener("click", () => form.replaceWith(btn));
+
+		form.addEventListener("submit", async (ev) => {
+			ev.preventDefault();
+			const password = form.querySelector<HTMLInputElement>(".hz-decrypt-input")?.value ?? "";
+			const submitBtn = form.querySelector<HTMLButtonElement>("button[type=submit]");
+			const errorEl   = form.querySelector<HTMLElement>(".hz-decrypt-error");
+			if (!password) return;
+			if (submitBtn) { submitBtn.textContent = "…"; submitBtn.disabled = true; }
+
+			try {
+				const plain = await decryptPayload(payload, password);
+				// Store in the signal so Solid's re-render shows decrypted content
+				// and polls don't wipe it back to the encrypted button.
+				if (!isNaN(msgId))
+					setDecryptedBodies((prev) => new Map([...prev, [msgId, plain]]));
+			} catch (err) {
+				if (errorEl) {
+					errorEl.textContent = err instanceof Error ? err.message : "Decryption failed";
+					errorEl.classList.remove("hidden");
+				}
+				if (submitBtn) { submitBtn.textContent = "Decrypt"; submitBtn.disabled = false; }
+			}
+		});
+	}
+
 	async function handleSetExpire(val: number) {
 		setExpireUpdating(true);
 		try {
@@ -129,6 +189,10 @@ export default function ChatRoomView() {
 		return `${Math.round(minutes / 1440)}d`;
 	}
 
+	// Stores per-message decrypted bodies (keyed by message id).
+	// Written by handleBubbleClick on success; persists across polls.
+	const [decryptedBodies, setDecryptedBodies] = createSignal(new Map<number, string>());
+
 	const presenceCount = createMemo(() => presence().length);
 	const isRestricted = createMemo(() => {
 		const acl = roomAcl();
@@ -137,9 +201,12 @@ export default function ChatRoomView() {
 		       acl.deny_cid.length > 0  || acl.deny_gid.length > 0;
 	});
 	const groupedMessages = createMemo(() => {
-		const msgs = messages();
+		const msgs      = messages();
+		const decrypted = decryptedBodies();
 		return msgs.map((msg, i) => ({
 			...msg,
+			// Use auto-decrypted body when available so the chat renders plaintext
+			body: decrypted.get(msg.id) ?? msg.body,
 			isFirst: i === 0 || msgs[i - 1].author_hash !== msg.author_hash,
 			isLast:
 				i === msgs.length - 1 ||
@@ -400,10 +467,12 @@ export default function ChatRoomView() {
 														"rounded-tr-2xl": isSelf() && !msg.isFirst,
 														"rounded-tl-2xl": !isSelf() && !msg.isFirst,
 													}}
+													data-msg-id={String(msg.id)}
+													onClick={handleBubbleClick}
 												>
 													<span innerHTML={DOMPurify.sanitize(bbcode(msg.body), {
-							ADD_TAGS: ["video", "audio"],
-							ADD_ATTR: ["controls", "preload", "poster"],
+							ADD_TAGS: ["video", "audio", "button"],
+							ADD_ATTR: ["controls", "preload", "poster", "data-crypt-payload"],
 						})} />
 												</div>
 												<Show when={msg.isLast}>

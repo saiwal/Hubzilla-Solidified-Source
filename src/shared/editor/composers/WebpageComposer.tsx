@@ -4,6 +4,10 @@ import { createComposerStore } from "../store/createComposerStore";
 import RichEditor from "../core/RichEditor";
 import { CAPABILITIES } from "../types/editor.types";
 import { getCsrfToken } from "@/shared/lib/csrf";
+import { useEncrypt } from "../useEncrypt";
+import EncryptPanel from "../components/EncryptPanel";
+import { isEncryptedBody } from "@/shared/lib/postCrypto";
+import { isFeatureEnabled } from "@/shared/store/auth-store";
 import AttachmentBar from "../attachments/AttachmentBar";
 import { createAttachmentStore } from "../attachments/useAttachments";
 import { bbcodeToInsert } from "../attachments/insertHelpers";
@@ -187,6 +191,8 @@ export default function WebpageComposer(props: Props) {
     props.onSaved?.();
   }, scope, { initialBody: props.initial?.body });
 
+  const enc = useEncrypt(() => store.body(), store.setBody);
+
   if (props.initial) {
     store.setTitle(props.initial.title);
     store.setSummary(props.initial.summary);
@@ -358,11 +364,16 @@ export default function WebpageComposer(props: Props) {
         />
       </Show>
 
+      {/* Encrypt panel */}
+      <Show when={enc.open()}>
+        <EncryptPanel enc={enc} />
+      </Show>
+
       {/* Actions */}
       <div class="flex flex-wrap items-center gap-3 border-t border-rim pt-4">
         <button
           type="button"
-          onClick={() => { store.reset(); attach.clear(); clearEntries(); setAclMode("public"); props.onCancel?.(); }}
+          onClick={() => { store.reset(); attach.clear(); clearEntries(); setAclMode("public"); enc.reset(); props.onCancel?.(); }}
           class="px-3 py-1.5 text-sm rounded-lg border border-rim text-muted
                  hover:bg-elevated transition-colors"
         >
@@ -379,6 +390,35 @@ export default function WebpageComposer(props: Props) {
             onToggle={toggleEntry}
             onClear={clearEntries}
           />
+        </Show>
+
+        {/* Encrypt toggle */}
+        <Show when={isFeatureEnabled("content_encrypt")}>
+          <Show
+            when={!isEncryptedBody(store.body())}
+            fallback={
+              <span class="flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm bg-yellow-500/10 text-yellow-500 border-yellow-500/30">
+                🔒 {t("editor.encrypt_badge")}
+              </span>
+            }
+          >
+            <button
+              type="button"
+              onClick={() => enc.setOpen((o) => !o)}
+              class={
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm transition-colors " +
+                (enc.open()
+                  ? "bg-accent/10 text-accent border-accent/30"
+                  : "text-muted hover:text-txt hover:bg-elevated border-rim")
+              }
+            >
+              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              </svg>
+              {t("editor.encrypt_toggle")}
+            </button>
+          </Show>
         </Show>
 
         <button

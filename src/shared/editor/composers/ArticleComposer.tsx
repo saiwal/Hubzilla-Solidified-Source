@@ -6,6 +6,10 @@ import RichEditor from "../core/RichEditor";
 import { CAPABILITIES } from "../types/editor.types";
 import { apiFetch } from "@/shared/lib/fetch";
 import AclPicker, { entryKey, type AclMode, type AclEntry } from "../components/AclPicker";
+import { useEncrypt } from "../useEncrypt";
+import EncryptPanel from "../components/EncryptPanel";
+import { isEncryptedBody } from "@/shared/lib/postCrypto";
+import { isFeatureEnabled } from "@/shared/store/auth-store";
 import {
   useMention,
   getWysiwygMentionQuery,
@@ -274,6 +278,8 @@ export default function ArticleComposer(props: Props) {
     props.onSaved?.();
   }, scope);
 
+  const enc = useEncrypt(() => store.body(), store.setBody);
+
   // Seed from initial if editing
   if (props.initial) {
     store.setTitle(props.initial.title);
@@ -531,6 +537,11 @@ export default function ArticleComposer(props: Props) {
         </Show>
       </div>
 
+      {/* Encrypt panel */}
+      <Show when={enc.open()}>
+        <EncryptPanel enc={enc} />
+      </Show>
+
       {/* Mention popup */}
       <Show when={mention.open() && mention.rect() !== null}>
         <MentionPopup
@@ -579,7 +590,7 @@ export default function ArticleComposer(props: Props) {
         <div class="flex gap-2 items-center">
           <button
             type="button"
-            onClick={() => { store.reset(); attach.clear(); clearEntries(); setAclMode("connections"); setPollEnabled(false); setPollAnswers(["", ""]); setPollExpireValue("1"); setPollExpireUnit("Days"); setPendingCategory(""); }}
+            onClick={() => { store.reset(); attach.clear(); clearEntries(); setAclMode("connections"); setPollEnabled(false); setPollAnswers(["", ""]); setPollExpireValue("1"); setPollExpireUnit("Days"); setPendingCategory(""); enc.reset(); }}
             class="px-3 py-1.5 text-sm rounded-lg border border-rim text-muted
                    hover:bg-elevated transition-colors"
           >
@@ -624,6 +635,35 @@ export default function ArticleComposer(props: Props) {
             onToggle={toggleEntry}
             onClear={clearEntries}
           />
+        </Show>
+
+        {/* Encrypt toggle */}
+        <Show when={isFeatureEnabled("content_encrypt")}>
+          <Show
+            when={!isEncryptedBody(store.body())}
+            fallback={
+              <span class="flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm bg-yellow-500/10 text-yellow-500 border-yellow-500/30">
+                🔒 {t("editor.encrypt_badge")}
+              </span>
+            }
+          >
+            <button
+              type="button"
+              onClick={() => enc.setOpen((o) => !o)}
+              class={
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm transition-colors " +
+                (enc.open()
+                  ? "bg-accent/10 text-accent border-accent/30"
+                  : "text-muted hover:text-txt hover:bg-elevated border-rim")
+              }
+            >
+              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              </svg>
+              {t("editor.encrypt_toggle")}
+            </button>
+          </Show>
         </Show>
 
         {/* Right: publish */}

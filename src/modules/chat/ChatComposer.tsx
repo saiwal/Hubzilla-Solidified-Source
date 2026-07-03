@@ -4,6 +4,8 @@ import { createComposerStore } from "@/shared/editor/store/createComposerStore";
 import RichEditor from "@/shared/editor/core/RichEditor";
 import { CAPABILITIES } from "@/shared/editor/types/editor.types";
 import { useI18n } from "@/i18n";
+import { encryptBody } from "@/shared/lib/postCrypto";
+import { isFeatureEnabled } from "@/shared/store/auth-store";
 import {
   useMention,
   getWysiwygMentionQuery,
@@ -41,9 +43,37 @@ export default function ChatComposer(props: Props) {
   const [uploadPct, setUploadPct] = createSignal(0);
   const [cameraOpen, setCameraOpen] = createSignal(false);
 
+  // Session encrypt: password stored here, encrypts all outgoing messages until cleared.
+  const [sessionPassword, setSessionPassword] = createSignal<string | null>(null);
+  const [sessionHint, setSessionHint]         = createSignal("");
+  const [sessionSetupOpen, setSessionSetupOpen] = createSignal(false);
+  const [sessionPwInput, setSessionPwInput]     = createSignal("");
+  const [sessionHintInput, setSessionHintInput] = createSignal("");
+  const [sessionError, setSessionError]         = createSignal("");
+
+  function enableSession() {
+    const pw = sessionPwInput().trim();
+    if (!pw) { setSessionError(t("editor.encrypt_error_no_password")); return; }
+    setSessionPassword(pw);
+    setSessionHint(sessionHintInput().trim());
+    setSessionSetupOpen(false);
+    setSessionError("");
+    setSessionPwInput("");
+    setSessionHintInput("");
+  }
+
+  function disableSession() {
+    setSessionPassword(null);
+    setSessionHint("");
+    setSessionSetupOpen(false);
+    setSessionError("");
+  }
+
   const store = createComposerStore(
     async (body) => {
-      await sendChatMessage(props.nick, props.roomId, body);
+      const pw = sessionPassword();
+      const msgBody = pw ? await encryptBody(body, pw, sessionHint()) : body;
+      await sendChatMessage(props.nick, props.roomId, msgBody);
     },
     `chat:${props.nick}:${props.roomId}`,
   );
@@ -168,6 +198,50 @@ export default function ChatComposer(props: Props) {
         <p class="text-xs text-red-500 mt-1">{store.error()}</p>
       </Show>
 
+      {/* Session encrypt setup panel */}
+      <Show when={isFeatureEnabled("content_encrypt") && sessionSetupOpen()}>
+        <form
+          class="mt-2 p-2.5 rounded-lg border border-rim bg-elevated/60 space-y-2"
+          onSubmit={(e) => { e.preventDefault(); enableSession(); }}
+        >
+          <span class="block text-xs font-semibold text-muted uppercase tracking-wide">
+            {t("editor.encrypt_panel_title")}
+          </span>
+          <div class="flex gap-2">
+            <input
+              type="password"
+              placeholder={t("editor.encrypt_password_placeholder")}
+              value={sessionPwInput()}
+              onInput={(e) => setSessionPwInput(e.currentTarget.value)}
+              class="flex-1 bg-transparent border border-rim rounded px-2 py-1 text-xs text-txt
+                     placeholder:text-muted outline-none focus:border-rim-strong transition-colors"
+            />
+            <input
+              type="text"
+              placeholder={t("editor.encrypt_hint_placeholder")}
+              value={sessionHintInput()}
+              onInput={(e) => setSessionHintInput(e.currentTarget.value)}
+              class="flex-1 bg-transparent border border-rim rounded px-2 py-1 text-xs text-txt
+                     placeholder:text-muted outline-none focus:border-rim-strong transition-colors"
+            />
+          </div>
+          <Show when={sessionError()}>
+            <p class="text-red-400 text-xs">{sessionError()}</p>
+          </Show>
+          <div class="flex gap-2">
+            <button type="submit"
+              class="px-3 py-1 rounded-md text-xs font-semibold bg-accent text-accent-fg hover:opacity-90 transition-opacity">
+              {t("editor.encrypt_btn")}
+            </button>
+            <button type="button"
+              onClick={() => { setSessionSetupOpen(false); setSessionError(""); }}
+              class="px-3 py-1 rounded-md text-xs text-muted hover:text-txt hover:bg-elevated transition-colors">
+              {t("editor.encrypt_cancel")}
+            </button>
+          </div>
+        </form>
+      </Show>
+
       <div class="flex items-center justify-between mt-2 gap-2">
         {/* Left: media + emoji buttons */}
         <div class="flex items-center gap-0.5">
@@ -186,6 +260,38 @@ export default function ChatComposer(props: Props) {
           <MediaBtn title="Emoji" onClick={toggleEmoji} disabled={false}>
             <MdOutlineEmoji_emotions class="text-lg" />
           </MediaBtn>
+          {/* Session encryption toggle */}
+          <Show when={isFeatureEnabled("content_encrypt")}>
+            <Show
+              when={!sessionPassword()}
+              fallback={
+                /* Active: clicking disables session encryption */
+                <button
+                  type="button"
+                  title="Session encrypted — click to disable"
+                  onClick={disableSession}
+                  class="p-1.5 rounded-lg text-yellow-500 bg-yellow-500/10 hover:bg-yellow-500/20 transition-colors"
+                >
+                  <svg class="w-[1.125rem] h-[1.125rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </button>
+              }
+            >
+              {/* Inactive: clicking opens setup */}
+              <MediaBtn
+                title={t("editor.encrypt_toggle")}
+                onClick={() => setSessionSetupOpen((o) => !o)}
+                disabled={false}
+              >
+                <svg class="w-[1.125rem] h-[1.125rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                </svg>
+              </MediaBtn>
+            </Show>
+          </Show>
 
           {/* Upload progress */}
           <Show when={uploading()}>
