@@ -50,6 +50,8 @@ export const cart: RawDictionary["cart"] = {
   order_placed:        "ऑर्डर दिया गया!",
   order_placed_note:   "विक्रेता भुगतान और डिलीवरी के लिए संपर्क करेगा।",
   // payment settings (seller)
+  store_currency:      "स्टोर मुद्रा",
+  store_currency_hint: "3-अक्षर ISO कोड (USD, EUR, GBP, INR, JPY…)",
   payment_settings:    "भुगतान सेटिंग",
   provider_enabled:    "सक्षम",
   paypal_client_id:    "Client ID",
@@ -84,4 +86,19 @@ export const cart: RawDictionary["cart"] = {
   cashfree_production:        "Production",
   cashfree_phone_placeholder: "मोबाइल नंबर (10 अंक)",
   cashfree_phone_required:    "कृपया 10 अंकों का मान्य मोबाइल नंबर दर्ज करें।",
+  // catalog management (seller)
+  manage_catalog:      "कैटलॉग प्रबंधित करें",
+  catalog_add_item:    "आइटम जोड़ें",
+  catalog_new_item:    "नया आइटम",
+  catalog_edit_item:   "आइटम संपादित करें",
+  catalog_description: "विवरण",
+  catalog_price:       "मूल्य",
+  catalog_photo_url:   "फ़ोटो URL (वैकल्पिक)",
+  catalog_active:      "सक्रिय",
+  catalog_inactive:    "निष्क्रिय",
+  catalog_activate:    "सक्रिय करें",
+  catalog_deactivate:  "निष्क्रिय करें",
+  catalog_save_item:   "आइटम सहेजें",
+  catalog_delete:      "हटाएँ",
+  catalog_no_items:    "अभी कोई कैटलॉग आइटम नहीं। पहला आइटम जोड़ें।",
 };

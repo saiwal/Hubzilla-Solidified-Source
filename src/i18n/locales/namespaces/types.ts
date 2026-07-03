@@ -1637,6 +1637,8 @@ export type RawDictionary = {
     order_placed:        string;
     order_placed_note:   string;
     // payment settings (seller)
+    store_currency:      string;
+    store_currency_hint: string;
     payment_settings:    string;
     provider_enabled:    string;
     paypal_client_id:    string;
@@ -1671,6 +1673,21 @@ export type RawDictionary = {
     cashfree_production:        string;
     cashfree_phone_placeholder: string;
     cashfree_phone_required:    string;
+    // catalog management (seller)
+    manage_catalog:      string;
+    catalog_add_item:    string;
+    catalog_new_item:    string;
+    catalog_edit_item:   string;
+    catalog_description: string;
+    catalog_price:       string;
+    catalog_photo_url:   string;
+    catalog_active:      string;
+    catalog_inactive:    string;
+    catalog_activate:    string;
+    catalog_deactivate:  string;
+    catalog_save_item:   string;
+    catalog_delete:      string;
+    catalog_no_items:    string;
   };
   bookmarks: {
     title:            string;

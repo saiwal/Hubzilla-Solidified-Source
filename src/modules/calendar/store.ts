@@ -17,6 +17,7 @@ export { nick };
 const [events, setEvents] = createSignal<CalEvent[]>([]);
 const [loading, setLoading] = createSignal(false);
 const [error, setError] = createSignal<string | null>(null);
+const [loaded, setLoaded] = createSignal(false);
 
 export { events, loading, error };
 
@@ -44,6 +45,7 @@ export function resetCal() {
   setError(null);
   setRange(undefined);
   setSelectedEvent(null);
+  setLoaded(false);
 }
 
 /**
@@ -57,11 +59,11 @@ export async function loadCalendar(
 ): Promise<void> {
   const nickChanged = nickname !== nick();
 
-  // Avoid re-fetching the same nick + range pair
+  // Avoid re-fetching the same nick + range pair (even when empty)
   if (
     !force &&
     !nickChanged &&
-    events().length > 0 &&
+    loaded() &&
     rangesEqual(newRange, range())
   ) {
     return;
@@ -80,6 +82,7 @@ export async function loadCalendar(
   try {
     const data = await fetchEvents(nickname, newRange);
     setEvents(data);
+    setLoaded(true);
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Failed to load calendar";
     setError(msg);

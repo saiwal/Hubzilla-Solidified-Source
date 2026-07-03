@@ -1,7 +1,10 @@
 import { createMemo, createSignal } from 'solid-js';
-import type { CatalogItem, Order, OrderItem, SellerOrder, PaymentConfig, PaymentSettings } from './api';
+import type { CatalogItem, CatalogItemInput, Order, OrderItem, SellerOrder, PaymentConfig, PaymentSettings } from './api';
 import {
-  fetchCatalog, fetchOrder,
+  fetchCatalog, fetchCatalogAll, fetchOrder,
+  saveCatalogItem as apiSaveCatalogItem,
+  deleteCatalogItem as apiDeleteCatalogItem,
+  toggleCatalogItem as apiToggleCatalogItem,
   addItem as apiAdd, removeItem as apiRemove, setItemQty as apiSetQty,
   checkout as apiCheckout,
   fetchPaymentConfig, fetchPaymentSettings as apiFetchSettings,
@@ -29,6 +32,8 @@ const [sellerOrders, setSellerOrders]             = createSignal<SellerOrder[]>(
 const [ordersLoading, setOrdersLoading]           = createSignal(false);
 const [selectedOrder, setSelectedOrder]           = createSignal<SellerOrder | null>(null);
 const [orderDetailLoading, setOrderDetailLoading] = createSignal(false);
+const [managedCatalog, setManagedCatalog]         = createSignal<CatalogItem[]>([]);
+const [catalogManageLoading, setCatalogManageLoading] = createSignal(false);
 
 // ── Derived ───────────────────────────────────────────────────────────────────
 
@@ -294,6 +299,59 @@ function _catalogItemToOrder(sku: string, cat: CatalogItem[]): OrderItem {
   return { id: 0, sku, desc: c?.desc ?? sku, qty: 1, price_raw: c?.price_raw ?? 0, price: c?.price ?? '' };
 }
 
+// ── Catalog management (seller) ───────────────────────────────────────────────
+
+export async function loadManagedCatalog() {
+  const n = nick();
+  if (!n) return;
+  setCatalogManageLoading(true);
+  try {
+    setManagedCatalog(await fetchCatalogAll(n));
+  } catch {
+    toast.error('Failed to load catalog.');
+  } finally {
+    setCatalogManageLoading(false);
+  }
+}
+
+export async function saveCatalogItemAction(item: CatalogItemInput) {
+  const n = nick();
+  if (!n) return;
+  try {
+    const updated = await apiSaveCatalogItem(n, item);
+    setManagedCatalog(updated);
+    setCatalog(updated.filter(i => i.active !== false));
+    toast.success('Item saved.');
+  } catch (err) {
+    toast.error(err instanceof Error ? err.message : 'Failed to save item.');
+  }
+}
+
+export async function deleteCatalogItemAction(sku: string) {
+  const n = nick();
+  if (!n) return;
+  try {
+    const updated = await apiDeleteCatalogItem(n, sku);
+    setManagedCatalog(updated);
+    setCatalog(updated.filter(i => i.active !== false));
+    toast.success('Item deleted.');
+  } catch {
+    toast.error('Failed to delete item.');
+  }
+}
+
+export async function toggleCatalogItemAction(sku: string) {
+  const n = nick();
+  if (!n) return;
+  try {
+    const updated = await apiToggleCatalogItem(n, sku);
+    setManagedCatalog(updated);
+    setCatalog(updated.filter(i => i.active !== false));
+  } catch {
+    toast.error('Failed to update item.');
+  }
+}
+
 // ── Exports ───────────────────────────────────────────────────────────────────
 
 export {
@@ -301,4 +359,5 @@ export {
   paymentConfig, paymentSettings, paymentSettingsLoading,
   sellerOrders, ordersLoading, selectedOrder, orderDetailLoading,
   setSelectedOrder,
+  managedCatalog, catalogManageLoading,
 };

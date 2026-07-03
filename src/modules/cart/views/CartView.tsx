@@ -11,8 +11,21 @@ import {
   MdFillError,
   MdFillSettings,
   MdFillCheck_circle,
+  MdFillEdit,
+  MdFillDelete,
+  MdFillFormat_list_bulleted,
+  MdFillToggle_on,
+  MdFillToggle_off,
+  MdFillImage,
+  MdFillPhoto_library,
+  MdFillArrow_back,
 } from 'solid-icons/md';
+import { wallUpload } from '@/modules/files/api';
+import { fetchAlbums, fetchPhotoAlbum } from '@/modules/photos/api/api';
+import type { Album, Photo } from '@/modules/photos/api/api';
+import { toast } from '@/shared/store/toast';
 import {
+  nick,
   catalogWithQty, loading, cartItems, cartCount, cartSubtotal, isCheckedOut,
   paymentConfig, paymentSettings, paymentSettingsLoading, order,
   loadCatalog, addItem, removeItem, setItemQty, checkout,
@@ -23,8 +36,10 @@ import {
   sellerOrders, ordersLoading, selectedOrder, orderDetailLoading,
   loadSellerOrders, loadSellerOrder, markOrderPaid, addOrderNote,
   fulfillItem, cancelItem, setSelectedOrder,
+  managedCatalog, catalogManageLoading,
+  loadManagedCatalog, saveCatalogItemAction, deleteCatalogItemAction, toggleCatalogItemAction,
 } from '../store';
-import type { PaymentSettings } from '../api';
+import type { PaymentSettings, CatalogItemInput } from '../api';
 import { useI18n } from '@/i18n';
 import { useViewerRole } from '@/shared/store/site-config';
 
@@ -120,23 +135,22 @@ function CatalogGrid() {
       <Show when={catalogWithQty().length === 0}>
         <p class="text-sm text-muted py-8 text-center">{t('cart.no_items')}</p>
       </Show>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="columns-1 sm:columns-2 lg:columns-3 gap-4">
         <For each={catalogWithQty()}>
           {(item) => (
-            <div class="bg-elevated border border-rim rounded-2xl p-4 flex flex-col gap-3">
-              <Show when={item.photo_url}
-                fallback={
-                  <div class="w-full h-32 bg-surface rounded-xl flex items-center justify-center">
-                    <MdFillShopping_cart size={32} class="text-subtle" />
-                  </div>
-                }
-              >
+            <div class="break-inside-avoid mb-4 bg-elevated border border-rim rounded-2xl p-4 flex flex-col gap-3">
+              <Show when={item.photo_url}>
                 <img src={item.photo_url!} alt={item.desc}
-                  class="w-full h-32 object-cover rounded-xl bg-surface" />
+                  class="w-full h-auto block rounded-xl bg-surface" />
               </Show>
-              <div class="flex-1">
+              <div>
                 <p class="font-medium text-txt text-sm leading-snug">{item.desc}</p>
-                <p class="text-accent font-semibold text-sm mt-1">{item.price}</p>
+                <p class="text-accent font-semibold text-sm mt-1">
+                  {item.price}
+                  <Show when={paymentConfig()?.currency}>
+                    <span class="text-xs font-normal text-muted ml-1">{paymentConfig()!.currency}</span>
+                  </Show>
+                </p>
               </div>
               <Show when={item.in_order === 0}
                 fallback={<QtyStepper sku={item.sku} qty={item.in_order} />}
@@ -219,11 +233,11 @@ function CartContents(props: { onBrowse: () => void }) {
                     }
                   >
                     <img src={catItem()!.photo_url!} alt={item.desc}
-                      class="w-11 h-11 object-cover rounded-xl shrink-0" />
+                      class="w-11 h-11 object-contain rounded-xl shrink-0 bg-surface" />
                   </Show>
                   <div class="flex-1 min-w-0">
                     <p class="text-sm font-medium text-txt truncate">{item.desc}</p>
-                    <p class="text-xs text-muted mt-0.5">{item.price}</p>
+                    <p class="text-xs text-muted mt-0.5">{item.price}<Show when={paymentConfig()?.currency}> {paymentConfig()!.currency}</Show></p>
                   </div>
                   <QtyStepper sku={item.sku} qty={item.qty} />
                   <button
@@ -242,7 +256,7 @@ function CartContents(props: { onBrowse: () => void }) {
         <div class="bg-elevated border border-rim rounded-2xl p-4">
           <div class="flex justify-between text-sm font-semibold text-txt">
             <span>{t('cart.estimated_total')}</span>
-            <span>{cartSubtotal()}</span>
+            <span>{cartSubtotal()} <Show when={paymentConfig()?.currency}><span class="text-xs font-normal text-muted">{paymentConfig()!.currency}</span></Show></span>
           </div>
           <p class="text-xs text-muted mt-1">{t('cart.checkout_note')}</p>
         </div>
@@ -617,15 +631,23 @@ function UpiPayment(props: { provider: import('../api').PaymentProvider }) {
   );
 }
 
-// ── My Shop (orders + settings toggle) ───────────────────────────────────────
+// ── My Shop (orders + catalog + settings toggle) ──────────────────────────────
 
 function MyShop() {
   const { t } = useI18n();
   const [showSettings, setShowSettings] = createSignal(false);
+  const [showCatalog, setShowCatalog]   = createSignal(false);
 
   const toggleSettings = () => {
     if (!showSettings() && !paymentSettings()) loadPaymentSettings();
     setShowSettings(s => !s);
+    setShowCatalog(false);
+  };
+
+  const toggleCatalog = () => {
+    if (!showCatalog()) loadManagedCatalog();
+    setShowCatalog(s => !s);
+    setShowSettings(false);
   };
 
   return (
@@ -634,24 +656,443 @@ function MyShop() {
         <span class="text-xs font-semibold text-muted uppercase tracking-wide">
           {t('cart.orders_tab')}
         </span>
-        <button
-          onClick={toggleSettings}
-          title={t('cart.payment_settings')}
-          class={`p-1.5 rounded-lg transition-colors ${showSettings()
-            ? 'bg-accent text-accent-fg'
-            : 'text-muted hover:text-txt hover:bg-surface'}`}
-        >
-          <MdFillSettings size={16} />
-        </button>
+        <div class="flex gap-1">
+          <button
+            onClick={toggleCatalog}
+            title={t('cart.manage_catalog')}
+            class={`p-1.5 rounded-lg transition-colors ${showCatalog()
+              ? 'bg-accent text-accent-fg'
+              : 'text-muted hover:text-txt hover:bg-surface'}`}
+          >
+            <MdFillFormat_list_bulleted size={16} />
+          </button>
+          <button
+            onClick={toggleSettings}
+            title={t('cart.payment_settings')}
+            class={`p-1.5 rounded-lg transition-colors ${showSettings()
+              ? 'bg-accent text-accent-fg'
+              : 'text-muted hover:text-txt hover:bg-surface'}`}
+          >
+            <MdFillSettings size={16} />
+          </button>
+        </div>
       </div>
 
       <Show when={showSettings()}>
         <PaymentSettingsPanel onClose={() => setShowSettings(false)} />
       </Show>
-
-      <Show when={!showSettings()}>
+      <Show when={showCatalog()}>
+        <CatalogManagerPanel />
+      </Show>
+      <Show when={!showSettings() && !showCatalog()}>
         <OrdersList />
       </Show>
+    </div>
+  );
+}
+
+// ── Catalog manager ───────────────────────────────────────────────────────────
+
+function CatalogManagerPanel() {
+  const { t } = useI18n();
+  const [editingSku, setEditingSku] = createSignal<string | null | undefined>(undefined);
+  // undefined = form closed, null = new item, string = editing existing
+
+  const openAdd  = () => setEditingSku(null);
+  const openEdit = (sku: string) => setEditingSku(sku);
+  const closeForm = () => setEditingSku(undefined);
+
+  return (
+    <div class="flex flex-col gap-4">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-semibold text-muted uppercase tracking-wide">
+          {t('cart.manage_catalog')}
+        </span>
+        <button
+          onClick={openAdd}
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-accent-fg
+                 text-xs font-medium hover:opacity-90 transition-opacity"
+        >
+          <MdFillAdd size={14} /> {t('cart.catalog_add_item')}
+        </button>
+      </div>
+
+      <Show when={editingSku() !== undefined}>
+        <CatalogItemForm sku={editingSku()!} onClose={closeForm} />
+      </Show>
+
+      <Show when={catalogManageLoading()}>
+        <div class="space-y-2">
+          <For each={Array(3).fill(0)}>
+            {() => <div class="h-12 bg-elevated border border-rim rounded-xl animate-pulse" />}
+          </For>
+        </div>
+      </Show>
+
+      <Show when={!catalogManageLoading() && managedCatalog().length === 0}>
+        <p class="text-sm text-muted text-center py-6">{t('cart.catalog_no_items')}</p>
+      </Show>
+
+      <Show when={!catalogManageLoading() && managedCatalog().length > 0}>
+        <div class="bg-elevated border border-rim rounded-2xl divide-y divide-rim overflow-hidden">
+          <For each={managedCatalog()}>
+            {(item) => (
+              <div class={`flex items-center gap-3 px-4 py-3 ${!item.active ? 'opacity-60' : ''}`}>
+                <Show when={item.photo_url}
+                  fallback={
+                    <div class="w-10 h-10 bg-surface rounded-lg shrink-0 flex items-center justify-center">
+                      <MdFillShopping_cart size={16} class="text-subtle" />
+                    </div>
+                  }
+                >
+                  <img src={item.photo_url!} alt={item.desc}
+                    class="w-10 h-10 object-cover rounded-lg shrink-0" />
+                </Show>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-1.5">
+                    <p class="text-sm font-medium text-txt truncate">{item.desc}</p>
+                    <Show when={!item.active}>
+                      <span class="text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0
+                                   bg-surface text-muted border border-rim">
+                        {t('cart.catalog_inactive')}
+                      </span>
+                    </Show>
+                  </div>
+                  <p class="text-xs text-muted mt-0.5">{item.price}<Show when={paymentConfig()?.currency}> {paymentConfig()!.currency}</Show></p>
+                </div>
+                <div class="flex items-center gap-0.5 shrink-0">
+                  <button
+                    onClick={() => toggleCatalogItemAction(item.sku)}
+                    title={item.active ? t('cart.catalog_deactivate') : t('cart.catalog_activate')}
+                    class={`p-1.5 rounded-lg transition-colors ${item.active
+                      ? 'text-green-500 hover:bg-surface'
+                      : 'text-subtle hover:text-txt hover:bg-surface'}`}
+                  >
+                    <Show when={item.active} fallback={<MdFillToggle_off size={20} />}>
+                      <MdFillToggle_on size={20} />
+                    </Show>
+                  </button>
+                  <button
+                    onClick={() => openEdit(item.sku)}
+                    class="p-1.5 rounded-lg text-muted hover:text-txt hover:bg-surface transition-colors"
+                    title={t('cart.catalog_edit_item')}
+                  >
+                    <MdFillEdit size={16} />
+                  </button>
+                  <button
+                    onClick={() => deleteCatalogItemAction(item.sku)}
+                    class="p-1.5 rounded-lg text-muted hover:text-red-500 hover:bg-surface transition-colors"
+                    title={t('cart.catalog_delete')}
+                  >
+                    <MdFillDelete size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </For>
+        </div>
+      </Show>
+    </div>
+  );
+}
+
+function CatalogItemForm(props: { sku: string | null; onClose: () => void }) {
+  const { t } = useI18n();
+  const existing = () => managedCatalog().find(i => i.sku === props.sku);
+
+  const [desc, setDesc]               = createSignal(existing()?.desc ?? '');
+  const [price, setPrice]             = createSignal(existing()?.price_raw?.toString() ?? '0');
+  const [photoUrl, setPhotoUrl]       = createSignal(existing()?.photo_url ?? '');
+  const [active, setActive]           = createSignal(existing()?.active ?? true);
+  const [saving, setSaving]           = createSignal(false);
+  const [uploading, setUploading]     = createSignal(false);
+  const [uploadPct, setUploadPct]     = createSignal(0);
+
+  // album picker state
+  const [showPicker, setShowPicker]       = createSignal(false);
+  const [albums, setAlbums]               = createSignal<Album[]>([]);
+  const [albumsLoading, setAlbumsLoading] = createSignal(false);
+  const [pickerAlbum, setPickerAlbum]     = createSignal<Album | null>(null);
+  const [albumPhotos, setAlbumPhotos]     = createSignal<Photo[]>([]);
+  const [photosLoading, setPhotosLoading] = createSignal(false);
+
+  let fileInput!: HTMLInputElement;
+
+  const handleFileSelect = async (e: Event) => {
+    const file = (e.currentTarget as HTMLInputElement).files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setUploadPct(0);
+    try {
+      const result = await wallUpload(nick(), file, pct => setUploadPct(pct));
+      setPhotoUrl(result.src);
+    } catch {
+      toast.error('Photo upload failed.');
+    } finally {
+      setUploading(false);
+      setUploadPct(0);
+      fileInput.value = '';
+    }
+  };
+
+  const openPicker = async () => {
+    setShowPicker(s => !s);
+    setPickerAlbum(null);
+    if (albums().length === 0) {
+      setAlbumsLoading(true);
+      try {
+        setAlbums(await fetchAlbums(nick()));
+      } catch {
+        toast.error('Failed to load albums.');
+      } finally {
+        setAlbumsLoading(false);
+      }
+    }
+  };
+
+  const openAlbum = async (album: Album) => {
+    setPickerAlbum(album);
+    setPhotosLoading(true);
+    try {
+      const { photos } = await fetchPhotoAlbum(nick(), album.folder);
+      setAlbumPhotos(photos);
+    } catch {
+      toast.error('Failed to load photos.');
+    } finally {
+      setPhotosLoading(false);
+    }
+  };
+
+  const selectPhoto = (photo: Photo) => {
+    setPhotoUrl(photo.src);
+    setShowPicker(false);
+    setPickerAlbum(null);
+  };
+
+  const save = async () => {
+    if (!desc().trim()) return;
+    setSaving(true);
+    const item: CatalogItemInput = {
+      description: desc().trim(),
+      price: Math.max(0, parseFloat(price()) || 0),
+      photo_url: photoUrl().trim() || undefined,
+      active: active(),
+    };
+    if (props.sku !== null) item.sku = props.sku;
+    await saveCatalogItemAction(item);
+    setSaving(false);
+    props.onClose();
+  };
+
+  return (
+    <div class="bg-elevated border border-accent/30 rounded-2xl p-4 flex flex-col gap-3">
+      <p class="text-sm font-semibold text-txt">
+        {props.sku !== null ? t('cart.catalog_edit_item') : t('cart.catalog_new_item')}
+      </p>
+
+      <Show when={props.sku !== null}>
+        <p class="text-[11px] text-subtle font-mono">SKU: {props.sku}</p>
+      </Show>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-xs text-muted">{t('cart.catalog_description')}</label>
+        <input
+          type="text"
+          value={desc()}
+          onInput={e => setDesc(e.currentTarget.value)}
+          placeholder="Item name / description"
+          class="text-sm px-3 py-1.5 rounded-lg bg-surface border border-rim text-txt
+                 placeholder-subtle focus:outline-none focus:border-accent"
+          autofocus
+        />
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-xs text-muted">{t('cart.catalog_price')}</label>
+        <input
+          type="number"
+          value={price()}
+          onInput={e => setPrice(e.currentTarget.value)}
+          min="0"
+          step="0.01"
+          placeholder="0.00"
+          class="text-sm px-3 py-1.5 rounded-lg bg-surface border border-rim text-txt
+                 placeholder-subtle focus:outline-none focus:border-accent w-32"
+        />
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs text-muted">{t('cart.catalog_photo_url')}</label>
+
+        {/* URL input + upload + albums picker toggle */}
+        <div class="flex gap-2">
+          <input
+            type="url"
+            value={photoUrl()}
+            onInput={e => setPhotoUrl(e.currentTarget.value)}
+            placeholder="https://…"
+            class="flex-1 text-sm px-3 py-1.5 rounded-lg bg-surface border border-rim text-txt
+                   placeholder-subtle focus:outline-none focus:border-accent"
+          />
+          <button
+            type="button"
+            onClick={() => fileInput.click()}
+            disabled={uploading()}
+            title="Upload from device"
+            class="flex items-center justify-center px-2.5 py-1.5 rounded-lg bg-surface border border-rim
+                   text-muted hover:text-txt hover:border-accent transition-colors disabled:opacity-50 shrink-0"
+          >
+            <Show when={uploading()} fallback={<MdFillImage size={16} />}>
+              <span class="text-[11px] font-mono w-7 text-center">{uploadPct()}%</span>
+            </Show>
+          </button>
+          <button
+            type="button"
+            onClick={openPicker}
+            title="Choose from albums"
+            class={`flex items-center justify-center px-2.5 py-1.5 rounded-lg border transition-colors shrink-0
+              ${showPicker()
+                ? 'bg-accent text-accent-fg border-accent'
+                : 'bg-surface border-rim text-muted hover:text-txt hover:border-accent'}`}
+          >
+            <MdFillPhoto_library size={16} />
+          </button>
+          <input ref={fileInput} type="file" accept="image/*" class="hidden" onChange={handleFileSelect} />
+        </div>
+
+        {/* Preview */}
+        <Show when={photoUrl()}>
+          <img
+            src={photoUrl()}
+            alt="preview"
+            class="h-20 w-20 object-cover rounded-lg border border-rim"
+            onError={e => (e.currentTarget.style.display = 'none')}
+          />
+        </Show>
+
+        {/* Album picker panel */}
+        <Show when={showPicker()}>
+          <div class="border border-rim rounded-xl overflow-hidden bg-surface">
+            {/* Picker header */}
+            <div class="flex items-center justify-between px-3 py-2 border-b border-rim bg-elevated">
+              <Show when={pickerAlbum()} fallback={
+                <span class="text-xs font-medium text-txt">Albums</span>
+              }>
+                <button
+                  onClick={() => setPickerAlbum(null)}
+                  class="flex items-center gap-1 text-xs text-accent hover:opacity-80"
+                >
+                  <MdFillArrow_back size={14} /> {pickerAlbum()!.album}
+                </button>
+              </Show>
+              <button
+                onClick={() => setShowPicker(false)}
+                class="text-subtle hover:text-txt transition-colors text-xs leading-none px-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Picker body */}
+            <div class="p-2 max-h-52 overflow-y-auto">
+
+              {/* Loading skeleton */}
+              <Show when={albumsLoading() || photosLoading()}>
+                <div class="grid grid-cols-4 gap-1.5">
+                  <For each={Array(8).fill(0)}>
+                    {() => <div class="aspect-square bg-elevated rounded-lg animate-pulse" />}
+                  </For>
+                </div>
+              </Show>
+
+              {/* Album list */}
+              <Show when={!pickerAlbum() && !albumsLoading()}>
+                <Show when={albums().length === 0}>
+                  <p class="text-xs text-muted text-center py-6">No albums found.</p>
+                </Show>
+                <div class="grid grid-cols-3 gap-1.5">
+                  <For each={albums()}>
+                    {(album) => (
+                      <button
+                        onClick={() => openAlbum(album)}
+                        class="flex flex-col items-center gap-1 p-1.5 rounded-lg
+                               hover:bg-elevated transition-colors text-left"
+                      >
+                        <div class="w-full aspect-square bg-elevated rounded-lg overflow-hidden shrink-0">
+                          <Show when={album.thumb}
+                            fallback={
+                              <div class="w-full h-full flex items-center justify-center">
+                                <MdFillPhoto_library size={20} class="text-subtle" />
+                              </div>
+                            }
+                          >
+                            <img src={album.thumb!} alt={album.album}
+                              class="w-full h-full object-cover" />
+                          </Show>
+                        </div>
+                        <span class="text-[10px] text-muted truncate w-full text-center leading-tight">
+                          {album.album}
+                        </span>
+                        <span class="text-[9px] text-subtle">{album.total}</span>
+                      </button>
+                    )}
+                  </For>
+                </div>
+              </Show>
+
+              {/* Photo grid */}
+              <Show when={pickerAlbum() && !photosLoading()}>
+                <Show when={albumPhotos().length === 0}>
+                  <p class="text-xs text-muted text-center py-6">No photos in this album.</p>
+                </Show>
+                <div class="grid grid-cols-4 gap-1.5">
+                  <For each={albumPhotos()}>
+                    {(photo) => (
+                      <button
+                        onClick={() => selectPhoto(photo)}
+                        title={photo.title || photo.filename}
+                        class="aspect-square rounded-lg overflow-hidden
+                               hover:ring-2 hover:ring-accent transition-all"
+                      >
+                        <img src={photo.src} alt={photo.title || photo.filename}
+                          class="w-full h-full object-cover" />
+                      </button>
+                    )}
+                  </For>
+                </div>
+              </Show>
+
+            </div>
+          </div>
+        </Show>
+      </div>
+
+      <label class="flex items-center gap-2 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={active()}
+          onChange={e => setActive(e.currentTarget.checked)}
+          class="rounded"
+        />
+        <span class="text-sm text-txt">{t('cart.catalog_active')}</span>
+      </label>
+
+      <div class="flex gap-2 pt-1">
+        <button
+          onClick={save}
+          disabled={saving() || !desc().trim()}
+          class="px-4 py-2 rounded-xl bg-accent text-accent-fg text-sm font-medium
+                 hover:opacity-90 disabled:opacity-50 transition-opacity"
+        >
+          {saving() ? '…' : t('cart.catalog_save_item')}
+        </button>
+        <button
+          onClick={props.onClose}
+          class="px-4 py-2 rounded-xl text-sm font-medium text-muted hover:text-txt transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
     </div>
   );
 }
@@ -661,6 +1102,7 @@ function MyShop() {
 function PaymentSettingsPanel(props: { onClose: () => void }) {
   const { t } = useI18n();
   const defaults = (): PaymentSettings => ({
+    currency:  paymentConfig()?.currency ?? 'USD',
     paypal:    { enabled: false, client_id: '', secret: '', mode: 'sandbox' },
     razorpay:  { enabled: false, key_id: '', key_secret: '', currency: 'INR' },
     cashfree:  { enabled: false, app_id: '', secret_key: '', mode: 'sandbox' },
@@ -692,6 +1134,23 @@ function PaymentSettingsPanel(props: { onClose: () => void }) {
   return (
     <div class="bg-elevated border border-rim rounded-2xl p-4 flex flex-col gap-5">
       <p class="text-sm font-semibold text-txt">{t('cart.payment_settings')}</p>
+
+      {/* Store currency */}
+      <div class="flex flex-col gap-1.5 pb-2 border-b border-rim">
+        <label class="text-xs font-medium text-muted">{t('cart.store_currency')}</label>
+        <div class="flex items-center gap-2">
+          <input
+            type="text"
+            value={form().currency}
+            onInput={e => set(['currency'], e.currentTarget.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3))}
+            maxlength="3"
+            placeholder="USD"
+            class="text-sm px-3 py-1.5 rounded-lg bg-surface border border-rim text-txt
+                   font-mono w-20 uppercase focus:outline-none focus:border-accent tracking-widest"
+          />
+          <span class="text-xs text-subtle">{t('cart.store_currency_hint')}</span>
+        </div>
+      </div>
 
       {/* PayPal */}
       <div class="flex flex-col gap-3">
@@ -957,7 +1416,7 @@ function OrdersList() {
                     {ord.buyer_name || ord.buyer}
                   </p>
                   <p class="text-xs text-muted mt-0.5 truncate">
-                    {ord.hash?.slice(0, 12)}… · {ord.subtotal}
+                    {ord.hash?.slice(0, 12)}… · {ord.subtotal} {ord.currency}
                     <Show when={ord.payment}>
                       {' · '}<span class="text-accent">{ord.payment!.provider}</span>
                     </Show>
@@ -1018,7 +1477,7 @@ function OrderDetail() {
             </div>
             <div class="flex items-center justify-between text-sm pt-1">
               <span class="text-muted">{t('cart.order_total')}</span>
-              <span class="font-semibold text-txt">{ord()!.subtotal}</span>
+              <span class="font-semibold text-txt">{ord()!.subtotal} <span class="text-xs font-normal text-muted">{ord()!.currency}</span></span>
             </div>
             <Show when={!ord()!.paid}>
               <button
@@ -1041,7 +1500,7 @@ function OrderDetail() {
                   <div class="flex items-center gap-3 px-4 py-3">
                     <div class="flex-1 min-w-0">
                       <p class="text-sm text-txt truncate">{item.desc}</p>
-                      <p class="text-xs text-muted mt-0.5">{item.price} × {item.qty}</p>
+                      <p class="text-xs text-muted mt-0.5">{item.price} {ord()!.currency} × {item.qty}</p>
                     </div>
                     <ItemStatusBadge item={item} />
                     <div class="flex gap-1 shrink-0">
@@ -1152,13 +1611,15 @@ function ItemStatusBadge(props: { item: import('../api').OrderItem }) {
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 
+const SKELETON_HEIGHTS = ['h-28', 'h-40', 'h-24', 'h-48', 'h-32', 'h-36'];
+
 function CatalogSkeleton() {
   return (
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <For each={Array(6).fill(0)}>
-        {() => (
-          <div class="bg-elevated border border-rim rounded-2xl p-4 animate-pulse">
-            <div class="w-full h-32 bg-surface rounded-xl mb-3" />
+    <div class="columns-1 sm:columns-2 lg:columns-3 gap-4">
+      <For each={SKELETON_HEIGHTS}>
+        {(h) => (
+          <div class="break-inside-avoid mb-4 bg-elevated border border-rim rounded-2xl p-4 animate-pulse">
+            <div class={`w-full ${h} bg-surface rounded-xl mb-3`} />
             <div class="h-4 bg-surface rounded w-3/4 mb-2" />
             <div class="h-4 bg-surface rounded w-1/3 mb-3" />
             <div class="h-9 bg-surface rounded-xl" />

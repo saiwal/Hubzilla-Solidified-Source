@@ -40,13 +40,6 @@ export default function LoginView() {
     }
   };
 
-  // Destination to return to after remote auth completes
-  const dest = () => {
-    const ref = document.referrer;
-    if (ref && new URL(ref).origin === window.location.origin) return ref;
-    return window.location.origin;
-  };
-
   return (
     <div class="min-h-[60vh] flex items-center justify-center">
       <div class="w-full max-w-md bg-surface border border-rim rounded-2xl p-8 shadow-sm">
@@ -140,14 +133,13 @@ export default function LoginView() {
 
         {/* Remote login */}
         <form action="/rmagic" method="post" class="space-y-3">
-          <input type="hidden" name="dest" value={dest()} />
           <div class="space-y-1">
             <label class="text-sm font-medium text-txt" for="rmagic-addr">
               {t("auth.remote_address_label")}
             </label>
             <input
               id="rmagic-addr"
-              name="addr"
+              name="address"
               type="text"
               autocomplete="email"
               required

@@ -53,6 +53,8 @@ export const cart: RawDictionary["cart"] = {
   order_placed:        "Order placed!",
   order_placed_note:   "The seller will contact you to arrange payment and delivery.",
   // payment settings (seller)
+  store_currency:      "Store Currency",
+  store_currency_hint: "3-letter ISO code (USD, EUR, GBP, INR, JPY…)",
   payment_settings:    "Payment Settings",
   provider_enabled:    "Enabled",
   paypal_client_id:    "Client ID",
@@ -87,4 +89,19 @@ export const cart: RawDictionary["cart"] = {
   cashfree_production:        "Production",
   cashfree_phone_placeholder: "Mobile number (10 digits)",
   cashfree_phone_required:    "Please enter a valid 10-digit mobile number.",
+  // catalog management (seller)
+  manage_catalog:      "Manage Catalog",
+  catalog_add_item:    "Add Item",
+  catalog_new_item:    "New Item",
+  catalog_edit_item:   "Edit Item",
+  catalog_description: "Description",
+  catalog_price:       "Price",
+  catalog_photo_url:   "Photo URL (optional)",
+  catalog_active:      "Active",
+  catalog_inactive:    "Inactive",
+  catalog_activate:    "Activate",
+  catalog_deactivate:  "Deactivate",
+  catalog_save_item:   "Save Item",
+  catalog_delete:      "Delete",
+  catalog_no_items:    "No catalog items yet. Add your first item.",
 };

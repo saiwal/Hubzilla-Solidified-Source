@@ -7,6 +7,15 @@ export interface CatalogItem {
   price: string;
   photo_url: string | null;
   type: string;
+  active?: boolean;
+}
+
+export interface CatalogItemInput {
+  sku?: string;
+  description: string;
+  price: number;
+  photo_url?: string;
+  active?: boolean;
 }
 
 export interface OrderItem {
@@ -64,6 +73,7 @@ export interface PaymentConfig {
 }
 
 export interface PaymentSettings {
+  currency: string;
   paypal: {
     enabled: boolean;
     client_id: string;
@@ -120,6 +130,18 @@ async function cartPost<T>(path: string, body: Record<string, unknown> = {}): Pr
 
 export const fetchCatalog = (nick: string) =>
   cartGet<CatalogItem[]>(`${nick}/catalog`);
+
+export const fetchCatalogAll = (nick: string) =>
+  cartGet<CatalogItem[]>(`${nick}/catalog?all=1`);
+
+export const saveCatalogItem = (nick: string, item: CatalogItemInput) =>
+  cartPost<CatalogItem[]>(`${nick}/catalog`, item as unknown as Record<string, unknown>);
+
+export const deleteCatalogItem = (nick: string, sku: string) =>
+  cartPost<CatalogItem[]>(`${nick}/catalog/delete`, { sku });
+
+export const toggleCatalogItem = (nick: string, sku: string) =>
+  cartPost<CatalogItem[]>(`${nick}/catalog/toggle`, { sku });
 
 // ── Order ─────────────────────────────────────────────────────────────────────
 

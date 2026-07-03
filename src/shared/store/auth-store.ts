@@ -6,6 +6,7 @@ import { THEMES, type ThemeId } from "../types/theme.types";
 
 export type AuthState = {
   isLocal: boolean; // true = native logged-in user
+  isRemote: boolean; // true = OWA/remote-authenticated visitor
   isLoggedIn: boolean; // true = any authenticated user (local or remote)
   isAdmin: boolean; // true = is administrator
   nick: string; // channel nick, "" if anonymous
@@ -17,6 +18,7 @@ export type AuthState = {
 
 const ANONYMOUS: AuthState = {
   isLocal: false,
+  isRemote: false,
   isLoggedIn: false,
   isAdmin: false,
   nick: "",
@@ -43,7 +45,8 @@ async function fetchAuthState(): Promise<AuthState> {
   const isAdmin = data.is_admin ?? false;
   const nick = data.channel ?? "";
   const uid = Number(data.uid ?? 0);
-  // No is_local field — if uid > 0 and channel is set, it's a local user
+  const isRemote = data.is_remote === true;
+  // Local: uid > 0 with a channel nick. Remote: explicitly flagged by server.
   const isLocal = uid > 0 && nick !== "";
 
   if (data.spa) {
@@ -82,7 +85,8 @@ async function fetchAuthState(): Promise<AuthState> {
 
   return {
     isLocal,
-    isLoggedIn: nick !== "",
+    isRemote,
+    isLoggedIn: isLocal || isRemote,
     isAdmin,
     nick,
     uid,
