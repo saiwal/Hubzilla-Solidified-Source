@@ -573,7 +573,10 @@ export type RawDictionary = {
     cam_recording:    string;
     cam_error_access: string;
     cam_retry:        string;
+    cam_flip:         string;
+    cam_torch:        string;
     cam_btn_title:    string;
+    cam_use_native:   string;
     // Post summary + Poll
     post_summary_placeholder: string;
     poll_toggle:              string;

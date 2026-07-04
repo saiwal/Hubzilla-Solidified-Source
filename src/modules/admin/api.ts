@@ -1,8 +1,10 @@
 import { apiFetch } from "@/shared/lib/fetch";
 import type {
-  AdminSummary, AdminSite, AdminAccount, AdminChannel, AdminSecurity,
-  AdminFeatures, AdminAddon, AdminTheme, AdminQueue, WorkerJob,
-  ProfileField, DbUpdate, AdminLogs,
+  AdminSummary, AdminSite, AdminAccount, AdminPendingAccount,
+  AdminChannel, AdminSecurity, AdminFeatures, AdminAddon, AdminTheme,
+  AdminQueue, AdminQueueworker, QueueworkerSettings,
+  AdminProfileFields, ProfdefField, DbUpdate, AdminLogs,
+  ThemeOptions,
 } from "./types";
 
 const BASE = "/api/admin";
@@ -45,16 +47,21 @@ export const saveAdminSite = async (data: Partial<AdminSite>): Promise<void> => 
 export interface AccountsPage {
   data: AdminAccount[];
   meta: { offset: number; limit: number; count: number; root_count: number; has_more: boolean };
+  pending: AdminPendingAccount[];
 }
 
 export async function fetchAdminAccounts(page = 0): Promise<AccountsPage> {
   const res = await apiFetch(`${BASE}/accounts?page=${page}`);
   if (!res.ok) throw new Error(`Admin API error: ${res.status}`);
-  return res.json() as Promise<AccountsPage>;
+  const { data } = await res.json();
+  return { pending: [], ...data };
 }
 
 export const adminAccountAction = (account_id: number, action: "block" | "unblock" | "delete") =>
   post("accounts", { account_id, action });
+
+export const adminPendingAction = (reg_id: number, action: "approve" | "deny") =>
+  post("accounts", { reg_id, action });
 
 // ── Channels ──────────────────────────────────────────────────────────────────
 
@@ -68,6 +75,11 @@ export async function fetchAdminChannels(page = 0): Promise<ChannelsPage> {
   if (!res.ok) throw new Error(`Admin API error: ${res.status}`);
   return res.json() as Promise<ChannelsPage>;
 }
+
+export const adminChannelAction = (
+  channel_id: number,
+  action: "block" | "unblock" | "allowcode" | "disallowcode" | "delete",
+) => post("channels", { channel_id, action });
 
 // ── Security ──────────────────────────────────────────────────────────────────
 
@@ -94,23 +106,44 @@ export async function fetchAdminThemes(): Promise<{ themes: AdminTheme[]; curren
   return get("themes");
 }
 
+export async function fetchThemeOptions(theme: string): Promise<ThemeOptions> {
+  return get("themes/options", { theme });
+}
+
+export async function saveThemeOptions(theme: string, formData: Record<string, string>): Promise<void> {
+  await post("themes", { action: "options", theme, form_data: formData });
+}
+
+export async function toggleTheme(theme: string): Promise<void> {
+  await post("themes", { action: "toggle", theme });
+}
+
 // ── Queue ─────────────────────────────────────────────────────────────────────
 
 export const fetchAdminQueue = () => get<AdminQueue>("inspect-queue");
 
 // ── Queueworker ───────────────────────────────────────────────────────────────
 
-export async function fetchAdminQueueworker(): Promise<WorkerJob[]> {
-  const r = await get<{ jobs: WorkerJob[] }>("queueworker");
-  return r.jobs;
-}
+export const fetchAdminQueueworker = () => get<AdminQueueworker>("queueworker");
+
+export const saveQueueworkerSettings = (s: QueueworkerSettings) =>
+  post("queueworker", s);
 
 // ── Profile fields ────────────────────────────────────────────────────────────
 
-export async function fetchAdminProfileFields(): Promise<ProfileField[]> {
-  const r = await get<{ fields: ProfileField[] }>("profile-fields");
-  return r.fields;
-}
+export const fetchAdminProfileFields = () => get<AdminProfileFields>("profile-fields");
+
+export const saveProfileFieldLayout = (basic: string, advanced: string) =>
+  post("profile-fields", { action: "save_layout", basic, advanced });
+
+export const createProfileField = (f: Omit<ProfdefField, "id">) =>
+  post<{ field: ProfdefField }>("profile-fields", { action: "create", ...f });
+
+export const updateProfileField = (id: number, f: Omit<ProfdefField, "id">) =>
+  post("profile-fields", { action: "update", id, ...f });
+
+export const deleteProfileField = (id: number) =>
+  post("profile-fields", { action: "delete", id });
 
 // ── DB updates ────────────────────────────────────────────────────────────────
 
@@ -122,3 +155,6 @@ export async function fetchAdminDbUpdates(): Promise<DbUpdate[]> {
 // ── Logs ──────────────────────────────────────────────────────────────────────
 
 export const fetchAdminLogs = () => get<AdminLogs>("logs");
+
+export const saveLogSettings = (settings: { debugging: boolean; logfile: string; loglevel: number }) =>
+  post<AdminLogs>("logs", settings);

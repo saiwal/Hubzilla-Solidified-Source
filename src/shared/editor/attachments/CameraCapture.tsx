@@ -27,8 +27,12 @@ const CameraCapture: Component<Props> = (props) => {
   const [capturedUrl, setCapturedUrl] = createSignal<string | null>(null);
   const [capturedFile,setCapturedFile]= createSignal<File | null>(null);
   const [editFile,    setEditFile]    = createSignal<File | null>(null);
+  const [facing,      setFacing]      = createSignal<"environment" | "user">("environment");
+  const [torchOn,     setTorchOn]     = createSignal(false);
+  const [hasTorch,    setHasTorch]    = createSignal(false);
 
   let videoRef: HTMLVideoElement | undefined;
+  let nativeInputRef: HTMLInputElement | undefined;
   let stream: MediaStream | null = null;
   let recorder: MediaRecorder | null = null;
   let chunks: Blob[] = [];
@@ -36,21 +40,33 @@ const CameraCapture: Component<Props> = (props) => {
   // ── Camera / mic lifecycle ───────────────────────────────────────────────────
 
   async function startCamera(m: Mode) {
+    const wasStreaming = stream !== null;
     stopCamera();
     setStage("initializing");
     setErrorMsg("");
+    // Android needs longer to release camera hardware after a previous stream;
+    // without this the next getUserMedia races the teardown and gets NotReadableError.
+    await new Promise<void>((resolve) => setTimeout(resolve, wasStreaming ? 500 : 150));
     try {
       if (m === "audio") {
         stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       } else {
         stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" },
+          video: { facingMode: facing() },
           audio: m === "video",
         });
         if (videoRef) {
           videoRef.srcObject = stream;
-          await videoRef.play();
+          // play() is non-fatal: iOS Safari rejects it after an async break
+          // but autoplay+muted+playsinline handles playback on its own
+          videoRef.play().catch(() => {});
         }
+        const videoTrack = stream.getVideoTracks()[0];
+        // Camera hardware may not have populated capabilities yet; brief delay avoids
+        // getCapabilities() returning an empty object and torch going undetected.
+        await new Promise<void>((resolve) => setTimeout(resolve, 200));
+        const caps = videoTrack?.getCapabilities() as MediaTrackCapabilities & { torch?: boolean };
+        setHasTorch(!!caps?.torch);
       }
       setStage("streaming");
     } catch (err) {
@@ -65,9 +81,9 @@ const CameraCapture: Component<Props> = (props) => {
     chunks = [];
     stream?.getTracks().forEach((tr) => tr.stop());
     stream = null;
-    if (videoRef) {
-      videoRef.srcObject = null;
-    }
+    if (videoRef) videoRef.srcObject = null;
+    setTorchOn(false);
+    setHasTorch(false);
   }
 
   function revokeCaptured() {
@@ -92,6 +108,25 @@ const CameraCapture: Component<Props> = (props) => {
     revokeCaptured();
     setMode(m);
     startCamera(m);
+  }
+
+  function switchFacing() {
+    const next = facing() === "environment" ? "user" : "environment";
+    setFacing(next);
+    startCamera(mode());
+  }
+
+  async function toggleTorch() {
+    if (!stream) return;
+    const videoTrack = stream.getVideoTracks()[0];
+    if (!videoTrack) return;
+    const next = !torchOn();
+    try {
+      await videoTrack.applyConstraints({ advanced: [{ torch: next } as MediaTrackConstraintSet] });
+      setTorchOn(next);
+    } catch {
+      // torch toggle failed silently — hardware may not support it at runtime
+    }
   }
 
   // ── Photo capture ────────────────────────────────────────────────────────────
@@ -307,7 +342,7 @@ const CameraCapture: Component<Props> = (props) => {
                   playsinline
                   muted
                   class={
-                    "w-full h-full object-cover " +
+                    "w-full h-full object-contain " +
                     (stage() === "captured" || mode() === "audio" ? "hidden" : "")
                   }
                 />
@@ -399,10 +434,71 @@ const CameraCapture: Component<Props> = (props) => {
                     <span class="text-xs text-white font-medium">{String(t("editor.cam_recording"))}</span>
                   </div>
                 </Show>
+
+                {/* Torch button */}
+                <Show when={stage() === "streaming" && mode() !== "audio" && hasTorch() && !recording()}>
+                  <button
+                    type="button"
+                    onClick={toggleTorch}
+                    aria-label={String(t("editor.cam_torch"))}
+                    class={
+                      "absolute top-3 left-3 p-2 rounded-full transition-colors " +
+                      (torchOn()
+                        ? "bg-yellow-400/90 text-black"
+                        : "bg-black/60 text-white hover:bg-black/80")
+                    }
+                  >
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M7 2v11h3v9l7-12h-4l4-8z" />
+                    </svg>
+                  </button>
+                </Show>
+
+                {/* Flip camera button */}
+                <Show when={stage() === "streaming" && mode() !== "audio"}>
+                  <button
+                    type="button"
+                    onClick={switchFacing}
+                    aria-label={String(t("editor.cam_flip"))}
+                    class="absolute top-3 right-3 p-2 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
+                  >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </button>
+                </Show>
               </div>
+
+              {/* Shared native camera input */}
+              <input
+                ref={nativeInputRef}
+                type="file"
+                accept={mode() === "audio" ? "audio/*" : mode() === "video" ? "video/*" : "image/*"}
+                capture="environment"
+                class="hidden"
+                onChange={(e) => {
+                  const file = e.currentTarget.files?.[0];
+                  if (file) props.onCapture([file]);
+                  props.onClose();
+                }}
+              />
 
               {/* Controls */}
               <div class="px-4 py-4">
+
+                {/* Error controls */}
+                <Show when={stage() === "error"}>
+                  <div class="flex flex-col items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => nativeInputRef?.click()}
+                      class={btnOutline}
+                    >
+                      {String(t("editor.cam_use_native"))}
+                    </button>
+                  </div>
+                </Show>
 
                 {/* Streaming controls */}
                 <Show when={stage() === "streaming"}>
@@ -428,6 +524,18 @@ const CameraCapture: Component<Props> = (props) => {
                         {String(t("editor.cam_capture"))}
                       </button>
                     </Show>
+                    <button
+                      type="button"
+                      onClick={() => nativeInputRef?.click()}
+                      aria-label={String(t("editor.cam_use_native"))}
+                      title={String(t("editor.cam_use_native"))}
+                      class="p-2 rounded-xl border border-rim text-muted hover:bg-elevated hover:text-txt transition-colors"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2" stroke-width="2"/>
+                        <circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/>
+                      </svg>
+                    </button>
                     <button type="button" onClick={props.onClose} class={btnOutline}>
                       {String(t("editor.cancel_btn"))}
                     </button>

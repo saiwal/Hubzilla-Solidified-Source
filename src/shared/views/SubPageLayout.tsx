@@ -55,7 +55,7 @@ export default function SubPageLayout(props: Props) {
     visibleItems().find((item) => item.path === props.activeKey);
 
   return (
-    <div class="flex h-full min-h-0">
+    <div class="flex">
 
       {/* ── Left nav ─────────────────────────────────────── */}
       <aside
@@ -105,7 +105,7 @@ export default function SubPageLayout(props: Props) {
           </div>
         </Show>
 
-        <div class={props.contentClass ?? "flex-1 overflow-y-auto"}>
+        <div class={props.contentClass ?? "flex-1 min-w-0"}>
           {props.children}
         </div>
       </main>
@@ -122,7 +122,7 @@ function SubPageNav(props: {
 }) {
   const { t } = useI18n();
   return (
-    <nav class="py-2 overflow-y-auto flex-1" aria-label={t("layout.section_navigation")}>
+    <nav class="py-2 flex-1" aria-label={t("layout.section_navigation")}>
       {props.items.map((item) => {
         const active = () => item.path === props.activeKey;
         return (

@@ -568,9 +568,6 @@ export default function PostCard(props: {
           <a href={props.post.authorUrl} class="font-medium text-sm text-txt hover:underline truncate">
             {props.post.authorName}
           </a>
-          <Show when={props.post.wallPost}>
-            <span class="text-xs text-muted shrink-0">→ wall</span>
-          </Show>
           <Show when={props.post.verb && props.post.verb !== "Create" && !isRepeat()}>
             <span class="text-xs text-muted italic shrink-0">
               {props.post.verb?.toLowerCase()}
@@ -949,9 +946,6 @@ export default function PostCard(props: {
                   {props.post.via!.name}
                 </a>
               </div>
-            </Show>
-            <Show when={props.post.wallPost}>
-              <span class="text-xs text-muted">→ wall</span>
             </Show>
           </div>
           <div class="flex items-center gap-1.5">

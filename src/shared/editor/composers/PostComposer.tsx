@@ -211,15 +211,13 @@ const PostComposer: Component<ComposerProps> = (props) => {
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = (await res.json().catch(() => ({}))) as {
-        success?: boolean;
-        iid?: number;
-        mid?: string;
+        data?: { post?: { iid?: number } };
       };
-      if (!json.success) {
+      if (!json.data?.post) {
         throw new Error("Server reported failure. Check Hubzilla logs.");
       }
 
-      props.onPosted?.(json.iid ?? 0);
+      props.onPosted?.(json.data.post.iid ?? 0);
       attach.clear();
       props.onClose();
     },

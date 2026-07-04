@@ -1,4 +1,4 @@
-import { For, Show, Switch, Match, createSignal, createEffect, onMount, onCleanup, batch, untrack } from "solid-js";
+import { For, Show, Switch, Match, createSignal, createEffect, onMount, onCleanup, batch } from "solid-js";
 import {
   connectionsData, refetch, setFilter, setOrder, setSearch, setPage,
   filter, order, search, page, LIMIT,
@@ -380,14 +380,17 @@ export default function ConnectionsSection() {
   const [newConn, setNewConn] = createSignal<Connection | null>(null);
   const [allConnections, setAllConnections] = createSignal<Connection[]>([]);
   const [hasMore, setHasMore] = createSignal(true);
-  const [lastPage, setLastPage] = createSignal(-1);
+
+  // Plain boolean ref — set synchronously before fetch, cleared when data arrives.
+  // Prevents the IntersectionObserver from double-firing between setPage() and when
+  // the resource actually transitions to loading=true (which is async in Solid).
+  let fetchingMore = false;
 
   let sentinelRef!: HTMLDivElement;
 
   const meta = () => connectionsData()?.meta;
 
   onMount(() => {
-    // page is module-level and persists across navigations; always start from page 0
     setPage(0);
   });
 
@@ -395,33 +398,30 @@ export default function ConnectionsSection() {
     setPage(0);
   });
 
+  // Only tracks connectionsData() — NOT page(). Tracking page() caused the effect to
+  // fire with stale data the moment setPage() was called, before the resource switched
+  // to loading, resulting in duplicate appends followed by an unexpected full replace.
   createEffect(() => {
     const data = connectionsData();
-    const currentPage = page();
-    
     if (connectionsData.loading || !data) return;
-    
-    // Determine if we should append or replace
-    const previousPage = untrack(lastPage);
-    const shouldAppend = previousPage !== -1 && currentPage > previousPage;
-    
-    if (shouldAppend) {
-      // Append new items to existing list
-      setAllConnections((prev) => [...prev, ...data.connections]);
-    } else {
-      // Replace entire list (new search/filter/sort)
+
+    fetchingMore = false;
+
+    // meta.offset === 0 means a fresh fetch (new search/filter/sort or first page).
+    if (data.meta.offset === 0) {
       setAllConnections(data.connections);
+    } else {
+      setAllConnections((prev) => [...prev, ...data.connections]);
     }
-    
-    // Update tracking
-    setLastPage(currentPage);
+
     setHasMore(data.connections.length >= LIMIT);
   });
 
   onMount(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && hasMore() && !connectionsData.loading && allConnections().length > 0) {
+        if (entry.isIntersecting && hasMore() && !fetchingMore && allConnections().length > 0) {
+          fetchingMore = true;
           setPage((p) => p + 1);
         }
       },
@@ -431,27 +431,20 @@ export default function ConnectionsSection() {
     onCleanup(() => observer.disconnect());
   });
 
-  function resetList() {
-    batch(() => {
-      setAllConnections([]);
-      setHasMore(true);
-      setLastPage(-1);
-    });
-  }
-
   function onDeleted() {
+    setAllConnections([]);
     setHasMore(true);
+    fetchingMore = false;
     if (page() > 0) setPage(0);
-    else {
-      setAllConnections([]);
-      refetch();
-    }
+    else refetch();
   }
 
   function applySearch() {
     setAddError(null);
     batch(() => {
-      resetList();
+      setAllConnections([]);
+      setHasMore(true);
+      fetchingMore = false;
       setSearch(input());
       setPage(0);
     });
@@ -459,7 +452,9 @@ export default function ConnectionsSection() {
 
   function handleFilterChange(f: ConnectionFilter) {
     batch(() => {
-      resetList();
+      setAllConnections([]);
+      setHasMore(true);
+      fetchingMore = false;
       setFilter(f);
       setPage(0);
     });
@@ -467,7 +462,9 @@ export default function ConnectionsSection() {
 
   function handleOrderChange(o: ConnectionOrder) {
     batch(() => {
-      resetList();
+      setAllConnections([]);
+      setHasMore(true);
+      fetchingMore = false;
       setOrder(o);
       setPage(0);
     });

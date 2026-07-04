@@ -132,7 +132,10 @@ export const editor: RawDictionary["editor"] = {
   cam_recording:    "रिकॉर्ड",
   cam_error_access: "कैमरे की अनुमति नहीं मिली या यह उपकरण पर उपलब्ध नहीं है।",
   cam_retry:        "दोबारा कोशिश करें",
+  cam_flip:         "कैमरा पलटें",
+  cam_torch:        "टॉर्च",
   cam_btn_title:    "फ़ोटो या वीडियो कैप्चर करें",
+  cam_use_native:   "डिवाइस कैमरा ऐप उपयोग करें",
   // Post summary + Poll
   post_summary_placeholder: "सारांश (वैकल्पिक)",
   poll_toggle:              "मतदान जोड़ें",

@@ -1,56 +1,185 @@
-import { createResource, For, Show } from "solid-js";
+import { createResource, createSignal, createEffect, For, Show, batch } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
-import { fetchAdminQueueworker } from "../../api";
-import { useI18n } from "@/i18n";
+import { fetchAdminQueueworker, saveQueueworkerSettings } from "../../api";
+import type { QueueworkerSettings } from "../../types";
 
 export default function QueueworkerSection() {
-  const { t } = useI18n();
-  const [jobs, { refetch }] = createResource(fetchAdminQueueworker);
+  const [data, { refetch }] = createResource(fetchAdminQueueworker);
+
+  // Settings state seeded from loaded data
+  const [settings, setSettings] = createSignal<QueueworkerSettings>({
+    max_queueworkers: 4,
+    queueworker_max_age: 300,
+    queue_worker_sleep: 100,
+    auto_queue_worker_sleep: 0,
+  });
+  const [saving, setSaving] = createSignal(false);
+  const [saved, setSaved] = createSignal(false);
+
+  createEffect(() => {
+    const d = data();
+    if (d) setSettings(d.settings);
+  });
+
+  function setSetting<K extends keyof QueueworkerSettings>(k: K, v: QueueworkerSettings[K]) {
+    setSettings((p) => ({ ...p, [k]: v }));
+  }
+
+  async function onSave() {
+    setSaving(true);
+    try {
+      await saveQueueworkerSettings(settings());
+      batch(() => { setSaving(false); setSaved(true); });
+      setTimeout(() => setSaved(false), 2000);
+      refetch();
+    } catch { setSaving(false); }
+  }
 
   return (
-    <SubPageContent title={t("admin.queueworker_title")} description={t("admin.queueworker_desc")}>
-      <Show when={jobs()} fallback={<Skeleton />}>
-        {(list) => (
-          <div class="space-y-3">
-            <div class="flex items-center justify-between">
-              <p class="text-sm text-muted">{list().length} {t("admin.jobs")}</p>
-              <button
-                onClick={refetch}
-                class="px-3 py-1.5 text-xs rounded-lg border border-rim text-txt hover:bg-elevated transition-colors"
-              >
-                {t("admin.refresh")}
-              </button>
+    <SubPageContent
+      title="Queue Worker"
+      description="Monitor queue status and configure worker settings."
+      action={
+        <button
+          onClick={refetch}
+          class="px-3 py-1.5 text-xs rounded-lg border border-rim text-txt hover:bg-elevated transition-colors"
+        >
+          Refresh
+        </button>
+      }
+    >
+      <Show when={data()} fallback={<Skeleton />}>
+        {(d) => (
+          <div class="space-y-6">
+            {/* Status cards */}
+            <div class="grid grid-cols-2 gap-3">
+              <StatCard
+                label="Queue items"
+                value={d().total}
+                accent={d().total > 0}
+              />
+              <StatCard
+                label="Active workers"
+                value={d().active_workers}
+                accent={d().active_workers > 0}
+              />
             </div>
 
-            <Show when={list().length === 0}>
-              <p class="text-sm text-muted py-4 text-center">{t("admin.no_jobs")}</p>
+            {/* Work items by command */}
+            <Show when={d().by_command.length > 0}>
+              <div class="space-y-2">
+                <p class="text-xs font-semibold text-muted uppercase tracking-wider">By command</p>
+                <div class="rounded-lg border border-rim overflow-hidden divide-y divide-rim">
+                  <For each={d().by_command}>
+                    {(row) => (
+                      <div class="flex items-center justify-between px-3 py-2 hover:bg-elevated/50 transition-colors">
+                        <span class="text-sm font-mono text-txt truncate">{row.cmd || "—"}</span>
+                        <span class="text-xs text-muted shrink-0 ml-4">{row.total}</span>
+                      </div>
+                    )}
+                  </For>
+                </div>
+              </div>
             </Show>
 
-            <Show when={list().length > 0}>
-              <div class="rounded-lg border border-rim overflow-x-auto">
-                <table class="w-full text-xs">
-                  <thead>
-                    <tr class="border-b border-rim bg-elevated">
-                      <th class="px-3 py-2 text-left font-medium text-muted">{t("admin.col_id")}</th>
-                      <th class="px-3 py-2 text-left font-medium text-muted">{t("admin.col_priority")}</th>
-                      <th class="px-3 py-2 text-left font-medium text-muted hidden sm:table-cell">{t("admin.col_created")}</th>
-                      <th class="px-3 py-2 text-left font-medium text-muted hidden md:table-cell">{t("admin.col_command")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <For each={list()}>
-                      {(job) => (
-                        <tr class="border-b border-rim last:border-0 hover:bg-elevated/50 transition-colors">
-                          <td class="px-3 py-2 text-txt font-mono">{job.id}</td>
-                          <td class="px-3 py-2 text-muted">{job.priority}</td>
-                          <td class="px-3 py-2 text-muted hidden sm:table-cell">{new Date(job.created).toLocaleString()}</td>
-                          <td class="px-3 py-2 text-muted hidden md:table-cell truncate max-w-[16rem]">{job.argv}</td>
-                        </tr>
-                      )}
-                    </For>
-                  </tbody>
-                </table>
+            {/* Settings form */}
+            <div class="rounded-lg border border-rim bg-surface p-4 space-y-4">
+              <p class="text-sm font-semibold text-txt">Worker Settings</p>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <NumberField
+                  label="Max worker threads"
+                  hint="Minimum 4"
+                  value={settings().max_queueworkers}
+                  min={4}
+                  onChange={(v) => setSetting("max_queueworkers", v)}
+                />
+                <NumberField
+                  label="Assume workers dead after"
+                  hint="Minimum 120 seconds"
+                  value={settings().queueworker_max_age}
+                  min={120}
+                  onChange={(v) => setSetting("queueworker_max_age", v)}
+                />
+                <NumberField
+                  label="Pause before next task"
+                  hint="Minimum 100 microseconds"
+                  value={settings().queue_worker_sleep}
+                  min={100}
+                  disabled={settings().auto_queue_worker_sleep === 1}
+                  onChange={(v) => setSetting("queue_worker_sleep", v)}
+                />
+                <label class="flex items-start gap-2.5 cursor-pointer select-none pt-5">
+                  <input
+                    type="checkbox"
+                    checked={settings().auto_queue_worker_sleep === 1}
+                    onChange={(e) => setSetting("auto_queue_worker_sleep", e.currentTarget.checked ? 1 : 0)}
+                    class="mt-0.5 h-4 w-4 rounded border-rim accent-[var(--color-accent)]"
+                  />
+                  <div>
+                    <p class="text-sm text-txt">Auto-adjust pause</p>
+                    <p class="text-xs text-muted">Automatically tune the inter-task delay</p>
+                  </div>
+                </label>
               </div>
+
+              <div class="flex items-center gap-3 justify-end pt-1">
+                <Show when={saved()}>
+                  <span class="text-xs text-green-600 dark:text-green-400">Saved</span>
+                </Show>
+                <button
+                  onClick={onSave}
+                  disabled={saving()}
+                  class="px-4 py-1.5 text-sm rounded-lg bg-accent text-accent-fg
+                         hover:opacity-90 disabled:opacity-50 transition-opacity"
+                >
+                  {saving() ? "Saving…" : "Save settings"}
+                </button>
+              </div>
+            </div>
+
+            {/* Jobs table */}
+            <Show when={d().jobs.length > 0}>
+              <div class="space-y-2">
+                <p class="text-xs font-semibold text-muted uppercase tracking-wider">
+                  Queued jobs ({d().jobs.length})
+                </p>
+                <div class="rounded-lg border border-rim overflow-x-auto">
+                  <table class="w-full text-xs">
+                    <thead>
+                      <tr class="border-b border-rim bg-elevated">
+                        <th class="px-3 py-2 text-left font-medium text-muted">ID</th>
+                        <th class="px-3 py-2 text-left font-medium text-muted">Command</th>
+                        <th class="px-3 py-2 text-left font-medium text-muted">Priority</th>
+                        <th class="px-3 py-2 text-left font-medium text-muted hidden sm:table-cell">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <For each={d().jobs}>
+                        {(job) => (
+                          <tr class="border-b border-rim last:border-0 hover:bg-elevated/50 transition-colors">
+                            <td class="px-3 py-2 font-mono text-muted">{job.id}</td>
+                            <td class="px-3 py-2 font-mono text-txt truncate max-w-[10rem]">{job.cmd || "—"}</td>
+                            <td class="px-3 py-2 text-muted">{job.priority}</td>
+                            <td class="px-3 py-2 hidden sm:table-cell">
+                              <Show
+                                when={job.reservation_id}
+                                fallback={<span class="text-muted">queued</span>}
+                              >
+                                <span class="text-amber-600 dark:text-amber-400">active</span>
+                              </Show>
+                            </td>
+                          </tr>
+                        )}
+                      </For>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </Show>
+
+            <Show when={d().total === 0}>
+              <p class="text-sm text-muted text-center py-4">Queue is empty.</p>
             </Show>
           </div>
         )}
@@ -59,15 +188,51 @@ export default function QueueworkerSection() {
   );
 }
 
+function StatCard(props: { label: string; value: number; accent?: boolean }) {
+  return (
+    <div class={`rounded-lg border p-4 text-center ${props.accent && props.value > 0 ? "border-accent/40 bg-accent/5" : "border-rim bg-surface"}`}>
+      <p class={`text-2xl font-bold ${props.accent && props.value > 0 ? "text-accent" : "text-txt"}`}>
+        {props.value}
+      </p>
+      <p class="text-xs text-muted mt-1">{props.label}</p>
+    </div>
+  );
+}
+
+function NumberField(props: {
+  label: string;
+  hint: string;
+  value: number;
+  min: number;
+  disabled?: boolean;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div class="space-y-1">
+      <label class="text-xs font-medium text-muted">{props.label}</label>
+      <input
+        type="number"
+        value={props.value}
+        min={props.min}
+        disabled={props.disabled}
+        onInput={(e) => props.onChange(parseInt(e.currentTarget.value) || props.min)}
+        class="w-full px-3 py-1.5 text-sm rounded-lg border border-rim bg-surface text-txt
+               focus:outline-none focus:border-accent disabled:opacity-50 disabled:cursor-not-allowed"
+      />
+      <p class="text-xs text-muted">{props.hint}</p>
+    </div>
+  );
+}
+
 function Skeleton() {
   return (
-    <div class="space-y-2 animate-pulse">
-      <div class="h-4 w-24 rounded bg-elevated" />
-      <div class="rounded-lg border border-rim overflow-hidden">
-        {Array.from({ length: 4 }, () => (
-          <div class="h-8 border-b border-rim bg-elevated/30 last:border-0" />
-        ))}
+    <div class="space-y-4 animate-pulse">
+      <div class="grid grid-cols-2 gap-3">
+        <div class="h-20 rounded-lg border border-rim bg-elevated/30" />
+        <div class="h-20 rounded-lg border border-rim bg-elevated/30" />
       </div>
+      <div class="h-32 rounded-lg border border-rim bg-elevated/30" />
+      <div class="h-48 rounded-lg border border-rim bg-elevated/30" />
     </div>
   );
 }

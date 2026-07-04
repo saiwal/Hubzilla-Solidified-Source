@@ -1,8 +1,16 @@
-import { createResource, createSignal, createMemo, For, Show } from "solid-js";
+import { createResource, createSignal, createMemo, createEffect, For, Show, batch } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
-import { fetchAdminLogs } from "../../api";
+import { fetchAdminLogs, saveLogSettings } from "../../api";
 import type { LogEntry, LogLevel } from "../../types";
 import { useI18n } from "@/i18n";
+
+const LOG_LEVELS: { label: string; value: number }[] = [
+  { label: "Normal",  value: 0 },
+  { label: "Trace",   value: 1 },
+  { label: "Debug",   value: 2 },
+  { label: "Data",    value: 3 },
+  { label: "All",     value: 4 },
+];
 
 // ── Level metadata ────────────────────────────────────────────────────────────
 
@@ -85,6 +93,31 @@ export default function LogsSection() {
   const [levelFilter, setLevelFilter] = createSignal<Severity | "all">("all");
   const [expandedIds, setExpandedIds] = createSignal<Set<number>>(new Set());
 
+  // Settings state — seeded from loaded data
+  const [debugging, setDebugging] = createSignal(false);
+  const [logfile, setLogfile] = createSignal("");
+  const [loglevel, setLoglevel] = createSignal(0);
+  const [settingsSaving, setSettingsSaving] = createSignal(false);
+  const [settingsSaved, setSettingsSaved] = createSignal(false);
+
+  createEffect(() => {
+    const d = data();
+    if (!d) return;
+    setDebugging(d.debugging);
+    setLogfile(d.logfile ?? "");
+    setLoglevel(d.loglevel);
+  });
+
+  async function onSaveSettings() {
+    setSettingsSaving(true);
+    try {
+      await saveLogSettings({ debugging: debugging(), logfile: logfile(), loglevel: loglevel() });
+      batch(() => { setSettingsSaving(false); setSettingsSaved(true); });
+      setTimeout(() => setSettingsSaved(false), 2000);
+      refetch();
+    } catch { setSettingsSaving(false); }
+  }
+
   const counts = createMemo(() => {
     const entries = data()?.entries ?? [];
     const c: Record<Severity | "all", number> = { all: entries.length, error: 0, warning: 0, info: 0, debug: 0, other: 0 };
@@ -130,17 +163,71 @@ export default function LogsSection() {
       <Show when={data()} fallback={<Skeleton />}>
         {(d) => (
           <div class="space-y-4">
-            {/* Logfile path */}
-            <Show when={d().logfile} fallback={
-              <div class="rounded-lg border border-rim bg-elevated/40 px-4 py-3 text-sm text-muted">
-                {t("admin.no_logfile")}
+            {/* Log settings panel */}
+            <div class="rounded-lg border border-rim bg-surface p-4 space-y-3">
+              <div class="flex items-center justify-between gap-4 flex-wrap">
+                {/* Debugging toggle */}
+                <label class="flex items-center gap-3 cursor-pointer select-none">
+                  <button
+                    role="switch"
+                    aria-checked={debugging()}
+                    onClick={() => setDebugging((v) => !v)}
+                    class={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors
+                      ${debugging() ? "bg-accent" : "bg-rim"}`}
+                  >
+                    <span class={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform
+                      ${debugging() ? "translate-x-6" : "translate-x-1"}`} />
+                  </button>
+                  <div>
+                    <p class="text-sm font-medium text-txt">Debugging</p>
+                    <p class="text-xs text-muted">{debugging() ? "Logging enabled" : "Logging disabled"}</p>
+                  </div>
+                </label>
+
+                {/* Log level */}
+                <div class="flex items-center gap-2">
+                  <label class="text-xs text-muted whitespace-nowrap">Log level</label>
+                  <select
+                    value={loglevel()}
+                    onChange={(e) => setLoglevel(parseInt(e.currentTarget.value))}
+                    disabled={!debugging()}
+                    class="px-2 py-1 text-xs rounded border border-rim bg-surface text-txt
+                           focus:outline-none focus:border-accent disabled:opacity-50"
+                  >
+                    <For each={LOG_LEVELS}>
+                      {({ label, value }) => <option value={value}>{label}</option>}
+                    </For>
+                  </select>
+                </div>
               </div>
-            }>
-              <div class="flex items-center gap-2 text-xs text-muted">
-                <span class="font-medium">{t("admin.logfile_label")}</span>
-                <code class="font-mono">{d().logfile}</code>
+
+              {/* Logfile path */}
+              <div class="flex items-center gap-2">
+                <label class="text-xs text-muted whitespace-nowrap shrink-0">Log file</label>
+                <input
+                  type="text"
+                  value={logfile()}
+                  onInput={(e) => setLogfile(e.currentTarget.value)}
+                  placeholder="e.g. log/hub.log"
+                  class="flex-1 min-w-0 px-2 py-1 text-xs rounded border border-rim bg-surface text-txt
+                         placeholder:text-muted focus:outline-none focus:border-accent font-mono"
+                />
               </div>
-            </Show>
+
+              <div class="flex items-center gap-3 justify-end">
+                <Show when={settingsSaved()}>
+                  <span class="text-xs text-green-600 dark:text-green-400">Saved</span>
+                </Show>
+                <button
+                  onClick={onSaveSettings}
+                  disabled={settingsSaving()}
+                  class="px-3 py-1.5 text-xs rounded-lg bg-accent text-accent-fg
+                         hover:opacity-90 disabled:opacity-50 transition-opacity"
+                >
+                  {settingsSaving() ? "Saving…" : "Save settings"}
+                </button>
+              </div>
+            </div>
 
             {/* Level filter pills */}
             <div class="flex items-center gap-1.5 flex-wrap">

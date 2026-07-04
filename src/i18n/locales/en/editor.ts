@@ -141,7 +141,10 @@ export const editor = {
   cam_recording:    "REC",
   cam_error_access: "Camera access was denied or is unavailable on this device.",
   cam_retry:        "Try again",
+  cam_flip:         "Flip camera",
+  cam_torch:        "Torch",
   cam_btn_title:    "Capture photo or video",
+  cam_use_native:   "Use device camera app",
   // Post summary + Poll
   post_summary_placeholder: "Summary (optional)",
   poll_toggle:              "Add poll",

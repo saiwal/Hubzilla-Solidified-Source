@@ -17,26 +17,73 @@ export interface AdminSummary {
 // ── Site ──────────────────────────────────────────────────────────────────────
 
 export interface AdminSite {
+  // Basic identity
   sitename: string;
   banner: string;
   admininfo: string;
   siteinfo: string;
+  site_location: string;
+
+  // Registration
   register_policy: number;
   access_policy: number;
   max_daily_registrations: number;
+  register_text: string;
+  minimum_age: number;
+  verify_email: boolean;
+  register_wo_email: boolean;
+  register_sameip: number;
+  auto_channel_create: boolean;
+  invitation_only: boolean;
+  invitation_also: boolean;
   abandon_days: number;
+
+  // Content & visibility
   login_on_homepage: boolean;
   disable_discover_tab: boolean;
   site_firehose: boolean;
   open_pubstream: boolean;
+  publish_all: boolean;
+  no_community_page: boolean;
+  frontpage: string;
+  site_sellpage: string;
+  first_page: string;
+  mirror_frontpage: boolean;
+  allowed_sites: string;
+  pubstream_incl: string;
+  pubstream_excl: string;
+
+  // Defaults
   language: string;
   theme: string;
+  default_permissions_role: string;
+
+  // Email
   directory_server: string;
   from_email: string;
   from_email_name: string;
   reply_address: string;
+
+  // Upload limits
   maximagesize: number;
-  site_location: string;
+
+  // Behavior
+  enable_context_help: boolean;
+  sse_enabled: boolean;
+  feed_contacts: boolean;
+
+  // Advanced / technical
+  verifyssl: boolean;
+  proxyuser: string;
+  proxy: string;
+  curl_timeout: number;
+  delivery_interval: number;
+  delivery_batch_count: number;
+  poll_interval: number;
+  imagick_path: string;
+  maxloadavg: number;
+  default_expire_days: number;
+  active_expire_days: number;
 }
 
 // ── Accounts ──────────────────────────────────────────────────────────────────
@@ -52,6 +99,18 @@ export interface AdminAccount {
   channels: string;
 }
 
+export interface AdminPendingAccount {
+  reg_id: number;
+  reg_hash: string;
+  reg_email: string;
+  reg_created: string;
+  reg_expires: string;
+  reg_atip: string;
+  msg: string;
+  unverified: boolean;
+  expired: boolean;
+}
+
 // ── Channels ──────────────────────────────────────────────────────────────────
 
 export interface AdminChannel {
@@ -60,6 +119,9 @@ export interface AdminChannel {
   channel_address: string;
   channel_created: string;
   channel_lastpost: string;
+  channel_account_id: number;
+  blocked: boolean;
+  allowcode: boolean;
 }
 
 // ── Security ──────────────────────────────────────────────────────────────────
@@ -123,6 +185,23 @@ export interface AdminTheme {
   mobile: boolean;
   experimental: boolean;
   current: boolean;
+  allowed: boolean;
+  has_config: boolean;
+}
+
+export interface ThemeField {
+  key: string;
+  type: "color" | "text" | "bool" | "select";
+  label: string;
+  hint?: string;
+  group: string;
+  value: string;
+  options?: Record<string, string>;
+}
+
+export interface ThemeOptions {
+  theme: string;
+  fields: ThemeField[];
 }
 
 // ── Queue ─────────────────────────────────────────────────────────────────────
@@ -147,17 +226,41 @@ export interface AdminQueue {
 export interface WorkerJob {
   id: number;
   priority: number;
-  created: string;
-  pid: number;
-  argc: number;
-  argv: string;
+  cmd: string;
+  reservation_id: string | null;
+  timeout: string;
+}
+
+export interface QueueworkerSettings {
+  max_queueworkers: number;
+  queueworker_max_age: number;
+  queue_worker_sleep: number;
+  auto_queue_worker_sleep: number;
+}
+
+export interface AdminQueueworker {
+  total: number;
+  active_workers: number;
+  by_command: { cmd: string; total: number }[];
+  jobs: WorkerJob[];
+  settings: QueueworkerSettings;
 }
 
 // ── Profile fields ────────────────────────────────────────────────────────────
 
-export interface ProfileField {
+export interface ProfdefField {
   id: number;
-  [key: string]: unknown;
+  field_name: string;
+  field_type: string;
+  field_desc: string;
+  field_help: string;
+}
+
+export interface AdminProfileFields {
+  basic: string;
+  advanced: string;
+  all_available: string[];
+  custom_fields: ProfdefField[];
 }
 
 // ── DB updates ────────────────────────────────────────────────────────────────
@@ -186,5 +289,7 @@ export interface LogEntry {
 
 export interface AdminLogs {
   logfile: string | null;
+  debugging: boolean;
+  loglevel: number;
   entries: LogEntry[];
 }

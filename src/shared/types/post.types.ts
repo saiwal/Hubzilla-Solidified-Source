@@ -45,7 +45,6 @@ export interface Post {
   authorAddress?: string;
   authorNetwork?: string;
   via?: { name: string; address: string; url: string; avatar: string };
-  wallPost?: boolean;
   created: string;
   commented?: string;
   edited?: string;

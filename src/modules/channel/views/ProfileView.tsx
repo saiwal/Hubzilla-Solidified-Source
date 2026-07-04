@@ -1,5 +1,5 @@
 // src/modules/channel/views/ProfileView.tsx
-import { createResource, Show, For } from "solid-js";
+import { createResource, createSignal, Show, For } from "solid-js";
 import { useParams, A } from "@solidjs/router";
 import { useViewerRole } from "@/shared/store/site-config";
 import { MdFillLocation_on, MdFillPublic } from "solid-icons/md";
@@ -9,6 +9,7 @@ import { useI18n } from "@/i18n";
 type ChannelProfile = {
   channel_name: string;
   channel_address: string;
+  xchan_addr: string;
   channel_photo_l: string;
   channel_cover: string;
   pdesc: string;
@@ -76,6 +77,45 @@ export default function ProfileView(props: { full?: boolean }) {
   );
 }
 
+// ─── Copy-to-clipboard address badge ────────────────────────────────────────
+
+function AddressRow(props: { address: string }) {
+  const [copied, setCopied] = createSignal(false);
+
+  function copy() {
+    navigator.clipboard.writeText(props.address).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }
+
+  return (
+    <span class="inline-flex items-center gap-1 text-sm text-muted">
+      <span>@{props.address}</span>
+      <button
+        onClick={copy}
+        title="Copy address"
+        class="p-0.5 rounded hover:bg-overlay transition-colors text-muted hover:text-txt"
+        aria-label="Copy address to clipboard"
+      >
+        <Show
+          when={copied()}
+          fallback={
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+          }
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-accent">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </Show>
+      </button>
+    </span>
+  );
+}
+
 // ─── Shared header (cover + avatar + name + connect) ────────────────────────
 
 function ProfileHeader(props: {
@@ -114,7 +154,7 @@ function ProfileHeader(props: {
       <div class="pt-12 px-5 flex items-start justify-between gap-3">
         <div>
           <h1 class="text-lg font-bold leading-tight text-txt">{p.channel_name}</h1>
-          <p class="text-sm text-muted">@{p.channel_address}</p>
+          <AddressRow address={p.xchan_addr || p.channel_address} />
           <Show when={p.pdesc}>
             <p class="text-xs text-muted mt-0.5 italic">{p.pdesc}</p>
           </Show>
