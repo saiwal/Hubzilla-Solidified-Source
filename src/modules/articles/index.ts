@@ -2,20 +2,6 @@ import { registerModule } from "@/shared/lib/module-registry";
 import { useI18n } from "@/i18n";
 import { usePageNick } from "@/shared/store/site-config";
 
-const popularLoader = () =>
-  import("./widgets/ArticleWidgets").then((m) => ({
-    default: m.ArticlePopularWidget,
-  }));
-const categoryLoader = () =>
-  import("./widgets/ArticleWidgets").then((m) => ({
-    default: m.ArticleCategoryWidget,
-  }));
-const tagLoader = () =>
-  import("./widgets/ArticleWidgets").then((m) => ({
-    default: m.ArticleTagWidget,
-  }));
-const draftsLoader = () => import("./widgets/ArticleDraftsWidget");
-
 registerModule({
   id: "articles",
   routes: [
@@ -37,9 +23,33 @@ registerModule({
     context: "all",
     hidden: false,
   },
-  slots: {
-    right: [draftsLoader, popularLoader, categoryLoader, tagLoader],
-  },
+  widgets: [
+    {
+      id: "articles.drafts",
+      label: () => useI18n().t("widgets.article_drafts"),
+      loader: () => import("./widgets/ArticleDraftsWidget"),
+      slot: "right",
+      visitorVisible: false,
+    },
+    {
+      id: "articles.popular",
+      label: () => useI18n().t("widgets.popular_articles"),
+      loader: () => import("./widgets/ArticleWidgets").then((m) => ({ default: m.ArticlePopularWidget })),
+      slot: "right",
+    },
+    {
+      id: "articles.categories",
+      label: () => useI18n().t("widgets.article_categories"),
+      loader: () => import("./widgets/ArticleWidgets").then((m) => ({ default: m.ArticleCategoryWidget })),
+      slot: "right",
+    },
+    {
+      id: "articles.tags",
+      label: () => useI18n().t("widgets.article_tags"),
+      loader: () => import("./widgets/ArticleWidgets").then((m) => ({ default: m.ArticleTagWidget })),
+      slot: "right",
+    },
+  ],
   permissions: [],
   appName: "Articles",
 });

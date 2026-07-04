@@ -19,6 +19,30 @@ export interface NavItemDef {
 
 type SlotLoader = () => Promise<{ default: Component }>;
 
+export type WidgetSlotName = "right" | "leftBottom" | "mainTop" | "rightVisitor";
+
+export interface WidgetDef {
+  /** Stable identifier, persisted in user layouts — never rename once shipped. Convention: "<moduleId>.<name>". */
+  id: string;
+  /** Human-readable name for the widget picker UI. */
+  label: string | (() => string);
+  loader: SlotLoader;
+  slot: WidgetSlotName;
+  /** Module ids where the widget appears out of the box. Defaults to the registering module. */
+  defaultModules?: string[];
+  /** Module ids where the widget can be placed by the user, or "any". Defaults to defaultModules. */
+  contexts?: string[] | "any";
+  /** Always mounted regardless of active module; never torn down on navigation. */
+  global?: boolean;
+  /**
+   * false = only rendered for authenticated local users. Set on widgets that
+   * show viewer-private data (drafts, bookmarks) so visitors to public pages
+   * never mount them. Default true.
+   */
+  visitorVisible?: boolean;
+}
+
+/** @deprecated Use ModuleDef.widgets instead. Ignored by the registry. */
 export interface SlotsDef {
   right?: SlotLoader | SlotLoader[];
   leftBottom?: SlotLoader | SlotLoader[];
@@ -31,7 +55,9 @@ export interface ModuleDef {
   id: string;
   routes: RouteDef[];
   navItem?: NavItemDef;
+  /** @deprecated Use widgets instead. Ignored by the registry. */
   slots?: SlotsDef;
+  widgets?: WidgetDef[];
   permissions?: string[];
   /** Hubzilla app name (e.g. "Photos"). If set, module only renders when this app is installed. */
   appName?: string;

@@ -1,26 +1,25 @@
 import { createSignal, type Component, lazy } from "solid-js";
-import type { ModuleDef, RouteDef, NavItemDef, SlotsDef } from "@/shared/types/module.types";
+import type { ModuleDef, RouteDef, NavItemDef, WidgetDef, WidgetSlotName } from "@/shared/types/module.types";
 
 type SlotLoader = () => Promise<{ default: Component }>;
 
+// Widget as stored in the registry: defaults resolved, owning module recorded
+export interface RegisteredWidget extends WidgetDef {
+  moduleId: string;
+  defaultModules: string[];
+}
+
 const modules = new Map<string, ModuleDef>();
+const widgets = new Map<string, RegisteredWidget>();
 const [navItems, setNavItems] = createSignal<NavItemDef[]>([]);
 const [routes, setRoutes] = createSignal<RouteDef[]>([]);
-const [globalVersion, setGlobalVersion] = createSignal(0);
+const [widgetVersion, setWidgetVersion] = createSignal(0);
 
 // Lazy component cache — prevents remounting when memos recompute
 const lazyCache = new WeakMap<SlotLoader, Component>();
 export function getLazy(loader: SlotLoader): Component {
   if (!lazyCache.has(loader)) lazyCache.set(loader, lazy(loader));
   return lazyCache.get(loader)!;
-}
-
-// Global loaders collected once at registration time, deduped by reference
-const globalLoaders = new Map<keyof SlotsDef, Set<SlotLoader>>();
-
-export function globalSlot(loader: SlotLoader): SlotLoader {
-  (loader as any).__global = true;
-  return loader;
 }
 
 export function registerModule(def: ModuleDef) {
@@ -30,19 +29,23 @@ export function registerModule(def: ModuleDef) {
   }
   modules.set(def.id, def);
 
-  // Collect global loaders at registration — Set deduplicates by reference
-  if (def.slots) {
-    for (const [slot, entry] of Object.entries(def.slots)) {
-      const loaders = Array.isArray(entry) ? entry : [entry];
-      for (const l of loaders as SlotLoader[]) {
-        if ((l as any).__global) {
-          const key = slot as keyof SlotsDef;
-          if (!globalLoaders.has(key)) globalLoaders.set(key, new Set());
-          globalLoaders.get(key)!.add(l);
-          setGlobalVersion((v) => v + 1);
-        }
+  if (def.slots && Object.values(def.slots).some((e) => (Array.isArray(e) ? e.length > 0 : !!e))) {
+    console.warn(`Module "${def.id}" uses deprecated "slots" — migrate to "widgets" (entries are ignored)`);
+  }
+
+  if (def.widgets) {
+    for (const w of def.widgets) {
+      if (widgets.has(w.id)) {
+        console.warn(`Widget "${w.id}" already registered`);
+        continue;
       }
+      widgets.set(w.id, {
+        ...w,
+        moduleId: def.id,
+        defaultModules: w.defaultModules ?? [def.id],
+      });
     }
+    setWidgetVersion((v) => v + 1);
   }
 
   if (def.navItem) setNavItems((prev) => [...prev, def.navItem!]);
@@ -62,21 +65,35 @@ export function getModule(id: string) {
   return modules.get(id) ?? null;
 }
 
-export function getGlobalVersion() {
-  return globalVersion;
+export function getWidgetVersion() {
+  return widgetVersion;
+}
+
+export function getWidget(id: string): RegisteredWidget | null {
+  return widgets.get(id) ?? null;
+}
+
+// Registration-order list of every known widget (picker UI, layout validation)
+export function getAllWidgets(): RegisteredWidget[] {
+  return [...widgets.values()];
 }
 
 // Global widgets — always mounted, never torn down
-export function resolveGlobalSlots(slot: keyof SlotsDef): SlotLoader[] {
-  return [...(globalLoaders.get(slot) ?? [])];
+export function resolveGlobalSlots(slot: WidgetSlotName): RegisteredWidget[] {
+  return [...widgets.values()].filter((w) => w.global && w.slot === slot);
 }
 
 // Module-local widgets — swapped on navigation, globals excluded
-export function resolveModuleSlot(slot: keyof SlotsDef, moduleId: string): SlotLoader[] {
-  const entry = modules.get(moduleId)?.slots?.[slot];
-  if (!entry) return [];
-  const loaders = Array.isArray(entry) ? entry : [entry];
-  return (loaders as SlotLoader[]).filter((l) => !(l as any).__global);
+export function resolveModuleSlot(slot: WidgetSlotName, moduleId: string): RegisteredWidget[] {
+  return [...widgets.values()].filter(
+    (w) => !w.global && w.slot === slot && w.defaultModules.includes(moduleId),
+  );
+}
+
+// Whether a user may place the widget on the given module's pages
+export function widgetAllowedIn(w: RegisteredWidget, moduleId: string): boolean {
+  const contexts = w.contexts ?? w.defaultModules;
+  return contexts === "any" || contexts.includes(moduleId);
 }
 
 // Returns false when the module has an appName that isn't in the installed set.
@@ -96,15 +113,6 @@ export function getSpaExclusiveNavItems(): NavItemDef[] {
     if (!mod.appName && mod.navItem) result.push(mod.navItem);
   }
   return result;
-}
-
-// Keep for any existing call sites
-export function resolveSlot(slot: keyof SlotsDef, moduleId?: string) {
-  if (moduleId) return modules.get(moduleId)?.slots?.[slot] ?? null;
-  for (const mod of modules.values()) {
-    if (mod.slots?.[slot]) return mod.slots[slot];
-  }
-  return null;
 }
 
 // Resolve the module ID for a given pathname by matching against registered

@@ -16,8 +16,13 @@ registerModule({
     href: () => `/cart/${usePageNick()()}`,
 		context: "all",
   },
-  slots: {
-    right: () => import('./widgets/CartWidget'),
-  },
+  widgets: [
+    {
+      id: "cart.cart",
+      label: () => useI18n().t("widgets.shopping_cart"),
+      loader: () => import("./widgets/CartWidget"),
+      slot: "right",
+    },
+  ],
   permissions: [],
 });

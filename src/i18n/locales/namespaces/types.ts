@@ -308,6 +308,30 @@ export type RawDictionary = {
     no_archive:     string;
     connections:    string;
     view_all:       string;
+    // Widget labels (picker / edit mode)
+    notifications:      string;
+    pinned_chat:        string;
+    stream_filters:     string;
+    saved_searches:     string;
+    article_drafts:     string;
+    popular_articles:   string;
+    article_categories: string;
+    article_tags:       string;
+    calendar:           string;
+    shopping_cart:      string;
+    photo_albums:       string;
+    bookmarked_rooms:   string;
+    // Layout edit mode UI
+    edit_layout:   string;
+    done_editing:  string;
+    add_widget:    string;
+    remove_widget: string;
+    move_up:       string;
+    move_down:     string;
+    reset_layout:  string;
+    empty_slot:    string;
+    none_to_add:   string;
+    save_failed:   string;
   };
   tools: {
     label:            string;

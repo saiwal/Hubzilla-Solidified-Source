@@ -13,14 +13,7 @@ registerModule({
     context: "all",
     hidden: true,
   },
-  slots: {
-    right: [
-      () => import("@/shared/widgets/channelconnections"),
-      () => import("@/modules/channel/widgets/ChannelPostWidgets").then((m) => ({ default: m.ChannelPopularWidget })),
-      () => import("@/modules/channel/widgets/ChannelPostWidgets").then((m) => ({ default: m.ChannelCategoryWidget })),
-      () => import("@/modules/channel/widgets/ChannelPostWidgets").then((m) => ({ default: m.ChannelTagWidget })),
-      () => import("@/modules/channel/widgets/ChannelPostWidgets").then((m) => ({ default: m.ChannelArchiveWidget })),
-    ],
-  },
+  // Sidebar widgets come from the channel module — its widgets list
+  // "profile" in their defaultModules.
   permissions: [],
 });

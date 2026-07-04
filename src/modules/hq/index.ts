@@ -1,6 +1,6 @@
 import { registerModule } from "@/shared/lib/module-registry";
 import { useI18n } from "@/i18n";
-import { notificationSlot, pinnedChatSlot } from "@/shared/slots";
+import { notificationsWidget, pinnedChatWidget } from "@/shared/slots";
 
 registerModule({
   id: "hq",
@@ -12,11 +12,7 @@ registerModule({
     href: "/hq",
     context: "owner",
   },
-  slots: {
-    right: [
-      notificationSlot,
-      pinnedChatSlot,
-    ],
-  },
+  // Both are global: mounted on every page, not just /hq
+  widgets: [notificationsWidget, pinnedChatWidget],
   permissions: [],
 });

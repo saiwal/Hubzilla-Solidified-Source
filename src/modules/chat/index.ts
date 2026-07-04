@@ -26,11 +26,15 @@ registerModule({
     context: "all", // only shown in channel context
     // hidden: true,       // excluded from main nav; shown via channel_tabs
   },
-  slots: {
-    right: [
-      () => import("./widgets/BookmarkedRoomsWidget"),
-    ],
-  },
+  widgets: [
+    {
+      id: "chat.bookmarkedRooms",
+      label: () => useI18n().t("widgets.bookmarked_rooms"),
+      loader: () => import("./widgets/BookmarkedRoomsWidget"),
+      slot: "right",
+      visitorVisible: false,
+    },
+  ],
   permissions: [],
   appName: "Chatrooms",
 });

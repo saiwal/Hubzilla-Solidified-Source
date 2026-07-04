@@ -14,7 +14,10 @@ import {
   MdFillChevron_right,
   MdFillMore_horiz,
   MdFillApps,
+  MdFillCheck,
+  MdOutlineEdit,
 } from "solid-icons/md";
+import { editingWidgets, setEditingWidgets } from "@/shared/store/widget-layout";
 import { useOnlineStatus } from "./shared/lib/useOnlineStatus";
 import NavUtilities from "./shared/views/NavUtilities";
 import { notifCount } from "@/shared/lib/notificationCount";
@@ -120,6 +123,12 @@ const Layout: ParentComponent = (props) => {
   const isOwner = () => viewerRole() === "owner";
   const isLocalUser = () =>
     viewerRole() === "owner" || viewerRole() === "local";
+
+  // Widget editing targets your own layout — leave edit mode when the page
+  // stops being yours (e.g. navigating to someone else's channel).
+  createEffect(() => {
+    if (!isOwner()) setEditingWidgets(false);
+  });
 
   const isMedium = createMediaQuery("(min-width: 768px)");
   const bottomLimit = () => (isMedium() ? 8 : 4);
@@ -346,27 +355,48 @@ const Layout: ParentComponent = (props) => {
             aria-hidden={!isXl() && !rightOpen()}
             tabindex="0"
             class={`
-              fixed inset-y-0 right-0 z-40 w-72 shrink-0 p-4 overflow-y-auto space-y-4
+              fixed inset-y-0 right-0 z-40 w-72 shrink-0 p-4 pb-20 lg:pb-4 overflow-y-auto space-y-4
               bg-surface border-l border-rim
               transform transition-transform duration-300 ease-in-out
               xl:relative xl:translate-x-0 xl:block
               ${rightOpen() ? "translate-x-0" : "translate-x-full"}
             `}
           >
-            <div class="flex items-center justify-between xl:hidden mb-2">
+            {/* Header: always shown on your own pages (hosts the widget-edit
+                toggle); otherwise only on the mobile drawer */}
+            <div class={`flex items-center justify-between mb-2 ${isOwner() ? "" : "xl:hidden"}`}>
               <span class="text-[10px] font-semibold uppercase tracking-widest text-muted">
                 {t("layout.panel")}
               </span>
-              <button
-                ref={rightCloseRef}
-                onClick={() => setRightOpen(false)}
-                aria-label="Close sidebar"
-                class="p-1 rounded-lg hover:bg-elevated transition"
-              >
-                <MdFillClose size={18} />
-              </button>
+              <div class="flex items-center gap-1">
+                <Show when={isOwner()}>
+                  <button
+                    onClick={() => setEditingWidgets(!editingWidgets())}
+                    aria-pressed={editingWidgets()}
+                    aria-label={editingWidgets() ? t("widgets.done_editing") : t("widgets.edit_layout")}
+                    title={editingWidgets() ? t("widgets.done_editing") : t("widgets.edit_layout")}
+                    class={`p-1 rounded-lg transition ${
+                      editingWidgets()
+                        ? "bg-accent text-accent-fg"
+                        : "text-muted hover:text-txt hover:bg-elevated"
+                    }`}
+                  >
+                    <Show when={editingWidgets()} fallback={<MdOutlineEdit size={16} />}>
+                      <MdFillCheck size={16} />
+                    </Show>
+                  </button>
+                </Show>
+                <button
+                  ref={rightCloseRef}
+                  onClick={() => setRightOpen(false)}
+                  aria-label="Close sidebar"
+                  class="p-1 rounded-lg hover:bg-elevated transition xl:hidden"
+                >
+                  <MdFillClose size={18} />
+                </button>
+              </div>
             </div>
-            <Slot name="right" moduleId={activeModuleId()} />
+            <Slot name="right" moduleId={activeModuleId()} editable />
             <Show when={!isLocalUser()}>
               <Slot name="rightVisitor" moduleId={activeModuleId()} />
             </Show>

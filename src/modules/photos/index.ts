@@ -24,9 +24,14 @@ registerModule({
     href: () => `/photos/${usePageNick()()}`,
     context: "all",
   },
-  slots: {
-    right: () => import('./widgets/PhotosWidget'),
-  },
+  widgets: [
+    {
+      id: "photos.albums",
+      label: () => useI18n().t("widgets.photo_albums"),
+      loader: () => import("./widgets/PhotosWidget"),
+      slot: "right",
+    },
+  ],
   permissions: [],
   appName: "Photos",
 });

@@ -2,6 +2,7 @@ import { createResource } from "solid-js";
 import { applyTypography, type FontSize, type FontFamily } from "../lib/typography";
 import { initBackground, type BgFit } from "../lib/background";
 import { initTheme } from "../lib/useTheme";
+import { initWidgetLayout } from "./widget-layout";
 import { THEMES, type ThemeId } from "../types/theme.types";
 
 export type AuthState = {
@@ -82,6 +83,11 @@ async function fetchAuthState(): Promise<AuthState> {
       initTheme(serverTheme as ThemeId, data.spa.custom_theme_colors ?? undefined);
     }
   }
+
+  // For visitors data.spa holds the visited channel's display prefs, not a
+  // viewer layout — sync to the server value only for local users, otherwise
+  // clear any stale cache so defaults apply.
+  initWidgetLayout(isLocal ? data.spa?.widget_layout : undefined);
 
   return {
     isLocal,

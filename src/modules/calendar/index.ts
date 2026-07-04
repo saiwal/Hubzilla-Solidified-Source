@@ -4,8 +4,6 @@ import { registerModule } from "@/shared/lib/module-registry";
 import { useI18n } from "@/i18n";
 import { usePageNick } from "@/shared/store/site-config";
 
-const cdavWidgetLoader = () => import("./widgets/CdavCalendarWidget");
-
 registerModule({
   id: "cal",
   routes: [
@@ -20,9 +18,15 @@ registerModule({
     context: "all",
     hidden: false,
   },
-  slots: {
-    right: [cdavWidgetLoader],
-  },
+  widgets: [
+    {
+      id: "cal.calendar",
+      label: () => useI18n().t("widgets.calendar"),
+      loader: () => import("./widgets/CdavCalendarWidget"),
+      slot: "right",
+      visitorVisible: false,
+    },
+  ],
   permissions: [],
   appName: "Calendar",
 });

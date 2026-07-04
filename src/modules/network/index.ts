@@ -1,9 +1,6 @@
 import { registerModule } from "@/shared/lib/module-registry";
 import { useI18n } from "@/i18n";
 
-const filtersLoader      = () => import("./widgets/StreamFiltersWidget");
-const savedSearchLoader  = () => import("./widgets/SavedSearchesWidget");
-
 registerModule({
   id: "network",
   routes: [
@@ -16,8 +13,21 @@ registerModule({
     href: "/network",
     context: "owner",
   },
-  slots: {
-    right: [filtersLoader, savedSearchLoader],
-  },
+  widgets: [
+    {
+      id: "network.filters",
+      label: () => useI18n().t("widgets.stream_filters"),
+      loader: () => import("./widgets/StreamFiltersWidget"),
+      slot: "right",
+      visitorVisible: false,
+    },
+    {
+      id: "network.savedSearch",
+      label: () => useI18n().t("widgets.saved_searches"),
+      loader: () => import("./widgets/SavedSearchesWidget"),
+      slot: "right",
+      visitorVisible: false,
+    },
+  ],
   permissions: [],
 });

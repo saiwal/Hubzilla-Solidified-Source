@@ -2,6 +2,7 @@ import { createResource, createEffect } from "solid-js";
 import { applyBackgroundCSS, loadBackground, type BgFit } from "./background";
 import { applyTheme, applyCustomThemeColors } from "./useTheme";
 import { applyTypographyCSS, loadTypography, type FontSize, type FontFamily } from "./typography";
+import { initPageWidgetLayout } from "../store/widget-layout";
 import { THEMES, type ThemeId, type CustomThemeColors } from "../types/theme.types";
 
 const VALID_FITS    = new Set<string>(["tile", "cover"]);
@@ -43,8 +44,12 @@ export function useChannelTheme(channelNick: () => string) {
       loadBackground();
       loadTypography();
       applyTheme(((localStorage.getItem("hz-theme") ?? "light") as ThemeId));
+      initPageWidgetLayout(null);
       return;
     }
+
+    // Track the visited channel's widget arrangement for Slot resolution
+    initPageWidgetLayout(spa.widget_layout);
 
     // Apply the channel's background (CSS only — do not overwrite user's localStorage)
     const bgUrl = spa.bg_url ?? "";
