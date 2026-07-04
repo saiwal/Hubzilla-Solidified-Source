@@ -11,9 +11,15 @@ import type { ViewMode } from "@/shared/stream/types";
 const [nick, setNick] = createSignal<string>("");
 export { nick };
 
+// ── can_post_wall signal ──────────────────────────────────────────────────────
+const [canPostWall, setCanPostWall] = createSignal(false);
+export { canPostWall };
+
 // ── fetcher adapter: closes over nick signal ──────────────────────────────────
 async function channelFetcher(params: ChannelParams): Promise<ChannelStreamResult> {
-  return fetchChannelPosts(nick(), params);
+  const result = await fetchChannelPosts(nick(), params);
+  setCanPostWall(result.canPostWall);
+  return result;
 }
 
 // ── viewMode ──────────────────────────────────────────────────────────────────

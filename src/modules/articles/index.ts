@@ -14,6 +14,7 @@ const tagLoader = () =>
   import("./widgets/ArticleWidgets").then((m) => ({
     default: m.ArticleTagWidget,
   }));
+const draftsLoader = () => import("./widgets/ArticleDraftsWidget");
 
 registerModule({
   id: "articles",
@@ -37,7 +38,7 @@ registerModule({
     hidden: false,
   },
   slots: {
-    right: [popularLoader, categoryLoader, tagLoader],
+    right: [draftsLoader, popularLoader, categoryLoader, tagLoader],
   },
   permissions: [],
   appName: "Articles",

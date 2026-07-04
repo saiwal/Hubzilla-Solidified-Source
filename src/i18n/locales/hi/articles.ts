@@ -23,4 +23,14 @@ export const articles: RawDictionary["articles"] = {
   deleting:         "हटाया जा रहा है…",
   delete_failed:    "हटाने में विफल",
   share:            "लेख साझा करें",
+  // Drafts widget
+  drafts:           "लेख ड्राफ़्ट",
+  no_drafts:        "कोई ड्राफ़्ट लेख नहीं",
+  empty_draft:      "खाली ड्राफ़्ट",
+  load_draft:       "लोड करें",
+  delete_draft:     "हटाएँ",
+  draft_new:        "नया",
+  draft_edit:       "संपादन",
+  refresh_drafts:   "रीफ़्रेश करें",
+  just_now:         "अभी-अभी",
 };

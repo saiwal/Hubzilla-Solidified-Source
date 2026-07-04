@@ -26,4 +26,14 @@ export const articles: RawDictionary["articles"] = {
   // Delete failed
   delete_failed:    "Delete failed",
   share:            "Share article",
+  // Drafts widget
+  drafts:           "Article drafts",
+  no_drafts:        "No draft articles",
+  empty_draft:      "Empty draft",
+  load_draft:       "Load",
+  delete_draft:     "Delete",
+  draft_new:        "New",
+  draft_edit:       "Edit",
+  refresh_drafts:   "Refresh",
+  just_now:         "Just now",
 };

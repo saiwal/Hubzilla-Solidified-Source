@@ -73,4 +73,6 @@ export const ui: RawDictionary["ui"] = {
   // PopularPostsWidget comments
   comment_singular:       "comment",
   comment_plural:         "comments",
+  recent_posts:           "Recent posts",
+  remote_hosted_on:       "Remote profile · hosted on",
 };

@@ -16,9 +16,7 @@ export type ChannelParams = {
   nouveau?: 1;
 };
 
-// Re-export StreamResult shape under the channel-specific name so
-// store.ts can import it — they're structurally identical.
-export type ChannelStreamResult = StreamResult;
+export type ChannelStreamResult = StreamResult & { canPostWall: boolean };
 
 export async function fetchChannelPosts(
   nickname: string,
@@ -37,10 +35,11 @@ export async function fetchChannelPosts(
   const activities: any[] = Array.isArray(data) ? data : [];
 
   return {
-    items:     activities.map(mapActivityToPost),
-    rootCount: meta?.root_count ?? activities.filter((a: any) => a.item_thread_top === 1).length,
-    limit:     meta?.limit ?? 10,
-    nouveau:   meta?.nouveau ?? false,
+    items:        activities.map(mapActivityToPost),
+    rootCount:    meta?.root_count ?? activities.filter((a: any) => a.item_thread_top === 1).length,
+    limit:        meta?.limit ?? 10,
+    nouveau:      meta?.nouveau ?? false,
+    canPostWall:  meta?.can_post_wall ?? false,
   };
 }
 

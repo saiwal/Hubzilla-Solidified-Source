@@ -9,7 +9,7 @@ use Theme\Solidified\Api\Response;
 
 class Drafts
 {
-    // GET  /api/drafts               → list all drafts for the local channel
+    // GET  /api/drafts[?type=post,article]  → list drafts for the local channel by content type
     // POST /api/drafts               → create a new draft
     // POST /api/drafts/:mid          → update an existing draft
     // POST /api/drafts/:mid/delete   → delete a draft
@@ -19,12 +19,35 @@ class Drafts
         Auth::requireLocalGet();
         $uid = local_channel();
 
+        $this->migrateLegacyDrafts($uid);
+
+        // Comma-separated scope prefixes ("post", "article", …); default keeps
+        // original behaviour. Tokens are whitelisted to [a-z]+ so they can be
+        // embedded directly in the LIKE conditions below.
+        $types = array_filter(
+            array_map('trim', explode(',', $_GET['type'] ?? 'post')),
+            fn($t) => preg_match('/^[a-z]+$/', $t)
+        );
+        if (!$types) {
+            $types = ['post'];
+        }
+
+        $conds = [];
+        foreach ($types as $t) {
+            // %% survives q()'s sprintf pass as a literal %
+            $conds[] = "route LIKE '%%\"scope\":\"" . $t . ":%%'";
+        }
+        $typeSql = '(' . implode(' OR ', $conds) . ')';
+
+        // resource_type narrows via the uid_resource_type index; the LIKE
+        // conditions then only run against the handful of draft rows
         $rows = q(
             "SELECT * FROM item
              WHERE uid = %d
+               AND resource_type = 'draft'
                AND item_unpublished = 1
                AND item_deleted = 0
-               AND route LIKE '%%\"scope\":\"post:%%'
+               AND $typeSql
              ORDER BY edited DESC",
             intval($uid)
         );
@@ -51,6 +74,29 @@ class Drafts
         }
 
         $this->createDraft();
+    }
+
+    // One-time backfill: drafts created before resource_type stamping was
+    // introduced need it set so the indexed listing query can find them.
+    // The pconfig flag ensures the unindexed scan runs only once per channel.
+    private function migrateLegacyDrafts(int $uid): void
+    {
+        if (get_pconfig($uid, 'solidified', 'drafts_resource_type')) {
+            return;
+        }
+
+        q(
+            "UPDATE item
+             SET resource_type = 'draft'
+             WHERE uid = %d
+               AND item_unpublished = 1
+               AND item_deleted = 0
+               AND resource_type = ''
+               AND route LIKE '%%\"scope\":%%'",
+            intval($uid)
+        );
+
+        set_pconfig($uid, 'solidified', 'drafts_resource_type', 1);
     }
 
     // ── Handlers ──────────────────────────────────────────────────────────────
@@ -107,6 +153,9 @@ class Drafts
             'item_unseen'     => 0,
             'item_private'    => 0,
             'item_unpublished'=> 1,
+            // Rides the existing uid_resource_type index so listing stays
+            // fast on large item tables (no schema change needed)
+            'resource_type'   => 'draft',
         ];
 
         // deliver=false, addAndSync=false — no federation, no notifications

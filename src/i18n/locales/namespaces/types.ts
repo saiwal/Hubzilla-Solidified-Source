@@ -165,6 +165,8 @@ export type RawDictionary = {
     // PopularPostsWidget comments
     comment_singular:        string;
     comment_plural:          string;
+    recent_posts:            string;
+    remote_hosted_on:        string;
   };
   help: {
     click_for_help: string;
@@ -1077,11 +1079,7 @@ export type RawDictionary = {
     msg_tab_folders:      string;
     no_folders:           string;
     filter_placeholder:   string;
-    draft_new_post:       string;
-    draft_new_article:    string;
-    draft_new_webpage:    string;
-    draft_new_wiki:       string;
-    draft_new_event:      string;
+    draft_post:           string;
     draft_reply:          string;
     draft_comment:        string;
     draft_article:        string;
@@ -1140,6 +1138,8 @@ export type RawDictionary = {
     field_education:  string;
     field_contact:    string;
     field_other_channels: string;
+    remote_channel:       string;
+    group_profile_fields: string;
   };
   photos: {
     no_photos:        string;
@@ -1244,6 +1244,15 @@ export type RawDictionary = {
     deleting:         string;
     delete_failed:    string;
     share:            string;
+    drafts:           string;
+    no_drafts:        string;
+    empty_draft:      string;
+    load_draft:       string;
+    delete_draft:     string;
+    draft_new:        string;
+    draft_edit:       string;
+    refresh_drafts:   string;
+    just_now:         string;
   };
   calendar: {
     loading:          string;

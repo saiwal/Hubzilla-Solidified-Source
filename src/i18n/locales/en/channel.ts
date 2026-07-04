@@ -44,4 +44,6 @@ export const channel: RawDictionary["channel"] = {
   field_education:  "Education",
   field_contact:    "Contact",
   field_other_channels: "Other channels",
+  remote_channel:       "Remote channel",
+  group_profile_fields: "Profile",
 };

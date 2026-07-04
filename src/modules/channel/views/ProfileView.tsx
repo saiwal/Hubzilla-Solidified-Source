@@ -38,6 +38,8 @@ type ChannelProfile = {
   channels: string;
   connections: number;
   is_connected: boolean;
+  is_remote?: boolean;
+  actor_fields?: { name: string; value: string }[];
 };
 
 async function fetchProfile(nick: string): Promise<ChannelProfile | null> {
@@ -160,7 +162,7 @@ function ProfileHeader(props: {
           </Show>
         </div>
         <Show when={!props.isOwner}>
-          <FollowButton nick={p.channel_address} connected={p.is_connected} isVisitor={props.isVisitor} />
+          <FollowButton nick={p.xchan_addr || p.channel_address} connected={p.is_connected} isVisitor={props.isVisitor} />
         </Show>
       </div>
     </>
@@ -178,8 +180,22 @@ function CompactCard(props: { p: ChannelProfile; isOwner: boolean; isVisitor: bo
       <ProfileHeader p={p} isOwner={props.isOwner} isVisitor={props.isVisitor} />
 
       <div class="px-5 pb-5">
-        {/* Location + gender */}
-        <Show when={p.location || p.gender}>
+        {/* Remote badge */}
+        <Show when={p.is_remote}>
+          <div class="mt-3">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-overlay text-muted border border-rim">
+              <MdFillPublic size={11} /> {t("channel.remote_channel")}
+            </span>
+          </div>
+        </Show>
+
+        {/* Bio (remote actor summary or local about) */}
+        <Show when={p.is_remote && p.about}>
+          <p class="mt-3 text-xs text-txt leading-relaxed line-clamp-3">{p.about}</p>
+        </Show>
+
+        {/* Location + gender (local only) */}
+        <Show when={!p.is_remote && (p.location || p.gender)}>
           <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
             <Show when={p.location}>
               <span class="flex items-center gap-1">
@@ -198,6 +214,20 @@ function CompactCard(props: { p: ChannelProfile; isOwner: boolean; isVisitor: bo
             <For each={p.keywords}>
               {(tag) => (
                 <span class="px-2 py-0.5 text-xs rounded-full bg-overlay text-muted">#{tag}</span>
+              )}
+            </For>
+          </div>
+        </Show>
+
+        {/* AP actor fields (remote) */}
+        <Show when={p.is_remote && (p.actor_fields?.length ?? 0) > 0}>
+          <div class="mt-3 space-y-1">
+            <For each={p.actor_fields}>
+              {(f) => (
+                <div class="flex gap-2 text-xs">
+                  <span class="text-muted w-20 shrink-0">{f.name}</span>
+                  <span class="text-txt">{f.value}</span>
+                </div>
               )}
             </For>
           </div>
@@ -223,15 +253,17 @@ function CompactCard(props: { p: ChannelProfile; isOwner: boolean; isVisitor: bo
           </div>
         </Show>
 
-        {/* View full profile */}
-        <div class="mt-3 flex justify-end">
-          <A
-            href={`/profile/${p.channel_address}`}
-            class="text-xs text-muted hover:text-accent transition-colors"
-          >
-            {t("channel.more_details")} →
-          </A>
-        </div>
+        {/* View full profile (local only) */}
+        <Show when={!p.is_remote}>
+          <div class="mt-3 flex justify-end">
+            <A
+              href={`/profile/${p.channel_address}`}
+              class="text-xs text-muted hover:text-accent transition-colors"
+            >
+              {t("channel.more_details")} →
+            </A>
+          </div>
+        </Show>
       </div>
     </div>
   );
@@ -342,6 +374,17 @@ function FullCard(props: { p: ChannelProfile; isOwner: boolean; isVisitor: boole
                 <Field label={t("channel.field_other_channels")} value={p.channels} />
               </FieldSection>
             </Show>
+          </div>
+        </Show>
+
+        {/* AP actor fields (remote channels) */}
+        <Show when={p.is_remote && (p.actor_fields?.length ?? 0) > 0}>
+          <div class="border-t border-rim pt-5">
+            <FieldSection label={t("channel.group_profile_fields")}>
+              <For each={p.actor_fields}>
+                {(f) => <Field label={f.name} value={f.value} />}
+              </For>
+            </FieldSection>
           </div>
         </Show>
       </div>

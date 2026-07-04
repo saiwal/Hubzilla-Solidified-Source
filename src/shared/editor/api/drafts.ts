@@ -3,9 +3,9 @@ import type { SavedDraft } from "../store/createComposerStore";
 
 export type ServerDraft = SavedDraft & { serverMid: string; scope: string };
 
-export async function listServerDrafts(): Promise<ServerDraft[]> {
+export async function listServerDrafts(type = "post"): Promise<ServerDraft[]> {
   try {
-    const res = await apiFetch("/api/drafts");
+    const res = await apiFetch(`/api/drafts?type=${encodeURIComponent(type)}`);
     if (!res.ok) return [];
     const json = await res.json();
     return (json.data ?? []) as ServerDraft[];

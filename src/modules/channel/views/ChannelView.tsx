@@ -10,6 +10,7 @@ import {
   hasMore,
   newPosts,
   profileUid,
+  canPostWall,
   loadChannel,
   loadMore,
   flushNewPosts,
@@ -137,7 +138,7 @@ export default function ChannelView() {
         />
 
         <div class="flex-1 flex justify-end items-center gap-1.5">
-          <Show when={profileUid() > 0}>
+          <Show when={canPostWall()}>
             <button
               title={t("channel.compose")}
               onClick={openCompose}

@@ -13,7 +13,16 @@ import {
   MdFillLocation_on,
   MdFillPublic,
   MdOutlineArrow_back,
+  MdFillOpen_in_new,
 } from "solid-icons/md";
+
+interface RemotePost {
+  id: string;
+  url: string;
+  content: string;
+  published: string;
+  summary?: string | null;
+}
 
 interface XchanData {
   xchan_hash: string;
@@ -34,6 +43,9 @@ interface XchanData {
   keywords?: string[];
   connections?: number;
   cover?: string;
+  // AP actor fields (remote channels)
+  actor_fields?: { name: string; value: string }[];
+  remote_posts?: RemotePost[];
 }
 
 interface NetworkBadge {
@@ -252,6 +264,27 @@ export default function ChanView() {
                   </div>
                 </div>
 
+                {/* Remote channel indicator */}
+                <Show when={!xdata().local_nick && xdata().url}>
+                  {(_) => {
+                    const domain = () => { try { return new URL(xdata().url).hostname; } catch { return xdata().url; } };
+                    return (
+                      <a
+                        href={xdata().url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg
+                               bg-overlay border border-rim text-xs text-muted
+                               hover:border-accent hover:text-accent transition-colors group"
+                      >
+                        <MdFillPublic size={13} class="shrink-0" />
+                        <span>{t("ui.remote_hosted_on")} <strong class="text-txt group-hover:text-accent">{domain()}</strong></span>
+                        <MdFillOpen_in_new size={11} class="ml-auto shrink-0" />
+                      </a>
+                    );
+                  }}
+                </Show>
+
                 {/* About */}
                 <Show when={xdata().about}>
                   <div
@@ -299,23 +332,36 @@ export default function ChanView() {
                   </div>
                 </Show>
 
-                {/* External link */}
-                <Show when={xdata().url}>
-                  <div class="mt-4 pt-4 border-t border-rim">
-                    <a
-                      href={xdata().url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="text-xs text-muted hover:text-accent transition-colors truncate block"
-                    >
-                      {xdata().url}
-                    </a>
+                {/* AP actor profile fields (remote channels) */}
+                <Show when={(xdata().actor_fields?.length ?? 0) > 0}>
+                  <div class="mt-4 pt-4 border-t border-rim space-y-1.5">
+                    <For each={xdata().actor_fields}>
+                      {(f) => (
+                        <div class="flex gap-3 text-xs">
+                          <span class="text-muted w-24 shrink-0">{f.name}</span>
+                          <span class="text-txt">{f.value}</span>
+                        </div>
+                      )}
+                    </For>
                   </div>
                 </Show>
+
               </div>
             </div>
           );
         }}
+      </Show>
+
+      {/* Recent remote posts */}
+      <Show when={(x()?.remote_posts?.length ?? 0) > 0}>
+        <div class="mt-4 space-y-3">
+          <h2 class="text-xs font-semibold text-muted uppercase tracking-wide px-1">
+            {t("ui.recent_posts")}
+          </h2>
+          <For each={x()!.remote_posts}>
+            {(post) => <RemotePostCard post={post} />}
+          </For>
+        </div>
       </Show>
 
       {/* Connection editor modal */}
@@ -332,6 +378,43 @@ export default function ChanView() {
           }}
         />
       </Show>
+    </div>
+  );
+}
+
+function RemotePostCard(props: { post: RemotePost }) {
+  const { post } = props;
+
+  const dateStr = () => {
+    if (!post.published) return "";
+    const d = new Date(post.published);
+    return isNaN(d.getTime()) ? "" : d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  };
+
+  return (
+    <div class="rounded-xl bg-surface border border-rim px-4 py-3 text-sm">
+      <Show when={post.summary}>
+        <p class="text-xs font-medium text-muted mb-1 italic">{post.summary}</p>
+      </Show>
+      <div
+        class="text-txt leading-relaxed prose prose-sm dark:prose-invert max-w-none
+               prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+               line-clamp-6"
+        innerHTML={post.content}
+      />
+      <div class="mt-2 flex items-center justify-between">
+        <span class="text-xs text-muted">{dateStr()}</span>
+        <Show when={post.url}>
+          <a
+            href={post.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center gap-1 text-xs text-muted hover:text-accent transition-colors"
+          >
+            <MdFillOpen_in_new size={12} />
+          </a>
+        </Show>
+      </div>
     </div>
   );
 }

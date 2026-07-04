@@ -30,11 +30,7 @@ export const hq: RawDictionary["hq"] = {
   no_folders:           "No saved folders",
   filter_placeholder:   "Filter…",
   // DraftsWidget
-  draft_new_post:       "New Post",
-  draft_new_article:    "New Article",
-  draft_new_webpage:    "New Webpage",
-  draft_new_wiki:       "New Wiki Page",
-  draft_new_event:      "New Event",
+  draft_post:           "Post",
   draft_reply:          "Reply",
   draft_comment:        "Comment",
   draft_article:        "Article",

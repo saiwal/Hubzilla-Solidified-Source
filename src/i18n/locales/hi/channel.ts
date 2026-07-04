@@ -42,4 +42,6 @@ export const channel: RawDictionary["channel"] = {
   field_education:  "शिक्षा",
   field_contact:    "संपर्क",
   field_other_channels: "अन्य चैनल",
+  remote_channel:       "दूरस्थ चैनल",
+  group_profile_fields: "प्रोफ़ाइल",
 };

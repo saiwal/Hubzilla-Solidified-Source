@@ -63,7 +63,7 @@ export function createComposerStore(
   const [initialized, setInitialized] = createSignal(false);
 
   // Load saved drafts from server, filtered to this scope
-  listServerDrafts().then((serverDrafts) => {
+  listServerDrafts(scope.split(":")[0]).then((serverDrafts) => {
     const forScope = serverDrafts
       .filter((sd) => sd.scope === scope)
       .map((sd) => ({ ...sd, id: sd.serverMid }));
