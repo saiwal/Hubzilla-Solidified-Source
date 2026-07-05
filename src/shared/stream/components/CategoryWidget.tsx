@@ -21,7 +21,7 @@ export interface CategoryItem {
 // Fetch
 // ---------------------------------------------------------------------------
 
-async function fetchCategories(params: {
+export async function fetchCategories(params: {
   channelNick?: string;
   type?: "articles" | "posts";
 }): Promise<CategoryItem[]> {

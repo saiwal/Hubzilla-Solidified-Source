@@ -33,7 +33,7 @@ export interface ArchiveYear {
 // Fetch
 // ---------------------------------------------------------------------------
 
-async function fetchArchive(params: {
+export async function fetchArchive(params: {
   channelNick?: string;
   type?: "articles" | "posts";
 }): Promise<ArchiveYear[]> {

@@ -34,19 +34,19 @@ registerModule({
     {
       id: "articles.popular",
       label: () => useI18n().t("widgets.popular_articles"),
-      loader: () => import("./widgets/ArticleWidgets").then((m) => ({ default: m.ArticlePopularWidget })),
+      loader: () => import("./widgets/ArticlePopularWidget"),
       slot: "right",
     },
     {
       id: "articles.categories",
       label: () => useI18n().t("widgets.article_categories"),
-      loader: () => import("./widgets/ArticleWidgets").then((m) => ({ default: m.ArticleCategoryWidget })),
+      loader: () => import("./widgets/ArticleCategoryWidget"),
       slot: "right",
     },
     {
       id: "articles.tags",
       label: () => useI18n().t("widgets.article_tags"),
-      loader: () => import("./widgets/ArticleWidgets").then((m) => ({ default: m.ArticleTagWidget })),
+      loader: () => import("./widgets/ArticleTagWidget"),
       slot: "right",
     },
   ],

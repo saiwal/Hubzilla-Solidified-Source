@@ -305,6 +305,9 @@ export type RawDictionary = {
     load_error:     string;
     show_more_tags: string;
     archive:        string;
+    archive_grid:   string;
+    category_cloud: string;
+    tag_list:       string;
     no_archive:     string;
     connections:    string;
     view_all:       string;

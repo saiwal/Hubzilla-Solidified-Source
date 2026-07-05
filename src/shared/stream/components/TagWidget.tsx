@@ -28,7 +28,7 @@ export interface TagItem {
 // Fetch
 // ---------------------------------------------------------------------------
 
-async function fetchTags(params: {
+export async function fetchTags(params: {
   channelNick?: string;
   type?: "articles" | "posts";
 }): Promise<TagItem[]> {

@@ -33,26 +33,53 @@ registerModule({
     {
       id: "channel.popular",
       label: () => useI18n().t("widgets.popular_posts"),
-      loader: () => import("./widgets/ChannelPostWidgets").then((m) => ({ default: m.ChannelPopularWidget })),
+      loader: () => import("./widgets/ChannelPopularWidget"),
       ...channelWidgetPlacement,
     },
     {
       id: "channel.categories",
       label: () => useI18n().t("widgets.categories"),
-      loader: () => import("./widgets/ChannelPostWidgets").then((m) => ({ default: m.ChannelCategoryWidget })),
+      loader: () => import("./widgets/ChannelCategoryWidget"),
       ...channelWidgetPlacement,
     },
     {
       id: "channel.tags",
       label: () => useI18n().t("widgets.tags"),
-      loader: () => import("./widgets/ChannelPostWidgets").then((m) => ({ default: m.ChannelTagWidget })),
+      loader: () => import("./widgets/ChannelTagWidget"),
       ...channelWidgetPlacement,
     },
     {
       id: "channel.archive",
       label: () => useI18n().t("widgets.archive"),
-      loader: () => import("./widgets/ChannelPostWidgets").then((m) => ({ default: m.ChannelArchiveWidget })),
+      loader: () => import("./widgets/ChannelArchiveWidget"),
       ...channelWidgetPlacement,
+    },
+    {
+      // Opt-in alternate layout for channel.tags — picker only, no default placement
+      id: "channel.tags_list",
+      label: () => useI18n().t("widgets.tag_list"),
+      loader: () => import("./widgets/ChannelTagListWidget"),
+      slot: "right",
+      defaultModules: [],
+      contexts: ["channel", "profile"],
+    },
+    {
+      // Opt-in alternate layout for channel.categories — picker only, no default placement
+      id: "channel.categories_cloud",
+      label: () => useI18n().t("widgets.category_cloud"),
+      loader: () => import("./widgets/ChannelCategoryCloudWidget"),
+      slot: "right",
+      defaultModules: [],
+      contexts: ["channel", "profile"],
+    },
+    {
+      // Opt-in alternate layout for channel.archive — picker only, no default placement
+      id: "channel.archive_grid",
+      label: () => useI18n().t("widgets.archive_grid"),
+      loader: () => import("./widgets/ChannelArchiveGridWidget"),
+      slot: "right",
+      defaultModules: [],
+      contexts: ["channel", "profile"],
     },
   ],
   permissions: [],
