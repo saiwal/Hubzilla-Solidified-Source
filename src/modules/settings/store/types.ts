@@ -49,8 +49,8 @@ export interface NotificationSettings {
   notify9: number;
   vnotify1: number; vnotify2: number; vnotify3: number; vnotify4: number;
   vnotify5: number; vnotify6: number; vnotify7: number; vnotify8: number;
-  vnotify9: number; vnotify10: number; vnotify11: number; vnotify12: number;
-  vnotify13: number; vnotify14: number; vnotify15: number;
+  vnotify9: number; vnotify10: number; vnotify11?: number; vnotify12: number;
+  vnotify13?: number; vnotify14: number; vnotify15: number;
   post_newfriend: number;
   post_joingroup: number;
   post_profilechange: number;

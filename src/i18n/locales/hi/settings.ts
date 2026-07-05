@@ -104,7 +104,9 @@ export const settings: RawDictionary["settings"] = {
   font_group_accessibility: "पहुँच",
   // Privacy section
   privacy_perm_limits:            "अनुमति सीमाएँ",
+  privacy_perm_limits_desc:       "इनमें से प्रत्येक कार्य की अनुमति किसे है:",
   privacy_advanced:               "उन्नत",
+  privacy_advanced_desc:          "आपके चैनल के साथ दूसरों की सहभागिता पर अतिरिक्त नियंत्रण।",
   privacy_autoperms:              "स्वचालित अनुमतियाँ",
   privacy_autoperms_hint:         "नए कनेक्शन पर स्वचालित रूप से अनुमतियाँ लागू करें।",
   privacy_permit_mentions:        "सभी उल्लेखों की अनुमति दें",
@@ -118,9 +120,13 @@ export const settings: RawDictionary["settings"] = {
   privacy_ocap_hint:              "प्रयोगात्मक क्षमता-आधारित एक्सेस नियंत्रण।",
   // Notifications
   notif_autopost_title:    "स्वतः-पोस्ट गतिविधि",
+  notif_autopost_desc:     "इन अवसरों पर आपकी ओर से एक स्टेटस पोस्ट साझा करें:",
   notif_email_title:       "ईमेल सूचनाएँ",
+  notif_email_desc:        "इन स्थितियों में आपके खाते के ईमेल पते पर ईमेल भेजें:",
   notif_visual_title:      "दृश्य सूचनाएँ",
+  notif_visual_desc:       "इनके लिए ऐप में अलर्ट और अनदेखी गिनती दिखाएँ:",
   notif_other_title:       "अन्य",
+  notif_other_desc:        "नोटिस का व्यवहार और इवेंट अनुस्मारक।",
   notif_friend_request:    "मित्र अनुरोध स्वीकार करना",
   notif_join_forum:        "फ़ोरम या समुदाय में शामिल होना",
   notif_profile_change:    "एक दिलचस्प प्रोफ़ाइल परिवर्तन करना",

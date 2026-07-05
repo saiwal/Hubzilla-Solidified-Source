@@ -105,7 +105,9 @@ export const settings: RawDictionary["settings"] = {
   font_group_accessibility: "Accessibility",
   // Privacy section
   privacy_perm_limits:            "Permission limits",
+  privacy_perm_limits_desc:       "Who is allowed to do each of these things:",
   privacy_advanced:               "Advanced",
+  privacy_advanced_desc:          "Additional controls over how others interact with your channel.",
   privacy_autoperms:              "Automatic permissions",
   privacy_autoperms_hint:         "Automatically apply permissions to new connections.",
   privacy_permit_mentions:        "Permit all mentions",
@@ -119,9 +121,13 @@ export const settings: RawDictionary["settings"] = {
   privacy_ocap_hint:              "Experimental capability-based access control.",
   // Notifications — auto-post
   notif_autopost_title:    "Auto-post activity",
+  notif_autopost_desc:     "Post a status update on your behalf when:",
   notif_email_title:       "Email notifications",
+  notif_email_desc:        "Send an email to your account address when:",
   notif_visual_title:      "Visual notifications",
+  notif_visual_desc:       "Show in-app alerts and unseen counts for:",
   notif_other_title:       "Other",
+  notif_other_desc:        "How notices behave, and event reminders.",
   notif_friend_request:    "Accepting a friend request",
   notif_join_forum:        "Joining a forum or community",
   notif_profile_change:    "Making an interesting profile change",

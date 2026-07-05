@@ -31,6 +31,17 @@ registerModule({
       loader: () => import("./widgets/PhotosWidget"),
       slot: "right",
     },
+    {
+      // Opt-in album showcase; place several, each configured with an album
+      id: "photos.album_strip",
+      label: () => useI18n().t("widgets.album_strip"),
+      loader: () => import("./widgets/AlbumStripWidget"),
+      slot: "right",
+      defaultModules: [],
+      contexts: ["channel", "profile", "photos"],
+      multiInstance: true,
+      configComponent: () => import("./widgets/AlbumStripConfig"),
+    },
   ],
   permissions: [],
   appName: "Photos",

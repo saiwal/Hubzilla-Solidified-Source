@@ -49,6 +49,17 @@ registerModule({
       loader: () => import("./widgets/ArticleTagWidget"),
       slot: "right",
     },
+    {
+      // Opt-in article showcase; place several, each configured with an article
+      id: "articles.teaser",
+      label: () => useI18n().t("widgets.article_teaser"),
+      loader: () => import("./widgets/ArticleTeaserWidget"),
+      slot: "right",
+      defaultModules: [],
+      contexts: ["channel", "profile", "articles"],
+      multiInstance: true,
+      configComponent: () => import("./widgets/ArticleTeaserConfig"),
+    },
   ],
   permissions: [],
   appName: "Articles",

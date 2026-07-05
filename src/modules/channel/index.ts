@@ -55,6 +55,17 @@ registerModule({
       ...channelWidgetPlacement,
     },
     {
+      // Opt-in pinned-post showcase; place several, each configured with a post
+      id: "channel.pinned_post",
+      label: () => useI18n().t("widgets.pinned_post"),
+      loader: () => import("./widgets/PinnedPostWidget"),
+      slot: "right",
+      defaultModules: [],
+      contexts: ["channel", "profile"],
+      multiInstance: true,
+      configComponent: () => import("./widgets/PinnedPostConfig"),
+    },
+    {
       // Opt-in alternate layout for channel.tags — picker only, no default placement
       id: "channel.tags_list",
       label: () => useI18n().t("widgets.tag_list"),

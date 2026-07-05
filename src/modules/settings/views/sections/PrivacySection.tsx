@@ -2,8 +2,9 @@ import { Show, For } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { apiFetch } from "@/shared/lib/fetch";
 import { useSectionForm } from "../../store/useSectionForm";
-import { SaveBar, Toggle, Section } from "../../store/FormHelpers";
+import { SaveBar, Group, SwitchRow } from "../../store/FormHelpers";
 import { useI18n } from "@/i18n";
+import { MdOutlineShield, MdOutlineTune } from "solid-icons/md";
 
 interface PermRow {
   key: string;
@@ -46,19 +47,6 @@ const TOGGLE_FIELDS = [
   "permit_all_mentions", "moderate_unsolicited_comments", "ocap_enabled",
 ] as const;
 
-function Skeleton() {
-  return (
-    <div class="space-y-4 animate-pulse">
-      {[...Array(5)].map(() => (
-        <div class="space-y-1.5">
-          <div class="h-3.5 w-40 rounded bg-elevated" />
-          <div class="h-9 w-full max-w-xs rounded-lg bg-elevated" />
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export default function PrivacySection() {
   const { t } = useI18n();
   const { data, saving, handleSubmit } = useSectionForm({
@@ -76,19 +64,28 @@ export default function PrivacySection() {
   return (
     <SubPageContent title={t("settings.title_privacy")} description={t("settings.desc_privacy")}>
       <Show when={data()} fallback={<Skeleton />}>
-        <form onSubmit={handleSubmit} class="space-y-8">
+        <form onSubmit={handleSubmit} class="space-y-5">
 
           {/* Permission limits */}
           <Show when={data()!.permission_limits}>
-            <Section title={t("settings.privacy_perm_limits")}>
+            <Group
+              icon={<MdOutlineShield size={18} />}
+              title={t("settings.privacy_perm_limits")}
+              desc={t("settings.privacy_perm_limits_desc")}
+            >
               <For each={perms()}>
                 {(perm) => (
-                  <div class="space-y-1">
-                    <label class="block text-sm font-medium text-txt">{perm.label}</label>
+                  <div class="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-4 py-2.5">
+                    <span class="flex-1 min-w-0">
+                      <span class="block text-sm text-txt">{perm.label}</span>
+                      <Show when={perm.help}>
+                        <span class="block text-xs text-muted">{perm.help}</span>
+                      </Show>
+                    </span>
                     <select
                       name={perm.key}
-                      class="w-full max-w-xs px-3 py-2 rounded-lg border border-rim bg-surface
-                             text-txt text-sm hover:border-rim-strong focus:outline-none
+                      class="w-full sm:w-60 shrink-0 px-2.5 py-1.5 rounded-lg border border-rim
+                             bg-base text-txt text-sm hover:border-rim-strong focus:outline-none
                              focus:border-rim-strong transition-colors"
                     >
                       <For each={Object.entries(perm.options)}>
@@ -99,28 +96,55 @@ export default function PrivacySection() {
                         )}
                       </For>
                     </select>
-                    <Show when={perm.help}>
-                      <p class="text-xs text-muted">{perm.help}</p>
-                    </Show>
                   </div>
                 )}
               </For>
-            </Section>
+            </Group>
           </Show>
 
-          {/* Toggles */}
-          <Section title={t("settings.privacy_advanced")}>
-            <Toggle name="autoperms"                     label={t("settings.privacy_autoperms")}              hint={t("settings.privacy_autoperms_hint")}           checked={!!data()!.autoperms} />
-            <Toggle name="permit_all_mentions"           label={t("settings.privacy_permit_mentions")}        hint={t("settings.privacy_permit_mentions_hint")}     checked={!!data()!.permit_all_mentions} />
-            <Toggle name="moderate_unsolicited_comments" label={t("settings.privacy_moderate_comments")}      hint={t("settings.privacy_moderate_comments_hint")}   checked={!!data()!.moderate_unsolicited_comments} />
-            <Toggle name="index_opt_out"                 label={t("settings.privacy_index_opt_out")}          hint={t("settings.privacy_index_opt_out_hint")}       checked={!!data()!.index_opt_out} />
-            <Toggle name="group_actor"                   label={t("settings.privacy_group_actor")}                                                                  checked={!!data()!.group_actor} />
-            <Toggle name="ocap_enabled"                  label={t("settings.privacy_ocap")}                   hint={t("settings.privacy_ocap_hint")}               checked={!!data()!.ocap_enabled} />
-          </Section>
+          {/* Advanced toggles */}
+          <Group
+            icon={<MdOutlineTune size={18} />}
+            title={t("settings.privacy_advanced")}
+            desc={t("settings.privacy_advanced_desc")}
+          >
+            <SwitchRow name="autoperms"                     label={t("settings.privacy_autoperms")}         hint={t("settings.privacy_autoperms_hint")}         checked={!!data()!.autoperms} />
+            <SwitchRow name="permit_all_mentions"           label={t("settings.privacy_permit_mentions")}   hint={t("settings.privacy_permit_mentions_hint")}   checked={!!data()!.permit_all_mentions} />
+            <SwitchRow name="moderate_unsolicited_comments" label={t("settings.privacy_moderate_comments")} hint={t("settings.privacy_moderate_comments_hint")} checked={!!data()!.moderate_unsolicited_comments} />
+            <SwitchRow name="index_opt_out"                 label={t("settings.privacy_index_opt_out")}     hint={t("settings.privacy_index_opt_out_hint")}     checked={!!data()!.index_opt_out} />
+            <SwitchRow name="group_actor"                   label={t("settings.privacy_group_actor")}                                                           checked={!!data()!.group_actor} />
+            <SwitchRow name="ocap_enabled"                  label={t("settings.privacy_ocap")}              hint={t("settings.privacy_ocap_hint")}              checked={!!data()!.ocap_enabled} />
+          </Group>
 
           <SaveBar saving={saving()} />
         </form>
       </Show>
     </SubPageContent>
+  );
+}
+
+function Skeleton() {
+  return (
+    <div class="space-y-5 animate-pulse">
+      {[...Array(2)].map(() => (
+        <div class="rounded-xl border border-rim bg-surface">
+          <div class="flex items-center gap-3 px-4 py-3 border-b border-rim">
+            <div class="h-8 w-8 rounded-lg bg-elevated" />
+            <div class="space-y-1.5">
+              <div class="h-3.5 w-36 rounded bg-elevated" />
+              <div class="h-3 w-52 rounded bg-elevated" />
+            </div>
+          </div>
+          <div class="px-4 py-2 space-y-3">
+            {[...Array(4)].map(() => (
+              <div class="flex items-center justify-between gap-4">
+                <div class="h-3.5 w-48 rounded bg-elevated" />
+                <div class="h-8 w-40 rounded-lg bg-elevated" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }

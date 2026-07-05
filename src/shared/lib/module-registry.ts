@@ -1,7 +1,12 @@
 import { createSignal, type Component, lazy } from "solid-js";
-import type { ModuleDef, RouteDef, NavItemDef, WidgetDef, WidgetSlotName } from "@/shared/types/module.types";
-
-type SlotLoader = () => Promise<{ default: Component }>;
+import type {
+  ComponentLoader,
+  ModuleDef,
+  NavItemDef,
+  RouteDef,
+  WidgetDef,
+  WidgetSlotName,
+} from "@/shared/types/module.types";
 
 // Widget as stored in the registry: defaults resolved, owning module recorded
 export interface RegisteredWidget extends WidgetDef {
@@ -16,8 +21,8 @@ const [routes, setRoutes] = createSignal<RouteDef[]>([]);
 const [widgetVersion, setWidgetVersion] = createSignal(0);
 
 // Lazy component cache — prevents remounting when memos recompute
-const lazyCache = new WeakMap<SlotLoader, Component>();
-export function getLazy(loader: SlotLoader): Component {
+const lazyCache = new WeakMap<ComponentLoader<any>, Component<any>>();
+export function getLazy<P extends Record<string, any> = {}>(loader: ComponentLoader<P>): Component<P> {
   if (!lazyCache.has(loader)) lazyCache.set(loader, lazy(loader));
   return lazyCache.get(loader)!;
 }

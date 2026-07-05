@@ -23,6 +23,17 @@ registerModule({
       loader: () => import("./widgets/CartWidget"),
       slot: "right",
     },
+    {
+      // Opt-in showcase card; place several, each configured with its own sku
+      id: "cart.item_card",
+      label: () => useI18n().t("widgets.item_card"),
+      loader: () => import("./widgets/ItemCardWidget"),
+      slot: "right",
+      defaultModules: [],
+      contexts: ["channel", "profile", "cart"],
+      multiInstance: true,
+      configComponent: () => import("./widgets/ItemCardConfig"),
+    },
   ],
   permissions: [],
 });

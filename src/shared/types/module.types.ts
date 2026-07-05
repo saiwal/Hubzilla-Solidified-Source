@@ -19,14 +19,29 @@ export interface NavItemDef {
 
 type SlotLoader = () => Promise<{ default: Component }>;
 
+export type ComponentLoader<P extends Record<string, any> = {}> = () => Promise<{ default: Component<P> }>;
+
 export type WidgetSlotName = "right" | "leftBottom" | "mainTop" | "rightVisitor";
+
+/** Props every widget component is mounted with. */
+export interface WidgetProps {
+  /** Per-instance settings for multiInstance widgets; absent for singletons. */
+  config?: Record<string, unknown>;
+}
+
+/** Props for a widget's configComponent (shown in the edit-mode config panel). */
+export interface WidgetConfigProps {
+  config: Record<string, unknown>;
+  /** Persist the instance config. The panel closes on success. */
+  onSave: (config: Record<string, unknown>) => void;
+}
 
 export interface WidgetDef {
   /** Stable identifier, persisted in user layouts — never rename once shipped. Convention: "<moduleId>.<name>". */
   id: string;
   /** Human-readable name for the widget picker UI. */
   label: string | (() => string);
-  loader: SlotLoader;
+  loader: ComponentLoader<WidgetProps>;
   slot: WidgetSlotName;
   /** Module ids where the widget appears out of the box. Defaults to the registering module. */
   defaultModules?: string[];
@@ -40,6 +55,17 @@ export interface WidgetDef {
    * never mount them. Default true.
    */
   visitorVisible?: boolean;
+  /**
+   * true = the widget may be placed several times in the same slot; each
+   * placement is an instance with its own key and config. The picker keeps
+   * offering the widget when instances are already present.
+   */
+  multiInstance?: boolean;
+  /**
+   * Settings form rendered in the edit-mode config panel of each instance.
+   * Receives the current config and an onSave callback.
+   */
+  configComponent?: ComponentLoader<WidgetConfigProps>;
 }
 
 /** @deprecated Use ModuleDef.widgets instead. Ignored by the registry. */

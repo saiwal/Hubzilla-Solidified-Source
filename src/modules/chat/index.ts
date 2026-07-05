@@ -34,6 +34,17 @@ registerModule({
       slot: "right",
       visitorVisible: false,
     },
+    {
+      // Opt-in chatroom showcase; place several, each configured with a room
+      id: "chat.room_card",
+      label: () => useI18n().t("widgets.room_card"),
+      loader: () => import("./widgets/RoomCardWidget"),
+      slot: "right",
+      defaultModules: [],
+      contexts: ["channel", "profile", "chat"],
+      multiInstance: true,
+      configComponent: () => import("./widgets/RoomCardConfig"),
+    },
   ],
   permissions: [],
   appName: "Chatrooms",

@@ -6,19 +6,62 @@ import { apiFetch } from "@/shared/lib/fetch";
  * User-customised widget placement, keyed by module then slot:
  *   { version: 1, modules: { hq: { right: ["shared.notifications", "network.savedSearch"] } } }
  *
+ * A slot entry is either a plain widget id (singleton widgets) or an instance
+ * object for multiInstance widgets:
+ *   { id: "cart.item_card", key: "cart.item_card#a1b2c3", config: { sku: "..." } }
+ * `key` is unique within the slot; `config` is the per-instance settings blob
+ * handed to the widget component as its `config` prop.
+ *
  * Absence of a module/slot entry means "use the registry defaults".
  * An explicit empty array means "the user removed every widget here".
  *
  * Source of truth is pconfig (cat "spa", key "widget_layout"); localStorage
  * holds a copy so the sidebar doesn't flash defaults while pconfig loads.
  */
+export interface WidgetInstance {
+  id: string;
+  key: string;
+  config?: Record<string, unknown>;
+}
+
+export type LayoutEntry = string | WidgetInstance;
+
 export interface WidgetLayout {
   version: 1;
-  modules: Record<string, Partial<Record<WidgetSlotName, string[]>>>;
+  modules: Record<string, Partial<Record<WidgetSlotName, LayoutEntry[]>>>;
+}
+
+export function entryId(e: LayoutEntry): string {
+  return typeof e === "string" ? e : e.id;
+}
+
+export function entryKey(e: LayoutEntry): string {
+  return typeof e === "string" ? e : e.key;
+}
+
+export function entryConfig(e: LayoutEntry): Record<string, unknown> | undefined {
+  return typeof e === "string" ? undefined : e.config;
+}
+
+/** Fresh unique key for a new instance of a multiInstance widget. */
+export function makeInstanceKey(widgetId: string): string {
+  return `${widgetId}#${Math.random().toString(36).slice(2, 8)}`;
 }
 
 const LS_KEY = "hz-widget-layout";
 const SLOT_NAMES = new Set<string>(["right", "leftBottom", "mainTop", "rightVisitor"]);
+
+function parseEntry(raw: unknown): LayoutEntry | null {
+  if (typeof raw === "string") return raw;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const obj = raw as Record<string, unknown>;
+  if (typeof obj.id !== "string" || typeof obj.key !== "string") return null;
+  const entry: WidgetInstance = { id: obj.id, key: obj.key };
+  if (obj.config && typeof obj.config === "object" && !Array.isArray(obj.config)) {
+    entry.config = obj.config as Record<string, unknown>;
+  }
+  return entry;
+}
 
 // Tolerant parser: unknown slots/shapes are dropped, never thrown on —
 // stored layouts outlive code changes.
@@ -43,10 +86,18 @@ export function parseWidgetLayout(raw: unknown): WidgetLayout | null {
   const clean: WidgetLayout["modules"] = {};
   for (const [moduleId, slots] of Object.entries(modules)) {
     if (!slots || typeof slots !== "object" || Array.isArray(slots)) continue;
-    const cleanSlots: Partial<Record<WidgetSlotName, string[]>> = {};
-    for (const [slot, ids] of Object.entries(slots as Record<string, unknown>)) {
-      if (!SLOT_NAMES.has(slot) || !Array.isArray(ids)) continue;
-      cleanSlots[slot as WidgetSlotName] = ids.filter((id): id is string => typeof id === "string");
+    const cleanSlots: Partial<Record<WidgetSlotName, LayoutEntry[]>> = {};
+    for (const [slot, entries] of Object.entries(slots as Record<string, unknown>)) {
+      if (!SLOT_NAMES.has(slot) || !Array.isArray(entries)) continue;
+      const seen = new Set<string>();
+      const cleanEntries: LayoutEntry[] = [];
+      for (const rawEntry of entries) {
+        const entry = parseEntry(rawEntry);
+        if (entry === null || seen.has(entryKey(entry))) continue;
+        seen.add(entryKey(entry));
+        cleanEntries.push(entry);
+      }
+      cleanSlots[slot as WidgetSlotName] = cleanEntries;
     }
     if (Object.keys(cleanSlots).length) clean[moduleId] = cleanSlots;
   }
@@ -82,7 +133,7 @@ export function useWidgetLayout() {
 }
 
 // The user's list for a module+slot, or null when the defaults apply
-export function layoutFor(moduleId: string, slot: WidgetSlotName): string[] | null {
+export function layoutFor(moduleId: string, slot: WidgetSlotName): LayoutEntry[] | null {
   return layout()?.modules[moduleId]?.[slot] ?? null;
 }
 
@@ -98,7 +149,7 @@ export function initPageWidgetLayout(raw: string | null | undefined): void {
 }
 
 // The page owner's list for a module+slot, or null when the defaults apply
-export function pageLayoutFor(moduleId: string, slot: WidgetSlotName): string[] | null {
+export function pageLayoutFor(moduleId: string, slot: WidgetSlotName): LayoutEntry[] | null {
   return pageLayout()?.modules[moduleId]?.[slot] ?? null;
 }
 
@@ -134,12 +185,12 @@ export async function saveWidgetLayout(next: WidgetLayout | null): Promise<boole
 export function saveSlotLayout(
   moduleId: string,
   slot: WidgetSlotName,
-  ids: string[] | null,
+  entries: LayoutEntry[] | null,
 ): Promise<boolean> {
   const current = layout() ?? { version: 1 as const, modules: {} };
   const moduleSlots = { ...current.modules[moduleId] };
-  if (ids === null) delete moduleSlots[slot];
-  else moduleSlots[slot] = ids;
+  if (entries === null) delete moduleSlots[slot];
+  else moduleSlots[slot] = entries;
 
   const modules = { ...current.modules };
   if (Object.keys(moduleSlots).length) modules[moduleId] = moduleSlots;

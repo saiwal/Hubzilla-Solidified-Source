@@ -19,6 +19,11 @@ import {
   pageLayoutFor,
   saveSlotLayout,
   editingWidgets,
+  entryId,
+  entryKey,
+  entryConfig,
+  makeInstanceKey,
+  type LayoutEntry,
 } from "@/shared/store/widget-layout";
 import { toast } from "@/shared/store/toast";
 import { useI18n } from "@/i18n";
@@ -28,6 +33,7 @@ import {
   MdFillKeyboard_arrow_up,
   MdFillKeyboard_arrow_down,
   MdFillRefresh,
+  MdFillSettings,
 } from "solid-icons/md";
 import type { WidgetSlotName } from "../types/module.types";
 
@@ -36,6 +42,15 @@ interface SlotProps {
   moduleId?: string;
   /** Allow the user to rearrange this slot while widget-edit mode is on. */
   editable?: boolean;
+}
+
+// A layout entry resolved against the registry: the widget definition plus
+// the instance key/config it is mounted with. Singleton widgets use their
+// widget id as the key.
+interface ResolvedEntry {
+  widget: RegisteredWidget;
+  key: string;
+  config?: Record<string, unknown>;
 }
 
 function widgetLabel(w: RegisteredWidget): string {
@@ -72,9 +87,12 @@ const Slot: Component<SlotProps> = (props) => {
   });
 
   // Module-local widgets: the user's saved layout when one exists, otherwise
-  // registry defaults. Stored ids that point at unknown, global, disallowed,
+  // registry defaults. Stored entries that point at unknown, global, disallowed,
   // or uninstalled-app widgets are silently dropped — layouts outlive code.
-  const localWidgetDefs = createMemo<RegisteredWidget[]>(() => {
+  // Resolved entries are reference-stable across recomputes (keyed by instance
+  // key + config) so <For> doesn't remount unchanged widgets.
+  let entryCache = new Map<string, ResolvedEntry>();
+  const localEntries = createMemo<ResolvedEntry[]>(() => {
     widgetVersion(); // track
     const moduleId = activeModuleId();
     const apps = installedApps();
@@ -83,76 +101,116 @@ const Slot: Component<SlotProps> = (props) => {
     const custom = isPageOwner()
       ? layoutFor(moduleId, props.name)
       : pageLayoutFor(moduleId, props.name);
-    if (custom) {
-      return custom
-        .map(getWidget)
-        .filter(
-          (w): w is RegisteredWidget =>
-            !!w &&
-            !w.global &&
-            widgetAllowedIn(w, moduleId) &&
-            isModuleActive(w.moduleId, apps) &&
-            visibleToViewer(w),
-        );
-    }
-    return resolveModuleSlot(props.name, moduleId).filter(
-      (w) => isModuleActive(w.moduleId, apps) && visibleToViewer(w),
-    );
-  });
 
-  const localWidgets = createMemo(() => localWidgetDefs().map((w) => getLazy(w.loader)));
+    let resolved: ResolvedEntry[];
+    if (custom) {
+      resolved = [];
+      const seen = new Set<string>();
+      for (const entry of custom) {
+        const w = getWidget(entryId(entry));
+        if (
+          !w ||
+          w.global ||
+          !widgetAllowedIn(w, moduleId) ||
+          !isModuleActive(w.moduleId, apps) ||
+          !visibleToViewer(w) ||
+          seen.has(entryKey(entry))
+        ) continue;
+        seen.add(entryKey(entry));
+        resolved.push({ widget: w, key: entryKey(entry), config: entryConfig(entry) });
+      }
+    } else {
+      resolved = resolveModuleSlot(props.name, moduleId)
+        .filter((w) => isModuleActive(w.moduleId, apps) && visibleToViewer(w))
+        .map((w) => ({ widget: w, key: w.id }));
+    }
+
+    // Reuse previous entry objects when nothing about them changed
+    const next = new Map<string, ResolvedEntry>();
+    const out = resolved.map((e) => {
+      const cacheKey = `${e.key}|${JSON.stringify(e.config ?? null)}`;
+      const prev = entryCache.get(cacheKey);
+      const stable = prev && prev.widget === e.widget ? prev : e;
+      next.set(cacheKey, stable);
+      return stable;
+    });
+    entryCache = next;
+    return out;
+  });
 
   // ── Edit mode ───────────────────────────────────────────────────────────────
 
   // Editing only applies to your own layout, on your own pages
   const editing = () => props.editable === true && editingWidgets() && isPageOwner();
 
-  const persist = async (ids: string[] | null) => {
-    const ok = await saveSlotLayout(activeModuleId(), props.name, ids);
+  const persist = async (entries: LayoutEntry[] | null) => {
+    const ok = await saveSlotLayout(activeModuleId(), props.name, entries);
     if (!ok) toast.error(t("widgets.save_failed"));
   };
 
-  const currentIds = () => localWidgetDefs().map((w) => w.id);
+  // The current arrangement in persistable form: plain id for singletons,
+  // instance object otherwise
+  const currentEntries = (): LayoutEntry[] =>
+    localEntries().map((e) =>
+      e.key === e.widget.id && e.config === undefined
+        ? e.widget.id
+        : { id: e.widget.id, key: e.key, ...(e.config !== undefined ? { config: e.config } : {}) },
+    );
 
   const move = (index: number, delta: number) => {
-    const ids = [...currentIds()];
+    const entries = [...currentEntries()];
     const target = index + delta;
-    if (target < 0 || target >= ids.length) return;
-    [ids[index], ids[target]] = [ids[target], ids[index]];
-    void persist(ids);
+    if (target < 0 || target >= entries.length) return;
+    [entries[index], entries[target]] = [entries[target], entries[index]];
+    void persist(entries);
   };
 
   const removeAt = (index: number) => {
-    const ids = [...currentIds()];
-    ids.splice(index, 1);
-    void persist(ids);
+    const entries = [...currentEntries()];
+    entries.splice(index, 1);
+    void persist(entries);
   };
 
-  const addWidget = (id: string) => {
-    void persist([...currentIds(), id]);
+  const addWidget = (w: RegisteredWidget) => {
+    const entry: LayoutEntry = w.multiInstance
+      ? { id: w.id, key: makeInstanceKey(w.id) }
+      : w.id;
+    void persist([...currentEntries(), entry]);
+  };
+
+  const saveConfig = (index: number, config: Record<string, unknown>) => {
+    const entries = [...currentEntries()];
+    const e = entries[index];
+    if (e === undefined) return;
+    entries[index] = { id: entryId(e), key: entryKey(e), config };
+    void persist(entries);
+    setConfigOpenKey(null);
   };
 
   const isCustomised = () => layoutFor(activeModuleId(), props.name) !== null;
 
   // Widgets the user could add here: same slot, allowed in this module,
-  // backing app installed, not global, not already present
+  // backing app installed, not global, not already present (multiInstance
+  // widgets stay available — each add creates a new instance)
   const availableWidgets = createMemo<RegisteredWidget[]>(() => {
     if (!editing()) return [];
     widgetVersion(); // track
     const moduleId = activeModuleId();
     const apps = installedApps();
-    const present = new Set(currentIds());
+    const present = new Set(localEntries().map((e) => e.widget.id));
     return getAllWidgets().filter(
       (w) =>
         !w.global &&
         w.slot === props.name &&
-        !present.has(w.id) &&
+        (w.multiInstance === true || !present.has(w.id)) &&
         widgetAllowedIn(w, moduleId) &&
         isModuleActive(w.moduleId, apps),
     );
   });
 
   const [pickerOpen, setPickerOpen] = createSignal(false);
+  // Instance key of the entry whose config panel is open (one at a time)
+  const [configOpenKey, setConfigOpenKey] = createSignal<string | null>(null);
 
   const editButtonClass =
     "p-1 rounded-md text-muted hover:text-txt hover:bg-elevated transition-colors " +
@@ -166,20 +224,43 @@ const Slot: Component<SlotProps> = (props) => {
       {/* Swapped per active module */}
       <Show
         when={editing()}
-        fallback={<For each={localWidgets()}>{(Widget) => <Widget />}</For>}
+        fallback={
+          <For each={localEntries()}>
+            {(entry) => {
+              const Widget = getLazy(entry.widget.loader);
+              return <Widget config={entry.config} />;
+            }}
+          </For>
+        }
       >
-        <Show when={localWidgetDefs().length === 0}>
+        <Show when={localEntries().length === 0}>
           <p class="text-xs text-muted px-1">{t("widgets.empty_slot")}</p>
         </Show>
 
-        <For each={localWidgetDefs()}>
-          {(widget, index) => {
-            const Widget = getLazy(widget.loader);
+        <For each={localEntries()}>
+          {(entry, index) => {
+            const Widget = getLazy(entry.widget.loader);
+            const configOpen = () => configOpenKey() === entry.key;
+            const ConfigForm = entry.widget.configComponent
+              ? getLazy(entry.widget.configComponent)
+              : null;
             return (
               <div class="rounded-xl border border-dashed border-accent/50 overflow-hidden">
                 <div class="flex items-center justify-between gap-1 px-2 py-1 bg-elevated">
-                  <span class="text-xs font-medium truncate">{widgetLabel(widget)}</span>
+                  <span class="text-xs font-medium truncate">{widgetLabel(entry.widget)}</span>
                   <div class="flex items-center shrink-0">
+                    <Show when={ConfigForm}>
+                      <button
+                        onClick={() => setConfigOpenKey(configOpen() ? null : entry.key)}
+                        aria-expanded={configOpen()}
+                        aria-label={t("widgets.configure_widget")}
+                        title={t("widgets.configure_widget")}
+                        class={editButtonClass}
+                        classList={{ "text-accent": configOpen() }}
+                      >
+                        <MdFillSettings size={14} />
+                      </button>
+                    </Show>
                     <button
                       onClick={() => move(index(), -1)}
                       disabled={index() === 0}
@@ -191,7 +272,7 @@ const Slot: Component<SlotProps> = (props) => {
                     </button>
                     <button
                       onClick={() => move(index(), 1)}
-                      disabled={index() === localWidgetDefs().length - 1}
+                      disabled={index() === localEntries().length - 1}
                       aria-label={t("widgets.move_down")}
                       title={t("widgets.move_down")}
                       class={editButtonClass}
@@ -208,9 +289,25 @@ const Slot: Component<SlotProps> = (props) => {
                     </button>
                   </div>
                 </div>
+
+                {/* Per-instance settings form */}
+                <Show when={configOpen() && ConfigForm}>
+                  {(Form) => {
+                    const F = Form();
+                    return (
+                      <div class="px-2 py-2 border-t border-rim">
+                        <F
+                          config={entry.config ?? {}}
+                          onSave={(config) => saveConfig(index(), config)}
+                        />
+                      </div>
+                    );
+                  }}
+                </Show>
+
                 {/* Inert preview — interacting with widgets is disabled while editing */}
                 <div class="pointer-events-none opacity-60 p-1" aria-hidden="true">
-                  <Widget />
+                  <Widget config={entry.config} />
                 </div>
               </div>
             );
@@ -238,7 +335,7 @@ const Slot: Component<SlotProps> = (props) => {
                 <For each={availableWidgets()}>
                   {(widget) => (
                     <button
-                      onClick={() => addWidget(widget.id)}
+                      onClick={() => addWidget(widget)}
                       class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-left text-xs
                              bg-elevated border border-rim
                              hover:brightness-95 transition-all"
