@@ -12,7 +12,7 @@ interface Row {
   url: string;
 }
 
-const MAX_LINKS = 8;
+const MAX_LINKS = 20;
 const MAX_CONFIG_CHARS = 1900;
 
 const inputClass =
