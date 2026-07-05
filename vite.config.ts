@@ -86,13 +86,15 @@ export default defineConfig({
     outDir: OUT_DIR,
     emptyOutDir: true,
     cssCodeSplit: false,
+    // .vite/manifest.json maps entry → hashed filenames; read by php/manifest.php
+    manifest: true,
     // removed watch: {} — use vite build --watch from CLI
     rollupOptions: {
       output: {
-        entryFileNames: "app.js",
-        chunkFileNames: "app-[name].js",
+        entryFileNames: "app-[hash].js",
+        chunkFileNames: "app-[name]-[hash].js",
         assetFileNames: (info) =>
-          info.name?.endsWith(".css") ? "app.css" : "[name][extname]",
+          info.name?.endsWith(".css") ? "app-[hash].css" : "[name][extname]",
         manualChunks(id) {
           // React + Filerobot image editor land in a single vendor chunk so
           // the browser can cache them across deploys independently of app code.

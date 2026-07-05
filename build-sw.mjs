@@ -18,6 +18,9 @@ const { count, size } = await generateSW({
   // exclude the sw itself from precache
   globIgnores: ['sw.js'],
 
+  // app-*.js/css names contain a content hash; the URL itself is the revision
+  dontCacheBustURLsMatching: /app-[^/]+\.(?:js|css)$/,
+
   modifyURLPrefix: { '': `${ASSET_WEB_PATH}/` },
 
   navigateFallback: null,
