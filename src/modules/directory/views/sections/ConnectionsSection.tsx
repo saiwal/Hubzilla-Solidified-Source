@@ -388,7 +388,9 @@ export default function ConnectionsSection() {
 
   let sentinelRef!: HTMLDivElement;
 
-  const meta = () => connectionsData()?.meta;
+  // .latest instead of () — a plain read while the resource is re-fetching triggers
+  // the section's <Suspense> boundary, blanking the whole view on every page load.
+  const meta = () => connectionsData.latest?.meta;
 
   onMount(() => {
     setPage(0);
@@ -402,7 +404,7 @@ export default function ConnectionsSection() {
   // fire with stale data the moment setPage() was called, before the resource switched
   // to loading, resulting in duplicate appends followed by an unexpected full replace.
   createEffect(() => {
-    const data = connectionsData();
+    const data = connectionsData.latest;
     if (connectionsData.loading || !data) return;
 
     fetchingMore = false;
