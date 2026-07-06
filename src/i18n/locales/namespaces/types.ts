@@ -509,7 +509,7 @@ export type RawDictionary = {
     like: string; dislike: string; repeat: string; reshare_with_comment: string;
     more_sharing: string; star: string; unstar: string; follow: string; unfollow: string;
     follow_for_notifs: string; unfollow_post: string; statistics: string; post_statistics: string;
-    view_source: string; import_post: string; import: string; source: string; toggle_comments: string;
+    view_source: string; import_post: string; import: string; original: string; toggle_comments: string;
     toggle_flat: string; toggle_threaded: string; flat: string; threaded: string;
     flat_view: string; threaded_view: string; refresh: string; more_actions: string;
     reply: string; delete_post: string; delete: string; confirm: string; confirm_delete: string;

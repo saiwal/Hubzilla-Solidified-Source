@@ -105,6 +105,94 @@ function VoteGutter(props: {
   );
 }
 
+// ── details row (shared by both row modes) ───────────────────────────────────
+
+function RowDetails(props: {
+  post: ThreadNode;
+  replyCount: number;
+  replyLabel: string;
+  onReplies: () => void;
+  repliesActive?: boolean;
+  handlers: StreamHandlers;
+}) {
+  const p = props.post;
+  const { t } = useI18n();
+
+  return (
+    <div
+      class="flex items-center gap-0.5 px-2 pb-1.5 flex-wrap"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        onClick={() => props.handlers.onRepeat(p.mid)}
+        class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-md transition-colors"
+        classList={{
+          "text-accent bg-accent-muted": p.viewerRepeated,
+          "text-muted hover:text-txt hover:bg-elevated": !p.viewerRepeated,
+        }}
+      >
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        <Show when={p.repeatCount > 0}>
+          <span>{p.repeatCount}</span>
+        </Show>
+        <span class="hidden sm:inline">{t("post.repeat")}</span>
+      </button>
+
+      <button
+        onClick={() => props.onReplies()}
+        class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-md transition-colors"
+        classList={{
+          "text-accent bg-accent-muted": props.repliesActive,
+          "text-muted hover:text-txt hover:bg-elevated": !props.repliesActive,
+        }}
+      >
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+        <Show when={props.replyCount > 0}>
+          <span>{props.replyCount}</span>
+        </Show>
+        <span class="hidden sm:inline">{props.replyLabel}</span>
+      </button>
+
+      <Show when={p.via}>
+        <a
+          href={p.via!.url}
+          class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-md
+                 text-muted hover:text-txt hover:bg-elevated transition-colors min-w-0"
+        >
+          <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span>via</span>
+          <span class="font-medium truncate max-w-[120px]">{p.via!.name}</span>
+        </a>
+      </Show>
+
+      <Show when={p.permalink}>
+        <a
+          href={p.permalink}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-md
+                 text-muted hover:text-txt hover:bg-elevated transition-colors"
+        >
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+          <span class="hidden sm:inline">{t("post.original")}</span>
+        </a>
+      </Show>
+    </div>
+  );
+}
+
 // ── list mode row (opens post modal) ─────────────────────────────────────────
 
 function ListRow(props: {
@@ -198,60 +286,18 @@ function ListRow(props: {
             >
               {formatPostDate(p.created, locale())}
             </span>
-            <Show when={p.via}>
-              <span class="text-[11px] text-muted/50">·</span>
-              <svg class="w-2.5 h-2.5 text-muted shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              <span class="text-[11px] text-muted">via</span>
-              <a href={p.via!.url} class="text-[11px] text-muted hover:underline font-medium truncate">
-                {p.via!.name}
-              </a>
-            </Show>
           </div>
         </div>
 
-        <div
-          class="flex items-center gap-0.5 px-2 pb-1.5 transition-opacity"
-          classList={{ "opacity-40 group-hover:opacity-100": !p.viewerRepeated }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button
-            onClick={() => props.handlers.onRepeat(p.mid)}
-            class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-md transition-colors"
-            classList={{
-              "text-accent bg-accent-muted": p.viewerRepeated,
-              "text-muted hover:text-txt hover:bg-elevated": !p.viewerRepeated,
-            }}
-          >
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            <Show when={p.repeatCount > 0}>
-              <span>{p.repeatCount}</span>
-            </Show>
-            <span class="hidden sm:inline">{t("post.repeat")}</span>
-          </button>
-
-          <Show when={replyCount() > 0}>
-            <button
-              onClick={() => props.onOpenModal()}
-              class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-md
-                     text-muted hover:text-txt hover:bg-elevated transition-colors"
-            >
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-              <span>{replyCount()}</span>
-              <span class="hidden sm:inline">
-                {replyCount() > 1 ? t("post.comments_plural") : t("post.comments_singular")}
-              </span>
-            </button>
-          </Show>
-        </div>
+        <RowDetails
+          post={p}
+          replyCount={replyCount()}
+          replyLabel={
+            replyCount() === 1 ? t("post.comments_singular") : t("post.comments_plural")
+          }
+          onReplies={() => props.onOpenModal()}
+          handlers={props.handlers}
+        />
       </div>
     </div>
   );
@@ -538,18 +584,6 @@ function InboxRow(props: {
               {formatPostDate(p.created, locale())}
             </span>
 
-            <Show when={p.via}>
-              <span class="text-[11px] text-muted/50">·</span>
-              <svg class="w-2.5 h-2.5 text-muted shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              <span class="text-[11px] text-muted">via</span>
-              <a href={p.via!.url} class="text-[11px] text-muted hover:underline font-medium truncate max-w-[120px]">
-                {p.via!.name}
-              </a>
-            </Show>
-
             <svg
               class="w-3 h-3 text-muted/50 ml-auto transition-transform duration-200"
               classList={{ "rotate-180": expanded() }}
@@ -562,45 +596,14 @@ function InboxRow(props: {
           </div>
         </div>
 
-        <div
-          class="flex items-center gap-0.5 px-2 pb-1.5 transition-opacity"
-          classList={{ "opacity-40 group-hover:opacity-100": replyCount() === 0 }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button
-            onClick={toggleExpand}
-            class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-md
-                   text-muted hover:text-txt hover:bg-elevated transition-colors"
-            classList={{ "text-accent bg-accent-muted": expanded() }}
-          >
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-            <Show when={replyCount() > 0}>
-              <span>{replyCount()}</span>
-            </Show>
-            <span class="hidden sm:inline">
-              {replyCount() === 1 ? t("ui.reply") : t("ui.replies")}
-            </span>
-          </button>
-
-          <Show when={p.permalink}>
-            <a
-              href={p.permalink}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-md
-                     text-muted hover:text-txt hover:bg-elevated transition-colors"
-            >
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-              <span class="hidden sm:inline">{t("post.source")}</span>
-            </a>
-          </Show>
-        </div>
+        <RowDetails
+          post={p}
+          replyCount={replyCount()}
+          replyLabel={replyCount() === 1 ? t("ui.reply") : t("ui.replies")}
+          onReplies={toggleExpand}
+          repliesActive={expanded()}
+          handlers={props.handlers}
+        />
 
         <Show when={expanded() && commentsLoading()}>
           <div class="px-3 py-2 text-xs text-muted animate-pulse border-t border-rim">
