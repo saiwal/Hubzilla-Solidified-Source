@@ -1,8 +1,9 @@
 // Article teaser card (config: { uuid }): title, short excerpt, and a
 // read-more link for one article. multiInstance.
 
-import { createResource, Show } from "solid-js";
+import { Show } from "solid-js";
 import { A } from "@solidjs/router";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import type { WidgetProps } from "@/shared/types/module.types";
 import { usePageNick } from "@/shared/store/site-config";
 import { editingWidgets } from "@/shared/store/widget-layout";
@@ -29,7 +30,8 @@ export default function ArticleTeaserWidget(props: WidgetProps) {
   const nick = usePageNick();
   const uuid = () => String(props.config?.uuid ?? "");
 
-  const [article] = createResource(
+  const [article] = createQueryResource(
+    "article-teaser",
     () => (nick() && uuid() ? { nick: nick(), uuid: uuid() } : null),
     async (p) => (await fetchArticle(p.nick, p.uuid)).article,
   );

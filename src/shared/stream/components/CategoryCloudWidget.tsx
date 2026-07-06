@@ -3,7 +3,8 @@
 // Alternate category layout: a tag-cloud of pills with font size scaled by
 // post count, instead of the row list in CategoryWidget. Same API and props.
 
-import { type Component, createEffect, createResource, For, on, Show } from "solid-js";
+import { type Component, createEffect, For, on, Show } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { useI18n } from "@/i18n";
 import { toast } from "@/shared/store/toast";
 import {
@@ -26,7 +27,8 @@ function CloudSkeleton() {
 const CategoryCloudWidget: Component<CategoryWidgetProps> = (props) => {
   const { t } = useI18n();
 
-  const [remote] = createResource(
+  const [remote] = createQueryResource(
+    "stream-categories",
     () =>
       props.data
         ? null

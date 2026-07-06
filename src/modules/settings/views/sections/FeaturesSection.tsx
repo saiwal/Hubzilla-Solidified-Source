@@ -1,4 +1,5 @@
-import { createResource, createSignal, Show, For, createMemo } from "solid-js";
+import { Show, For, createMemo } from "solid-js";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/solid-query";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { apiFetch } from "@/shared/lib/fetch";
 import { toast } from "@/shared/store/toast";
@@ -25,11 +26,14 @@ async function fetchFeatures(): Promise<FeaturesData> {
 
 export default function FeaturesSection() {
   const { t } = useI18n();
-  const [features, { mutate }] = createResource(fetchFeatures);
-  const [busy, setBusy] = createSignal<string | null>(null);
+  const queryClient = useQueryClient();
+  const query = useQuery(() => ({
+    queryKey: ["settings", "features"] as const,
+    queryFn: fetchFeatures,
+  }));
 
   const grouped = createMemo<[string, FeatureEntry[]][]>(() => {
-    const list = features()?.features ?? [];
+    const list = query.data?.features ?? [];
     const map = new Map<string, FeatureEntry[]>();
     for (const f of list) {
       const g = f.group || "";
@@ -39,42 +43,45 @@ export default function FeaturesSection() {
     return [...map.entries()];
   });
 
-  async function toggle(name: string, currentlyEnabled: boolean) {
-    setBusy(name);
-    try {
+  const toggleMutation = useMutation(() => ({
+    mutationFn: async ({ name, enabled }: { name: string; enabled: boolean }) => {
       const res = await apiFetch("/api/settings/features", {
         method: "POST",
-        body: JSON.stringify({ feature: name, enabled: currentlyEnabled ? 0 : 1 }),
+        body: JSON.stringify({ feature: name, enabled: enabled ? 0 : 1 }),
       });
       if (!res.ok) throw new Error("Failed to toggle");
-      // Optimistic update
-      mutate((prev) =>
+    },
+    onSuccess: (_data, { name, enabled }) => {
+      // Patch the cache in place — cheaper than invalidating and refetching
+      queryClient.setQueryData<FeaturesData>(["settings", "features"], (prev) =>
         prev
           ? {
               features: prev.features.map((f) =>
-                f.name === name ? { ...f, enabled: !currentlyEnabled } : f,
+                f.name === name ? { ...f, enabled: !enabled } : f,
               ),
             }
           : prev,
       );
-    } catch {
+    },
+    onError: () => {
       toast.error("Failed to toggle feature");
-    } finally {
-      setBusy(null);
-    }
-  }
+    },
+  }));
+
+  const toggle = (name: string, currentlyEnabled: boolean) =>
+    toggleMutation.mutate({ name, enabled: currentlyEnabled });
 
   return (
     <SubPageContent title={t("settings.title_features")} description={t("settings.desc_features")}>
-      <Show when={features.error}>
+      <Show when={query.isError}>
         <p class="text-sm text-muted">{t("settings.feat_load_error")}</p>
       </Show>
 
-      <Show when={features.loading}>
+      <Show when={query.isPending}>
         <Skeleton />
       </Show>
 
-      <Show when={features() && grouped().length === 0}>
+      <Show when={query.data && grouped().length === 0}>
         <p class="text-sm text-muted">{t("settings.feat_no_features")}</p>
       </Show>
 
@@ -92,7 +99,7 @@ export default function FeaturesSection() {
                   {(feat) => (
                     <FeatureRow
                       feature={feat}
-                      isBusy={busy() === feat.name}
+                      isBusy={toggleMutation.isPending && toggleMutation.variables?.name === feat.name}
                       onToggle={() => toggle(feat.name, feat.enabled)}
                     />
                   )}

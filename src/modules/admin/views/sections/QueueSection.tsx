@@ -1,11 +1,12 @@
-import { createResource, For, Show } from "solid-js";
+import { For, Show } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchAdminQueue } from "../../api";
 import { useI18n } from "@/i18n";
 
 export default function QueueSection() {
   const { t } = useI18n();
-  const [data, { refetch }] = createResource(fetchAdminQueue);
+  const [data, { refetch }] = createQueryResource("admin-queue", fetchAdminQueue);
 
   return (
     <SubPageContent title={t("admin.queue_title")} description={t("admin.queue_desc")}>

@@ -2,8 +2,9 @@
 // location. multiInstance. Events outside the calendar feed's upcoming
 // window (e.g. past events) show the unavailable hint in edit mode.
 
-import { createResource, Show } from "solid-js";
+import { Show } from "solid-js";
 import { A } from "@solidjs/router";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import type { WidgetProps } from "@/shared/types/module.types";
 import { usePageNick } from "@/shared/store/site-config";
 import { editingWidgets } from "@/shared/store/widget-layout";
@@ -35,7 +36,8 @@ export default function EventCardWidget(props: WidgetProps) {
   const nick = usePageNick();
   const uri = () => String(props.config?.uri ?? "");
 
-  const [event] = createResource(
+  const [event] = createQueryResource(
+    "calendar-event",
     () => (nick() && uri() ? { nick: nick(), uri: uri() } : null),
     async (p) => {
       const events = await fetchEvents(p.nick);

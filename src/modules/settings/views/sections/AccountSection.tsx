@@ -7,6 +7,7 @@ import { useI18n } from "@/i18n";
 export default function AccountSection() {
   const { t } = useI18n();
   const { data, saving, handleSubmit } = useSectionForm({
+    section: "account",
     fetcher: fetchAccountSettings,
     saver: async () => {}, // account email change not yet wired in PHP
   });

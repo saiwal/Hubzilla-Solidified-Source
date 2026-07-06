@@ -50,6 +50,7 @@ const TOGGLE_FIELDS = [
 export default function PrivacySection() {
   const { t } = useI18n();
   const { data, saving, handleSubmit } = useSectionForm({
+    section: "privacy",
     fetcher: fetchPrivacy,
     saver: savePrivacy,
     numericFields: [...TOGGLE_FIELDS],

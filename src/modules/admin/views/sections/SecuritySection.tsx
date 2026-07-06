@@ -8,6 +8,7 @@ import { useI18n } from "@/i18n";
 export default function SecuritySection() {
   const { t } = useI18n();
   const { data, saving, handleSubmit } = useSectionForm<AdminSecurity>({
+    section: "admin-security",
     fetcher: fetchAdminSecurity,
     saver: saveAdminSecurity,
     checkboxFields: [

@@ -1,7 +1,8 @@
 // Settings form for ItemCardWidget instances: pick which catalog item the
 // card shows. Rendered in Slot's edit-mode config panel (owner only).
 
-import { createResource, createSignal, For } from "solid-js";
+import { createSignal, For } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import type { WidgetConfigProps } from "@/shared/types/module.types";
 import { usePageNick } from "@/shared/store/site-config";
 import { useI18n } from "@/i18n";
@@ -12,7 +13,7 @@ export default function ItemCardConfig(props: WidgetConfigProps) {
   const nick = usePageNick();
   const [sku, setSku] = createSignal(String(props.config.sku ?? ""));
 
-  const [catalog] = createResource(() => nick() || null, fetchCatalog);
+  const [catalog] = createQueryResource("cart-catalog", () => nick() || null, fetchCatalog);
 
   return (
     <div class="flex flex-col gap-2">

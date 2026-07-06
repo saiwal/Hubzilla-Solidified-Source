@@ -1,5 +1,5 @@
 import { Show, createSignal } from "solid-js";
-import { createResource } from "solid-js";
+import { useQuery } from "@tanstack/solid-query";
 import { toast } from "@/shared/store/toast";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { apiFetch } from "@/shared/lib/fetch";
@@ -9,11 +9,15 @@ interface DangerData { nick: string; name: string; account_email: string; }
 
 export default function DangerSection() {
   const { t } = useI18n();
-  const [data] = createResource<DangerData>(async () => {
-    const res = await apiFetch("/api/settings/danger");
-    const { data } = await res.json();
-    return data;
-  });
+  const query = useQuery(() => ({
+    queryKey: ["settings", "danger"] as const,
+    queryFn: async (): Promise<DangerData> => {
+      const res = await apiFetch("/api/settings/danger");
+      const { data } = await res.json();
+      return data;
+    },
+  }));
+  const data = () => query.data;
 
   const [confirm, setConfirm] = createSignal("");
   const [busy, setBusy] = createSignal(false);

@@ -1,11 +1,12 @@
-import { createResource, For, Show } from "solid-js";
+import { For, Show } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchAdminSummary } from "../../api";
 import { useI18n } from "@/i18n";
 
 export default function SummarySection() {
   const { t } = useI18n();
-  const [data] = createResource(fetchAdminSummary);
+  const [data] = createQueryResource("admin-summary", fetchAdminSummary);
 
   return (
     <SubPageContent title={t("admin.summary_title")} description={t("admin.summary_desc")}>

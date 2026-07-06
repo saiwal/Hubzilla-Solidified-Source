@@ -1,7 +1,8 @@
 // Settings form for EventCardWidget instances: pick one of the channel's
 // upcoming events (default feed window).
 
-import { createResource, createSignal, For } from "solid-js";
+import { createSignal, For } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import type { WidgetConfigProps } from "@/shared/types/module.types";
 import { usePageNick } from "@/shared/store/site-config";
 import { useI18n } from "@/i18n";
@@ -12,7 +13,7 @@ export default function EventCardConfig(props: WidgetConfigProps) {
   const nick = usePageNick();
   const [uri, setUri] = createSignal(String(props.config.uri ?? ""));
 
-  const [events] = createResource(() => nick() || null, (n) => fetchEvents(n));
+  const [events] = createQueryResource("calendar-events", () => nick() || null, (n) => fetchEvents(n));
 
   return (
     <div class="flex flex-col gap-2">

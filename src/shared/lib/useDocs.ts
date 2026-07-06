@@ -1,15 +1,18 @@
 // src/shared/lib/useDocs.ts
 import { useI18n } from "@/i18n";
-import { createResource, type Accessor } from "solid-js";
+import { type Accessor } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import type { DocType } from "@/shared/store/help-mode";
 
 export function useDocs(path: string, docType: Accessor<DocType>) {
   const { locale } = useI18n();
 
-  return createResource(
+  return createQueryResource(
+    "docs",
     () => ({
       lang: locale(),
       type: docType(),
+      path,
     }),
     async ({ lang, type }) => {
       const res = await fetch(

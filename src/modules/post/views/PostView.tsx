@@ -1,6 +1,7 @@
 // src/modules/post/views/PostView.tsx
-import { createMemo, createResource, createSignal, Show } from "solid-js";
+import { createMemo, createSignal, Show } from "solid-js";
 import { useNavigate, useParams } from "@solidjs/router";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import PostCard from "@/shared/stream/components/PostCard";
 import type { StreamHandlers } from "@/shared/stream/types";
 import type { ThreadNode } from "@/shared/lib/thread";
@@ -58,7 +59,7 @@ export default function PostView() {
   const navigate = useNavigate();
   const { t } = useI18n();
 
-  const [node, { refetch }] = createResource(() => params.uuid, fetchPost);
+  const [node, { refetch }] = createQueryResource("post", () => params.uuid, fetchPost);
   const [localReactions, setLocalReactions] = createSignal<Record<string, ReactionOverride>>({});
 
   const displayNode = createMemo((): ThreadNode | undefined => {

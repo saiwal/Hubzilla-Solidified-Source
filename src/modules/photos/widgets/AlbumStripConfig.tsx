@@ -1,7 +1,8 @@
 // Settings form for AlbumStripWidget instances: pick one of the channel's
 // photo albums.
 
-import { createResource, createSignal, For } from "solid-js";
+import { createSignal, For } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import type { WidgetConfigProps } from "@/shared/types/module.types";
 import { usePageNick } from "@/shared/store/site-config";
 import { useI18n } from "@/i18n";
@@ -12,7 +13,7 @@ export default function AlbumStripConfig(props: WidgetConfigProps) {
   const nick = usePageNick();
   const [album, setAlbum] = createSignal(String(props.config.album ?? ""));
 
-  const [albums] = createResource(() => nick() || null, fetchAlbums);
+  const [albums] = createQueryResource("photo-albums", () => nick() || null, fetchAlbums);
 
   return (
     <div class="flex flex-col gap-2">

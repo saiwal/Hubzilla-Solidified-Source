@@ -1,11 +1,11 @@
 import {
   createSignal,
   createMemo,
-  createResource,
   For,
   Show,
   type Component,
 } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { toast } from "@/shared/store/toast";
 import { useI18n } from "@/i18n";
 import { useParams } from "@solidjs/router";
@@ -502,7 +502,8 @@ export default function FilesView() {
   const current = createMemo(() => navStack()[navStack().length - 1]);
 
   // File listing — refetches whenever current folder hash changes
-  const [files, { refetch }] = createResource(
+  const [files, { refetch }] = createQueryResource(
+    "files-folder",
     () => ({ nick: nick(), hash: current().hash }),
     ({ nick: n, hash }) => listFolder(n, hash)
   );

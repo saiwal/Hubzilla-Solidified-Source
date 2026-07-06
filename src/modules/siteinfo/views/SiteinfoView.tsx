@@ -1,4 +1,5 @@
-import { createResource, Show, For } from "solid-js";
+import { Show, For } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { fetchSiteInfo } from "../api";
 import { bbcode } from "@/shared/lib/bbcode";
 import DOMPurify from "dompurify";
@@ -6,7 +7,7 @@ import { useI18n } from "@/i18n";
 
 export default function SiteinfoView() {
   const { t } = useI18n();
-  const [info] = createResource(fetchSiteInfo);
+  const [info] = createQueryResource("siteinfo", fetchSiteInfo);
 
   return (
     <Show when={!info.loading} fallback={<SiteinfoPending />}>

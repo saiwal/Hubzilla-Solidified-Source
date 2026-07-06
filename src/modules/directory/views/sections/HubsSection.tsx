@@ -1,4 +1,5 @@
-import { createResource, For, Show, createSignal, createMemo } from 'solid-js';
+import { For, Show, createSignal, createMemo } from 'solid-js';
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { fetchPubsites, type PubSite } from '../../hubs/api';
 import { useI18n } from "@/i18n";
 
@@ -97,7 +98,7 @@ function HubCard(props: { site: PubSite }) {
 
 export default function PubsitesView() {
   const { t } = useI18n();
-  const [sites] = createResource(fetchPubsites);
+  const [sites] = createQueryResource("pubsites", fetchPubsites);
   const [filter, setFilter] = createSignal('');
   const [accessFilter, setAccessFilter] = createSignal('all');
   const [registerFilter, setRegisterFilter] = createSignal('all');

@@ -1,6 +1,7 @@
 // src/modules/network/views/ReactorList.tsx
 
-import { createResource, Show, For } from 'solid-js';
+import { Show, For } from 'solid-js';
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { fetchDislikes, fetchLikes, fetchRepeats } from '../api';
 import { useI18n } from "@/i18n";
 
@@ -11,12 +12,14 @@ interface Props {
 
 export default function ReactorList(props: Props) {
   const { t } = useI18n();
-  const fetcher = () =>
-    props.verb === 'likes'    ? fetchLikes(props.mid)    :
-    props.verb === 'dislikes' ? fetchDislikes(props.mid) :
-                                fetchRepeats(props.mid);
-
-  const [data] = createResource(() => props.mid, fetcher);
+  const [data] = createQueryResource(
+    "reactors",
+    () => ({ mid: props.mid, verb: props.verb }),
+    ({ mid, verb }) =>
+      verb === 'likes'    ? fetchLikes(mid)    :
+      verb === 'dislikes' ? fetchDislikes(mid) :
+                            fetchRepeats(mid),
+  );
 
   return (
     <Show when={!data.loading} fallback={<p>{t("network.loading")}</p>}>

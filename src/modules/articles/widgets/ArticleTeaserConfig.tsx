@@ -1,7 +1,8 @@
 // Settings form for ArticleTeaserWidget instances: pick one of the channel's
 // articles.
 
-import { createResource, createSignal, For } from "solid-js";
+import { createSignal, For } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import type { WidgetConfigProps } from "@/shared/types/module.types";
 import { usePageNick } from "@/shared/store/site-config";
 import { useI18n } from "@/i18n";
@@ -12,7 +13,8 @@ export default function ArticleTeaserConfig(props: WidgetConfigProps) {
   const nick = usePageNick();
   const [uuid, setUuid] = createSignal(String(props.config.uuid ?? ""));
 
-  const [articles] = createResource(
+  const [articles] = createQueryResource(
+    "articles-list",
     () => nick() || null,
     async (n) => (await fetchArticles(n)).articles,
   );

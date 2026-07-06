@@ -6,12 +6,12 @@
 
 import {
   createSignal,
-  createResource,
   Show,
   For,
   type Component,
   type JSX,
 } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { Portal } from "solid-js/web";
 import { fetchConnections } from "@/modules/network/api";
 import type { AclEntry } from "@/modules/network/api";
@@ -48,7 +48,7 @@ export interface AclPickerProps {
 
 const AclPicker: Component<AclPickerProps> = (props) => {
   const { t } = useI18n();
-  const [fetched] = createResource(() => !props.entries, fetchConnections);
+  const [fetched] = createQueryResource("network-connections", () => !props.entries, fetchConnections);
   const [query, setQuery] = createSignal("");
   const loading = () => !props.entries && fetched.loading;
   const allEntries = () => props.entries ?? fetched() ?? [];

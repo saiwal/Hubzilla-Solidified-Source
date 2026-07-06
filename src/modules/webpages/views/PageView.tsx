@@ -1,5 +1,6 @@
-import { createResource, Show } from "solid-js";
+import { Show } from "solid-js";
 import { useParams, A } from "@solidjs/router";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import DOMPurify from "dompurify";
 import { bbcodeToHtml } from "@/shared/lib/bbcode";
 import { fetchWebPageByPagelink } from "../api";
@@ -35,7 +36,8 @@ export default function PageView() {
   const pagelink = () => params.path ?? "";
   const nick = () => params.nick ?? "";
 
-  const [detail] = createResource(
+  const [detail] = createQueryResource(
+    "webpage",
     () => ({ nick: nick(), pagelink: pagelink() }),
     ({ nick, pagelink }) => fetchWebPageByPagelink(nick, pagelink),
   );

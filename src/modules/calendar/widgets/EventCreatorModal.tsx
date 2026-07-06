@@ -1,4 +1,5 @@
-import { createSignal, createResource, Show, For, onMount, onCleanup } from "solid-js";
+import { createSignal, Show, For, onMount, onCleanup } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { toast } from "@/shared/store/toast";
 import { createEvent, editEvent } from "../api";
 import type { CalEvent } from "../api";
@@ -55,7 +56,7 @@ export default function EventCreatorModal(props: Props) {
   const [submitting, setSubmitting] = createSignal(false);
   const [selectedCalIdx, setSelectedCalIdx] = createSignal(0);
 
-  const [calData] = createResource(fetchCdavCalendars);
+  const [calData] = createQueryResource("cdav-calendars", fetchCdavCalendars);
 
   const calendarOptions = (): CalendarOption[] => {
     const d = calData();

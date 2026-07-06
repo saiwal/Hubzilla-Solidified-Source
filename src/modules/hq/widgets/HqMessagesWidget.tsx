@@ -7,12 +7,12 @@ import {
   createSignal,
   createEffect,
   createMemo,
-  createResource,
   onCleanup,
   For,
   Show,
   type Component,
 } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -358,7 +358,7 @@ export default function HqMessagesWidget() {
   const { t } = useI18n();
   const [activeTab, setActiveTab] = createSignal<TabMode>("");
   const [activeFolder, setActiveFolder] = createSignal("");
-  const [folders] = createResource(fetchFolders);
+  const [folders] = createQueryResource("hq-folders", fetchFolders);
   const [refreshKey, setRefreshKey] = createSignal(0);
   const [entries, setEntries] = createSignal<MessageEntry[]>([]);
   const [offset, setOffset] = createSignal(0);

@@ -1,10 +1,10 @@
 import {
-  createResource,
   createSignal,
   createMemo,
   For,
   Show,
 } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import {
   fetchConnections,
   fetchPermcats,
@@ -389,8 +389,8 @@ type RolePill = {
 
 export default function ContactRolesSection() {
   const { t } = useI18n();
-  const [connections, { mutate: mutateConns, refetch: refetchConns }] = createResource(fetchAllConnections);
-  const [permcats, { mutate: mutatePermcats }] = createResource(fetchPermcats);
+  const [connections, { mutate: mutateConns, refetch: refetchConns }] = createQueryResource("connections-all", fetchAllConnections);
+  const [permcats, { mutate: mutatePermcats }] = createQueryResource("permcats", fetchPermcats);
   const [activeRole, setActiveRole] = createSignal<string | null>(null);
   const [showCreate, setShowCreate] = createSignal(false);
 

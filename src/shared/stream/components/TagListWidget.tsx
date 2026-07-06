@@ -7,12 +7,12 @@
 import {
   type Component,
   createEffect,
-  createResource,
   createSignal,
   For,
   on,
   Show,
 } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { useI18n } from "@/i18n";
 import { toast } from "@/shared/store/toast";
 import { fetchTags, type TagItem, type TagWidgetProps } from "./TagWidget";
@@ -40,7 +40,8 @@ const TagListWidget: Component<TagWidgetProps> = (props) => {
   const [expanded, setExpanded] = createSignal(false);
   const max = () => props.maxVisible ?? 20;
 
-  const [remote] = createResource(
+  const [remote] = createQueryResource(
+    "stream-tags",
     () =>
       props.data
         ? null

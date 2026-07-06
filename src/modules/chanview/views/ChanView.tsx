@@ -1,5 +1,6 @@
-import { createResource, createSignal, Show, For } from "solid-js";
+import { createSignal, Show, For } from "solid-js";
 import { useSearchParams } from "@solidjs/router";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { apiFetch } from "@/shared/lib/fetch";
 import { useAuth } from "@/shared/store/auth-store";
 import { addConnection } from "@/modules/directory/people/api";
@@ -92,7 +93,7 @@ export default function ChanView() {
     return Array.isArray(h) ? h[0] : (h ?? "");
   };
 
-  const [xchan] = createResource(hash, fetchXchan);
+  const [xchan] = createQueryResource("xchan", hash, fetchXchan);
 
   const [connectState, setConnectState] = createSignal<ConnectState>({ tag: "idle" });
   const [editConn, setEditConn] = createSignal<Connection | null>(null);

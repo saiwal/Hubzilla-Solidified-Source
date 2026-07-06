@@ -1,5 +1,6 @@
-import { createSignal, createResource, Show, Switch, Match } from "solid-js";
+import { createSignal, Show, Switch, Match } from "solid-js";
 import { A } from "@solidjs/router";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { fetchRegisterConfig, submitRegister } from "../api/api";
 import { toast } from "@/shared/store/toast";
 import { useI18n } from "@/i18n";
@@ -7,7 +8,7 @@ import { useI18n } from "@/i18n";
 export default function RegisterView() {
   const { t } = useI18n();
 
-  const [config] = createResource(fetchRegisterConfig);
+  const [config] = createQueryResource("register-config", fetchRegisterConfig);
 
   const [step, setStep] = createSignal<"form" | "check_email" | "pending_approval">("form");
   const [regateUrl, setRegateUrl] = createSignal("");

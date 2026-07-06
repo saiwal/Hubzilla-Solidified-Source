@@ -1,5 +1,6 @@
 import { createSignal, createResource, createEffect, For, Show } from "solid-js";
 import { Portal } from "solid-js/web";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import type { Connection } from "@/modules/directory/connections/api";
 import {
   updateConnection, deleteConnection,
@@ -76,12 +77,12 @@ export default function ConnectionEditorModal(props: Props) {
   const [checkedGroupIds, setCheckedGroupIds] = createSignal<Set<number>>(new Set());
   let initialGroupIds = new Set<number>();
 
-  const [privacyGroups] = createResource(async () => {
+  const [privacyGroups] = createQueryResource("privacy-groups", async () => {
     try { return await fetchGroups(); }
     catch { return []; }
   });
 
-  const [profilesResult] = createResource(async () => {
+  const [profilesResult] = createQueryResource("profiles", async () => {
     try { return await fetchProfiles(); }
     catch { return null; }
   });
@@ -90,7 +91,8 @@ export default function ConnectionEditorModal(props: Props) {
   const extraProfiles = () =>
     (profilesResult()?.profiles ?? []).filter((p) => !p.is_default);
 
-  const [connectionGroupIds] = createResource(
+  const [connectionGroupIds] = createQueryResource(
+    "connection-groups",
     () => props.connection.id,
     async (id) => {
       try { return await fetchConnectionGroups(id); }
@@ -106,7 +108,7 @@ export default function ConnectionEditorModal(props: Props) {
     }
   });
 
-  const [permcats] = createResource(() => fetchPermcats().catch(() => []));
+  const [permcats] = createQueryResource("permcats", () => fetchPermcats().catch(() => []));
   const [permsData] = createResource(
     () => props.connection.id,
     (id) => fetchConnectionPerms(id).then((d) => {

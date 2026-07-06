@@ -1,8 +1,9 @@
 // Chatroom card (config: { room }): room name, who's inside, join link.
 // multiInstance.
 
-import { createResource, Show } from "solid-js";
+import { Show } from "solid-js";
 import { A } from "@solidjs/router";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import type { WidgetProps } from "@/shared/types/module.types";
 import { usePageNick } from "@/shared/store/site-config";
 import { editingWidgets } from "@/shared/store/widget-layout";
@@ -25,7 +26,8 @@ export default function RoomCardWidget(props: WidgetProps) {
   const nick = usePageNick();
   const roomId = () => Number(props.config?.room ?? 0);
 
-  const [room] = createResource(
+  const [room] = createQueryResource(
+    "chat-room",
     () => (nick() && roomId() ? { nick: nick(), id: roomId() } : null),
     async (p) => {
       const res = await fetchRooms(p.nick);

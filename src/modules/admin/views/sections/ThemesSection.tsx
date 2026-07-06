@@ -1,4 +1,5 @@
-import { createResource, createSignal, createEffect, For, Show, batch } from "solid-js";
+import { createSignal, createEffect, For, Show, batch } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import SubPageContent from "@/shared/views/SubPageContent";
 import {
   fetchAdminThemes,
@@ -11,7 +12,7 @@ import { useI18n } from "@/i18n";
 
 export default function ThemesSection() {
   const { t } = useI18n();
-  const [result, { refetch }] = createResource(fetchAdminThemes);
+  const [result, { refetch }] = createQueryResource("admin-themes", fetchAdminThemes);
   const [configTheme, setConfigTheme] = createSignal<string | null>(null);
 
   async function onToggle(name: string) {
@@ -93,7 +94,7 @@ export default function ThemesSection() {
 }
 
 function ThemeConfigPanel(props: { theme: string }) {
-  const [opts] = createResource(() => props.theme, fetchThemeOptions);
+  const [opts] = createQueryResource("admin-theme-options", () => props.theme, fetchThemeOptions);
   const [values, setValues] = createSignal<Record<string, string>>({});
   const [saving, setSaving] = createSignal(false);
   const [saved, setSaved] = createSignal(false);

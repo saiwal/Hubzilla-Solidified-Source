@@ -1,4 +1,5 @@
-import { createSignal, createResource, createMemo, For, Show } from "solid-js";
+import { createSignal, createMemo, For, Show } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchAdminChannels, adminChannelAction } from "../../api";
 import type { AdminChannel } from "../../types";
@@ -8,7 +9,7 @@ export default function ChannelsSection() {
   const { t } = useI18n();
   const [page, setPage] = createSignal(0);
   const [search, setSearch] = createSignal("");
-  const [result, { refetch }] = createResource(page, fetchAdminChannels);
+  const [result, { refetch }] = createQueryResource("admin-channels", page, fetchAdminChannels);
 
   const filtered = createMemo(() => {
     const q = search().toLowerCase().trim();

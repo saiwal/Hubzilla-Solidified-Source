@@ -1,6 +1,6 @@
 import { Show, For, createSignal, createMemo, createEffect } from "solid-js";
 import { toast } from "@/shared/store/toast";
-import { createResource } from "solid-js";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/solid-query";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { apiFetch } from "@/shared/lib/fetch";
 import { getNavIcon, biToNavIcon } from "@/shared/views/NavItem";
@@ -84,18 +84,21 @@ function AppIcon(props: { app: AppEntry }) {
 
 export default function IntegrationsSection() {
   const { t } = useI18n();
-  const [data, { refetch }] = createResource(fetchIntegrations);
-  const [busy, setBusy] = createSignal<string | null>(null);
+  const queryClient = useQueryClient();
+  const query = useQuery(() => ({
+    queryKey: ["settings", "integrations"] as const,
+    queryFn: fetchIntegrations,
+  }));
   const [search, setSearch] = createSignal("");
   const [filter, setFilter] = createSignal<FilterTab>("all");
 
   // Sync server-stored nav order into the local signal on load
   createEffect(() => {
-    const d = data();
+    const d = query.data;
     if (d) setNavOrder(d.navOrder);
   });
 
-  const apps = () => data()?.apps ?? [];
+  const apps = () => query.data?.apps ?? [];
 
   const filtered = createMemo(() => {
     const list = apps();
@@ -147,13 +150,10 @@ export default function IntegrationsSection() {
     }).catch(() => {});
   };
 
-  const isBusy = (name: string, action?: AppAction) =>
-    action ? busy() === `${name}:${action}` : busy()?.startsWith(`${name}:`);
-
-  const run = async (app: AppEntry, action: AppAction) => {
-    setBusy(`${app.name}:${action}`);
-    try {
-      await appAction(app.name, action);
+  const appMutation = useMutation(() => ({
+    mutationFn: ({ app, action }: { app: AppEntry; action: AppAction }) =>
+      appAction(app.name, action),
+    onSuccess: async (_data, { app, action }) => {
       if (action === "pin" || action === "feature") {
         const current = navOrder();
         const isActivating = action === "pin" ? !app.pinned : !app.featured;
@@ -168,14 +168,21 @@ export default function IntegrationsSection() {
           body: JSON.stringify({ action: "reorder", order: navOrder() }),
         }).catch(() => {});
       }
-      await refetch();
+      await queryClient.invalidateQueries({ queryKey: ["settings", "integrations"] });
       if (action === "install" || action === "uninstall") refetchNavData();
-    } catch (e) {
+    },
+    onError: (e) => {
       toast.error(e instanceof Error ? e.message : "Unknown error");
-    } finally {
-      setBusy(null);
-    }
-  };
+    },
+  }));
+
+  // While the mutation is in flight, `variables` holds the pending {app, action}
+  const isBusy = (name: string, action?: AppAction) =>
+    appMutation.isPending &&
+    appMutation.variables?.app.name === name &&
+    (!action || appMutation.variables.action === action);
+
+  const run = (app: AppEntry, action: AppAction) => appMutation.mutate({ app, action });
 
   const TABS: { value: FilterTab; labelKey: string }[] = [
     { value: "all",       labelKey: "settings.integ_tab_all" },
@@ -269,7 +276,7 @@ export default function IntegrationsSection() {
 
       {/* App list tabs */}
       <Show when={filter() !== "order"}>
-        <Show when={!data.loading} fallback={<Skeleton />}>
+        <Show when={!query.isPending} fallback={<Skeleton />}>
           <Show
             when={filtered().length > 0}
             fallback={

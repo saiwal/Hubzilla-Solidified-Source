@@ -3,7 +3,8 @@
 // API: GET /api/stream-widgets/categories?channel_nick=<nick>&type=<articles|posts>
 // Response: { data: { categories: { name: string; slug: string; count: number }[] } }
 
-import { type Component, createEffect, on, createResource, For, Show } from "solid-js";
+import { type Component, createEffect, on, For, Show } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { useI18n } from "@/i18n";
 import { toast } from "@/shared/store/toast";
 
@@ -79,7 +80,8 @@ export interface CategoryWidgetProps {
 const CategoryWidget: Component<CategoryWidgetProps> = (props) => {
   const { t } = useI18n();
 
-  const [remote] = createResource(
+  const [remote] = createQueryResource(
+    "stream-categories",
     () =>
       props.data
         ? null

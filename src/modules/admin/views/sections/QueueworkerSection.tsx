@@ -1,10 +1,11 @@
-import { createResource, createSignal, createEffect, For, Show, batch } from "solid-js";
+import { createSignal, createEffect, For, Show, batch } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchAdminQueueworker, saveQueueworkerSettings } from "../../api";
 import type { QueueworkerSettings } from "../../types";
 
 export default function QueueworkerSection() {
-  const [data, { refetch }] = createResource(fetchAdminQueueworker);
+  const [data, { refetch }] = createQueryResource("admin-queueworker", fetchAdminQueueworker);
 
   // Settings state seeded from loaded data
   const [settings, setSettings] = createSignal<QueueworkerSettings>({

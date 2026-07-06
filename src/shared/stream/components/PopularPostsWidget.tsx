@@ -16,11 +16,11 @@ import {
   type Component,
   createEffect,
   on,
-  createResource,
   createSignal,
   For,
   Show,
 } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { useI18n } from "@/i18n";
 import { toast } from "@/shared/store/toast";
 import formatPostDate from "@/shared/lib/date";
@@ -222,7 +222,8 @@ const PopularPostsWidget: Component<PopularPostsWidgetProps> = (props) => {
   const { t, locale } = useI18n();
   const limit = () => props.limit ?? 5;
 
-  const [remote] = createResource(
+  const [remote] = createQueryResource(
+    "stream-popular",
     () =>
       props.data
         ? null

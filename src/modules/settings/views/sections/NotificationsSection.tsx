@@ -24,6 +24,7 @@ const NOTIFY_FIELDS = [
 export default function NotificationsSection() {
   const { t } = useI18n();
   const { data, saving, handleSubmit } = useSectionForm({
+    section: "notifications",
     fetcher: fetchNotificationSettings,
     saver: saveNotificationSettings,
     numericFields: ["evdays", ...NOTIFY_FIELDS],

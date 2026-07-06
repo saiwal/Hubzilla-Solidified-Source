@@ -1,7 +1,8 @@
 // Settings form for RoomCardWidget instances: pick one of the channel's
 // chatrooms.
 
-import { createResource, createSignal, For } from "solid-js";
+import { createSignal, For } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import type { WidgetConfigProps } from "@/shared/types/module.types";
 import { usePageNick } from "@/shared/store/site-config";
 import { useI18n } from "@/i18n";
@@ -12,7 +13,8 @@ export default function RoomCardConfig(props: WidgetConfigProps) {
   const nick = usePageNick();
   const [room, setRoom] = createSignal(String(props.config.room ?? ""));
 
-  const [rooms] = createResource(
+  const [rooms] = createQueryResource(
+    "chat-rooms",
     () => nick() || null,
     async (n) => (await fetchRooms(n)).rooms,
   );

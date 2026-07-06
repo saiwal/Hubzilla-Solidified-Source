@@ -1,4 +1,5 @@
-import { createResource, createEffect } from "solid-js";
+import { createEffect } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { applyBackgroundCSS, loadBackground, type BgFit } from "./background";
 import { applyTheme, applyCustomThemeColors } from "./useTheme";
 import { applyTypographyCSS, loadTypography, type FontSize, type FontFamily } from "./typography";
@@ -33,7 +34,7 @@ async function fetchChannelSpa(nick: string): Promise<Record<string, string> | n
  * saved settings.
  */
 export function useChannelTheme(channelNick: () => string) {
-  const [channelSpa] = createResource(channelNick, fetchChannelSpa);
+  const [channelSpa] = createQueryResource("channel-spa", channelNick, fetchChannelSpa);
 
   createEffect(() => {
     const spa = channelSpa();

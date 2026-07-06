@@ -1,8 +1,9 @@
 // src/modules/articles/views/ArticleView.tsx
 import {
-  createResource, createSignal, createEffect, onCleanup, onMount,
+  createSignal, createEffect, onCleanup, onMount,
   Show, For
 } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { toast } from "@/shared/store/toast";
 import { useI18n } from "@/i18n";
 import { useParams, A, useNavigate } from "@solidjs/router";
@@ -212,7 +213,8 @@ export default function ArticleView() {
   const { t } = useI18n();
   const navigate = useNavigate();
 
-  const [data, { refetch }] = createResource(
+  const [data, { refetch }] = createQueryResource(
+    "article-detail",
     () => ({ nick: nick(), uuid: params.uuid }),
     ({ nick, uuid }) => fetchArticle(nick, uuid),
   );

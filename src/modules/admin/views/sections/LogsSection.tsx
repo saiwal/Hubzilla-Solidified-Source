@@ -1,4 +1,5 @@
-import { createResource, createSignal, createMemo, createEffect, For, Show, batch } from "solid-js";
+import { createSignal, createMemo, createEffect, For, Show, batch } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchAdminLogs, saveLogSettings } from "../../api";
 import type { LogEntry, LogLevel } from "../../types";
@@ -88,7 +89,7 @@ function getMeta(level: LogLevel) {
 
 export default function LogsSection() {
   const { t } = useI18n();
-  const [data, { refetch }] = createResource(fetchAdminLogs);
+  const [data, { refetch }] = createQueryResource("admin-logs", fetchAdminLogs);
   const [search, setSearch] = createSignal("");
   const [levelFilter, setLevelFilter] = createSignal<Severity | "all">("all");
   const [expandedIds, setExpandedIds] = createSignal<Set<number>>(new Set());

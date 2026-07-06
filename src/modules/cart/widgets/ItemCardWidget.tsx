@@ -1,8 +1,9 @@
 // Showcase card for one shop item, chosen per instance via the widget config
 // panel (config: { sku }). multiInstance — a channel can place several cards.
 
-import { createResource, createSignal, Show } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { A } from "@solidjs/router";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import type { WidgetProps } from "@/shared/types/module.types";
 import { usePageNick } from "@/shared/store/site-config";
 import { editingWidgets } from "@/shared/store/widget-layout";
@@ -41,7 +42,8 @@ export default function ItemCardWidget(props: WidgetProps) {
   const nick = usePageNick();
   const sku = () => String(props.config?.sku ?? "");
 
-  const [catalog] = createResource(
+  const [catalog] = createQueryResource(
+    "cart-catalog",
     () => (nick() && sku() ? nick() : null),
     (n) => cachedCatalog(n),
   );

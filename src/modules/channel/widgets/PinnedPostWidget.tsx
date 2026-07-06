@@ -1,8 +1,9 @@
 // Pinned post card (config: { mid }): showcases one wall post in the sidebar.
 // multiInstance — pin several posts in any order.
 
-import { createResource, Show } from "solid-js";
+import { Show } from "solid-js";
 import DOMPurify from "dompurify";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { A } from "@solidjs/router";
 import type { WidgetProps } from "@/shared/types/module.types";
 import { usePageNick } from "@/shared/store/site-config";
@@ -26,7 +27,8 @@ export default function PinnedPostWidget(props: WidgetProps) {
   const nick = usePageNick();
   const mid = () => String(props.config?.mid ?? "");
 
-  const [post] = createResource(
+  const [post] = createQueryResource(
+    "pinned-post",
     () => (nick() && mid() ? { nick: nick(), mid: mid() } : null),
     async (p) => {
       const res = await fetchChannelPosts(p.nick, { mid: p.mid });

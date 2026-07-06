@@ -1,5 +1,6 @@
-import { Show, createResource } from "solid-js";
+import { Show } from "solid-js";
 import { A } from "@solidjs/router";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchAdminSite, saveAdminSite, fetchAdminThemes } from "../../api";
 import { useSectionForm } from "@/modules/settings/store/useSectionForm";
@@ -28,9 +29,10 @@ const PERMISSION_ROLES = [
 
 export default function SiteSection() {
   const { t } = useI18n();
-  const [themes] = createResource(fetchAdminThemes);
+  const [themes] = createQueryResource("admin-themes", fetchAdminThemes);
 
   const { data, saving, handleSubmit } = useSectionForm<AdminSite>({
+    section: "admin-site",
     fetcher: fetchAdminSite,
     saver: saveAdminSite,
     numericFields: [

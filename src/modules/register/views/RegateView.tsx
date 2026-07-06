@@ -1,5 +1,6 @@
-import { createSignal, createResource, Show, Switch, Match } from "solid-js";
+import { createSignal, Show, Switch, Match } from "solid-js";
 import { useParams, A } from "@solidjs/router";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { fetchRegateState, submitRegate } from "../api/api";
 import { useI18n } from "@/i18n";
 
@@ -8,7 +9,7 @@ export default function RegateView() {
   const params = useParams<{ token: string }>();
   const token = () => params.token;
 
-  const [state] = createResource(token, fetchRegateState);
+  const [state] = createQueryResource("regate", token, fetchRegateState);
 
   const [pin, setPin] = createSignal("");
   const [loading, setLoading] = createSignal(false);

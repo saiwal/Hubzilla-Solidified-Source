@@ -1,7 +1,8 @@
 // Settings form for PinnedPostWidget instances: pick one of the channel's
 // recent wall posts.
 
-import { createResource, createSignal, For } from "solid-js";
+import { createSignal, For } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import type { WidgetConfigProps } from "@/shared/types/module.types";
 import { usePageNick } from "@/shared/store/site-config";
 import { useI18n } from "@/i18n";
@@ -19,7 +20,8 @@ export default function PinnedPostConfig(props: WidgetConfigProps) {
   const nick = usePageNick();
   const [mid, setMid] = createSignal(String(props.config.mid ?? ""));
 
-  const [posts] = createResource(
+  const [posts] = createQueryResource(
+    "channel-posts",
     () => nick() || null,
     async (n) => (await fetchChannelPosts(n, { order: "created" })).items,
   );

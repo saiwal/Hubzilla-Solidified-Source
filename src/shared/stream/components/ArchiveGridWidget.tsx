@@ -7,11 +7,11 @@
 import {
   type Component,
   createEffect,
-  createResource,
   For,
   on,
   Show,
 } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { useI18n } from "@/i18n";
 import { toast } from "@/shared/store/toast";
 import {
@@ -42,7 +42,8 @@ function GridSkeleton() {
 const ArchiveGridWidget: Component<ArchiveWidgetProps> = (props) => {
   const { t } = useI18n();
 
-  const [remote] = createResource(
+  const [remote] = createQueryResource(
+    "stream-archive",
     () => ({ channelNick: props.channelNick, type: props.type }),
     fetchArchive,
   );

@@ -1,5 +1,6 @@
-import { createResource, createSignal, Show, For } from "solid-js";
+import { createSignal, Show, For } from "solid-js";
 import { A, useNavigate } from "@solidjs/router";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { useI18n } from "@/i18n";
 import { toast } from "@/shared/store/toast";
 import { apiFetch } from "@/shared/lib/fetch";
@@ -15,7 +16,7 @@ import { SETTINGS_ITEMS } from "@/modules/settings/index";
 export default function ProfilesView() {
   const { t } = useI18n();
   const navigate = useNavigate();
-  const [result, { refetch }] = createResource(fetchProfiles);
+  const [result, { refetch }] = createQueryResource("profiles", fetchProfiles);
   const [creating, setCreating] = createSignal(false);
   const [togglingFeature, setTogglingFeature] = createSignal(false);
 

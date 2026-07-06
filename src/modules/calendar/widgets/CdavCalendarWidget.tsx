@@ -1,11 +1,11 @@
 import {
   createSignal,
-  createResource,
   Show,
   For,
   Switch,
   Match,
 } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { useI18n } from "@/i18n";
 import { toast } from "@/shared/store/toast";
 import {
@@ -529,7 +529,7 @@ function CreateCalendarForm(props: { onCreated: () => void }) {
 export default function CdavCalendarWidget() {
   const { t } = useI18n();
 
-  const [data, { refetch }] = createResource<CdavCalendarsData>(fetchCdavCalendars);
+  const [data, { refetch }] = createQueryResource<CdavCalendarsData>("cdav-calendars", fetchCdavCalendars);
 
   return (
     <div class="bg-surface border border-rim rounded-2xl shadow-sm overflow-hidden">

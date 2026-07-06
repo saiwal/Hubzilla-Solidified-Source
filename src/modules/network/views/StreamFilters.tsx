@@ -7,12 +7,12 @@
 
 import {
   createSignal,
-  createResource,
   createEffect,
   lazy,
   For,
   Show,
 } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { motion } from "solid-motionone";
 import { useFloating } from "@/shared/lib/useFloating";
 void motion;
@@ -84,7 +84,7 @@ export default function StreamFilters() {
   // Connection typeahead
   const [connInput, setConnInput]             = createSignal("");
   const [connSuggestOpen, setConnSuggestOpen] = createSignal(false);
-  const [connections] = createResource(fetchConnections);
+  const [connections] = createQueryResource("network-connections", fetchConnections);
 
   let searchInputRef: HTMLInputElement | undefined;
   let connInputRef:   HTMLInputElement | undefined;

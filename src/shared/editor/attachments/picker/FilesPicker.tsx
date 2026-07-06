@@ -1,10 +1,10 @@
 import {
   createSignal,
-  createResource,
   Show,
   For,
   type Component,
 } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { listFolder } from "@/modules/files/api";
 import type { FileMeta } from "@/modules/files/api";
 import { useI18n } from "@/i18n";
@@ -28,7 +28,8 @@ const FilesPicker: Component<Props> = (props) => {
   const [crumbs, setCrumbs] = createSignal<BreadcrumbEntry[]>([]);
   const currentHash = () => crumbs()[crumbs().length - 1]?.hash ?? "";
 
-  const [items] = createResource(
+  const [items] = createQueryResource(
+    "files-folder",
     () => ({ nick: props.nick, hash: currentHash() }),
     ({ nick, hash }) => listFolder(nick, hash),
   );

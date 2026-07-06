@@ -1,8 +1,9 @@
 // Photo album strip (config: { album }): the album's latest thumbnails in a
 // small grid, linking into the gallery. multiInstance.
 
-import { createResource, For, Show } from "solid-js";
+import { For, Show } from "solid-js";
 import { A } from "@solidjs/router";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import type { WidgetProps } from "@/shared/types/module.types";
 import { usePageNick } from "@/shared/store/site-config";
 import { editingWidgets } from "@/shared/store/widget-layout";
@@ -26,7 +27,8 @@ export default function AlbumStripWidget(props: WidgetProps) {
   const nick = usePageNick();
   const album = () => String(props.config?.album ?? "");
 
-  const [data] = createResource(
+  const [data] = createQueryResource(
+    "photo-album",
     () => (nick() && album() ? { nick: nick(), album: album() } : null),
     (p) => fetchPhotoAlbum(p.nick, p.album),
   );

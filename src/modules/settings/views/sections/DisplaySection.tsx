@@ -30,6 +30,7 @@ export default function DisplaySection() {
   );
 
   const { data, saving, handleSubmit } = useSectionForm({
+    section: "display",
     fetcher: fetchDisplaySettings,
     saver: saveDisplaySettings,
     numericFields: [

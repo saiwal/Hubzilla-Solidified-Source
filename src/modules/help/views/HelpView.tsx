@@ -1,12 +1,12 @@
 // src/modules/help/views/HelpView.tsx
 import {
-  createResource,
   createSignal,
   createEffect,
   onCleanup,
   Show,
   For,
 } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { useParams, A } from "@solidjs/router";
 import DOMPurify from "dompurify";
 import { useI18n } from "@/i18n";
@@ -202,7 +202,8 @@ function NavItem(props: {
 }
 
 function DocNav(props: { section: string; lang: string; activePath: string }) {
-  const [navData] = createResource(
+  const [navData] = createQueryResource(
+    "help-nav",
     () => ({ section: props.section, lang: props.lang }),
     ({ section, lang }) => fetchNav(section, lang),
   );
@@ -338,7 +339,8 @@ export default function HelpView() {
   // Use app locale as doc lang; PHP falls back to any available lang if not found
   const lang = () => locale().split("-")[0]; // "en-US" → "en"
 
-  const [topicData] = createResource(
+  const [topicData] = createQueryResource(
+    "help-topic",
     () => ({ section: section(), lang: lang(), topic: topic() }),
     ({ section, lang, topic }) => fetchTopic(section, lang, topic),
   );

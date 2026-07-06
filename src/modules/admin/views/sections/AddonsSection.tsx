@@ -1,11 +1,12 @@
-import { createResource, For, Show } from "solid-js";
+import { For, Show } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchAdminAddons } from "../../api";
 import { useI18n } from "@/i18n";
 
 export default function AddonsSection() {
   const { t } = useI18n();
-  const [addons] = createResource(fetchAdminAddons);
+  const [addons] = createQueryResource("admin-addons", fetchAdminAddons);
 
   return (
     <SubPageContent title={t("admin.addons_title")} description={t("admin.addons_desc")}>

@@ -1,4 +1,5 @@
-import { createResource, createSignal, For, Show } from "solid-js";
+import { createSignal, For, Show } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { toast } from "@/shared/store/toast";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchAdminFeatures, saveAdminFeatures } from "../../api";
@@ -7,7 +8,7 @@ import { useI18n } from "@/i18n";
 
 export default function FeaturesSection() {
   const { t } = useI18n();
-  const [features, { refetch }] = createResource(fetchAdminFeatures);
+  const [features, { refetch }] = createQueryResource("admin-features", fetchAdminFeatures);
   const [saving, setSaving] = createSignal(false);
 
   async function handleSubmit(e: Event) {

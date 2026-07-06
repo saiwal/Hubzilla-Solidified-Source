@@ -1,7 +1,8 @@
 // RSS/Atom feed widget (config: { url, count }). Feeds are fetched and parsed
 // server-side via GET /api/rss-feed — browsers can't fetch cross-origin feeds.
 
-import { createResource, For, Show } from "solid-js";
+import { For, Show } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import type { WidgetProps } from "@/shared/types/module.types";
 import { editingWidgets } from "@/shared/store/widget-layout";
 import { useI18n } from "@/i18n";
@@ -39,7 +40,8 @@ export default function RssWidget(props: WidgetProps) {
   const url = () => String(props.config?.url ?? "");
   const count = () => Math.max(1, Math.min(10, Number(props.config?.count ?? 5)));
 
-  const [feed] = createResource(
+  const [feed] = createQueryResource(
+    "rss-feed",
     () => (url() ? { url: url(), count: count() } : null),
     fetchFeed,
   );

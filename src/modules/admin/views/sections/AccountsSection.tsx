@@ -1,4 +1,5 @@
-import { createSignal, createResource, For, Show } from "solid-js";
+import { createSignal, For, Show } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchAdminAccounts, adminAccountAction, adminPendingAction } from "../../api";
 import type { AdminAccount } from "../../types";
@@ -7,7 +8,7 @@ import { useI18n } from "@/i18n";
 export default function AccountsSection() {
   const { t } = useI18n();
   const [page, setPage] = createSignal(0);
-  const [result, { refetch }] = createResource(page, fetchAdminAccounts);
+  const [result, { refetch }] = createQueryResource("admin-accounts", page, fetchAdminAccounts);
 
   async function act(account_id: number, action: "block" | "unblock" | "delete") {
     if (action === "delete" && !confirm(t("admin.delete_confirm"))) return;

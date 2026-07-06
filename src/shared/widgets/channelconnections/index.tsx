@@ -1,4 +1,5 @@
-import { createResource, Show, For } from "solid-js";
+import { Show, For } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { usePageNick } from "@/shared/store/site-config";
 import { apiFetch } from "@/shared/lib/fetch";
 import { useI18n } from "@/i18n";
@@ -29,7 +30,7 @@ export default function ChannelConnectionsWidget() {
   const nick = usePageNick();
   const { t } = useI18n();
 
-  const [data] = createResource(() => nick(), fetchConnections);
+  const [data] = createQueryResource("channel-connections", () => nick(), fetchConnections);
 
   const conns = () => data()?.connections ?? [];
   const total = () => data()?.total ?? 0;

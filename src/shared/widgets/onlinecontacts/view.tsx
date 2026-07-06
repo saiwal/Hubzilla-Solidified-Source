@@ -1,4 +1,5 @@
-import { createResource, For, Show } from "solid-js";
+import { For, Show } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { fetchConnections } from "@/modules/directory/connections/api";
 import { useI18n } from "@/i18n";
 
@@ -23,7 +24,7 @@ function initials(name: string) {
 
 export default function OnlineContactsWidget() {
   const { t } = useI18n();
-  const [contacts] = createResource(fetchRecentContacts);
+  const [contacts] = createQueryResource("recent-contacts", fetchRecentContacts);
 
   return (
     <div class="bg-surface border border-rim rounded-xl p-4">

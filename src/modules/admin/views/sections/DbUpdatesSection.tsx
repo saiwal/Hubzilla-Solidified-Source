@@ -1,11 +1,12 @@
-import { createResource, For, Show } from "solid-js";
+import { For, Show } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchAdminDbUpdates } from "../../api";
 import { useI18n } from "@/i18n";
 
 export default function DbUpdatesSection() {
   const { t } = useI18n();
-  const [updates] = createResource(fetchAdminDbUpdates);
+  const [updates] = createQueryResource("admin-db-updates", fetchAdminDbUpdates);
 
   return (
     <SubPageContent title={t("admin.db_title")} description={t("admin.db_desc")}>

@@ -1,4 +1,5 @@
-import { createResource, createSignal, For, Show, batch } from "solid-js";
+import { createSignal, For, Show, batch } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import SubPageContent from "@/shared/views/SubPageContent";
 import {
   fetchAdminProfileFields,
@@ -19,7 +20,7 @@ const EMPTY: Omit<ProfdefField, "id"> = {
 };
 
 export default function ProfileFieldsSection() {
-  const [data, { refetch }] = createResource(fetchAdminProfileFields);
+  const [data, { refetch }] = createQueryResource("admin-profile-fields", fetchAdminProfileFields);
   const [basic, setBasic] = createSignal("");
   const [advanced, setAdvanced] = createSignal("");
   const [layoutSaving, setLayoutSaving] = createSignal(false);

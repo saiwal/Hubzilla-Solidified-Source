@@ -15,7 +15,8 @@ import {
   MdFillPeople,
   MdFillPoll,
 } from "solid-icons/md";
-import { createSignal, createEffect, createResource, For, Show } from "solid-js";
+import { createSignal, createEffect, For, Show } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { useI18n } from "@/i18n";
 import { loadNetwork, resetPosts } from "../store";
 import { fetchFolders, type NetworkParams } from "../api";
@@ -139,13 +140,15 @@ function buildParams(params: Record<string, string | string[] | undefined>): Net
 export default function StreamFiltersWidget() {
   const { t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [folders] = createResource(fetchFolders);
+  const [folders] = createQueryResource("network-folders", fetchFolders);
 
   const installedApps = useInstalledApps();
   const privacyGroupsInstalled = () => installedApps().has("Privacy Groups");
   const affinityInstalled = () => installedApps().has("Affinity Tool");
-  const [privacyGroups] = createResource(privacyGroupsInstalled, (installed) =>
-    installed ? fetchGroups() : Promise.resolve([] as PrivacyGroup[]),
+  const [privacyGroups] = createQueryResource(
+    "privacy-groups",
+    () => privacyGroupsInstalled() || null,
+    (): Promise<PrivacyGroup[]> => fetchGroups(),
   );
 
   const tag    = () => str(searchParams.tag);

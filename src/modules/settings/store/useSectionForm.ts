@@ -1,15 +1,17 @@
-import { createSignal, createResource } from "solid-js";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/solid-query";
 import { toast } from "@/shared/store/toast";
 
 /**
  * Generic hook for a settings section form.
  *
- * - Fetches data via `fetcher` on mount.
- * - `handleSubmit` collects FormData, coerces numeric fields, calls `saver`,
- *   then refetches (or reloads if `reloadOn` predicate returns true).
+ * - Loads data via TanStack Query under ["settings", section].
+ * - `handleSubmit` collects FormData, coerces numeric fields, runs the save
+ *   mutation, then invalidates the section cache (or reloads if `reloadOn`
+ *   predicate returns true).
  *
  * Usage:
  *   const { data, saving, handleSubmit } = useSectionForm({
+ *     section: "display",
  *     fetcher: fetchDisplaySettings,
  *     saver: saveDisplaySettings,
  *     numericFields: ["thread_allow", "itemspage", ...],
@@ -17,6 +19,7 @@ import { toast } from "@/shared/store/toast";
  *   });
  */
 export function useSectionForm<T extends object>(options: {
+  section: string;
   fetcher: () => Promise<T>;
   saver: (data: Partial<T>) => Promise<void>;
   numericFields?: string[];
@@ -24,6 +27,7 @@ export function useSectionForm<T extends object>(options: {
   reloadOn?: (prev: T | undefined, next: Partial<T>) => boolean;
 }) {
   const {
+    section,
     fetcher,
     saver,
     numericFields = [],
@@ -31,10 +35,33 @@ export function useSectionForm<T extends object>(options: {
     reloadOn,
   } = options;
 
-  const [data, { refetch }] = createResource<T>(fetcher);
-  const [saving, setSaving] = createSignal(false);
+  const queryClient = useQueryClient();
 
-  async function handleSubmit(e: Event) {
+  const query = useQuery(() => ({
+    queryKey: ["settings", section] as const,
+    queryFn: fetcher,
+    // These forms are uncontrolled inputs seeded from the fetched data — a
+    // background refetch mid-edit would clobber unsaved user input.
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  }));
+
+  const save = useMutation(() => ({
+    mutationFn: (payload: Partial<T>) => saver(payload),
+    onSuccess: (_res: void, payload: Partial<T>) => {
+      if (reloadOn?.(query.data, payload)) {
+        window.location.reload();
+        return;
+      }
+      toast.success("Saved");
+      queryClient.invalidateQueries({ queryKey: ["settings", section] });
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Save failed");
+    },
+  }));
+
+  function handleSubmit(e: Event) {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
     const raw = Object.fromEntries(new FormData(form)) as Record<
@@ -52,23 +79,12 @@ export function useSectionForm<T extends object>(options: {
       ),
     ) as Partial<T>;
 
-    setSaving(true);
-
-    try {
-      if (reloadOn?.(data(), payload)) {
-        await saver(payload);
-        window.location.reload();
-        return;
-      }
-      await saver(payload);
-      toast.success("Saved");
-      refetch();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Save failed");
-    } finally {
-      setSaving(false);
-    }
+    save.mutate(payload);
   }
 
-  return { data, saving, handleSubmit };
+  return {
+    data: () => query.data,
+    saving: () => save.isPending,
+    handleSubmit,
+  };
 }

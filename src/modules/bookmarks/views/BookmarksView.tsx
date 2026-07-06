@@ -1,6 +1,7 @@
 // src/modules/bookmarks/views/BookmarksView.tsx
-import { createResource, For, Show } from "solid-js";
+import { For, Show } from "solid-js";
 import { useNavigate } from "@solidjs/router";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { useI18n } from "@/i18n";
 import { fetchAllBookmarks, deleteBookmark, type BookmarkMenu, type BookmarkItem } from "../api";
 import { resetChatBookmarks } from "@/modules/chat/bookmarks";
@@ -9,7 +10,7 @@ export default function BookmarksView() {
   const { t } = useI18n();
   const navigate = useNavigate();
 
-  const [menus, { mutate }] = createResource<BookmarkMenu[]>(fetchAllBookmarks, {
+  const [menus, { mutate }] = createQueryResource<BookmarkMenu[]>("bookmarks", fetchAllBookmarks, {
     initialValue: [],
   });
 

@@ -38,6 +38,7 @@ async function saveProfile(payload: Partial<ProfileData>): Promise<void> {
 export default function ProfileSection() {
   const { t } = useI18n();
   const { data, saving, handleSubmit } = useSectionForm({
+    section: "profile",
     fetcher: fetchProfile,
     saver: saveProfile,
     numericFields: ["hide_friends", "publish"],

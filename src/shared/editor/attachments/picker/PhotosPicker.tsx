@@ -1,10 +1,10 @@
 import {
   createSignal,
-  createResource,
   Show,
   For,
   type Component,
 } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { fetchAlbums, fetchPhotoAlbum } from "@/modules/photos/api/api";
 import type { Photo, Album } from "@/modules/photos/api/api";
 import { useI18n } from "@/i18n";
@@ -19,14 +19,15 @@ const PhotosPicker: Component<Props> = (props) => {
   const { t } = useI18n();
   const [currentAlbum, setCurrentAlbum] = createSignal<Album | null>(null);
 
-  const [albums] = createResource(() => props.nick, fetchAlbums);
+  const [albums] = createQueryResource("photo-albums", () => props.nick, fetchAlbums);
 
-  const [albumPhotos] = createResource(
+  const [albumPhotos] = createQueryResource(
+    "photo-album",
     () => {
       const a = currentAlbum();
       return a ? { nick: props.nick, folder: a.folder } : null;
     },
-    (p) => (p ? fetchPhotoAlbum(p.nick, p.folder) : null),
+    (p) => fetchPhotoAlbum(p.nick, p.folder),
   );
 
   return (
