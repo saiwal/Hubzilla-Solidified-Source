@@ -76,6 +76,10 @@ export default defineConfig({
       targets: [
         { src: "src/docs", dest: "../" },
         { src: "src/Api", dest: "../" },
+        { src: "src/img", dest: "../" },
+        { src: "src/mod", dest: "../" },
+        { src: "src/php", dest: "../" },
+        { src: "README.md", dest: "../" },
         { src: `${FFMPEG_CORE_DIR}/ffmpeg-core.js`,   dest: "ffmpeg" },
         { src: `${FFMPEG_CORE_DIR}/ffmpeg-core.wasm`, dest: "ffmpeg" },
         { src: FFMPEG_WORKER_SRC,                     dest: "ffmpeg" },
