@@ -8,13 +8,14 @@ A [Solid.js](https://www.solidjs.com/) single-page application (SPA) that ships 
 
 ## Features at a Glance
 
-- **22 feature modules** — channel, network, articles, photos, files, chat, calendar, wiki, webpages, directory, admin, and more
+- **modules** — channel, network, articles, photos, files, chat, calendar, wiki, webpages, directory, admin, and more
 - **Rich text editor** — BBCode, HTML, and Markdown with WYSIWYG, Source, and Preview tabs
 - **Threaded feed** — like, dislike, repeat, comment, reshare, star, and delete with live state
 - **22 UI themes** — presets (Nord, Dracula, Catppuccin, Tokyo Night…) plus fully customizable
+- **Cached data layer** — TanStack Query: instant back-navigation, request dedup, background revalidation
 - **Progressive Web App** — service worker caching, push notifications, background update detection
 - **Responsive layout** — desktop three-column, tablet collapsible sidebar, mobile bottom tab bar
-- **i18n** — English and Hindi; locale switcher with localStorage persistence
+- **i18n** — locale switcher with localStorage persistence
 - **Pluggable module system** — every feature self-registers routes, nav items, and sidebar slots
 
 ---
@@ -129,6 +130,20 @@ All stream views (network, channel, public, HQ) share the same underlying store 
 
 ---
 
+## Data Fetching & Caching
+
+Server reads go through [TanStack Solid Query](https://tanstack.com/query/latest/docs/framework/solid/overview). A shared client (`src/shared/lib/query-client.ts`) caches every GET response under a query key:
+
+- **Fresh for 60 s** — repeat reads within a minute hit the cache with zero network requests
+- **Stale-while-revalidate** — older data still renders instantly, then refetches in the background (also on window focus and network reconnect)
+- **Garbage-collected after 30 min** unused; the cache is in-memory only
+- **Request dedup** — components reading the same key share one in-flight request
+- **Retries** — failed queries retry twice with backoff before surfacing an error
+
+Component reads use `createQueryResource()` (`src/shared/lib/createQueryResource.ts`), a cache-backed drop-in for Solid's `createResource`. Writes use `useMutation` with cache invalidation — see `src/modules/settings/store/useSectionForm.ts` for the canonical pattern, and `src/docs/dev/en/data-fetching.txt` for the full guide (including which code intentionally stays on plain `createResource`).
+
+---
+
 ## Theming
 
 22 built-in themes plus full custom mode. Theme preference is stored in both localStorage (instant restore, no flash on reload) and the server (`/api/settings/display`) so it follows the user across devices.
@@ -151,12 +166,8 @@ Themes are implemented as CSS custom properties on `data-theme` and integrate wi
 | Tablet (`768px – 1279px`) | Single column, collapsible right sidebar via FAB |
 | Desktop (`≥ 1280px`) | Three-column: left nav (fixed) · main content · right sidebar (fixed) |
 
-**Sidebar slots** — modules inject widgets into named regions:
+**Sidebar slot** — modules inject widgets into named region:
 - `right` — contextual right sidebar (per-module + global)
-- `rightVisitor` — visitor-only right sidebar
-- `leftBottom` — left sidebar footer area
-- `mainTop` — owner-only content above the main feed
-- `help` — help overlay integration
 
 ---
 
@@ -217,6 +228,7 @@ All responses use a consistent JSON envelope — `Response::send()`, `Response::
 |---|---|---|
 | Framework | Solid.js | 1.9.10 |
 | Router | @solidjs/router | 0.15.4 |
+| Data fetching | @tanstack/solid-query | 5.101.2 |
 | Styling | Tailwind CSS | 4.2.1 |
 | Icons | solid-icons | 1.2.0 |
 | Animations | solid-motionone | 1.0.4 |
