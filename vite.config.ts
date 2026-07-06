@@ -89,7 +89,7 @@ export default defineConfig({
   build: {
     outDir: OUT_DIR,
     emptyOutDir: true,
-    cssCodeSplit: false,
+    cssCodeSplit: true,
     // .vite/manifest.json maps entry → hashed filenames; read by php/manifest.php
     manifest: true,
     // removed watch: {} — use vite build --watch from CLI
