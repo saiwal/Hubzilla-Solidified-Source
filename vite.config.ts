@@ -154,6 +154,16 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      "/follow": {
+        target: "https://hz-ddev.ddev.site",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/subthread": {
+        target: "https://hz-ddev.ddev.site",
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
   base: ASSET_WEB_PATH + "/",
