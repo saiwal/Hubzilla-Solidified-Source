@@ -109,11 +109,13 @@ export const apiSaveToFolder = (uuid: string, name: string, remove = false): Pro
 export const apiVotePoll = (uuid: string, answer: string | string[]) =>
   post<{ success: boolean }>(`${BASE}/${encodeId(uuid)}/vote`, { answer });
 
-export const apiFollowPost = (iid: number): Promise<void> =>
-  fetch(`/subthread/sub/${iid}`, { credentials: 'include' }).then(() => undefined);
+export const apiFollowPost = (uuid: string): Promise<void> =>
+  post<{ success?: boolean; error?: string }>(`${BASE}/${encodeId(uuid)}/follow`)
+    .then(r => { if (!r.success) throw new Error(r.error || 'Follow failed'); });
 
-export const apiUnfollowPost = (iid: number): Promise<void> =>
-  fetch(`/subthread/unsub/${iid}`, { credentials: 'include' }).then(() => undefined);
+export const apiUnfollowPost = (uuid: string): Promise<void> =>
+  post<{ success?: boolean; error?: string }>(`${BASE}/${encodeId(uuid)}/unfollow`)
+    .then(r => { if (!r.success) throw new Error(r.error || 'Unfollow failed'); });
 
 export async function postComment(params: {
   body: string;

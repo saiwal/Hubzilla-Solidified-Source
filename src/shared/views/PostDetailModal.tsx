@@ -9,7 +9,7 @@ import type { Post } from "../types/post.types";
 import { mapActivityToPost } from "../lib/activity.mapper";
 import { BiRegularX } from "solid-icons/bi";
 import { useI18n } from "@/i18n";
-import { apiDeleteItem, apiToggleStar, apiCreateComment } from "@/shared/lib/item-api";
+import { apiDeleteItem, apiToggleStar } from "@/shared/lib/item-api";
 import { toggleVerb, repeatItem } from "@/shared/stream/store/actions-store";
 
 async function fetchDisplay(uuid: string): Promise<ThreadNode> {
@@ -145,10 +145,8 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
         });
       });
     },
-    async onComment(parentMid, body) {
-      const found = findInTree(nodeData(), parentMid);
-      if (!found) return;
-      await apiCreateComment(found.uuid, body);
+    // CommentComposer already POSTs the comment itself; only refresh here.
+    onComment() {
       refetch();
     },
     onLoadComments: () => Promise.resolve(),

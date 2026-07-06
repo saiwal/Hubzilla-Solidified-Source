@@ -144,6 +144,7 @@ export type RawDictionary = {
     sign_in_notifs:          string;
     nothing_new:             string;
     all_caught_up:           string;
+    no_notifications:        string;
     // AuthorPopover
     view_profile:            string;
     connect:                 string;

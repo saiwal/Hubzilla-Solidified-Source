@@ -170,8 +170,12 @@ export default function PostCard(props: {
   const canStar = () =>
     !!props.handlers.onStar && auth()?.isLocal === true;
 
-  // Follow: available to local users when the post has a local iid
-  const canFollow = () => auth()?.isLocal === true && !!props.post.iid;
+  // Follow: local users on thread-top posts only — core attaches the
+  // Follow/Ignore state to the thread top (mirrors thread_action_menu()).
+  const canFollow = () =>
+    auth()?.isLocal === true &&
+    !!props.post.uuid &&
+    (props.post.item_thread_top === 1 || props.post.mid === props.post.top_mid);
 
   // Reshare: only local users can reshare posts that have a local iid
   const canReshare = () => auth()?.isLocal === true && !!props.post.iid;
@@ -411,12 +415,12 @@ export default function PostCard(props: {
   }
 
   async function onFollowToggle() {
-    if (!props.post.iid || followPending()) return;
+    if (!props.post.uuid || followPending()) return;
     const next = !following();
     setFollowing(next);
     setFollowPending(true);
     try {
-      await (next ? apiFollowPost(props.post.iid) : apiUnfollowPost(props.post.iid));
+      await (next ? apiFollowPost(props.post.uuid) : apiUnfollowPost(props.post.uuid));
     } catch {
       setFollowing(!next);
     } finally {

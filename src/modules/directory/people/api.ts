@@ -72,9 +72,16 @@ export async function fetchDirectory(
   return { entries: body.data, meta: body.meta } as DirectoryResponse;
 }
 
+// Core Mod_Follow: GET /follow?f=&url=<addr>&interactive=0 with a local
+// channel session; interactive=0 makes it answer JSON instead of redirecting.
 export async function addConnection(addr: string): Promise<void> {
-  await fetch(`/follow/&url=${addr}`, {
-    method: "POST",
-    credentials: "include",
-  });
+  const res = await fetch(
+    `/follow?f=&url=${encodeURIComponent(addr)}&interactive=0`,
+    { credentials: "include" },
+  );
+  if (!res.ok) throw new Error(`Follow failed: ${res.status}`);
+  const body = await res.json().catch(() => null);
+  if (!body?.success) {
+    throw new Error(body?.message || "Follow failed");
+  }
 }

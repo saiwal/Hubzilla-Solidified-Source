@@ -1,9 +1,18 @@
 /**
- * Mark a Hubzilla notification as seen.
- * Uses Hubzilla's native /notify/seen/<id> endpoint.
+ * Mark a Hubzilla notification (notify table) as seen.
+ * Core's Zotlabs\Module\Notify::init() expects a notify_id request
+ * parameter (see view/js/main.js) and responds with an empty body.
  */
-export function markNotifySeen(nid: number): void {
-  fetch(`/notify/seen/${nid}`, { redirect: "manual" }).catch(() => {});
+export function markNotifySeen(nid: number): Promise<void> {
+  return fetch("/notify", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ notify_id: String(nid) }).toString(),
+    credentials: "include",
+  }).then(
+    () => {},
+    () => {},
+  );
 }
 
 // Accumulate UUIDs and flush as one batched request after a 1s idle.

@@ -4,6 +4,7 @@ import { useParams, A } from "@solidjs/router";
 import { useViewerRole } from "@/shared/store/site-config";
 import { MdFillLocation_on, MdFillPublic } from "solid-icons/md";
 import { apiFetch } from "@/shared/lib/fetch";
+import { addConnection } from "@/modules/directory/people/api";
 import { useI18n } from "@/i18n";
 
 type ChannelProfile = {
@@ -38,6 +39,7 @@ type ChannelProfile = {
   channels: string;
   connections: number;
   is_connected: boolean;
+  connect_url: string;
   is_remote?: boolean;
   actor_fields?: { name: string; value: string }[];
 };
@@ -162,7 +164,12 @@ function ProfileHeader(props: {
           </Show>
         </div>
         <Show when={!props.isOwner}>
-          <FollowButton nick={p.xchan_addr || p.channel_address} connected={p.is_connected} isVisitor={props.isVisitor} />
+          <FollowButton
+            nick={p.xchan_addr || p.channel_address}
+            connected={p.is_connected}
+            connectUrl={p.connect_url}
+            isVisitor={props.isVisitor}
+          />
         </Show>
       </div>
     </>
@@ -418,21 +425,58 @@ function Field(props: { label: string; value: string }) {
   );
 }
 
-function FollowButton(props: { nick: string; connected: boolean; isVisitor: boolean }) {
+function FollowButton(props: {
+  nick: string;
+  connected: boolean;
+  connectUrl?: string;
+  isVisitor: boolean;
+}) {
   const { t } = useI18n();
-  const href = () =>
-    props.isVisitor
-      ? `/follow?url=${encodeURIComponent(props.nick)}`
-      : `/connedit?add=${encodeURIComponent(props.nick)}`;
+  const [state, setState] = createSignal<"idle" | "pending" | "done">("idle");
 
-  const cls = props.connected
-    ? "border-rim text-muted hover:border-accent hover:text-accent"
-    : "border-accent bg-accent text-accent-fg hover:opacity-80";
+  const connected = () => props.connected || state() === "done";
+
+  async function handleConnect() {
+    if (state() !== "idle") return;
+    setState("pending");
+    try {
+      await addConnection(props.nick);
+      setState("done");
+    } catch {
+      setState("idle");
+    }
+  }
+
+  const base = "shrink-0 px-4 py-1.5 text-sm font-medium rounded-full border transition-colors";
+  const connectedCls = "border-rim text-muted cursor-default";
+  const connectCls = "border-accent bg-accent text-accent-fg hover:opacity-80";
 
   return (
-    <a href={href()} class={`shrink-0 px-4 py-1.5 text-sm font-medium rounded-full border transition-colors ${cls}`}>
-      {props.connected ? t("channel.connected") : t("channel.connect")}
-    </a>
+    <Show
+      when={!connected()}
+      fallback={<span class={`${base} ${connectedCls}`}>{t("channel.connected")}</span>}
+    >
+      <Show
+        when={!props.isVisitor}
+        // Remote visitors follow from their own hub (core rconnect_url);
+        // no button for anonymous viewers, matching core's profile sidebar.
+        fallback={
+          <Show when={props.connectUrl}>
+            <a href={props.connectUrl} class={`${base} ${connectCls}`}>
+              {t("channel.connect")}
+            </a>
+          </Show>
+        }
+      >
+        <button
+          onClick={handleConnect}
+          disabled={state() === "pending"}
+          class={`${base} ${connectCls} disabled:opacity-60`}
+        >
+          {t("channel.connect")}
+        </button>
+      </Show>
+    </Show>
   );
 }
 

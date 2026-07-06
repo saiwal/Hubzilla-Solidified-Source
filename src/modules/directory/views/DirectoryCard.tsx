@@ -1,5 +1,5 @@
 // modules/directory/views/DirectoryCard.tsx
-import { Show, For, type Component } from "solid-js";
+import { Show, For, createSignal, type Component } from "solid-js";
 import { addConnection, type DirectoryEntry } from "../people/api";
 import { useI18n } from "@/i18n";
 import { MdFillCheck } from "solid-icons/md";
@@ -13,8 +13,16 @@ const DirectoryCard: Component<Props> = (props) => {
   const { t } = useI18n();
   const e = () => props.entry;
   const blurb = () => e().description || stripTags(e().about);
+  const [connectState, setConnectState] = createSignal<"idle" | "pending" | "done">("idle");
   async function handleAdd() {
-    await addConnection(props.entry.address);
+    if (connectState() !== "idle") return;
+    setConnectState("pending");
+    try {
+      await addConnection(props.entry.address);
+      setConnectState("done");
+    } catch {
+      setConnectState("idle");
+    }
   }
   return (
     <div
@@ -100,7 +108,7 @@ const DirectoryCard: Component<Props> = (props) => {
         onClick={(ev) => ev.stopPropagation()}
       >
         <Show
-          when={!e().is_connected}
+          when={!e().is_connected && connectState() !== "done"}
           fallback={
             <span class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-rim text-muted cursor-default">
               <MdFillCheck class="w-3.5 h-3.5 shrink-0" /> {t("directory.connected")}
@@ -108,8 +116,9 @@ const DirectoryCard: Component<Props> = (props) => {
           }
         >
           <button
-						onclick={handleAdd}
-            class="flex-1 text-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-accent text-accent-fg hover:opacity-80 transition-opacity"
+            onClick={handleAdd}
+            disabled={connectState() === "pending"}
+            class="flex-1 text-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-accent text-accent-fg hover:opacity-80 transition-opacity disabled:opacity-60"
           >
             {e().connect_url ? t("directory.connect") : t("directory.view_profile")}
           </button>

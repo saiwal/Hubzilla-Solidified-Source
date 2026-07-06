@@ -224,17 +224,16 @@ function prependDeduped(
 function NotifRow(props: {
   n: HzNotification;
   onDismiss: (b64mid: string) => void;
+  onNotifySeen: (nid: number) => void;
   onOpenModal: (uuid: string) => void;
 }) {
   const [hidden, setHidden] = createSignal(false);
   const uuid = () => getDisplayUuid(props.n);
 
   const dismiss = () => {
-    if (props.n.b64mid) {
-      setHidden(true);
-      props.onDismiss(props.n.b64mid);
-    }
-    if (props.n.notify_id) markNotifySeen(props.n.notify_id);
+    if (props.n.b64mid || props.n.notify_id) setHidden(true);
+    if (props.n.b64mid) props.onDismiss(props.n.b64mid);
+    if (props.n.notify_id) props.onNotifySeen(props.n.notify_id);
   };
 
   const handleClick = (e: MouseEvent) => {
@@ -306,6 +305,7 @@ function StreamSection(props: {
   bucket: StreamBucket;
   forumKeys?: string[];
   onDismiss: (b64mid: string) => void;
+  onNotifySeen: (nid: number) => void;
   onClearAll: (key: string) => void;
   onOpenModal: (uuid: string) => void;
 }) {
@@ -430,6 +430,7 @@ function StreamSection(props: {
                   <NotifRow
                     n={n}
                     onDismiss={props.onDismiss}
+                    onNotifySeen={props.onNotifySeen}
                     onOpenModal={props.onOpenModal}
                   />
                 )}
@@ -747,7 +748,6 @@ export default function NotificationsAside() {
         />
       </Show>
 
-      <Show when={!booted() || hasAnyCount() || notices().length > 0}>
       <div class="space-y-3">
         {/* Header */}
         <div class="flex items-center justify-between">
@@ -814,6 +814,14 @@ export default function NotificationsAside() {
                   bucket={buckets()[key]}
                   forumKeys={key === "forums" ? forumKeys() : undefined}
                   onDismiss={(mid) => markSeen([mid])}
+                  onNotifySeen={async (nid) => {
+                    await markNotifySeen(nid);
+                    try {
+                      await doFetchCounts();
+                    } catch {
+                      /* silent */
+                    }
+                  }}
                   onClearAll={async (key) => {
                     setBuckets((prev) => ({
                       ...prev,
@@ -837,8 +845,21 @@ export default function NotificationsAside() {
           </div>
         </Show>
 
+        <Show
+          when={
+            booted() &&
+            auth()?.isLoggedIn &&
+            activeBuckets().length === 0 &&
+            notices().length === 0
+          }
+        >
+          <p class="flex items-center justify-center gap-1.5 py-1.5 text-[11px] text-subtle">
+            <MdFillNotifications class="w-3.5 h-3.5 shrink-0" />
+            {t("ui.no_notifications")}
+          </p>
+        </Show>
+
       </div>
-      </Show>
     </>
   );
 }

@@ -52,6 +52,7 @@ export const ui: RawDictionary["ui"] = {
   sign_in_notifs:         "सूचनाएँ देखने के लिए साइन इन करें",
   nothing_new:            "कुछ नया नहीं",
   all_caught_up:          "सब देख लिया",
+  no_notifications:       "कोई सूचना नहीं",
   // AuthorPopover
   view_profile:           "प्रोफ़ाइल देखें",
   connect:                "जुड़ें",

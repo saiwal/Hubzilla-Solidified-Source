@@ -11,7 +11,6 @@ import { useI18n } from "@/i18n";
 import {
   apiDeleteItem,
   apiToggleStar,
-  apiCreateComment,
 } from "@/shared/lib/item-api";
 import { toggleVerb, repeatItem } from "@/shared/stream/store/actions-store";
 
@@ -117,10 +116,8 @@ export default function PostView() {
         });
       });
     },
-    async onComment(parentMid, body) {
-      const found = findInTree(node(), parentMid);
-      if (!found) return;
-      await apiCreateComment(found.uuid, body);
+    // CommentComposer already POSTs the comment itself; only refresh here.
+    onComment() {
       refetch();
     },
     onLoadComments: () => Promise.resolve(),
