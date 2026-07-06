@@ -1,11 +1,18 @@
 // shared/store/nav-store.ts
 //
-// Nav data resource — reactive to the current channel nick.
-// navData refetches whenever the subject nick changes, returning viewer info,
+// Nav data via TanStack Query — reactive to the current channel nick.
+// The query refetches whenever the subject nick changes, returning viewer info,
 // pinned/featured apps, and channel_tabs all in one request.
+//
+// Cached under ["nav", nick]: every component asking for the same nick shares
+// one request and one cache entry, revisits render instantly from cache, and
+// the data revalidates on window focus/reconnect (see shared/lib/query-client).
 
-import { createResource, createSignal } from "solid-js";
-import { fetchNavApi, type NavApiResponse, type NavApp } from "../lib/nav-api";
+import { createSignal } from "solid-js";
+import { useQuery, keepPreviousData } from "@tanstack/solid-query";
+import { fetchNavApi, type NavApiResponse } from "../lib/nav-api";
+import type { NavApp } from "../lib/nav-api";
+import { queryClient } from "../lib/query-client";
 
 // ── Channel nick signal ───────────────────────────────────────────────────────
 //
@@ -25,33 +32,59 @@ const [navNick, setNavNick] = createSignal<string>(nickFromUrl());
 
 export { setNavNick };
 
-// ── Resource ──────────────────────────────────────────────────────────────────
+// ── Query ─────────────────────────────────────────────────────────────────────
 //
 // Reactive to navNick: fetches /api/nav?channel_nick=<nick> when nick is set,
 // /api/nav otherwise. Includes channel_tabs in the response when nick is present.
+//
+// keepPreviousData mirrors createResource behaviour: while the new nick's data
+// loads, the accessor still returns the previous data and `.loading` is true.
 
-const [navData, { refetch: refetchNavData }] = createResource<NavApiResponse, string>(
-  navNick,
-  (nick) => fetchNavApi(nick || undefined),
-);
+/** Resource-style accessor: call for data, read `.loading` for fetch state. */
+export type NavDataAccessor = {
+  (): NavApiResponse | undefined;
+  readonly loading: boolean;
+};
 
-export function useNavData() {
-  return navData;
+function useNavQuery() {
+  return useQuery(() => {
+    const nick = navNick();
+    return {
+      queryKey: ["nav", nick] as const,
+      queryFn: () => fetchNavApi(nick || undefined),
+      placeholderData: keepPreviousData,
+    };
+  });
 }
 
-export { refetchNavData };
+export function useNavData(): NavDataAccessor {
+  const query = useNavQuery();
+  const accessor = (() => query.data) as NavDataAccessor;
+  Object.defineProperty(accessor, "loading", {
+    get: () => query.isPending || query.isPlaceholderData,
+  });
+  return accessor;
+}
+
+/** Drop cached nav data and refetch — call after installing/uninstalling apps. */
+export function refetchNavData() {
+  return queryClient.invalidateQueries({ queryKey: ["nav"] });
+}
 
 // ── Derived: pinned / featured apps ──────────────────────────────────────────
 
 export function usePinnedApps(): () => NavApp[] {
+  const navData = useNavData();
   return () => navData()?.pinned ?? [];
 }
 
 export function useFeaturedApps(): () => NavApp[] {
+  const navData = useNavData();
   return () => navData()?.featured ?? [];
 }
 
 export function useSystemApps(): () => NavApp[] {
+  const navData = useNavData();
   return () => navData()?.system_apps ?? [];
 }
 
@@ -60,20 +93,23 @@ export function useSystemApps(): () => NavApp[] {
 // Channel tabs are included in navData when channel_nick is set.
 // Returns the accessor directly so callers can check .loading.
 
-export function useChannelNav(_nick?: () => string | undefined) {
-  return navData;
+export function useChannelNav(_nick?: () => string | undefined): NavDataAccessor {
+  return useNavData();
 }
 
 // ── Derived: viewer / actions / installed apps ────────────────────────────────
 
 export function useNavViewer() {
+  const navData = useNavData();
   return () => navData()?.viewer;
 }
 
 export function useNavActions() {
+  const navData = useNavData();
   return () => navData()?.actions ?? {};
 }
 
 export function useInstalledApps(): () => Set<string> {
+  const navData = useNavData();
   return () => new Set(navData()?.installed_apps ?? []);
 }
