@@ -17,17 +17,19 @@ export default function DashboardView() {
     <div class="space-y-6">
       <h1 class="text-2xl font-bold">{t("hq.welcome")}{viewer()?.name ? `, ${viewer()!.name}` : ''}.</h1>
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div class="lg:col-span-2 flex flex-col gap-4">
+        <div class="flex flex-col gap-4">
           <HqComposerSlot />
-          <Show when={!auth.loading && auth()?.isLocal}>
-            <UpcomingEventsWidget />
-          </Show>
-          <PerfStatsWidget />
+          <DraftsWidget />
         </div>
         <div class="flex flex-col gap-4">
-          <DraftsWidget />
+					<Show when={!auth.loading && auth()?.isLocal}>
+            <UpcomingEventsWidget />
+          </Show>
+        </div>
+        <div class="flex flex-col gap-4">
           <HqMessagesWidget />
         </div>
+        <PerfStatsWidget />
       </div>
     </div>
   );
