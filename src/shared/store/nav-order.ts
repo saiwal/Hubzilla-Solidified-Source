@@ -1,39 +1,87 @@
 // shared/store/nav-order.ts
 //
-// Persists the user's preferred nav item order to localStorage.
-// The order is a list of app names (NavApp.name) in display order.
+// Persists the user's preferred nav item order (keyed by NavItemDef.path) to
+// pconfig (cat "spa", key "nav_order"), with a localStorage cache so the nav
+// doesn't flash the default order before pconfig loads. Set by dragging items
+// directly in the live nav (Layout.tsx) — there is no settings-page UI for this.
 
 import { createSignal } from "solid-js";
-import type { NavApp } from "../lib/nav-api";
+import type { NavItemDef } from "../types/module.types";
+import { apiFetch } from "../lib/fetch";
 
 const STORAGE_KEY = "hz-nav-order";
 
-function load(): string[] {
+function parseOrder(raw: unknown): string[] {
+  if (typeof raw === "string") {
+    if (!raw.trim()) return [];
+    try {
+      raw = JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+  return Array.isArray(raw) ? raw.filter((x): x is string => typeof x === "string") : [];
+}
+
+function readCache(): string[] {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]");
+    return parseOrder(localStorage.getItem(STORAGE_KEY));
   } catch {
     return [];
   }
 }
 
-const [navOrder, _setNavOrder] = createSignal<string[]>(load());
-
-export { navOrder };
-
-export function setNavOrder(names: string[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(names));
-  _setNavOrder([...names]);
+function writeCache(order: string[]): void {
+  try {
+    if (order.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(order));
+    else localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // storage full / private mode — cache is best-effort
+  }
 }
 
-// Sort apps by stored order; apps not in the list are appended at the end.
-// Calling navOrder() inside creates a reactive dependency when used in a memo.
-export function applyNavOrder(apps: NavApp[]): NavApp[] {
+const [navOrder, setNavOrderSignal] = createSignal<string[]>(readCache());
+export { navOrder };
+
+// Called from auth-store with the pconfig value at boot — the server wins,
+// including its absence (a reset on another device must clear this cache too).
+export function initNavOrder(raw: string | undefined): void {
+  const parsed = raw !== undefined ? parseOrder(raw) : [];
+  setNavOrderSignal(parsed);
+  writeCache(parsed);
+}
+
+function persist(order: string[]): void {
+  setNavOrderSignal(order);
+  writeCache(order);
+  apiFetch("/api/settings/integrations", {
+    method: "POST",
+    body: JSON.stringify({ action: "reorder", order }),
+  }).catch(() => {});
+}
+
+// Sort items by stored order; items not in the list keep their relative
+// order, appended after any explicitly ordered ones.
+export function applyNavItemOrder(items: NavItemDef[]): NavItemDef[] {
   const order = navOrder();
-  if (order.length === 0) return apps;
-  const idx = new Map(order.map((name, i) => [name, i]));
-  return [...apps].sort((a, b) => {
-    const ia = idx.get(a.name) ?? order.length;
-    const ib = idx.get(b.name) ?? order.length;
+  if (order.length === 0) return items;
+  const idx = new Map(order.map((path, i) => [path, i]));
+  return [...items].sort((a, b) => {
+    const ia = idx.get(a.path) ?? order.length;
+    const ib = idx.get(b.path) ?? order.length;
     return ia - ib;
   });
+}
+
+// Commit a new order for a *subset* of the nav (e.g. just the mobile bottom
+// tab bar, or just the "more" drawer overflow, or the full desktop list).
+// Items outside the subset keep their absolute position; the subset's
+// relative order is replaced with `subsetPathsInOrder`.
+export function commitNavOrder(fullOrderedItems: NavItemDef[], subsetPathsInOrder: string[]): void {
+  const subset = new Set(subsetPathsInOrder);
+  let i = 0;
+  const next = fullOrderedItems.map((item) =>
+    subset.has(item.path) ? subsetPathsInOrder[i++] : item.path,
+  );
+  persist(next);
 }

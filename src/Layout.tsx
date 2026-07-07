@@ -4,6 +4,9 @@ import { A, useLocation, useIsRouting } from "@solidjs/router";
 import NavItem, { getNavIcon } from "./shared/views/NavItem";
 import { useNav, useNavActionItems } from "./shared/lib/useNav";
 import { moduleIdForPath, getModule } from "./shared/lib/module-registry";
+import { createDragReorder } from "./shared/lib/useDragReorder";
+import { commitNavOrder } from "./shared/store/nav-order";
+import type { NavItemDef } from "./shared/types/module.types";
 import Slot from "./shared/views/Slot";
 import RemoteAuthBanner from "./shared/views/RemoteAuthBanner";
 import { useViewerRole, useSubjectNick } from "./shared/store/site-config";
@@ -133,6 +136,21 @@ const Layout: ParentComponent = (props) => {
   const isMedium = createMediaQuery("(min-width: 768px)");
   const bottomLimit = () => (isMedium() ? 8 : 4);
   const bottomItems = () => navItems().slice(0, bottomLimit());
+  const overflowItems = () => navItems().slice(bottomLimit());
+
+  // Drag-to-reorder — one instance per surface the nav is rendered in. Each
+  // commits into the same persisted order (nav-order.ts), replacing only the
+  // positions of the items visible in that surface.
+  const getItemKey = (item: NavItemDef) => item.path;
+  const desktopNavDrag = createDragReorder(navItems, getItemKey, (order) =>
+    commitNavOrder(navItems(), order),
+  );
+  const bottomTabDrag = createDragReorder(bottomItems, getItemKey, (order) =>
+    commitNavOrder(navItems(), order),
+  );
+  const moreDrawerDrag = createDragReorder(overflowItems, getItemKey, (order) =>
+    commitNavOrder(navItems(), order),
+  );
 
   return (
     <div class="fixed inset-0 bg-base text-txt hz-app-root">
@@ -224,15 +242,26 @@ const Layout: ParentComponent = (props) => {
               </Show>
             </div>
 
-            {/* Primary nav */}
+            {/* Primary nav — reorderable via drag handle while in edit-layout mode */}
             <nav aria-label="Primary" tabindex="0" class="flex-1 min-h-0 flex flex-col gap-0.5 overflow-y-auto">
-              <For each={navItems()}>
+              <For each={desktopNavDrag.displayItems()}>
                 {(item) => (
-                  <NavItem
-                    href={item.href}
-                    label={item.label}
-                    icon={item.icon}
-                  />
+                  <div
+                    ref={desktopNavDrag.registerRef(item.path)}
+                    classList={{ "rounded-xl border border-dashed border-accent/50": editingWidgets() }}
+                  >
+                    <NavItem
+                      href={item.href}
+                      label={item.label}
+                      icon={item.icon}
+                      draggable={editingWidgets()}
+                      dragging={desktopNavDrag.draggingKey() === item.path}
+                      onDragHandlePointerDown={(e) => {
+                        e.preventDefault();
+                        desktopNavDrag.beginDrag(item);
+                      }}
+                    />
+                  </div>
                 )}
               </For>
             </nav>
@@ -429,35 +458,44 @@ const Layout: ParentComponent = (props) => {
           >
             <div class="mx-auto mt-3 mb-4 w-9 h-1 rounded-full bg-rim" />
 
-            {/* ── Nav tiles ── */}
-            <Show when={navItems().slice(bottomLimit()).length > 0}>
+            {/* ── Nav tiles — reorderable via drag ── */}
+            <Show when={overflowItems().length > 0}>
               <p class="px-4 pb-2 text-[0.625rem] font-semibold uppercase tracking-widest text-muted">
                 {t("layout.navigation")}
               </p>
               <div class="grid grid-cols-4 gap-1.5 px-2.5 pb-4">
-                <For each={navItems().slice(bottomLimit())}>
+                <For each={moreDrawerDrag.displayItems()}>
                   {(item) => (
-                    <A
-                      href={
-                        typeof item.href === "function"
-                          ? item.href()
-                          : item.href
-                      }
-                      onClick={closeAll}
-                      class="flex flex-col items-center gap-1.5 py-2.5 px-1
-                             rounded-xl bg-elevated border border-rim
-                             text-txt text-xs font-medium leading-tight text-center
-                             hover:brightness-95 transition-all"
+                    <div
+                      ref={moreDrawerDrag.registerRef(item.path)}
+                      onPointerDown={editingWidgets() ? moreDrawerDrag.onTilePointerDown(item) : undefined}
+                      classList={{
+                        "opacity-50": moreDrawerDrag.draggingKey() === item.path,
+                        "touch-none rounded-xl border border-dashed border-accent/50": editingWidgets(),
+                      }}
                     >
-                      <span aria-hidden="true" class="text-muted">
-                        {getNavIcon(item.icon, 20)}
-                      </span>
-                      <span class="truncate w-full text-center">
-                        {typeof item.label === "function"
-                          ? item.label()
-                          : item.label}
-                      </span>
-                    </A>
+                      <A
+                        href={
+                          typeof item.href === "function"
+                            ? item.href()
+                            : item.href
+                        }
+                        onClick={closeAll}
+                        class="flex flex-col items-center gap-1.5 py-2.5 px-1
+                               rounded-xl bg-elevated border border-rim
+                               text-txt text-xs font-medium leading-tight text-center
+                               hover:brightness-95 transition-all"
+                      >
+                        <span aria-hidden="true" class="text-muted">
+                          {getNavIcon(item.icon, 20)}
+                        </span>
+                        <span class="truncate w-full text-center">
+                          {typeof item.label === "function"
+                            ? item.label()
+                            : item.label}
+                        </span>
+                      </A>
+                    </div>
                   )}
                 </For>
               </div>
@@ -518,13 +556,23 @@ const Layout: ParentComponent = (props) => {
                    bg-surface border-t border-rim
                    flex items-center px-2 gap-1"
           >
-            <For each={bottomItems()}>
+            <For each={bottomTabDrag.displayItems()}>
               {(item) => (
-                <MobileTab
-                  href={item.href}
-                  label={item.label}
-                  icon={item.icon}
-                />
+                <div
+                  ref={bottomTabDrag.registerRef(item.path)}
+                  onPointerDown={editingWidgets() ? bottomTabDrag.onTilePointerDown(item) : undefined}
+                  classList={{
+                    "opacity-50": bottomTabDrag.draggingKey() === item.path,
+                    "touch-none rounded-xl border border-dashed border-accent/50": editingWidgets(),
+                  }}
+                  class="flex-1 min-w-0 flex"
+                >
+                  <MobileTab
+                    href={item.href}
+                    label={item.label}
+                    icon={item.icon}
+                  />
+                </div>
               )}
             </For>
 

@@ -34,4 +34,5 @@ export const nav: RawDictionary["nav"] = {
   pubstream:     "पब्लिक स्ट्रीम",
   bookmarks:     "बुकमार्क",
   profiles:      "प्रोफ़ाइलें",
+  drag_reorder:  "क्रम बदलने के लिए खींचें",
 };

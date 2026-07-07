@@ -3,6 +3,7 @@ import { applyTypography, type FontSize, type FontFamily } from "../lib/typograp
 import { initBackground, type BgFit } from "../lib/background";
 import { initTheme } from "../lib/useTheme";
 import { initWidgetLayout } from "./widget-layout";
+import { initNavOrder } from "./nav-order";
 import { THEMES, type ThemeId } from "../types/theme.types";
 
 export type AuthState = {
@@ -88,6 +89,7 @@ async function fetchAuthState(): Promise<AuthState> {
   // viewer layout — sync to the server value only for local users, otherwise
   // clear any stale cache so defaults apply.
   initWidgetLayout(isLocal ? data.spa?.widget_layout : undefined);
+  initNavOrder(isLocal ? data.spa?.nav_order : undefined);
 
   return {
     isLocal,

@@ -80,6 +80,7 @@ export type RawDictionary = {
     pubstream:     string;
     bookmarks:     string;
     profiles:      string;
+    drag_reorder:  string;
   };
   layout: {
     title:              string;

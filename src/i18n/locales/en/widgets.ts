@@ -83,7 +83,7 @@ export const widgets: RawDictionary["widgets"] = {
   photo_albums:       "Photo Albums",
   bookmarked_rooms:   "Bookmarked Rooms",
   // Layout edit mode UI
-  edit_layout:   "Edit widgets",
+  edit_layout:   "Edit layout",
   done_editing:  "Done editing",
   add_widget:    "Add widget",
   remove_widget: "Remove",

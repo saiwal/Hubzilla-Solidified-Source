@@ -17,7 +17,7 @@ import { biToNavIcon } from "../lib/nav-api";
 import { getNavItems, getRoutes, getSpaExclusiveNavItems } from "./module-registry";
 import { useI18n } from "@/i18n";
 import { useViewerRole } from "../store/site-config";
-import { applyNavOrder } from "../store/nav-order";
+import { applyNavItemOrder } from "../store/nav-order";
 import type { ViewerRole } from "../store/site-config";
 
 type ActionMeta = {
@@ -173,15 +173,18 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
           !pinnedUrls.has(toSpaHref(a.url)) &&
           (installed.size === 0 || installed.has(a.name)),
       );
-      const items = applyNavOrder([...filteredPinned, ...filteredFeatured])
-        .map((a) => appToNavItem(a, moduleLabelMap));
+      const items: NavItemDef[] = [...filteredPinned, ...filteredFeatured].map((a) =>
+        appToNavItem(a, moduleLabelMap),
+      );
 
       // SPA-exclusive modules (no appName) opt in with hidden: false
       for (const item of getSpaExclusiveNavItems()) {
         if (item.hidden === false && visibleForOwner(item.context)) items.push(item);
       }
 
-      return dedupByHref(items);
+      // Merge apps and SPA-exclusive modules into one reorderable list —
+      // the user can drag any of them into any position in the live nav.
+      return applyNavItemOrder(dedupByHref(items));
     }
 
     // Visitor (anon/remote) not on a channel → system apps only

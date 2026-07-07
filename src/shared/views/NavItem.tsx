@@ -1,6 +1,7 @@
 import { A, useLocation } from "@solidjs/router";
 import type { Component, JSX } from "solid-js";
 import { Show } from "solid-js";
+import { useI18n } from "@/i18n";
 import { biToNavIcon } from "@/shared/lib/nav-api";
 export { biToNavIcon };
 import {
@@ -35,6 +36,7 @@ import {
   MdFillNote,
   MdFillHardware,
   MdFillVideogame_asset,
+  MdOutlineDrag_indicator,
 } from "solid-icons/md";
 
 
@@ -91,6 +93,11 @@ interface Props {
   href: string | (() => string);
   label: string | (() => string);
   icon?: string;
+  /** Renders a drag handle beside the link so the item can be reordered. */
+  draggable?: boolean;
+  dragging?: boolean;
+  onDragHandlePointerDown?: (e: PointerEvent) => void;
+  onDragHandleKeyDown?: (e: KeyboardEvent) => void;
 }
 
 const itemClass =
@@ -101,6 +108,7 @@ const itemClass =
 const activeClass = "!bg-elevated !text-txt font-medium";
 
 const NavItem: Component<Props> = (props) => {
+  const { t } = useI18n();
   const href = () =>
     typeof props.href === "function" ? props.href() : props.href;
   const label = () =>
@@ -127,7 +135,7 @@ const NavItem: Component<Props> = (props) => {
     </>
   );
 
-  return (
+  const link = () => (
     <Show
       when={isAbsolute()}
       fallback={
@@ -147,6 +155,29 @@ const NavItem: Component<Props> = (props) => {
       >
         {content()}
       </a>
+    </Show>
+  );
+
+  return (
+    <Show when={props.draggable} fallback={link()}>
+      <div
+        class="flex items-center gap-0.5 rounded-xl transition-opacity"
+        classList={{ "opacity-50": props.dragging }}
+      >
+        <div class="flex-1 min-w-0">{link()}</div>
+        <button
+          type="button"
+          aria-label={t("nav.drag_reorder")}
+          title={t("nav.drag_reorder")}
+          onPointerDown={props.onDragHandlePointerDown}
+          onKeyDown={props.onDragHandleKeyDown}
+          class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-muted/60
+                 hover:bg-elevated hover:text-txt cursor-grab active:cursor-grabbing touch-none
+                 focus:outline-none focus:ring-2 focus:ring-accent transition-colors"
+        >
+          <MdOutlineDrag_indicator size={16} />
+        </button>
+      </div>
     </Show>
   );
 };
