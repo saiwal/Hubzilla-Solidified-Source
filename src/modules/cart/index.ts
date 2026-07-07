@@ -22,6 +22,7 @@ registerModule({
       label: () => useI18n().t("widgets.shopping_cart"),
       loader: () => import("./widgets/CartWidget"),
       slot: "right",
+      helpTarget: "cart.shopping_cart_widget",
     },
     {
       // Opt-in showcase card; place several, each configured with its own sku
@@ -33,6 +34,7 @@ registerModule({
       contexts: ["channel", "profile", "cart"],
       multiInstance: true,
       configComponent: () => import("./widgets/ItemCardConfig"),
+      helpTarget: "cart.item_card_widget",
     },
   ],
   permissions: [],

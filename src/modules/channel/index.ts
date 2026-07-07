@@ -29,30 +29,35 @@ registerModule({
       label: () => useI18n().t("widgets.connections"),
       loader: () => import("@/shared/widgets/channelconnections"),
       ...channelWidgetPlacement,
+      helpTarget: "channel.connections_widget",
     },
     {
       id: "channel.popular",
       label: () => useI18n().t("widgets.popular_posts"),
       loader: () => import("./widgets/ChannelPopularWidget"),
       ...channelWidgetPlacement,
+      helpTarget: "channel.popular_posts_widget",
     },
     {
       id: "channel.categories",
       label: () => useI18n().t("widgets.categories"),
       loader: () => import("./widgets/ChannelCategoryWidget"),
       ...channelWidgetPlacement,
+      helpTarget: "channel.categories_widget",
     },
     {
       id: "channel.tags",
       label: () => useI18n().t("widgets.tags"),
       loader: () => import("./widgets/ChannelTagWidget"),
       ...channelWidgetPlacement,
+      helpTarget: "channel.tags_widget",
     },
     {
       id: "channel.archive",
       label: () => useI18n().t("widgets.archive"),
       loader: () => import("./widgets/ChannelArchiveWidget"),
       ...channelWidgetPlacement,
+      helpTarget: "channel.archive_widget",
     },
     {
       // Opt-in pinned-post showcase; place several, each configured with a post
@@ -64,6 +69,7 @@ registerModule({
       contexts: ["channel", "profile"],
       multiInstance: true,
       configComponent: () => import("./widgets/PinnedPostConfig"),
+      helpTarget: "channel.pinned_post_widget",
     },
     {
       // Opt-in alternate layout for channel.tags — picker only, no default placement
@@ -73,6 +79,7 @@ registerModule({
       slot: "right",
       defaultModules: [],
       contexts: ["channel", "profile"],
+      helpTarget: "channel.tag_list_widget",
     },
     {
       // Opt-in alternate layout for channel.categories — picker only, no default placement
@@ -82,6 +89,7 @@ registerModule({
       slot: "right",
       defaultModules: [],
       contexts: ["channel", "profile"],
+      helpTarget: "channel.category_cloud_widget",
     },
     {
       // Opt-in alternate layout for channel.archive — picker only, no default placement
@@ -91,6 +99,7 @@ registerModule({
       slot: "right",
       defaultModules: [],
       contexts: ["channel", "profile"],
+      helpTarget: "channel.archive_grid_widget",
     },
   ],
   permissions: [],

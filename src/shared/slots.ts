@@ -8,6 +8,7 @@ export const notificationsWidget: WidgetDef = {
   slot: "right",
   contexts: "any",
   global: true,
+  helpTarget: "notifications",
 };
 
 export const pinnedChatWidget: WidgetDef = {
@@ -17,4 +18,5 @@ export const pinnedChatWidget: WidgetDef = {
   slot: "right",
   contexts: "any",
   global: true,
+  helpTarget: "chat.pinned_rooms_widget",
 };

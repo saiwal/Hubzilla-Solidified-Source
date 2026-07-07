@@ -25,6 +25,7 @@ registerModule({
       loader: () => import("./widgets/CdavCalendarWidget"),
       slot: "right",
       visitorVisible: false,
+      helpTarget: "calendar.caldav_calendars_widget",
     },
     {
       // Opt-in event showcase; place several, each configured with an event
@@ -36,6 +37,7 @@ registerModule({
       contexts: ["channel", "profile", "cal"],
       multiInstance: true,
       configComponent: () => import("./widgets/EventCardConfig"),
+      helpTarget: "calendar.event_card_widget",
     },
   ],
   permissions: [],

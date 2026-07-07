@@ -94,10 +94,26 @@ function HelpModalHeader(props: { target: string; onClose: () => void }) {
 }
 
 function DocContent(props: { target: string }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { docType } = useHelpMode();
   const [module, section] = props.target.split(".");
   const [md] = useDocs(module, docType);
+
+  function renderHtml(): string {
+    const html = marked.parse(extractSection(md()!, section)) as string;
+
+    // module is the doc path relative to the lang root (e.g. "hq" for
+    // docs/user/en/hq.txt, or "network/index" for docs/user/en/network/index.txt).
+    // Relative image srcs in the markdown are relative to that same directory.
+    const slashIdx = module.lastIndexOf("/");
+    const topicDir = slashIdx === -1 ? "" : module.slice(0, slashIdx);
+    const assetBase = `/view/theme/solidified/docs/${docType()}/${locale()}/${topicDir ? topicDir + "/" : ""}`;
+
+    return html.replace(
+      /(<img\s[^>]*src=")(?!https?:\/\/|data:|\/)(.*?)(")/gi,
+      (_m, pre, src, post) => `${pre}${assetBase}${src}${post}`
+    );
+  }
 
   return (
     <Suspense fallback={
@@ -113,7 +129,7 @@ function DocContent(props: { target: string }) {
       >
         <div
           class="prose prose-sm dark:prose-invert max-w-none"
-          innerHTML={marked.parse(extractSection(md()!, section)) as string}
+          innerHTML={renderHtml()}
         />
       </Show>
     </Suspense>

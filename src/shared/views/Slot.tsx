@@ -26,6 +26,8 @@ import {
   type LayoutEntry,
 } from "@/shared/store/widget-layout";
 import { toast } from "@/shared/store/toast";
+import { helpable } from "@/shared/lib/helpable";
+void helpable;
 import { useI18n } from "@/i18n";
 import {
   MdFillAdd,
@@ -57,6 +59,10 @@ function widgetLabel(w: RegisteredWidget): string {
   return typeof w.label === "function" ? w.label() : w.label;
 }
 
+function widgetHelpTarget(w: RegisteredWidget): string {
+  return w.helpTarget ?? `widgets.${w.id}`;
+}
+
 const Slot: Component<SlotProps> = (props) => {
   const location = useLocation();
   const installedApps = useInstalledApps();
@@ -83,7 +89,7 @@ const Slot: Component<SlotProps> = (props) => {
     widgetVersion(); // track
     return resolveGlobalSlots(props.name)
       .filter(visibleToViewer)
-      .map((w) => getLazy(w.loader));
+      .map((w) => ({ widget: w, Widget: getLazy(w.loader) }));
   });
 
   // Module-local widgets: the user's saved layout when one exists, otherwise
@@ -219,7 +225,13 @@ const Slot: Component<SlotProps> = (props) => {
   return (
     <>
       {/* Always mounted — never torn down on module navigation */}
-      <For each={globalWidgets()}>{(Widget) => <Widget />}</For>
+      <For each={globalWidgets()}>
+        {(g) => (
+          <div use:helpable={widgetHelpTarget(g.widget)}>
+            <g.Widget />
+          </div>
+        )}
+      </For>
 
       {/* Swapped per active module */}
       <Show
@@ -228,7 +240,11 @@ const Slot: Component<SlotProps> = (props) => {
           <For each={localEntries()}>
             {(entry) => {
               const Widget = getLazy(entry.widget.loader);
-              return <Widget config={entry.config} />;
+              return (
+                <div use:helpable={widgetHelpTarget(entry.widget)}>
+                  <Widget config={entry.config} />
+                </div>
+              );
             }}
           </For>
         }
@@ -245,7 +261,10 @@ const Slot: Component<SlotProps> = (props) => {
               ? getLazy(entry.widget.configComponent)
               : null;
             return (
-              <div class="rounded-xl border border-dashed border-accent/50 overflow-hidden">
+              <div
+                class="rounded-xl border border-dashed border-accent/50 overflow-hidden"
+                use:helpable={widgetHelpTarget(entry.widget)}
+              >
                 <div class="flex items-center justify-between gap-1 px-2 py-1 bg-elevated">
                   <span class="text-xs font-medium truncate">{widgetLabel(entry.widget)}</span>
                   <div class="flex items-center shrink-0">

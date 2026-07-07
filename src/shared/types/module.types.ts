@@ -66,6 +66,14 @@ export interface WidgetDef {
    * Receives the current config and an onSave callback.
    */
   configComponent?: ComponentLoader<WidgetConfigProps>;
+  /**
+   * Help-mode target for this widget, in "<docModule>.<section>" form (section
+   * optional — omit it to show the whole doc). Resolved the same way as the
+   * `use:helpable` directive: fetches src/docs/user|dev/en/<docModule>.txt and,
+   * if a section is given, extracts the "## <section>" heading (underscores
+   * become spaces). Falls back to `widgets.<id>` when unset.
+   */
+  helpTarget?: string;
 }
 
 /** @deprecated Use ModuleDef.widgets instead. Ignored by the registry. */

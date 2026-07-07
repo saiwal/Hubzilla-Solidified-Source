@@ -30,24 +30,28 @@ registerModule({
       loader: () => import("./widgets/ArticleDraftsWidget"),
       slot: "right",
       visitorVisible: false,
+      helpTarget: "articles.drafts_widget",
     },
     {
       id: "articles.popular",
       label: () => useI18n().t("widgets.popular_articles"),
       loader: () => import("./widgets/ArticlePopularWidget"),
       slot: "right",
+      helpTarget: "articles.popular_articles_widget",
     },
     {
       id: "articles.categories",
       label: () => useI18n().t("widgets.article_categories"),
       loader: () => import("./widgets/ArticleCategoryWidget"),
       slot: "right",
+      helpTarget: "articles.categories_widget",
     },
     {
       id: "articles.tags",
       label: () => useI18n().t("widgets.article_tags"),
       loader: () => import("./widgets/ArticleTagWidget"),
       slot: "right",
+      helpTarget: "articles.tags_widget",
     },
     {
       // Opt-in article showcase; place several, each configured with an article
@@ -59,6 +63,7 @@ registerModule({
       contexts: ["channel", "profile", "articles"],
       multiInstance: true,
       configComponent: () => import("./widgets/ArticleTeaserConfig"),
+      helpTarget: "articles.teaser_widget",
     },
   ],
   permissions: [],

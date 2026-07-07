@@ -18,6 +18,7 @@ registerModule({
       contexts: "any",
       multiInstance: true,
       configComponent: () => import("./widgets/RssConfig"),
+      helpTarget: "widgets.rss_feed_widget",
     },
     {
       id: "blocks.html",
@@ -28,6 +29,7 @@ registerModule({
       contexts: "any",
       multiInstance: true,
       configComponent: () => import("./widgets/HtmlBlockConfig"),
+      helpTarget: "widgets.html_block_widget",
     },
     {
       id: "blocks.clock",
@@ -38,6 +40,7 @@ registerModule({
       contexts: "any",
       multiInstance: true,
       configComponent: () => import("./widgets/ClockConfig"),
+      helpTarget: "widgets.clock_card_widget",
     },
     {
       // Owner productivity tool, not page content — hidden from visitors
@@ -50,6 +53,7 @@ registerModule({
       multiInstance: true,
       visitorVisible: false,
       configComponent: () => import("./widgets/PomodoroConfig"),
+      helpTarget: "widgets.pomodoro_widget",
     },
     {
       id: "blocks.links",
@@ -60,6 +64,7 @@ registerModule({
       contexts: "any",
       multiInstance: true,
       configComponent: () => import("./widgets/LinkListConfig"),
+      helpTarget: "widgets.link_list_widget",
     },
   ],
   permissions: [],

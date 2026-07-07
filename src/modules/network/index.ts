@@ -21,6 +21,7 @@ registerModule({
       loader: () => import("./widgets/StreamFiltersWidget"),
       slot: "right",
       visitorVisible: false,
+      helpTarget: "network.stream_filters_widget",
     },
     {
       id: "network.savedSearch",
@@ -28,6 +29,7 @@ registerModule({
       loader: () => import("./widgets/SavedSearchesWidget"),
       slot: "right",
       visitorVisible: false,
+      helpTarget: "network.saved_searches_widget",
     },
   ],
   permissions: [],
