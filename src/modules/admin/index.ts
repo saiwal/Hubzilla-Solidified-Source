@@ -30,6 +30,7 @@ registerModule({
     { path: "/admin", component: () => import("./views/AdminView") },
     ...adminRoutes,
   ],
+  requiresAuth: true,
 
   navItem: {
     label: () => useI18n().t("nav.admin"),

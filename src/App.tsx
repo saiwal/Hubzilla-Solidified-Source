@@ -1,5 +1,5 @@
-import { lazy, For, Show, createEffect, createMemo, type ParentComponent } from "solid-js";
-import { Router, Route, useNavigate } from "@solidjs/router";
+import { lazy, For, Show, createEffect, createMemo, type Component, type ParentComponent } from "solid-js";
+import { Router, Route, useNavigate, useLocation } from "@solidjs/router";
 import { QueryClientProvider } from "@tanstack/solid-query";
 import Layout from "./Layout";
 import { getRoutes } from "./router";
@@ -7,6 +7,7 @@ import { I18nProvider } from "./i18n";
 import NotFound from "@/shared/views/NotFound";
 import { getModule, isModuleActive } from "@/shared/lib/module-registry";
 import { useInstalledApps } from "@/shared/store/nav-store";
+import { useAuth } from "@/shared/store/auth-store";
 import { queryClient } from "@/shared/lib/query-client";
 
 const QueryDevtools = import.meta.env.DEV
@@ -38,6 +39,25 @@ const ModuleGuard: ParentComponent<{ moduleId: string }> = (props) => {
   return <Show when={active()}>{props.children}</Show>;
 };
 
+// null = auth state not yet resolved (singleton resource still loading) — render
+// nothing but don't redirect yet, to avoid a flash-redirect on page load.
+const AuthGuard: ParentComponent = (props) => {
+  const auth = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const loggedIn = createMemo(() => auth()?.isLoggedIn ?? null);
+
+  createEffect(() => {
+    if (loggedIn() === false) {
+      const next = encodeURIComponent(location.pathname + location.search);
+      navigate(`/login?next=${next}`, { replace: true });
+    }
+  });
+
+  return <Show when={loggedIn() !== false}>{props.children}</Show>;
+};
+
 export default function App() {
   return (
   <QueryClientProvider client={queryClient}>
@@ -49,11 +69,18 @@ export default function App() {
           {(route) => {
             const Comp = lazy(route.component);
             const mid = route.moduleId;
-            if (mid && getModule(mid)?.appName) {
-              const Guarded = () => <ModuleGuard moduleId={mid}><Comp /></ModuleGuard>;
-              return <Route path={route.path} component={Guarded} />;
+            const mod = mid ? getModule(mid) : null;
+
+            let Rendered: Component = Comp;
+            if (mod?.appName) {
+              const Inner = Rendered;
+              Rendered = () => <ModuleGuard moduleId={mid!}><Inner /></ModuleGuard>;
             }
-            return <Route path={route.path} component={Comp} />;
+            if (mod?.requiresAuth) {
+              const Inner = Rendered;
+              Rendered = () => <AuthGuard><Inner /></AuthGuard>;
+            }
+            return <Route path={route.path} component={Rendered} />;
           }}
         </For>
         <Route path="*404" component={NotFound} />

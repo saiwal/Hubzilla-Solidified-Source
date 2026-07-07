@@ -87,6 +87,8 @@ export interface ModuleDef {
   permissions?: string[];
   /** Hubzilla app name (e.g. "Photos"). If set, module only renders when this app is installed. */
   appName?: string;
+  /** true = only rendered for authenticated users; anonymous visitors are redirected to /login. */
+  requiresAuth?: boolean;
 }
 
 export interface RouteDef {

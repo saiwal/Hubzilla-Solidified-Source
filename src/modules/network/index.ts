@@ -6,6 +6,7 @@ registerModule({
   routes: [
     { path: "/network", component: () => import("./views/NetworkView") },
   ],
+  requiresAuth: true,
   navItem: {
     label: () => useI18n().t("nav.network"),
     icon: "network",

@@ -18,4 +18,5 @@ registerModule({
       component: () => import("./views/ManagePage"),
     },
   ],
+  requiresAuth: true,
 });

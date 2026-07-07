@@ -5,6 +5,7 @@ import { notificationsWidget, pinnedChatWidget } from "@/shared/slots";
 registerModule({
   id: "hq",
   routes: [{ path: "/hq", component: () => import("./views/HqView") }],
+  requiresAuth: true,
   navItem: {
     label: () => useI18n().t("nav.hq"),
     icon: "dashboard",

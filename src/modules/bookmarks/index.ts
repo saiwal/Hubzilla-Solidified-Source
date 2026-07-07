@@ -7,6 +7,7 @@ registerModule({
   routes: [
     { path: "/bookmarks", component: () => import("./views/BookmarksView") },
   ],
+  requiresAuth: true,
   navItem: {
     label: () => useI18n().t("nav.bookmarks"),
     icon: "bookmark",

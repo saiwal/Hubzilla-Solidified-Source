@@ -6,6 +6,7 @@ registerModule({
   routes: [
     { path: "/notepad", component: () => import("./views/NotepadView") },
   ],
+  requiresAuth: true,
   navItem: {
     label: () => useI18n().t("notepad.title"),
     icon: "notepad",

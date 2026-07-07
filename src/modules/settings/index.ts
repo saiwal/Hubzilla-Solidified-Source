@@ -27,6 +27,7 @@ registerModule({
     { path: "/settings", component: () => import("./views/SettingsView") },
     ...settingsRoutes,
   ],
+  requiresAuth: true,
   navItem: {
     label: () => useI18n().t("nav.settings"),
     icon: "settings",

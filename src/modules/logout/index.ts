@@ -6,6 +6,7 @@ registerModule({
   routes: [
     { path: "/logout", component: () => import("./views/LogoutView") },
   ],
+  requiresAuth: true,
   navItem: {
     label: () => useI18n().t("nav.logout"),
     icon: "logout",

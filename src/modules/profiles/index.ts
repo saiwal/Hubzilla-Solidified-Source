@@ -7,6 +7,7 @@ registerModule({
     { path: "/settings/profile",     component: () => import("./views/ProfilesView") },
     { path: "/settings/profile/:id", component: () => import("./views/ProfileEditView") },
   ],
+  requiresAuth: true,
   navItem: {
     label: () => useI18n().t("nav.profiles"),
     icon: "manage",

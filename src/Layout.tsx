@@ -33,6 +33,36 @@ import { usePWA } from "@/pwa";
 import DOMPurify from "dompurify";
 void motion;
 
+// ── Brand / site banner ────────────────────────────────────────────────────────
+function BrandBlock(props: { banner?: string }) {
+  return (
+    <Show
+      when={props.banner}
+      fallback={
+        <div class="flex items-center gap-3 select-none">
+          <span class="text-2xl font-black leading-none tracking-tighter text-accent">
+            Hz
+          </span>
+          <span class="h-5 w-px bg-rim" />
+          <span class="text-sm font-medium tracking-tight text-muted">
+            Hubzilla
+          </span>
+        </div>
+      }
+    >
+      <div class="w-full flex flex-col items-center gap-1.5 select-none">
+        <div
+          class="w-full text-center text-base font-bold tracking-tight text-txt
+                 [&_img]:mx-auto [&_img]:max-h-14 [&_img]:max-w-full [&_img]:object-contain
+                 [&_img]:opacity-90 [&_img]:hover:opacity-100 [&_img]:transition-opacity"
+          innerHTML={DOMPurify.sanitize(props.banner!, { FORBID_TAGS: ["style", "script"] })}
+        />
+        <span class="h-[2px] w-5 bg-accent rounded-full" />
+      </div>
+    </Show>
+  );
+}
+
 // ── Mobile bottom tab ─────────────────────────────────────────────────────────
 function MobileTab(props: {
   href: string | (() => string);
@@ -216,30 +246,7 @@ const Layout: ParentComponent = (props) => {
           >
             {/* Brand */}
             <div class="flex items-center justify-center px-2 pb-4 mb-2 border-b border-rim">
-              <Show
-                when={navData()?.banner}
-                fallback={
-                  <div class="flex items-center gap-3 select-none">
-                    <span class="text-2xl font-black leading-none tracking-tighter text-accent">
-                      Hz
-                    </span>
-                    <span class="h-5 w-px bg-rim" />
-                    <span class="text-sm font-medium tracking-tight text-muted">
-                      Hubzilla
-                    </span>
-                  </div>
-                }
-              >
-                <div class="w-full flex flex-col items-center gap-1.5 select-none">
-                  <div
-                    class="w-full text-center text-base font-bold tracking-tight text-txt
-                           [&_img]:mx-auto [&_img]:max-h-14 [&_img]:max-w-full [&_img]:object-contain
-                           [&_img]:opacity-90 [&_img]:hover:opacity-100 [&_img]:transition-opacity"
-                    innerHTML={DOMPurify.sanitize(navData()!.banner, { FORBID_TAGS: ["style", "script"] })}
-                  />
-                  <span class="h-[2px] w-5 bg-accent rounded-full" />
-                </div>
-              </Show>
+              <BrandBlock banner={navData()?.banner} />
             </div>
 
             {/* Primary nav — reorderable via drag handle while in edit-layout mode */}
@@ -452,11 +459,16 @@ const Layout: ParentComponent = (props) => {
               bg-surface border-t border-rim
               rounded-t-2xl shadow-2xl px-0 pt-0 pb-3
               transform transition-transform duration-300 ease-in-out
-              max-h-[72vh] overflow-visible
+              max-h-[72vh] overflow-y-auto overscroll-contain
               ${moreOpen() ? "translate-y-0 bottom-16" : "translate-y-full bottom-16"}
             `}
           >
             <div class="mx-auto mt-3 mb-4 w-9 h-1 rounded-full bg-rim" />
+
+            {/* Brand */}
+            <div class="flex items-center justify-center px-4 pb-3 mb-1 border-b border-rim">
+              <BrandBlock banner={navData()?.banner} />
+            </div>
 
             {/* ── Nav tiles — reorderable via drag ── */}
             <Show when={overflowItems().length > 0}>
