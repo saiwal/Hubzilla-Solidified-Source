@@ -56,7 +56,6 @@ function HelpModalHeader(props: { target: string; onClose: () => void }) {
 
   const tabs: { id: DocType; label: () => string }[] = [
     { id: "user", label: () => t("help.user_guide") },
-    { id: "dev",  label: () => t("help.dev_guide")  },
   ];
 
   return (

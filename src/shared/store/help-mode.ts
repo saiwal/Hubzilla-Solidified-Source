@@ -1,7 +1,7 @@
 // src/shared/store/help-mode.ts
 import { createSignal } from "solid-js";
 
-export type DocType = "user" | "dev";
+export type DocType = "user";
 
 const [helpMode, setHelpMode] = createSignal(false);
 const [helpTarget, setHelpTarget] = createSignal<string | null>(null);
