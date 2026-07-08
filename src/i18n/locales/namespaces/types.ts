@@ -526,6 +526,7 @@ export type RawDictionary = {
     save_to_folder: string; new_folder_placeholder: string; add_folder: string; no_folders_yet: string;
     expand_all: string;
     delivery_report: string; delivery_no_data: string;
+    edited: string;
   };
   editor: {
     // PostComposer

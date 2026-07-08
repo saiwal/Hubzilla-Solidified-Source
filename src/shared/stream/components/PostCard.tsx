@@ -39,6 +39,7 @@ import {
   MdFillNotifications,
   MdOutlineNotifications_none,
   MdOutlineCode,
+  MdOutlineEdit,
   MdOutlineReply,
   MdFillFolder,
   MdFillFolder_open,
@@ -186,6 +187,10 @@ export default function PostCard(props: {
   const isUnseen = () => props.post.flags.includes("unseen");
   const isExpired = () => props.post.flags.includes("expired");
   const isRepeat = () => props.post.verb === "Announce";
+  const editedAt = () =>
+    props.post.edited && props.post.edited !== props.post.created
+      ? props.post.edited
+      : undefined;
 
   const eventData = () =>
     props.post.eventData ??
@@ -686,6 +691,15 @@ export default function PostCard(props: {
               {props.post.verb?.toLowerCase()}
             </span>
           </Show>
+          <Show when={editedAt()}>
+            {(edited) => (
+              <MdOutlineEdit
+                size={11}
+                class="text-muted shrink-0"
+                title={`${t("post.edited")}: ${new Date(edited() + "Z").toLocaleString(locale())}`}
+              />
+            )}
+          </Show>
           <span
             class="text-xs text-muted shrink-0 ml-1"
             title={new Date(props.post.created + "Z").toLocaleString(locale())}
@@ -1159,6 +1173,17 @@ export default function PostCard(props: {
             </Show>
           </div>
           <div class="flex items-center gap-1.5">
+            <Show when={editedAt()}>
+              {(edited) => (
+                <MdOutlineEdit
+                  size={12}
+                  class="text-muted shrink-0"
+                  title={`${t("post.edited")}: ${new Date(
+                    edited() + "Z",
+                  ).toLocaleString(locale())}`}
+                />
+              )}
+            </Show>
             <span
               class="text-sm text-muted"
               title={new Date(props.post.created + "Z").toLocaleString(
@@ -1167,15 +1192,6 @@ export default function PostCard(props: {
             >
               {formatPostDate(props.post.created, locale())}
             </span>
-            <Show
-              when={
-                props.post.verb && props.post.verb !== "Create" && !isRepeat()
-              }
-            >
-              <span class="text-xs text-muted italic">
-                {props.post.verb?.toLowerCase()}
-              </span>
-            </Show>
           </div>
         </div>
 
