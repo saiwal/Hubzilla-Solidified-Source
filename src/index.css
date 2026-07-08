@@ -30,8 +30,15 @@
   --plyr-font-size-base: 13px;
 }
 .plyr {
+  /* No overflow:hidden here — Plyr's settings/speed popup menu
+     (.plyr__menu__container) intentionally pops up above the player via
+     position:absolute; bottom:100%, escaping this box. Clipping overflow
+     on .plyr itself would cut that menu off. Rounded corners are already
+     handled at the right nested level: .plyr__video-wrapper clips video/
+     poster content (its own overflow:hidden + border-radius:inherit from
+     Plyr's base CSS), and .plyr--audio .plyr__controls gets
+     border-radius:inherit directly on its own background. */
   border-radius: 0.75rem;
-  overflow: hidden;
 }
 .plyr--audio .plyr__controls {
   border-radius: 0.75rem;
@@ -59,7 +66,19 @@
 .plyr--fullscreen-fallback video {
   width: 100% !important;
   height: 100% !important;
+  max-width: none !important;
   object-fit: contain;
+}
+.plyr:fullscreen .plyr-embed-wrap,
+.plyr:-webkit-full-screen .plyr-embed-wrap,
+.plyr--fullscreen-fallback .plyr-embed-wrap,
+.plyr:fullscreen iframe,
+.plyr:-webkit-full-screen iframe,
+.plyr--fullscreen-fallback iframe {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  aspect-ratio: auto !important;
 }
 
 .hz-app-root {

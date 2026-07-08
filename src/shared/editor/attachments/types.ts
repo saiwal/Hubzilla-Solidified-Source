@@ -17,6 +17,7 @@ export interface Attachment {
   insertUrl?: string;
   photoPageUrl?: string;
   hash?: string;
+  revision?: number;
   resourceId?: string;
   altText?: string;
   posterUrl?: string;

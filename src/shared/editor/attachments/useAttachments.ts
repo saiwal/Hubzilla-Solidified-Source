@@ -18,6 +18,7 @@ type DraftAttachment = {
   isVideo: boolean;
   isAudio: boolean;
   hash?: string;
+  revision?: number;
   resourceId?: string;
   insertUrl?: string;
   photoPageUrl?: string;
@@ -35,6 +36,7 @@ function toSerializable(a: Attachment): DraftAttachment {
     isVideo: a.isVideo,
     isAudio: a.isAudio,
     hash: a.hash,
+    revision: a.revision,
     resourceId: a.resourceId,
     insertUrl: a.insertUrl,
     photoPageUrl: a.photoPageUrl,
@@ -78,7 +80,36 @@ function isAudioMime(mime: string): boolean {
 }
 
 function isAudioFilename(name: string): boolean {
-  return /\.(mp3|ogg|oga|wav|flac|aac|m4a|opus)$/i.test(name);
+  // .webm is included here too because it's a shared container: our in-app
+  // audio recorder (CameraCapture) saves audio-only recordings as
+  // "audio-*.webm" (MediaRecorder has no audio-specific WebM extension), so
+  // the extension alone can't tell an audio-only webm from a video one —
+  // that case is disambiguated by MIME below, in classifyMedia().
+  return /\.(mp3|ogg|oga|wav|flac|aac|m4a|opus|webm)$/i.test(name);
+}
+
+// Classify a file as video xor audio, never both.
+//
+// Neither signal is trustworthy alone:
+// - MIME lies for some audio containers, e.g. certain browsers report an
+//   .m4a file as "video/mp4" since M4A is just an MP4 container with no
+//   video track — so a video/audio MIME can't override a specific,
+//   non-webm extension.
+// - The extension lies for .webm specifically, since it's shared between
+//   audio-only and video recordings (see isAudioFilename above) — that
+//   case must fall back to MIME, which MediaRecorder sets correctly
+//   ("audio/webm" vs "video/webm").
+function classifyMedia(name: string, mime: string): { isVideo: boolean; isAudio: boolean } {
+  const extAudio = isAudioFilename(name);
+  const extVideo = isVideoFilename(name);
+  if (extAudio && !extVideo) return { isVideo: false, isAudio: true };
+  if (extVideo && !extAudio) return { isVideo: true, isAudio: false };
+  // Ambiguous (.webm matches both lists) or no extension match — use MIME.
+  if (isAudioMime(mime)) return { isVideo: false, isAudio: true };
+  if (isVideoMime(mime)) return { isVideo: true, isAudio: false };
+  // .webm with no/generic MIME: default to video, matching legacy behavior.
+  if (extVideo) return { isVideo: true, isAudio: false };
+  return { isVideo: false, isAudio: false };
 }
 
 function uid(): string {
@@ -127,18 +158,21 @@ export function createAttachmentStore(nick: string, scope: string): AttachmentSt
 
   function addUploads(files: FileList | File[]) {
     const arr = Array.from(files);
-    const newItems: Attachment[] = arr.map((file) => ({
-      id: uid(),
-      source: "upload" as const,
-      status: "uploading" as const,
-      progress: 0,
-      filename: file.name,
-      isImage: isImageMime(file.type) || isImageFilename(file.name),
-      isVideo: isVideoMime(file.type) || isVideoFilename(file.name),
-      isAudio: isAudioMime(file.type) || isAudioFilename(file.name),
-      thumbUrl: (isImageMime(file.type) || isImageFilename(file.name)) ? URL.createObjectURL(file) : undefined,
-      file,
-    }));
+    const newItems: Attachment[] = arr.map((file) => {
+      const { isVideo, isAudio } = classifyMedia(file.name, file.type);
+      return {
+        id: uid(),
+        source: "upload" as const,
+        status: "uploading" as const,
+        progress: 0,
+        filename: file.name,
+        isImage: isImageMime(file.type) || isImageFilename(file.name),
+        isVideo,
+        isAudio,
+        thumbUrl: (isImageMime(file.type) || isImageFilename(file.name)) ? URL.createObjectURL(file) : undefined,
+        file,
+      };
+    });
 
     setState("items", (prev) => [...prev, ...newItems]);
 
@@ -171,6 +205,7 @@ export function createAttachmentStore(nick: string, scope: string): AttachmentSt
               status: "ready",
               progress: 100,
               hash: res.hash,
+              revision: res.revision,
               insertUrl,
             });
           }
@@ -251,6 +286,12 @@ export function createAttachmentStore(nick: string, scope: string): AttachmentSt
         ? `[img alt="${item.altText.trim()}"]${item.insertUrl}[/img]`
         : `[img]${item.insertUrl}[/img]`;
     }
+    // Note: do NOT also append an [attachment] tag here for video/audio.
+    // Hubzilla core already links the upload to the post via the attach
+    // hash embedded in the media URL (plus the ACL update on upload) —
+    // adding a second, explicit [attachment]hash,revision[/attachment] tag
+    // for the same file made core register/display it as a *second*,
+    // redundant attachment on the post (tried this; caused duplicates).
     if (item.isVideo) {
       return item.posterUrl
         ? `[zvideo poster='${item.posterUrl}']${item.insertUrl}[/zvideo]`
@@ -299,6 +340,7 @@ export function createAttachmentStore(nick: string, scope: string): AttachmentSt
             status: "ready",
             progress: 100,
             hash: videoRes.hash,
+            revision: videoRes.revision,
             insertUrl,
             posterUrl,
           });

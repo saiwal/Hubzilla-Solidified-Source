@@ -1060,22 +1060,36 @@ export function bbcode(text: string, options: BbcodeOptions = {}): string {
   // Media: [video], [audio], [zvideo], [zaudio]
   // ------------------------------------------------------------------
 
+  // [video]/[zvideo] tags are meant for direct media file URLs, but users
+  // (and the editor's own toolbar "Video" button) commonly paste a YouTube
+  // or Vimeo page URL in there instead of a raw file. A <video src="...">
+  // pointed at a YouTube watch page can never play, so try the oembed
+  // resolver first and only fall back to a native <video> tag when the URL
+  // isn't a recognised provider link.
+  const videoOrEmbed = (src: string, poster = "", maxWidth = 560): string => {
+    if (tryOembed && oembedResolver) {
+      const embed = oembedResolver(src.trim());
+      if (embed) return embed;
+    }
+    return buildVideoTag(src, poster, maxWidth);
+  };
+
   // [video opts]url[/video]
   text = text.replace(/\[video (.*?)\](.*?)\[\/video\]/gi, (_m, opts, src) => {
     const posterM = opts.match(/poster='(.*?)'/i) ?? opts.match(/poster=&quot;(.*?)&quot;/i);
-    return buildVideoTag(src, posterM?.[1] ?? "");
+    return videoOrEmbed(src, posterM?.[1] ?? "");
   });
-  text = text.replace(/\[video\](.*?)\[\/video\]/gi, (_m, src) => buildVideoTag(src));
+  text = text.replace(/\[video\](.*?)\[\/video\]/gi, (_m, src) => videoOrEmbed(src));
 
   text = text.replace(/\[audio\](.*?)\[\/audio\]/gi, (_m, src) => buildAudioTag(src));
 
   text = text.replace(/\[zvideo (.*?)\](.*?)\[\/zvideo\]/gi, (_m, opts, src) => {
     const posterM = opts.match(/poster='(.*?)'/i);
     const resolvedSrc = zidResolver ? zidResolver(src) : src;
-    return buildVideoTag(resolvedSrc, posterM?.[1] ?? "");
+    return videoOrEmbed(resolvedSrc, posterM?.[1] ?? "");
   });
   text = text.replace(/\[zvideo\](.*?)\[\/zvideo\]/gi, (_m, src) => {
-    return buildVideoTag(zidResolver ? zidResolver(src) : src);
+    return videoOrEmbed(zidResolver ? zidResolver(src) : src);
   });
   text = text.replace(/\[zaudio\](.*?)\[\/zaudio\]/gi, (_m, src) => {
     return buildAudioTag(zidResolver ? zidResolver(src) : src);

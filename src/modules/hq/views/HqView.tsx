@@ -20,6 +20,9 @@ export default function DashboardView() {
       <h1 class="text-2xl font-bold">{t("hq.welcome")}{viewer()?.name ? `, ${viewer()!.name}` : ''}.</h1>
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div class="flex flex-col gap-4">
+					<div use:helpable="hq.performance_widget">
+						<PerfStatsWidget />
+					</div>
           <div use:helpable="hq.post_composer">
             <HqComposerSlot />
           </div>
@@ -38,9 +41,6 @@ export default function DashboardView() {
           <div use:helpable="hq.messages_widget">
             <HqMessagesWidget />
           </div>
-        </div>
-        <div use:helpable="hq.performance_widget">
-          <PerfStatsWidget />
         </div>
       </div>
     </div>
