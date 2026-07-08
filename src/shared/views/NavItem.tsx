@@ -131,7 +131,7 @@ const NavItem: Component<Props> = (props) => {
       <span aria-hidden="true" class="shrink-0 w-5 h-5 flex items-center justify-center">
         {getNavIcon(props.icon, 20)}
       </span>
-      <span class="truncate leading-none label">{label()}</span>
+      <span class="truncate leading-tight label">{label()}</span>
     </>
   );
 

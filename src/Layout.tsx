@@ -84,7 +84,7 @@ function MobileTab(props: {
       activeClass="!text-txt"
     >
       <span aria-hidden="true" class="flex items-center">{getNavIcon(props.icon, 22)}</span>
-      <span class="text-[0.625rem] font-medium leading-none truncate max-w-[52px]">
+      <span class="text-[0.625rem] font-medium leading-tight truncate max-w-[52px]">
         {label()}
       </span>
     </A>
