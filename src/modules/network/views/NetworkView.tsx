@@ -1,5 +1,6 @@
 // src/modules/network/views/NetworkView.tsx
 import { createEffect, onCleanup, Show, For, Switch, Match } from "solid-js";
+import { useSearchParams } from "@solidjs/router";
 import { useAuth } from "@/shared/store/auth-store";
 import { useI18n } from "@/i18n";
 import { useScrollStyle } from "@/shared/store/scroll-style";
@@ -9,6 +10,7 @@ import { ListPlaceholder } from "@/shared/stream/feedviews/ListView";
 import { MasonryPlaceholder } from "@/shared/stream/feedviews/MasonryView";
 import { FeedPlaceholder } from "@/shared/stream/feedviews/FeedView";
 import StreamFilters from "./StreamFilters";
+import { parseNetworkParams } from "../api";
 import {
   viewMode, posts, loadNetwork, resetPosts,
   loading, loadMore, loadingMore, hasMore, newPosts, flushNewPosts,
@@ -31,6 +33,7 @@ export default function NetworkView() {
   const auth = useAuth();
   const { t } = useI18n();
   const scrollStyle = useScrollStyle();
+  const [searchParams] = useSearchParams();
   let initialized = false;
   let sentinel!: HTMLDivElement;
 
@@ -39,7 +42,7 @@ export default function NetworkView() {
     if (initialized) return;
     initialized = true;
     resetPosts();
-    loadNetwork({ order: "created" });
+    loadNetwork(parseNetworkParams(searchParams));
   });
 
   createEffect(() => {

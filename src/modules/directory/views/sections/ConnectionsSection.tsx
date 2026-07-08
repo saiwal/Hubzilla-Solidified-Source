@@ -123,7 +123,7 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
   return (
     <div class="rounded-lg border border-rim bg-surface overflow-hidden">
       <div class="flex items-center gap-3 p-3">
-        <a href={props.conn.url} target="_blank" rel="noopener" class="shrink-0">
+        <a href={`/chanview?f=&hash=${encodeURIComponent(props.conn.xchan_hash)}`} class="shrink-0">
           <img
             src={props.conn.photo}
             alt={props.conn.name}
@@ -134,9 +134,7 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-1.5 flex-wrap">
             <a
-              href={props.conn.url}
-              target="_blank"
-              rel="noopener"
+              href={`/chanview?f=&hash=${encodeURIComponent(props.conn.xchan_hash)}`}
               class="font-medium text-sm text-txt truncate hover:underline"
             >
               {props.conn.name}

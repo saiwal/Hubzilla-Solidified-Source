@@ -78,6 +78,19 @@ async function fetchXchan(hash: string): Promise<XchanData | null> {
   return data as XchanData;
 }
 
+// Mirrors Hubzilla core's Zotlabs\Lib\Url::zid(): appends the viewer's own
+// channel address as ?zid= so the remote site's zid_init() can trigger a
+// zot6 magic-auth (reverse OWA) handshake and log the viewer in there.
+function withZid(url: string, network: string | undefined, nick: string): string {
+  if (!url || network?.toLowerCase() !== "zot6" || !nick || url.includes("zid=")) return url;
+  let host = "";
+  try { host = new URL(url).hostname; } catch { return url; }
+  if (host === window.location.hostname) return url;
+  const zid = `${nick}@${window.location.hostname}`;
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}zid=${encodeURIComponent(zid)}`;
+}
+
 type ConnectState =
   | { tag: "idle" }
   | { tag: "loading" }
@@ -269,9 +282,12 @@ export default function ChanView() {
                 <Show when={!xdata().local_nick && xdata().url}>
                   {(_) => {
                     const domain = () => { try { return new URL(xdata().url).hostname; } catch { return xdata().url; } };
+                    const a = auth();
+                    const remoteUrl = () =>
+                      a?.isLocal && a.nick ? withZid(xdata().url, xdata().network, a.nick) : xdata().url;
                     return (
                       <a
-                        href={xdata().url}
+                        href={remoteUrl()}
                         target="_blank"
                         rel="noopener noreferrer"
                         class="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg

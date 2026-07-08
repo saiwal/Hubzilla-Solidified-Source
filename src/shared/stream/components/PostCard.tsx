@@ -672,7 +672,7 @@ export default function PostCard(props: {
             </span>
           </Show>
           <a
-            href={props.post.authorUrl}
+            href={`/chanview?f=&hash=${encodeURIComponent(props.post.authorUrl)}`}
             class="font-medium text-sm text-txt hover:underline truncate"
           >
             {props.post.authorName}
@@ -1140,7 +1140,7 @@ export default function PostCard(props: {
         <div class="flex flex-col">
           <div class="flex items-center gap-1.5 flex-wrap">
             <a
-              href={props.post.authorUrl}
+              href={`/chanview?f=&hash=${encodeURIComponent(props.post.authorUrl)}`}
               class="font-semibold text-txt hover:underline"
             >
               {props.post.authorName}
@@ -1150,7 +1150,7 @@ export default function PostCard(props: {
                 <MdFillShare size={12} class="text-muted shrink-0" />
                 <span class="text-xs text-muted">via</span>
                 <a
-                  href={props.post.via!.url}
+                  href={`/chanview?f=&hash=${encodeURIComponent(props.post.via!.url)}`}
                   class="text-xs text-muted hover:underline font-medium"
                 >
                   {props.post.via!.name}

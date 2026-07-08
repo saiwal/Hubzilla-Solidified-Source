@@ -236,8 +236,13 @@ export default function AuthorPopover(props: Props) {
     return networkBadge(net);
   };
 
-  const chanviewUrl = () =>
-    props.url ? `/chanview?f=&hash=${encodeURIComponent(props.url)}` : undefined;
+  // Prefer the resolved xchan_hash (fetched once the popover opens); fall
+  // back to the xchan url so the link is available immediately (the /api/xchan
+  // lookup matches by url too, so this still resolves to the right profile).
+  const chanviewUrl = () => {
+    const hash = xchanHash() ?? props.url;
+    return hash ? `/chanview?f=&hash=${encodeURIComponent(hash)}` : undefined;
+  };
 
   // The edit button is visible as soon as tag === "connected", but disabled
   // until conn is populated (the background fetch).

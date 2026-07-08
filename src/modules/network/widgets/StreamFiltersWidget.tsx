@@ -19,7 +19,7 @@ import { createSignal, createEffect, For, Show } from "solid-js";
 import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { useI18n } from "@/i18n";
 import { loadNetwork, resetPosts } from "../store";
-import { fetchFolders, type NetworkParams } from "../api";
+import { fetchFolders, parseNetworkParams } from "../api";
 import { useInstalledApps } from "@/shared/store/nav-store";
 import { fetchGroups, type PrivacyGroup } from "@/modules/directory/groups/api";
 
@@ -116,27 +116,6 @@ function AffinitySlider(props: { min: number; max: number; onChange: (min: numbe
   );
 }
 
-function buildParams(params: Record<string, string | string[] | undefined>): NetworkParams {
-  const p: NetworkParams = {};
-  if (params.order && params.order !== "created") p.order = params.order as NetworkParams["order"];
-  if (params.search) p.search = String(params.search);
-  if (params.tag)    p.tag    = String(params.tag);
-  if (params.file)   p.file   = String(params.file);
-  if (params.star  === "1") p.star  = 1;
-  if (params.pf    === "1") p.pf    = 1;
-  if (params.conv  === "1") p.conv  = 1;
-  if (params.dm    === "1") p.dm    = 1;
-  if (params.event === "1") p.event = 1;
-  if (params.poll  === "1") p.poll  = 1;
-  if (params.dbegin) p.dbegin = String(params.dbegin);
-  if (params.dend)   p.dend   = String(params.dend);
-  if (params.cmin)   p.cmin   = Number(params.cmin);
-  if (params.cmax)   p.cmax   = Number(params.cmax);
-  if (params.cid)    p.cid    = Number(params.cid);
-  if (params.gid)    p.gid    = Number(params.gid);
-  return p;
-}
-
 export default function StreamFiltersWidget() {
   const { t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -183,7 +162,7 @@ export default function StreamFiltersWidget() {
 
   function applyNow() {
     resetPosts();
-    loadNetwork(buildParams(searchParams));
+    loadNetwork(parseNetworkParams(searchParams));
   }
 
   function clearAll() {

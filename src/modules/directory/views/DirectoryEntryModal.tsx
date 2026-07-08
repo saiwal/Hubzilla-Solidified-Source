@@ -47,7 +47,7 @@ const DirectoryEntryModal: Component<Props> = (props) => {
 
             {/* ── Header ── */}
             <div class={`flex items-start gap-4 px-5 pb-4 border-b border-rim ${e()!.cover ? '-mt-8 pt-2' : 'pt-5'}`}>
-              <a href={e()!.profile_url} target="_blank" rel="noopener noreferrer" class="shrink-0">
+              <a href={`/chanview?f=&hash=${encodeURIComponent(e()!.hash)}`} class="shrink-0">
                 <img
                   src={e()!.photo}
                   alt={e()!.name}
@@ -58,9 +58,7 @@ const DirectoryEntryModal: Component<Props> = (props) => {
                 <div class="flex items-start justify-between gap-2">
                   <div class="min-w-0">
                     <a
-                      href={e()!.profile_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={`/chanview?f=&hash=${encodeURIComponent(e()!.hash)}`}
                       class="font-bold text-base text-txt hover:underline leading-tight block"
                     >
                       {e()!.name}
@@ -173,9 +171,9 @@ const DirectoryEntryModal: Component<Props> = (props) => {
               <Show
                 when={!e()!.is_connected}
                               >
-               <a 
-                  href={e()!.connect_url ?? e()!.profile_url}
-                  target={e()!.connect_url ? undefined : "_blank"}
+               <a
+                  href={e()!.connect_url || `/chanview?f=&hash=${encodeURIComponent(e()!.hash)}`}
+                  target={e()!.connect_url ? "_blank" : undefined}
                   rel="noopener noreferrer"
                   class="flex-1 text-center px-4 py-2 rounded-lg text-sm font-semibold bg-accent text-accent-fg hover:opacity-80 transition-opacity"
                 >
@@ -183,9 +181,7 @@ const DirectoryEntryModal: Component<Props> = (props) => {
                 </a>
               </Show>
              <a
-                href={e()!.profile_url}
-                target="_blank"
-                rel="noopener noreferrer"
+                href={`/chanview?f=&hash=${encodeURIComponent(e()!.hash)}`}
                 class="px-4 py-2 rounded-lg text-sm font-medium border border-rim text-muted hover:bg-overlay transition-colors"
               >
                 {t("directory.view_profile")}
