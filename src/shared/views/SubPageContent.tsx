@@ -6,6 +6,8 @@ interface Props {
   description?: string;
   /** Optional action button(s) in the header (e.g. a Save button) */
   action?: JSX.Element;
+  /** Use a wider content column (for data tables) instead of the default form-width column */
+  wide?: boolean;
   children: JSX.Element;
 }
 
@@ -21,7 +23,7 @@ interface Props {
  */
 export default function SubPageContent(props: Props) {
   return (
-    <div class="max-w-2xl mx-auto px-4 md:px-6 py-6 space-y-6">
+    <div class={`${props.wide ? "max-w-5xl" : "max-w-2xl"} mx-auto px-4 md:px-6 py-6 space-y-6`}>
       {/* Page header */}
       <div class="flex items-start justify-between gap-4">
         <div class="space-y-0.5">

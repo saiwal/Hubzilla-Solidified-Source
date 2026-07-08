@@ -82,6 +82,7 @@ export const widgets: RawDictionary["widgets"] = {
   cfg_event:          "इवेंट",
   photo_albums:       "फ़ोटो एल्बम",
   bookmarked_rooms:   "बुकमार्क किए गए रूम",
+  wiki_list:          "विकि सूची",
   // Layout edit mode UI
   edit_layout:   "लेआउट संपादित करें",
   done_editing:  "संपादन पूर्ण",

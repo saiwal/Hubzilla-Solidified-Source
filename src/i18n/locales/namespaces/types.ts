@@ -379,6 +379,7 @@ export type RawDictionary = {
     cfg_event:          string;
     photo_albums:       string;
     bookmarked_rooms:   string;
+    wiki_list:          string;
     // Layout edit mode UI
     edit_layout:   string;
     done_editing:  string;

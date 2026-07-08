@@ -26,7 +26,7 @@ export default function AccountsSection() {
   }
 
   return (
-    <SubPageContent title={t("admin.accounts_title")} description={t("admin.accounts_desc")}>
+    <SubPageContent title={t("admin.accounts_title")} description={t("admin.accounts_desc")} wide>
       <Show when={result.error}>
         <div class="rounded-lg border border-red-300 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700 dark:text-red-400 mb-4">
           Error: {String(result.error?.message ?? result.error)}
@@ -48,7 +48,14 @@ export default function AccountsSection() {
                 </h3>
 
                 <div class="rounded-lg border border-rim overflow-x-auto">
-                  <table class="w-full text-sm">
+                  <table class="w-full text-sm table-fixed">
+                    <colgroup>
+                      <col class="w-auto" />
+                      <col class="hidden sm:table-column sm:w-32" />
+                      <col class="hidden md:table-column md:w-32" />
+                      <col class="w-32" />
+                      <col class="w-40" />
+                    </colgroup>
                     <thead>
                       <tr class="border-b border-rim bg-elevated">
                         <th class="px-3 py-2 text-left text-xs font-medium text-muted">Email</th>
@@ -62,7 +69,7 @@ export default function AccountsSection() {
                       <For each={r().pending}>
                         {(reg) => (
                           <tr class="border-b border-rim last:border-0 hover:bg-elevated/50 transition-colors">
-                            <td class="px-3 py-2 text-txt truncate max-w-[12rem]">{reg.reg_email}</td>
+                            <td class="px-3 py-2 text-txt truncate">{reg.reg_email}</td>
                             <td class="px-3 py-2 text-muted hidden sm:table-cell">{fmtDate(reg.reg_created)}</td>
                             <td class="px-3 py-2 text-muted font-mono text-xs hidden md:table-cell">{reg.reg_atip || "—"}</td>
                             <td class="px-3 py-2">
@@ -116,7 +123,15 @@ export default function AccountsSection() {
               </p>
 
               <div class="rounded-lg border border-rim overflow-x-auto">
-                <table class="w-full text-sm">
+                <table class="w-full text-sm table-fixed">
+                  <colgroup>
+                    <col class="w-auto" />
+                    <col class="hidden sm:table-column sm:w-28" />
+                    <col class="hidden md:table-column md:w-28" />
+                    <col class="hidden lg:table-column lg:w-28" />
+                    <col class="w-28" />
+                    <col class="w-40" />
+                  </colgroup>
                   <thead>
                     <tr class="border-b border-rim bg-elevated">
                       <th class="px-3 py-2 text-left text-xs font-medium text-muted">{t("admin.col_email")}</th>
@@ -131,8 +146,8 @@ export default function AccountsSection() {
                     <For each={r().data}>
                       {(acc) => (
                         <tr class="border-b border-rim last:border-0 hover:bg-elevated/50 transition-colors">
-                          <td class="px-3 py-2 text-txt truncate max-w-[12rem]">{acc.account_email}</td>
-                          <td class="px-3 py-2 text-muted hidden sm:table-cell">{acc.channels || "—"}</td>
+                          <td class="px-3 py-2 text-txt truncate">{acc.account_email}</td>
+                          <td class="px-3 py-2 text-muted hidden sm:table-cell truncate">{acc.channels || "—"}</td>
                           <td class="px-3 py-2 text-muted hidden md:table-cell">{fmtDate(acc.account_created)}</td>
                           <td class="px-3 py-2 text-muted hidden lg:table-cell">{fmtDate(acc.account_lastlog)}</td>
                           <td class="px-3 py-2">

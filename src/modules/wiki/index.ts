@@ -29,6 +29,16 @@ registerModule({
     // not a standalone sidebar item — keep hidden from the main nav.
 		context: 'all',
   },
+  widgets: [
+    {
+      id: "wiki.list",
+      label: () => useI18n().t("widgets.wiki_list"),
+      loader: () => import("./widgets/WikiListWidget"),
+      slot: "right",
+      defaultModules: ["wiki", "channel"],
+      helpTarget: "wiki.wiki_list_widget",
+    },
+  ],
   slots: {},
   permissions: [],
   appName: "Wiki",
