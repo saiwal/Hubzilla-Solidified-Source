@@ -392,6 +392,43 @@ export type RawDictionary = {
     empty_slot:    string;
     none_to_add:   string;
     save_failed:   string;
+    // World clock (blocks.clock, mode "world")
+    clock_mode_world: string;
+    cfg_add_zone:     string;
+    cfg_zone_label:   string;
+    // Weather (blocks.weather)
+    weather:            string;
+    cfg_location:       string;
+    cfg_unit:           string;
+    unit_celsius:       string;
+    unit_fahrenheit:    string;
+    weather_not_found:  string;
+    wind:               string;
+    // Quote of the Day (blocks.quote)
+    quote_of_day:  string;
+    quote_shuffle: string;
+    // Embed (blocks.embed)
+    embed:            string;
+    cfg_embed_url:    string;
+    cfg_embed_height: string;
+    cfg_invalid_url:  string;
+    // Contact Card (channel.contact_card)
+    contact_card: string;
+    // Activity Heatmap (channel.activity_heatmap)
+    activity_heatmap:       string;
+    activity_heatmap_empty: string;
+    activity_heatmap_total: string;
+    // Site Announcements (admin.site_announcements)
+    site_announcements:      string;
+    no_announcements:        string;
+    cfg_announcement_title:  string;
+    cfg_announcement_body:   string;
+    post_announcement:       string;
+    delete_announcement:     string;
+    // Storage Usage (cloud.storage_usage)
+    storage_usage:     string;
+    storage_used_only: string;
+    storage_used_of:   string;
   };
   tools: {
     label:            string;
@@ -1152,6 +1189,7 @@ export type RawDictionary = {
     drafts:               string;
     messages:             string;
     performance:          string;
+    post_composer:        string;
     stats:                string;
     upcoming_events:      string;
     no_activity:          string;

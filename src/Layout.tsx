@@ -327,7 +327,7 @@ const Layout: ParentComponent = (props) => {
               {notifCount() > 0 ? `${notifCount()} notification${notifCount() === 1 ? "" : "s"}` : ""}
             </span>
             <Show when={isOwner()}>
-              <Slot name="mainTop" moduleId={activeModuleId()} />
+              <Slot name="mainTop" moduleId={activeModuleId()} editable />
             </Show>
 
             <ErrorBoundary fallback={(_, reset) => (

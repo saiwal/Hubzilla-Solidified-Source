@@ -95,4 +95,41 @@ export const widgets: RawDictionary["widgets"] = {
   empty_slot:    "इस पेज पर कोई विजेट नहीं।",
   none_to_add:   "जोड़ने के लिए कोई और विजेट उपलब्ध नहीं।",
   save_failed:   "विजेट लेआउट सहेजा नहीं जा सका।",
+  // World clock (blocks.clock, mode "world")
+  clock_mode_world: "विश्व घड़ी",
+  cfg_add_zone:     "टाइमज़ोन जोड़ें",
+  cfg_zone_label:   "शहर / लेबल",
+  // Weather (blocks.weather)
+  weather:            "मौसम",
+  cfg_location:       "स्थान",
+  cfg_unit:           "इकाई",
+  unit_celsius:       "सेल्सियस (°C)",
+  unit_fahrenheit:    "फ़ारेनहाइट (°F)",
+  weather_not_found:  "स्थान नहीं मिला।",
+  wind:               "हवा",
+  // Quote of the Day (blocks.quote)
+  quote_of_day:  "आज का उद्धरण",
+  quote_shuffle: "बदलें",
+  // Embed (blocks.embed)
+  embed:            "एम्बेड",
+  cfg_embed_url:    "एम्बेड यूआरएल",
+  cfg_embed_height: "ऊँचाई (px)",
+  cfg_invalid_url:  "एक मान्य http(s) यूआरएल दर्ज करें।",
+  // Contact Card (channel.contact_card)
+  contact_card: "संपर्क कार्ड",
+  // Activity Heatmap (channel.activity_heatmap)
+  activity_heatmap:       "गतिविधि",
+  activity_heatmap_empty: "अभी तक कोई गतिविधि नहीं।",
+  activity_heatmap_total: "पिछले वर्ष में {{count}} पोस्ट",
+  // Site Announcements (admin.site_announcements)
+  site_announcements:      "साइट घोषणाएँ",
+  no_announcements:        "कोई घोषणा नहीं।",
+  cfg_announcement_title:  "शीर्षक",
+  cfg_announcement_body:   "संदेश",
+  post_announcement:       "पोस्ट करें",
+  delete_announcement:     "हटाएँ",
+  // Storage Usage (cloud.storage_usage)
+  storage_usage:     "संग्रहण उपयोग",
+  storage_used_only: "{{used}} उपयोग हुआ",
+  storage_used_of:   "{{limit}} में से {{used}} उपयोग हुआ",
 };

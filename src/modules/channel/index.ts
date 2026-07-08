@@ -101,6 +101,45 @@ registerModule({
       contexts: ["channel", "profile"],
       helpTarget: "channel.archive_grid_widget",
     },
+    {
+      // Opt-in vCard-style summary — picker only, no default placement.
+      // Also placeable on /hq: usePageNick() falls back to the viewer's own
+      // nick there, so it shows the owner's own card on their dashboard.
+      id: "channel.contact_card",
+      label: () => useI18n().t("widgets.contact_card"),
+      loader: () => import("./widgets/ContactCardWidget"),
+      slot: "right",
+      defaultModules: [],
+      contexts: ["channel", "profile", "hq"],
+    },
+    {
+      // Opt-in GitHub-style posting activity graph — picker only, no default
+      // placement. Also placeable on /hq (see channel.contact_card above).
+      id: "channel.activity_heatmap",
+      label: () => useI18n().t("widgets.activity_heatmap"),
+      loader: () => import("./widgets/ActivityHeatmapWidget"),
+      slot: "right",
+      defaultModules: [],
+      contexts: ["channel", "profile", "hq"],
+    },
+    // Same two widgets again under slot "mainTop", so they can be dropped
+    // into HQ's top banner slot specifically.
+    {
+      id: "channel.contact_card_top",
+      label: () => useI18n().t("widgets.contact_card"),
+      loader: () => import("./widgets/ContactCardWidget"),
+      slot: "mainTop",
+      defaultModules: [],
+      contexts: ["hq"],
+    },
+    {
+      id: "channel.activity_heatmap_top",
+      label: () => useI18n().t("widgets.activity_heatmap"),
+      loader: () => import("./widgets/ActivityHeatmapWidget"),
+      slot: "mainTop",
+      defaultModules: [],
+      contexts: ["hq"],
+    },
   ],
   permissions: [],
 });

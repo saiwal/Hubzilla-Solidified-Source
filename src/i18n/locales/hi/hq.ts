@@ -5,6 +5,7 @@ export const hq: RawDictionary["hq"] = {
   drafts:               "मसौदे",
   messages:             "संदेश",
   performance:          "प्रदर्शन",
+  post_composer:        "पोस्ट कंपोज़र",
   stats:                "आँकड़े",
   upcoming_events:      "आगामी कार्यक्रम",
   no_activity:          "कोई हालिया गतिविधि नहीं",

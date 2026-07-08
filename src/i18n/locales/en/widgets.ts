@@ -95,4 +95,41 @@ export const widgets: RawDictionary["widgets"] = {
   empty_slot:    "No widgets on this page.",
   none_to_add:   "No more widgets available for this page.",
   save_failed:   "Couldn't save the widget layout.",
+  // World clock (blocks.clock, mode "world")
+  clock_mode_world: "World Clock",
+  cfg_add_zone:     "Add timezone",
+  cfg_zone_label:   "City / label",
+  // Weather (blocks.weather)
+  weather:            "Weather",
+  cfg_location:       "Location",
+  cfg_unit:           "Units",
+  unit_celsius:       "Celsius (°C)",
+  unit_fahrenheit:    "Fahrenheit (°F)",
+  weather_not_found:  "Location not found.",
+  wind:               "Wind",
+  // Quote of the Day (blocks.quote)
+  quote_of_day:  "Quote of the Day",
+  quote_shuffle: "Shuffle",
+  // Embed (blocks.embed)
+  embed:            "Embed",
+  cfg_embed_url:    "Embed URL",
+  cfg_embed_height: "Height (px)",
+  cfg_invalid_url:  "Enter a valid http(s) URL.",
+  // Contact Card (channel.contact_card)
+  contact_card: "Contact Card",
+  // Activity Heatmap (channel.activity_heatmap)
+  activity_heatmap:       "Activity",
+  activity_heatmap_empty: "No activity yet.",
+  activity_heatmap_total: "{{count}} posts in the last year",
+  // Site Announcements (admin.site_announcements)
+  site_announcements:      "Site Announcements",
+  no_announcements:        "No announcements.",
+  cfg_announcement_title:  "Title",
+  cfg_announcement_body:   "Message",
+  post_announcement:       "Post",
+  delete_announcement:     "Delete",
+  // Storage Usage (cloud.storage_usage)
+  storage_usage:     "Storage Usage",
+  storage_used_only: "{{used}} used",
+  storage_used_of:   "{{used}} of {{limit}} used",
 };

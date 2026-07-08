@@ -41,4 +41,24 @@ registerModule({
     hidden: true,
   },
   slots: {},
+  widgets: [
+    {
+      // Site-wide notice board — visible to everyone, editable inline by admins
+      id: "admin.site_announcements",
+      label: () => useI18n().t("widgets.site_announcements"),
+      loader: () => import("./widgets/SiteAnnouncementsWidget"),
+      slot: "right",
+      defaultModules: [],
+      contexts: "any",
+    },
+    {
+      // Same widget again under slot "mainTop", for HQ's top banner slot
+      id: "admin.site_announcements_top",
+      label: () => useI18n().t("widgets.site_announcements"),
+      loader: () => import("./widgets/SiteAnnouncementsWidget"),
+      slot: "mainTop",
+      defaultModules: [],
+      contexts: ["hq"],
+    },
+  ],
 });

@@ -222,12 +222,26 @@ const Slot: Component<SlotProps> = (props) => {
     "p-1 rounded-md text-muted hover:text-txt hover:bg-elevated transition-colors " +
     "disabled:opacity-30 disabled:pointer-events-none";
 
-  return (
+  // mainTop is a banner strip, not a sidebar: lay its widgets out
+  // masonry-style instead of stacking them full-width. A CSS grid would pad
+  // every cell in a row up to its tallest neighbour — with widgets of very
+  // different heights (a heatmap vs. a one-line quote, or a tall messages
+  // panel vs. a short stats card) that reads as a grid full of dead space,
+  // not a packed layout. CSS columns avoid that: each item flows into the
+  // next slot in its column at its own height. Other slots keep the plain
+  // single-column stack.
+  const isMainTop = props.name === "mainTop";
+  const hasContent = createMemo(
+    () => globalWidgets().length > 0 || localEntries().length > 0 || editing(),
+  );
+  const itemClass = () => (isMainTop ? "break-inside-avoid mb-4" : "");
+
+  const content = (
     <>
       {/* Always mounted — never torn down on module navigation */}
       <For each={globalWidgets()}>
         {(g) => (
-          <div use:helpable={widgetHelpTarget(g.widget)}>
+          <div class={itemClass()} use:helpable={widgetHelpTarget(g.widget)}>
             <g.Widget />
           </div>
         )}
@@ -241,7 +255,7 @@ const Slot: Component<SlotProps> = (props) => {
             {(entry) => {
               const Widget = getLazy(entry.widget.loader);
               return (
-                <div use:helpable={widgetHelpTarget(entry.widget)}>
+                <div class={itemClass()} use:helpable={widgetHelpTarget(entry.widget)}>
                   <Widget config={entry.config} />
                 </div>
               );
@@ -262,7 +276,7 @@ const Slot: Component<SlotProps> = (props) => {
               : null;
             return (
               <div
-                class="rounded-xl border border-dashed border-accent/50 overflow-hidden"
+                class={`rounded-xl border border-dashed border-accent/50 overflow-hidden ${itemClass()}`}
                 use:helpable={widgetHelpTarget(entry.widget)}
               >
                 <div class="flex items-center justify-between gap-1 px-2 py-1 bg-elevated">
@@ -333,7 +347,7 @@ const Slot: Component<SlotProps> = (props) => {
           }}
         </For>
 
-        <div class="space-y-2">
+        <div class={`space-y-2 ${itemClass()}`}>
           <button
             onClick={() => setPickerOpen((o) => !o)}
             aria-expanded={pickerOpen()}
@@ -382,6 +396,18 @@ const Slot: Component<SlotProps> = (props) => {
         </div>
       </Show>
     </>
+  );
+
+  if (!isMainTop) {
+    return content;
+  }
+
+  return (
+    <Show when={hasContent()}>
+      <div class="columns-1 sm:columns-2 lg:columns-4 gap-4 mb-4">
+        {content}
+      </div>
+    </Show>
   );
 };
 

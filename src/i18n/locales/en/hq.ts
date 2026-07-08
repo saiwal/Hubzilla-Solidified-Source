@@ -6,6 +6,7 @@ export const hq: RawDictionary["hq"] = {
   drafts:               "Drafts",
   messages:             "Messages",
   performance:          "Performance",
+  post_composer:        "Post Composer",
   stats:                "Stats",
   upcoming_events:      "Upcoming Events",
   // Empty states
