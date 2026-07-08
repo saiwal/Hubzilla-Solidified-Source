@@ -47,6 +47,4 @@ export const hq: RawDictionary["hq"] = {
   // UpcomingEventsWidget
   new_event:            "New",
   all_day:              "All day",
-  // HqView welcome
-  welcome:              "Welcome",
 };

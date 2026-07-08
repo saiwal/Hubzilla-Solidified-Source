@@ -1223,7 +1223,6 @@ export type RawDictionary = {
     delete_draft:         string;
     new_event:            string;
     all_day:              string;
-    welcome:              string;
   };
   channel: {
     no_posts:           string;

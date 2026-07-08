@@ -39,5 +39,4 @@ export const hq: RawDictionary["hq"] = {
   delete_draft:         "मसौदा हटाएँ",
   new_event:            "नया",
   all_day:              "पूरा दिन",
-  welcome:              "स्वागत है",
 };
