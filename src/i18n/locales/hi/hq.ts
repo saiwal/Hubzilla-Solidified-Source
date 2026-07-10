@@ -11,6 +11,7 @@ export const hq: RawDictionary["hq"] = {
   no_activity:          "कोई हालिया गतिविधि नहीं",
   no_drafts:            "कोई सहेजा गया मसौदा नहीं",
   no_messages:          "यहाँ कुछ नहीं",
+  no_filter_matches:    "उस फ़िल्टर के लिए कोई मेल नहीं",
   no_upcoming_events:   "अगले 30 दिनों में कोई आगामी कार्यक्रम नहीं",
   loading:              "लोड हो रहा है…",
   view_all:             "सभी देखें",

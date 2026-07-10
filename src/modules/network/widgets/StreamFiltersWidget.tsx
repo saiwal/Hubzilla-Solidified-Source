@@ -187,7 +187,7 @@ export default function StreamFiltersWidget() {
 
   return (
     <div class="bg-surface border border-rim rounded-xl overflow-hidden">
-      <div class="px-4 py-3 border-b border-rim flex items-center justify-between">
+      <div class="px-4 py-3 flex items-center justify-between">
         <h2 class="text-sm font-semibold text-txt">{t("network.filters")}</h2>
         <Show when={hasAnyFilter()}>
           <button onClick={clearAll} title={t("network.clear_filters")}

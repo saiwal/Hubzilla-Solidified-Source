@@ -120,7 +120,7 @@ export default function ArticleDraftsWidget() {
       <div class="bg-surface border border-rim rounded-2xl shadow-sm flex flex-col overflow-hidden">
 
         {/* Header */}
-        <div class="px-4 pt-3.5 pb-3 flex items-center justify-between border-b border-rim shrink-0">
+        <div class="px-4 pt-3.5 pb-3 flex items-center justify-between shrink-0">
           <div class="flex items-center gap-2">
             <svg class="w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"

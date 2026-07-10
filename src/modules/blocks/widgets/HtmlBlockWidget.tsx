@@ -30,7 +30,7 @@ export default function HtmlBlockWidget(props: WidgetProps) {
     >
       <div class="bg-surface border border-rim rounded-xl overflow-hidden">
         <Show when={title()}>
-          <div class="px-4 py-3 border-b border-rim">
+          <div class="px-4 py-3">
             <h3 class="text-sm font-semibold text-txt">{title()}</h3>
           </div>
         </Show>

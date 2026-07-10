@@ -44,7 +44,10 @@ export default function RegisterView() {
       });
 
       if (result.next === "complete") {
-        window.location.href = "/hq";
+        // No channel was created during registration (auto_channel_create is
+        // off site-wide) — send the new account through the wizard instead
+        // of /hq, which requires an active channel to render meaningfully.
+        window.location.href = result.nick ? "/hq" : "/new_channel";
       } else if (result.next === "check_email") {
         setRegateUrl(result.regate_url);
         setStep("check_email");

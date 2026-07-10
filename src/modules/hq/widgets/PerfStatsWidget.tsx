@@ -92,7 +92,7 @@ function PerfStatsPanelInner() {
   });
 
   function Sparkline(p: { data: number[]; color: string }) {
-    const W = 120, H = 32, pad = 2;
+    const W = 120, H = 28, pad = 2;
     const path = () => {
       const vals = p.data;
       if (vals.length < 2) return { line: "", area: "" };
@@ -115,7 +115,7 @@ function PerfStatsPanelInner() {
       <svg
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="none"
-        style={{ width: "100%", height: "32px", display: "block", overflow: "visible" }}
+        style={{ width: "100%", height: "28px", display: "block", overflow: "visible" }}
       >
         <path d={path().area} fill={p.color} opacity="0.15" />
         <path
@@ -131,9 +131,9 @@ function PerfStatsPanelInner() {
   }
 
   return (
-    <div class="bg-surface rounded-xl p-4 border border-rim">
+    <div class="bg-surface rounded-2xl p-3.5 border border-rim shadow-sm">
       {/* Header */}
-      <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center justify-between mb-2.5">
         <span class="text-xs font-medium uppercase tracking-wider text-muted">
           {t("hq.server_performance")}
         </span>
@@ -149,7 +149,7 @@ function PerfStatsPanelInner() {
       <Show when={!latest()}>
         <div class="grid gap-2" style={{ "grid-template-columns": "repeat(auto-fit, minmax(120px, 1fr))" }}>
           <For each={[1,2,3,4,5,6]}>{() =>
-            <div class="h-20 rounded-lg animate-pulse bg-elevated" />
+            <div class="h-16 rounded-lg animate-pulse bg-elevated" />
           }</For>
         </div>
       </Show>
@@ -173,13 +173,13 @@ function PerfStatsPanelInner() {
             <div class="grid gap-2" style={{ "grid-template-columns": "repeat(auto-fit, minmax(120px, 1fr))" }}>
               <For each={graphs}>
                 {(g) => (
-                  <div class="bg-elevated rounded-lg px-3 pt-2.5 pb-2 min-w-0 border border-rim">
+                  <div class="bg-elevated rounded-lg px-2.5 pt-2 pb-1.5 min-w-0 border border-rim">
                     <p class="text-[11px] text-muted truncate mb-0.5">{g.label}</p>
-                    <p class="text-xl font-medium text-txt tabular-nums leading-tight">{g.value}</p>
-                    <div class="mt-1.5 h-8">
+                    <p class="text-lg font-medium text-txt tabular-nums leading-tight">{g.value}</p>
+                    <div class="mt-1 h-7">
                       <Show
                         when={g.data.length > 1}
-                        fallback={<p class="text-[11px] text-muted leading-8">collecting…</p>}
+                        fallback={<p class="text-[11px] text-muted leading-7">collecting…</p>}
                       >
                         <Sparkline data={g.data} color={g.color} />
                       </Show>

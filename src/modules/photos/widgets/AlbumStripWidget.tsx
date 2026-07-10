@@ -52,7 +52,7 @@ export default function AlbumStripWidget(props: WidgetProps) {
           fallback={<EditHint text={t("widgets.item_unavailable")} />}
         >
           <div class="bg-surface border border-rim rounded-xl overflow-hidden">
-            <div class="px-4 py-3 border-b border-rim">
+            <div class="px-4 py-3">
               <h3 class="text-sm font-semibold text-txt truncate">
                 {data()!.album_name || t("widgets.album_strip")}
               </h3>

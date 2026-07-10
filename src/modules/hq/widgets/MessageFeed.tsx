@@ -141,14 +141,12 @@ function avatarHue(name: string): number {
 async function fetchMessages(params: {
   offset: number;
   type: MessageType | "filed";
-  author: string;
   file: string;
   signal?: AbortSignal;
 }): Promise<HqResponse> {
   const body = new URLSearchParams({
     offset: String(params.offset),
     type: params.type,
-    author: params.author,
     file: params.file,
   });
   const res = await fetch("/hq", {
@@ -169,7 +167,7 @@ async function fetchMessages(params: {
 
 const Avatar: Component<{ src?: string; name: string; size?: string }> = (props) => {
   const hue = () => avatarHue(props.name);
-  const size = props.size ?? "w-9 h-9";
+  const size = props.size ?? "w-8 h-8";
   return (
     <div
       class={`${size} rounded-full shrink-0 flex items-center justify-center text-xs font-semibold overflow-hidden select-none`}
@@ -221,7 +219,7 @@ const MessageItem: Component<{ entry: MessageEntry; feedType: FeedType }> = (pro
         type="button"
         onClick={handleClick}
         class={`
-          w-full text-left px-4 py-3 flex items-start gap-3
+          w-full text-left px-3.5 py-2 flex items-start gap-2
           transition-all duration-150 relative
           hover:bg-overlay
           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent
@@ -237,14 +235,14 @@ const MessageItem: Component<{ entry: MessageEntry; feedType: FeedType }> = (pro
           }}
         />
 
-        <Avatar src={e.author_img} name={e.author_name} />
+        <Avatar src={e.author_img} name={e.author_name} size="w-7 h-7" />
 
         <div class="flex-1 min-w-0">
-          <div class="flex items-baseline justify-between gap-2 mb-0.5">
-            <div class="flex items-center gap-1.5 min-w-0">
+          <div class="flex items-baseline justify-between gap-2">
+            <div class="flex items-center gap-1 min-w-0">
               {/* Tiny type icon colored by rail */}
               <svg
-                class="w-3 h-3 shrink-0 opacity-70"
+                class="w-2.5 h-2.5 shrink-0 opacity-70"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -258,24 +256,24 @@ const MessageItem: Component<{ entry: MessageEntry; feedType: FeedType }> = (pro
                 />
               </svg>
               <span
-                class={`text-sm truncate leading-snug ${
+                class={`text-[13px] truncate leading-snug ${
                   isAnyUnseen() ? "font-semibold text-txt" : "font-medium text-txt"
                 }`}
               >
                 {e.author_name}
               </span>
             </div>
-            <time class="text-[11px] text-muted shrink-0 tabular-nums">
+            <time class="text-[10px] text-muted shrink-0 tabular-nums">
               {timeAgo(e.created)}
             </time>
           </div>
 
-          <p class="text-[13px] text-muted line-clamp-2 leading-relaxed">
+          <p class="text-xs text-muted line-clamp-1 leading-snug">
             {decodeHtmlEntities(e.summary)}
           </p>
 
           <Show when={e.info}>
-            <div class="flex flex-wrap gap-1 mt-1">
+            <div class="flex flex-wrap gap-1 mt-0.5">
               <For each={parseFolderNames(e.info)}>
                 {(name) => (
                   <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-overlay text-[10px] text-muted font-medium">
@@ -292,8 +290,8 @@ const MessageItem: Component<{ entry: MessageEntry; feedType: FeedType }> = (pro
 
         <Show when={hasUnseenReplies()}>
           <span
-            class="absolute bottom-2 right-3 min-w-[1.25rem] h-5 rounded-full text-[10px] font-bold
-              flex items-center justify-center px-1.5 tabular-nums
+            class="absolute bottom-1.5 right-2.5 min-w-[1.1rem] h-4 rounded-full text-[9px] font-bold
+              flex items-center justify-center px-1 tabular-nums
               bg-accent text-surface"
           >
             {e.unseen_count}
@@ -301,7 +299,7 @@ const MessageItem: Component<{ entry: MessageEntry; feedType: FeedType }> = (pro
         </Show>
       </button>
 
-      <div class="mx-4 h-px bg-rim" />
+      <div class="mx-3.5 h-px bg-rim" />
 
       <Show when={showModal()}>
         <PostDetailModal uuid={e.b64mid} onClose={() => setShowModal(false)} />
@@ -313,12 +311,11 @@ const MessageItem: Component<{ entry: MessageEntry; feedType: FeedType }> = (pro
 // ── Skeleton loader ───────────────────────────────────────────────────────
 
 const SkeletonRow: Component = () => (
-  <div class="px-4 py-3 flex items-start gap-3 animate-pulse">
-    <div class="w-9 h-9 rounded-full bg-overlay shrink-0" />
-    <div class="flex-1 space-y-2">
-      <div class="h-3 bg-overlay rounded w-2/5" />
-      <div class="h-3 bg-overlay rounded w-4/5" />
-      <div class="h-3 bg-overlay rounded w-3/5" />
+  <div class="px-3.5 py-2 flex items-start gap-2 animate-pulse">
+    <div class="w-7 h-7 rounded-full bg-overlay shrink-0" />
+    <div class="flex-1 space-y-1.5">
+      <div class="h-2.5 bg-overlay rounded w-2/5" />
+      <div class="h-2.5 bg-overlay rounded w-4/5" />
     </div>
   </div>
 );
@@ -326,7 +323,7 @@ const SkeletonRow: Component = () => (
 // ── Group header ──────────────────────────────────────────────────────────
 
 const GroupHeader: Component<{ label: string; count: number }> = (props) => (
-  <div class="sticky top-0 z-10 bg-surface px-4 py-1.5 flex items-center gap-2 border-b border-rim">
+  <div class="sticky top-0 z-10 bg-surface px-3.5 py-1 flex items-center gap-2 border-b border-rim">
     <span class="text-[10px] font-semibold uppercase tracking-widest text-muted">
       {props.label}
     </span>
@@ -360,10 +357,23 @@ export const MessageFeed: Component<{ type: FeedType }> = (props) => {
   let resetController: AbortController | null = null;
   let loadMoreActive = false;
 
+  // The server's `author` param is an exact xchan-hash match, not a text
+  // search (see Zotlabs/Widget/Messages.php::get_messages_page) — so
+  // filtering is done client-side over whatever's currently loaded.
+  const filteredEntries = createMemo(() => {
+    const q = authorFilter().trim().toLowerCase();
+    if (!q) return entries();
+    return entries().filter(
+      (e) =>
+        e.author_name.toLowerCase().includes(q) ||
+        e.author_addr.toLowerCase().includes(q),
+    );
+  });
+
   // Group entries by time band in stable order
   const groupedEntries = createMemo(() => {
     const buckets: Partial<Record<TimeGroup, MessageEntry[]>> = {};
-    for (const entry of entries()) {
+    for (const entry of filteredEntries()) {
       const g = getTimeGroup(entry.created);
       (buckets[g] ??= []).push(entry);
     }
@@ -398,7 +408,6 @@ export const MessageFeed: Component<{ type: FeedType }> = (props) => {
       const data = await fetchMessages({
         offset: currentOffset,
         type: feedType === "folder" ? "filed" : feedType,
-        author: authorFilter(),
         file: feedType === "folder" ? activeFolder() : "",
         signal,
       });
@@ -425,7 +434,6 @@ export const MessageFeed: Component<{ type: FeedType }> = (props) => {
 
   createEffect(() => {
     activeFolder();
-    authorFilter();
     setOffset(0);
     loadPage(true);
   });
@@ -458,11 +466,11 @@ export const MessageFeed: Component<{ type: FeedType }> = (props) => {
       style={{ height: "480px" }}
     >
       {/* ── Header ── */}
-      <div class="px-4 pt-4 pb-0 shrink-0">
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="text-sm font-semibold text-txt tracking-tight">
+      <div class="px-3.5 pt-3.5 pb-2 shrink-0">
+        <div class="flex items-center justify-between mb-2.5">
+          <span class="text-xs font-medium uppercase tracking-wider text-muted">
             {t(FEED_META[props.type].titleKey as "hq.msg_tab_all")}
-          </h3>
+          </span>
           <div class="relative">
             <svg
               class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none"
@@ -480,16 +488,14 @@ export const MessageFeed: Component<{ type: FeedType }> = (props) => {
             <input
               type="text"
               placeholder={t("hq.filter_placeholder")}
-              class="w-36 text-xs bg-overlay border-0 rounded-lg
-                     pl-7 pr-3 py-1.5 text-txt placeholder-muted
+              class="w-32 text-xs bg-overlay border-0 rounded-lg
+                     pl-7 pr-3 py-1 text-txt placeholder-muted
                      focus:outline-none focus:ring-2 focus:ring-accent/40
-                     transition-all duration-200 focus:w-44"
+                     transition-all duration-200 focus:w-40"
               onInput={(e) => onFilterInput(e.currentTarget.value)}
             />
           </div>
         </div>
-
-        <div class="h-px bg-rim" />
 
         {/* Folder picker — only shown for the folders feed */}
         <Show when={props.type === "folder"}>
@@ -565,6 +571,20 @@ export const MessageFeed: Component<{ type: FeedType }> = (props) => {
               />
             </svg>
             <span>{t("hq.no_messages")}</span>
+          </div>
+        </Show>
+
+        <Show when={!empty() && !loading() && entries().length > 0 && filteredEntries().length === 0}>
+          <div class="flex flex-col items-center justify-center h-full gap-2 text-sm text-muted py-16">
+            <svg class="w-8 h-8 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            <span>{t("hq.no_filter_matches")}</span>
           </div>
         </Show>
 

@@ -29,7 +29,7 @@ export default function BookmarkedRoomsWidget() {
       <div class="bg-surface border border-rim rounded-2xl shadow-sm overflow-hidden">
 
         {/* Header */}
-        <div class="px-4 pt-3.5 pb-3 flex items-center gap-2 border-b border-rim">
+        <div class="px-4 pt-3.5 pb-3 flex items-center gap-2">
           <svg class="w-4 h-4 text-accent shrink-0" viewBox="0 0 24 24" fill="currentColor">
             <path d="M5 3a2 2 0 00-2 2v16l7-3 7 3V5a2 2 0 00-2-2H5z" />
           </svg>

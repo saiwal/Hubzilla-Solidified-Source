@@ -32,8 +32,8 @@ function fmtTime(iso: string, allDay: boolean, allDayLabel: string) {
 }
 
 const SkeletonRow = () => (
-  <div class="px-4 py-3 flex items-center gap-3 animate-pulse">
-    <div class="w-9 h-10 rounded-lg bg-overlay shrink-0" />
+  <div class="px-3.5 py-2.5 flex items-center gap-2.5 animate-pulse">
+    <div class="w-8 h-9 rounded-lg bg-overlay shrink-0" />
     <div class="flex-1 space-y-2">
       <div class="h-3 bg-overlay rounded w-3/5" />
       <div class="h-3 bg-overlay rounded w-2/5" />
@@ -72,18 +72,14 @@ export default function UpcomingEventsWidget() {
       <div class="bg-surface border border-rim rounded-2xl shadow-sm flex flex-col overflow-hidden">
 
         {/* Header */}
-        <div class="px-4 pt-3.5 pb-3 flex items-center justify-between border-b border-rim shrink-0">
-          <div class="flex items-center gap-2">
-            <svg class="w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <h3 class="text-sm font-semibold text-txt">{t("hq.upcoming_events")}</h3>
-          </div>
+        <div class="px-3.5 pt-3.5 pb-2.5 flex items-center justify-between shrink-0">
+          <span class="text-xs font-medium uppercase tracking-wider text-muted">
+            {t("hq.upcoming_events")}
+          </span>
           <button
             type="button"
             onClick={() => setShowCreator(true)}
-            class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium
+            class="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium
                    bg-accent text-accent-fg hover:opacity-90 transition-opacity"
           >
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,8 +102,8 @@ export default function UpcomingEventsWidget() {
           </Show>
 
           <Show when={!loading() && !error() && events().length === 0}>
-            <div class="px-4 py-8 flex flex-col items-center gap-2 text-muted">
-              <svg class="w-8 h-8 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="px-4 py-6 flex flex-col items-center gap-2 text-muted">
+              <svg class="w-7 h-7 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
@@ -125,12 +121,12 @@ export default function UpcomingEventsWidget() {
           <For each={events()}>
             {(ev, i) => (
               <div
-                class={`px-4 py-3 flex items-center gap-3 hover:bg-elevated transition-colors
+                class={`px-3.5 py-2.5 flex items-center gap-2.5 hover:bg-elevated transition-colors
                   ${i() < events().length - 1 ? "border-b border-rim" : ""}`}
               >
                 {/* Date badge — colored when from a CalDAV calendar */}
                 <div
-                  class="shrink-0 flex flex-col items-center justify-center w-9 h-10 rounded-lg"
+                  class="shrink-0 flex flex-col items-center justify-center w-8 h-9 rounded-lg"
                   style={ev.calendarColor
                     ? { background: ev.calendarColor + "22", color: ev.calendarColor }
                     : undefined}
@@ -143,7 +139,7 @@ export default function UpcomingEventsWidget() {
                     {fmtMonth(ev.start)}
                   </span>
                   <span
-                    class="text-base font-bold leading-tight"
+                    class="text-sm font-bold leading-tight"
                     classList={{ "text-accent": !ev.calendarColor }}
                   >
                     {fmtDay(ev.start)}

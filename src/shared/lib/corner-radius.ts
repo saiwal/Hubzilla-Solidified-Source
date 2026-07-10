@@ -1,6 +1,6 @@
 export type CornerRadius = "none" | "sm" | "default" | "lg" | "xl";
 
-const RADIUS_MAP: Record<CornerRadius, Record<string, string> | null> = {
+export const RADIUS_MAP: Record<CornerRadius, Record<string, string> | null> = {
   none: {
     "--radius-sm":  "0px",
     "--radius":     "0px",

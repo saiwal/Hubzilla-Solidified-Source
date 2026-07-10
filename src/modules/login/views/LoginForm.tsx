@@ -32,9 +32,12 @@ export default function LoginForm(props: LoginFormProps) {
     setLoading(true);
 
     try {
-      await submitLogin(username(), password(), token());
-      // Full reload so auth state re-initialises from scratch
-      window.location.href = props.dest ?? "/hq";
+      const result = await submitLogin(username(), password(), token());
+      // Full reload so auth state re-initialises from scratch. An account
+      // with no channel yet (e.g. signed up while auto_channel_create was
+      // off) has to go through channel creation before anything else in
+      // the SPA — which all assumes an active channel — can render.
+      window.location.href = result.nick ? (props.dest ?? "/hq") : "/new_channel";
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("auth.login_failed"));
       // The server consumes the login token on every attempt, even failed

@@ -54,7 +54,7 @@ type DraftEntry = { scope: string; draft: SavedDraft };
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 
 const SkeletonRow = () => (
-  <div class="px-4 py-3 flex items-start gap-3 animate-pulse">
+  <div class="px-3.5 py-2.5 flex items-start gap-2.5 animate-pulse">
     <div class="h-4 w-16 rounded bg-overlay shrink-0 mt-0.5" />
     <div class="flex-1 space-y-1.5">
       <div class="h-3 bg-overlay rounded w-4/5" />
@@ -164,17 +164,11 @@ export default function DraftsWidget() {
       <div class="bg-surface border border-rim rounded-2xl shadow-sm flex flex-col overflow-hidden">
 
         {/* Header */}
-        <div class="px-4 pt-3.5 pb-3 flex items-center justify-between border-b border-rim shrink-0">
-          <div class="flex items-center gap-2">
-            <svg class="w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                d="M5 5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V5z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                d="M15 3v5H9V3m0 14h6" />
-            </svg>
-            <h3 class="text-sm font-semibold text-txt">{t("hq.drafts")}</h3>
-          </div>
-          <div class="flex items-center gap-2">
+        <div class="px-3.5 pt-3.5 pb-2.5 flex items-center justify-between shrink-0">
+          <span class="text-xs font-medium uppercase tracking-wider text-muted">
+            {t("hq.drafts")}
+          </span>
+          <div class="flex items-center gap-1.5">
             <Show when={!loading() && entries().length > 0}>
               <span class="text-xs text-muted tabular-nums">{entries().length}</span>
             </Show>
@@ -203,8 +197,8 @@ export default function DraftsWidget() {
 
         {/* Empty state */}
         <Show when={!loading() && entries().length === 0}>
-          <div class="px-4 py-8 flex flex-col items-center gap-2 text-muted">
-            <svg class="w-8 h-8 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="px-4 py-6 flex flex-col items-center gap-2 text-muted">
+            <svg class="w-7 h-7 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                 d="M5 5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V5z" />
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -223,37 +217,39 @@ export default function DraftsWidget() {
                 const isDeleting = () => deleting() === entry.draft.id;
 
                 return (
-                  <div class="flex items-start gap-3 px-4 py-3 hover:bg-elevated group transition-colors"
+                  <div class="px-3.5 py-2.5 hover:bg-elevated group transition-colors"
                     classList={{ "opacity-50 pointer-events-none": isDeleting() }}>
 
-                    {/* Type badge */}
-                    <span class={`mt-0.5 shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded
-                                  border leading-none select-none ${badgeClass(entry.scope)}`}>
-                      {scopeLabel(entry.scope)}
-                    </span>
+                    <div class="flex items-start gap-2.5">
+                      {/* Type badge */}
+                      <span class={`mt-0.5 shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded
+                                    border leading-none select-none ${badgeClass(entry.scope)}`}>
+                        {scopeLabel(entry.scope)}
+                      </span>
 
-                    {/* Content */}
-                    <div
-                      class={`flex-1 min-w-0 ${loadable() ? "cursor-pointer" : ""}`}
-                      onClick={() => { if (loadable()) void handleLoad(entry); }}
-                    >
-                      <Show when={entry.draft.title}>
-                        <p class="text-xs font-medium text-txt truncate leading-snug">
-                          {entry.draft.title}
-                        </p>
-                      </Show>
-                      <p class="text-xs text-muted truncate">
-                        <Show when={entry.draft.preview} fallback={<em>{t("hq.empty_draft")}</em>}>
-                          {entry.draft.preview}
+                      {/* Content */}
+                      <div
+                        class={`flex-1 min-w-0 ${loadable() ? "cursor-pointer" : ""}`}
+                        onClick={() => { if (loadable()) void handleLoad(entry); }}
+                      >
+                        <Show when={entry.draft.title}>
+                          <p class="text-xs font-medium text-txt truncate leading-snug">
+                            {entry.draft.title}
+                          </p>
                         </Show>
-                      </p>
-                      <div class="flex items-center gap-1.5 mt-0.5">
-                        <span class="text-[10px] text-muted/60">{timeAgo(entry.draft.updated)}</span>
+                        <p class="text-xs text-muted truncate">
+                          <Show when={entry.draft.preview} fallback={<em>{t("hq.empty_draft")}</em>}>
+                            {entry.draft.preview}
+                          </Show>
+                        </p>
+                        <div class="flex items-center gap-1.5 mt-0.5">
+                          <span class="text-[10px] text-muted/60">{timeAgo(entry.draft.updated)}</span>
+                        </div>
                       </div>
                     </div>
 
                     {/* Actions */}
-                    <div class="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div class="flex items-center justify-end gap-1 mt-1.5">
                       <Show when={loadable()}>
                         <button
                           type="button"

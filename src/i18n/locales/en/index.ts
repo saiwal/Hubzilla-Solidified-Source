@@ -29,6 +29,7 @@ import { cart }       from "./cart";
 import { bookmarks }  from "./bookmarks";
 import { profiles }   from "./profiles";
 import { notepad }    from "./notepad";
+import { channel_create } from "./channel_create";
 
 export const dict: RawDictionary = {
   nav,
@@ -61,4 +62,5 @@ export const dict: RawDictionary = {
   bookmarks,
   profiles,
   notepad,
+  channel_create,
 };

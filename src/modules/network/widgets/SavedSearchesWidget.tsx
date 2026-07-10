@@ -49,7 +49,7 @@ export default function SavedSearchesWidget() {
   return (
     <Show when={savedSearches().length > 0}>
       <div class="bg-surface border border-rim rounded-xl overflow-hidden">
-        <div class="px-4 py-3 border-b border-rim flex items-center gap-2">
+        <div class="px-4 py-3 flex items-center gap-2">
           <MdFillBookmarks size={14} class="text-muted shrink-0" />
           <h2 class="text-sm font-semibold text-txt">{t("network.saved_searches")}</h2>
         </div>

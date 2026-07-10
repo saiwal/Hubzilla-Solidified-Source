@@ -16,7 +16,7 @@ export type FontFamily =
   | "comic"
   | "opendyslexic";
 
-const FONT_SIZES: Record<FontSize, string> = {
+export const FONT_SIZES: Record<FontSize, string> = {
   small: "14px",
   medium: "16px",
   large: "18px",
@@ -25,7 +25,7 @@ const FONT_SIZES: Record<FontSize, string> = {
 
 const D = '"Noto Sans Devanagari"';
 
-const FONT_FAMILIES: Record<FontFamily, string> = {
+export const FONT_FAMILIES: Record<FontFamily, string> = {
   system:             `ui-sans-serif, system-ui, -apple-system, ${D}, sans-serif`,
   serif:              `ui-serif, Georgia, Cambria, ${D}, serif`,
   monospace:          `ui-monospace, "Cascadia Code", "Fira Code", ${D}, monospace`,

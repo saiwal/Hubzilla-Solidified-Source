@@ -205,12 +205,19 @@ function HqComposer() {
   ];
 
   return (
-    <div class="bg-surface border border-rim rounded-2xl p-3 shadow-sm flex flex-col">
+    <div class="bg-surface border border-rim rounded-2xl p-3.5 shadow-sm flex flex-col">
+
+      {/* Header */}
+      <div class="mb-2.5">
+        <span class="text-xs font-medium uppercase tracking-wider text-muted">
+          {t("hq.post_composer")}
+        </span>
+      </div>
 
       {/* Body area — grows to fill card height */}
-      <div class="flex gap-2.5 flex-1 min-h-[120px]">
+      <div class="flex gap-2.5 flex-1 min-h-[84px]">
         <Show when={auth()?.nick}>
-          <div class="w-8 h-8 rounded-full bg-accent-muted text-accent flex items-center
+          <div class="w-7 h-7 rounded-full bg-accent-muted text-accent flex items-center
                       justify-center text-sm font-bold shrink-0 mt-0.5 select-none">
             {auth()!.nick[0].toUpperCase()}
           </div>
@@ -220,14 +227,14 @@ function HqComposer() {
           placeholder={t("editor.write_placeholder")}
           value={body()}
           onInput={(e) => { setBody(e.currentTarget.value); autoResize(); }}
-          rows={4}
+          rows={3}
           class="flex-1 resize-none bg-transparent text-sm text-txt placeholder:text-muted
                  focus:outline-none leading-relaxed overflow-hidden w-full"
         />
       </div>
 
       {/* Toolbar row */}
-      <div class="flex items-center gap-0.5 mt-2 pt-2 border-t border-rim">
+      <div class="flex items-center gap-0.5 mt-1.5 pt-1.5 border-t border-rim">
         <For each={toolbar}>
           {(btn) => (
             <button
@@ -275,7 +282,7 @@ function HqComposer() {
       </div>
 
       {/* ACL + submit row */}
-      <div class="flex items-center gap-1 mt-2 flex-wrap">
+      <div class="flex items-center gap-1 mt-1.5 flex-wrap">
         <AclPicker
           mode={aclMode()}
           onModeChange={setAclMode}

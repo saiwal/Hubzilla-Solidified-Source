@@ -52,7 +52,7 @@ export default function PinnedPostWidget(props: WidgetProps) {
         <Show when={post()} fallback={<EditHint text={t("widgets.item_unavailable")} />}>
           {(p) => (
             <div class="bg-surface border border-rim rounded-xl overflow-hidden">
-              <div class="px-4 py-3 border-b border-rim flex items-center gap-2">
+              <div class="px-4 py-3 flex items-center gap-2">
                 <img
                   src={p().authorAvatar}
                   alt=""

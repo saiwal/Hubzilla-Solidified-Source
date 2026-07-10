@@ -13,6 +13,7 @@ export const hq: RawDictionary["hq"] = {
   no_activity:          "No recent activity",
   no_drafts:            "No saved drafts",
   no_messages:          "Nothing here",
+  no_filter_matches:    "No matches for that filter",
   no_upcoming_events:   "No upcoming events in the next 30 days",
   // Loading
   loading:              "Loading…",

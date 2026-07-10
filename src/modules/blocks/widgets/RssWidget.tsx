@@ -58,7 +58,7 @@ export default function RssWidget(props: WidgetProps) {
       }
     >
       <div class="bg-surface border border-rim rounded-xl overflow-hidden">
-        <div class="px-4 py-3 border-b border-rim">
+        <div class="px-4 py-3">
           <h3 class="text-sm font-semibold text-txt truncate">
             <Show when={feed()?.link} fallback={feed()?.title || t("widgets.rss_feed")}>
               <a

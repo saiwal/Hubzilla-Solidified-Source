@@ -1,4 +1,5 @@
 import { type Component, For, Show } from "solid-js";
+import { A } from "@solidjs/router";
 import {
   useManageData,
   useActionState,
@@ -165,13 +166,13 @@ const ManagePage: Component = () => {
       {/* Header */}
       <div class="flex items-center justify-between">
         <h1 class="text-xl font-bold">{t("manage.channels")}</h1>
-			<a
+			<A
           href={data()?.create_url ?? "/new_channel"}
           class="px-3 py-1.5 text-sm rounded-md font-medium
                  bg-accent text-accent-fg hover:opacity-90 transition-opacity"
         >
           {t("manage.new_channel")}
-        </a>
+        </A>
       </div>
 
       {/* Loading skeletons */}

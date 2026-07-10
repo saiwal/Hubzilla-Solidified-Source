@@ -35,7 +35,7 @@ export default function EmbedWidget(props: WidgetProps) {
     >
       <div class="bg-surface border border-rim rounded-xl overflow-hidden">
         <Show when={title()}>
-          <div class="px-4 py-2.5 border-b border-rim">
+          <div class="px-4 py-2.5">
             <h3 class="text-sm font-semibold text-txt truncate">{title()}</h3>
           </div>
         </Show>
