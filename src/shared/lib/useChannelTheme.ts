@@ -3,12 +3,14 @@ import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { applyBackgroundCSS, loadBackground, type BgFit } from "./background";
 import { applyTheme, applyCustomThemeColors } from "./useTheme";
 import { applyTypographyCSS, loadTypography, type FontSize, type FontFamily } from "./typography";
+import { applyCornerRadiusCSS, loadCornerRadius, type CornerRadius } from "./corner-radius";
 import { initPageWidgetLayout } from "../store/widget-layout";
 import { THEMES, type ThemeId, type CustomThemeColors } from "../types/theme.types";
 
 const VALID_FITS    = new Set<string>(["tile", "cover"]);
 const VALID_THEMES  = new Set(THEMES.map((t) => t.id));
 const VALID_SIZES   = new Set<string>(["small", "medium", "large", "xl"]);
+const VALID_RADII   = new Set<string>(["none", "sm", "default", "lg", "xl"]);
 const VALID_FAMILIES = new Set<string>([
   "system","serif","monospace","nunito","saira","share-tech",
   "playfair","libre-baskerville","comfortaa","space-mono","iosevka",
@@ -44,6 +46,7 @@ export function useChannelTheme(channelNick: () => string) {
       // Left channel pages — restore user's own settings from localStorage
       loadBackground();
       loadTypography();
+      loadCornerRadius();
       applyTheme(((localStorage.getItem("hz-theme") ?? "light") as ThemeId));
       initPageWidgetLayout(null);
       return;
@@ -75,5 +78,9 @@ export function useChannelTheme(channelNick: () => string) {
     const fontSize = (VALID_SIZES.has(spa.font_size ?? "") ? spa.font_size : "medium") as FontSize;
     const fontFamily = (VALID_FAMILIES.has(spa.font_family ?? "") ? spa.font_family : "system") as FontFamily;
     applyTypographyCSS(fontSize, fontFamily);
+
+    // Apply the channel's corner radius (CSS only — do not overwrite user's localStorage)
+    const cornerRadius = (VALID_RADII.has(spa.corner_radius ?? "") ? spa.corner_radius : "default") as CornerRadius;
+    applyCornerRadiusCSS(cornerRadius);
   });
 }

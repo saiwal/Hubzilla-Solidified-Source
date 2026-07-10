@@ -12,6 +12,7 @@ export interface DisplaySettings {
   bg_url: string;
   bg_fit: "tile" | "cover";
   scroll_style: "endless" | "load_more";
+  corner_radius: "none" | "sm" | "default" | "lg" | "xl";
 }
 
 // ── Privacy ──────────────────────────────────────────────────────────────────

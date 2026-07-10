@@ -2,6 +2,7 @@ import { createResource } from "solid-js";
 import { applyTypography, type FontSize, type FontFamily } from "../lib/typography";
 import { initBackground, type BgFit } from "../lib/background";
 import { initTheme } from "../lib/useTheme";
+import { applyCornerRadius, type CornerRadius } from "../lib/corner-radius";
 import { initWidgetLayout } from "./widget-layout";
 import { initNavOrder } from "./nav-order";
 import { THEMES, type ThemeId } from "../types/theme.types";
@@ -82,6 +83,15 @@ async function fetchAuthState(): Promise<AuthState> {
     const serverTheme = data.spa.color_scheme ?? "";
     if (validThemes.has(serverTheme)) {
       initTheme(serverTheme as ThemeId, data.spa.custom_theme_colors ?? undefined);
+    }
+
+    // Sync corner radius to this identity's own saved value — without this,
+    // switching channels (a full reload) leaves the previous identity's
+    // radius sitting in the shared localStorage cache untouched.
+    const validRadii = new Set(["none", "sm", "default", "lg", "xl"]);
+    const serverRadius = data.spa.corner_radius ?? "";
+    if (validRadii.has(serverRadius)) {
+      applyCornerRadius(serverRadius as CornerRadius);
     }
   }
 

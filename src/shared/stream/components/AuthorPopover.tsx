@@ -17,6 +17,7 @@ interface Props {
   name: string;
   avatar?: string;
   url?: string;
+  hash?: string;
   address?: string;
   network?: string;
   children: JSX.Element;
@@ -88,20 +89,27 @@ export default function AuthorPopover(props: Props) {
 
   const isLocal = () => auth()?.isLocal ?? false;
 
-  // Use /api/xchan for reliable is_connected check (works in dev + prod,
-  // avoids the fuzzy /connections-api search that can miss by address).
-  // Once confirmed connected, fetch the full Connection in the background
-  // so the edit modal has data ready.
+  // Resolving xchan_hash/pdesc is public data and must happen for every
+  // viewer (anonymous, remote, local) — only the connection-status lookup
+  // (is_connected/full Connection) requires a local, non-self viewer.
+  // Previously this whole fetch was gated behind isLocal()/isSelf(), so
+  // anonymous/remote viewers never got a resolved hash and the profile
+  // link fell back to the raw xchan url.
+  const [profileFetch, setProfileFetch] = createSignal<"idle" | "loading" | "done">("idle");
+
   createEffect(() => {
-    if (!open() || !isLocal() || isSelf() || !props.url) return;
-    if (connState().tag !== "idle") return;
-    setConnState({ tag: "loading" });
+    if (!open() || !props.url || profileFetch() !== "idle") return;
+    const needsConnState = isLocal() && !isSelf();
+    setProfileFetch("loading");
+    if (needsConnState) setConnState({ tag: "loading" });
 
     fetch(`/api/xchan?hash=${encodeURIComponent(props.url)}`, { credentials: "include" })
       .then(r => (r.ok ? r.json() : null))
       .then((body: { data?: { is_connected?: boolean; xchan_hash?: string; pdesc?: string } } | null) => {
+        setProfileFetch("done");
         if (body?.data?.xchan_hash) setXchanHash(body.data.xchan_hash);
         if (body?.data?.pdesc) setPdesc(body.data.pdesc);
+        if (!needsConnState) return;
         if (body?.data?.is_connected) {
           setConnState({ tag: "connected", conn: null });
           // Eagerly fetch full Connection for the edit modal
@@ -118,7 +126,10 @@ export default function AuthorPopover(props: Props) {
           setConnState({ tag: "not_connected" });
         }
       })
-      .catch(() => setConnState({ tag: "not_connected" }));
+      .catch(() => {
+        setProfileFetch("done");
+        if (needsConnState) setConnState({ tag: "not_connected" });
+      });
   });
 
   function calcPos() {
@@ -236,11 +247,11 @@ export default function AuthorPopover(props: Props) {
     return networkBadge(net);
   };
 
-  // Prefer the resolved xchan_hash (fetched once the popover opens); fall
-  // back to the xchan url so the link is available immediately (the /api/xchan
-  // lookup matches by url too, so this still resolves to the right profile).
+  // Prefer the hash passed in from the item payload; fall back to the
+  // resolved xchan_hash (fetched once the popover opens), then finally
+  // the raw xchan url so the link is still available immediately.
   const chanviewUrl = () => {
-    const hash = xchanHash() ?? props.url;
+    const hash = props.hash || xchanHash() || props.url;
     return hash ? `/chanview?f=&hash=${encodeURIComponent(hash)}` : undefined;
   };
 

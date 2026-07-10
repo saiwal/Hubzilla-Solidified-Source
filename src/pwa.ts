@@ -4,7 +4,7 @@ import { useI18n } from "@/i18n";
 
 export function usePWA() {
   const { t } = useI18n();
-  const handler = () => toast.info(t("ui.pwa_update"), 0);
+  const handler = () => toast.info(t("ui.pwa_update"), 0, () => window.location.reload());
   window.addEventListener("pwa-update-available", handler);
   onCleanup(() => window.removeEventListener("pwa-update-available", handler));
 }

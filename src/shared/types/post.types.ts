@@ -42,9 +42,10 @@ export interface Post {
   authorName: string;
   authorAvatar: string;
   authorUrl: string;
+  authorHash?: string;
   authorAddress?: string;
   authorNetwork?: string;
-  via?: { name: string; address: string; url: string; avatar: string };
+  via?: { name: string; address: string; url: string; hash?: string; avatar: string };
   created: string;
   commented?: string;
   edited?: string;

@@ -71,6 +71,7 @@ function remapPost(r: Record<string, unknown>): Post {
     authorName:    String(author.name ?? ""),
     authorAvatar:  String(photo.src ?? ""),
     authorUrl:     String(author.url ?? ""),
+    authorHash:    author.hash ? String(author.hash) : undefined,
     created:       String(r.created ?? ""),
     commented:     r.commented ? String(r.commented) : undefined,
     edited:        r.edited    ? String(r.edited)    : undefined,

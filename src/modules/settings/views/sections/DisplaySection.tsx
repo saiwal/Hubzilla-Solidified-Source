@@ -54,6 +54,10 @@ export default function DisplaySection() {
       initTheme(d.color_scheme as ThemeId, d.custom_theme_colors);
     }
     if (d.scroll_style) setScrollStyle(d.scroll_style as ScrollStyle);
+    if (d.corner_radius) {
+      setCornerRadius(d.corner_radius as CornerRadius);
+      applyCornerRadius(d.corner_radius as CornerRadius);
+    }
   });
 
   return (
@@ -265,6 +269,7 @@ export default function DisplaySection() {
 
           {/* Corner roundness */}
           <Field label={t("settings.corner_radius")} hint={t("settings.corner_radius_hint")}>
+            <input type="hidden" name="corner_radius" value={cornerRadius()} />
             <div class="flex gap-2 flex-wrap">
               <For each={[
                 { value: "none",    labelKey: "settings.corner_radius_none"    },

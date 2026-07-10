@@ -42,7 +42,10 @@ const RADIUS_MAP: Record<CornerRadius, Record<string, string> | null> = {
 
 const ALL_VARS = ["--radius-sm", "--radius", "--radius-md", "--radius-lg", "--radius-xl", "--radius-2xl", "--radius-3xl"];
 
-export function applyCornerRadius(radius: CornerRadius): void {
+/** Apply corner radius to the DOM only — does not touch localStorage. Used
+ * when theming a visited channel's page, so the viewer's own preference
+ * in localStorage is left untouched. */
+export function applyCornerRadiusCSS(radius: CornerRadius): void {
   const root = document.documentElement;
   const overrides = RADIUS_MAP[radius];
   if (overrides) {
@@ -50,6 +53,10 @@ export function applyCornerRadius(radius: CornerRadius): void {
   } else {
     for (const k of ALL_VARS) root.style.removeProperty(k);
   }
+}
+
+export function applyCornerRadius(radius: CornerRadius): void {
+  applyCornerRadiusCSS(radius);
   localStorage.setItem("hz-corner-radius", radius);
 }
 

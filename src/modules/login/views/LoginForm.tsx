@@ -37,12 +37,17 @@ export default function LoginForm(props: LoginFormProps) {
       window.location.href = props.dest ?? "/hq";
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("auth.login_failed"));
-      setLoading(false);
-      // Refresh the token for the next attempt
+      // The server consumes the login token on every attempt, even failed
+      // ones. Keep the form disabled until a fresh token has actually
+      // arrived, otherwise a fast retry reuses the dead token and always
+      // fails with a confusing "invalid security token" error.
+      setToken("");
       try {
         setToken(await fetchLoginToken());
       } catch {
-        // ignore
+        toast.error(t("auth.load_form_error"));
+      } finally {
+        setLoading(false);
       }
     }
   };

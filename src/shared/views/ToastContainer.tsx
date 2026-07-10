@@ -73,15 +73,18 @@ const styles: Record<ToastType, { bar: string; icon: string; bg: string; border:
 function ToastItem(props: { toast: Toast }) {
   const { t } = useI18n();
   const s = styles[props.toast.type];
+  const clickable = !!props.toast.onClick;
   return (
     <div
       role="alert"
       aria-live="assertive"
+      onClick={clickable ? () => props.toast.onClick!() : undefined}
       class={`
         flex items-start gap-3 w-80 max-w-[calc(100vw-2rem)]
         rounded-xl border shadow-lg overflow-hidden
         ${s.bg} ${s.border}
         animate-[toast-in_0.2s_ease-out]
+        ${clickable ? "cursor-pointer hover:bg-elevated transition-colors" : ""}
       `}
     >
       {/* Colour stripe */}
@@ -97,7 +100,7 @@ function ToastItem(props: { toast: Toast }) {
 
       {/* Dismiss */}
       <button
-        onClick={() => dismiss(props.toast.id)}
+        onClick={(e) => { e.stopPropagation(); dismiss(props.toast.id); }}
         aria-label={t("ui.dismiss_notification")}
         class="mt-2.5 mr-2.5 shrink-0 p-0.5 rounded text-muted hover:text-txt
                hover:bg-elevated transition-colors"
