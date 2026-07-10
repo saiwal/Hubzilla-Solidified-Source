@@ -11,6 +11,12 @@ export interface FederationProtocol {
   photo: string;
 }
 
+export interface IntegrationApp {
+  name: string;
+  description: string;
+  photo: string;
+}
+
 export interface NewChannelMeta {
   default_role: string;
   roles: ChannelRole[];
@@ -19,6 +25,7 @@ export interface NewChannelMeta {
   limit: number | null;
   canadd: boolean;
   protocols: FederationProtocol[];
+  integrations: IntegrationApp[];
 }
 
 export interface CheckAddrResult {
@@ -31,6 +38,7 @@ export interface CreateChannelPayload {
   nickname: string;
   permissions_role?: string;
   protocols?: string[];
+  integrations?: string[];
   color_scheme?: string;
   custom_theme_colors?: string;
   font_size?: string;

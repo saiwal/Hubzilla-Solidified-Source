@@ -565,6 +565,7 @@ export type RawDictionary = {
     expand_all: string;
     delivery_report: string; delivery_no_data: string;
     edited: string;
+    edit: string;
   };
   editor: {
     // PostComposer
@@ -1875,6 +1876,7 @@ export type RawDictionary = {
     step_progress:            string;
     step_identity:            string;
     step_protocols:           string;
+    step_integrations:        string;
     step_appearance:          string;
     step_review:              string;
     back:                     string;
@@ -1900,6 +1902,10 @@ export type RawDictionary = {
     protocols_hint:           string;
     protocols_review_label:   string;
     protocols_none:           string;
+    integrations_desc:        string;
+    integrations_hint:        string;
+    integrations_review_label: string;
+    integrations_none:        string;
     color_scheme_label:       string;
     preview_text:             string;
     preview_like:             string;

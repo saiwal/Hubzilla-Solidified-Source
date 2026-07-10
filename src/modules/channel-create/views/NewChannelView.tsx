@@ -13,11 +13,12 @@ import { toast } from "@/shared/store/toast";
 import { useI18n } from "@/i18n";
 import IdentityStep from "./steps/IdentityStep";
 import ProtocolsStep from "./steps/ProtocolsStep";
+import IntegrationsStep from "./steps/IntegrationsStep";
 import AppearanceStep from "./steps/AppearanceStep";
 import ReviewStep from "./steps/ReviewStep";
 import SuccessStep from "./steps/SuccessStep";
 
-type StepId = "identity" | "protocols" | "appearance" | "review";
+type StepId = "identity" | "protocols" | "integrations" | "appearance" | "review";
 
 export default function NewChannelView() {
   const { t } = useI18n();
@@ -31,6 +32,7 @@ export default function NewChannelView() {
   const [nicknameEdited, setNicknameEdited] = createSignal(false);
   const [role, setRole] = createSignal("");
   const [protocols, setProtocols] = createSignal<Set<string>>(new Set());
+  const [integrations, setIntegrations] = createSignal<Set<string>>(new Set());
   const [colorScheme, setColorScheme] = createSignal<ThemeId>("light");
   const [fontSize, setFontSize] = createSignal<FontSize>("medium");
   const [cornerRadius, setCornerRadius] = createSignal<CornerRadius>("default");
@@ -92,6 +94,7 @@ export default function NewChannelView() {
   const steps = createMemo<StepId[]>(() => {
     const arr: StepId[] = ["identity"];
     if ((meta()?.protocols.length ?? 0) > 0) arr.push("protocols");
+    if ((meta()?.integrations.length ?? 0) > 0) arr.push("integrations");
     arr.push("appearance", "review");
     return arr;
   });
@@ -123,6 +126,15 @@ export default function NewChannelView() {
     });
   }
 
+  function toggleIntegration(appName: string) {
+    setIntegrations((prev) => {
+      const next = new Set(prev);
+      if (next.has(appName)) next.delete(appName);
+      else next.add(appName);
+      return next;
+    });
+  }
+
   function applySuggestion() {
     const s = suggestion();
     if (!s) return;
@@ -138,6 +150,7 @@ export default function NewChannelView() {
         nickname: nickname().trim(),
         permissions_role: role() || undefined,
         protocols: Array.from(protocols()),
+        integrations: Array.from(integrations()),
         color_scheme: colorScheme(),
         font_size: fontSize(),
         corner_radius: cornerRadius(),
@@ -155,6 +168,7 @@ export default function NewChannelView() {
     switch (id) {
       case "identity": return t("channel_create.step_identity");
       case "protocols": return t("channel_create.step_protocols");
+      case "integrations": return t("channel_create.step_integrations");
       case "appearance": return t("channel_create.step_appearance");
       case "review": return t("channel_create.step_review");
     }
@@ -245,6 +259,13 @@ export default function NewChannelView() {
                     onToggle={toggleProtocol}
                   />
                 </Match>
+                <Match when={step() === "integrations"}>
+                  <IntegrationsStep
+                    integrations={m().integrations}
+                    selected={integrations()}
+                    onToggle={toggleIntegration}
+                  />
+                </Match>
                 <Match when={step() === "appearance"}>
                   <AppearanceStep
                     colorScheme={colorScheme()}
@@ -263,6 +284,7 @@ export default function NewChannelView() {
                     role={role()}
                     roles={m().roles}
                     protocols={Array.from(protocols())}
+                    integrations={Array.from(integrations())}
                     colorScheme={colorScheme()}
                   />
                 </Match>

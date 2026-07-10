@@ -20,6 +20,7 @@ import {
   handleRepeat,
   handleStar,
   handleDelete,
+  handleEdit,
   handleComment,
   loadComments,
   handleRefresh,
@@ -46,6 +47,7 @@ const handlers: StreamHandlers = {
   onLoadComments:  loadComments,
   onStar:          handleStar,
   onDelete:        handleDelete,
+  onEdit:          handleEdit,
   onRefresh:       handleRefresh,
 };
 

@@ -11,6 +11,7 @@ import { mapActivityToPost } from "@/shared/lib/activity.mapper";
 import { useI18n } from "@/i18n";
 import {
   apiDeleteItem,
+  apiEditItem,
   apiToggleStar,
 } from "@/shared/lib/item-api";
 import { toggleVerb, repeatItem } from "@/shared/stream/store/actions-store";
@@ -136,6 +137,12 @@ export default function PostView() {
       const found = findInTree(node(), mid);
       if (found?.uuid) await apiDeleteItem(found.uuid);
       navigate(-1);
+    },
+    async onEdit(mid, body, title) {
+      const found = findInTree(node(), mid);
+      if (!found?.uuid) return;
+      await apiEditItem(found.uuid, body, title ?? "");
+      refetch();
     },
   };
 

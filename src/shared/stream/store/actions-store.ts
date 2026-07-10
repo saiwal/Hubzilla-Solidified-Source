@@ -15,7 +15,7 @@ import type { ThreadNode } from "@/shared/lib/thread";
 import { buildThreadTree } from "@/shared/lib/thread";
 import type { createStreamStore } from "./createStreamStore";
 import { updateNode } from "./createStreamStore";
-import { fetchComments, fetchItemDetail, apiDeleteItem, apiToggleStar } from "@/shared/lib/item-api";
+import { fetchComments, fetchItemDetail, apiDeleteItem, apiEditItem, apiToggleStar } from "@/shared/lib/item-api";
 import { mapActivityToPost } from "@/shared/lib/activity.mapper";
 import { sanitizeHtml } from "@/shared/lib/sanitize";
 import { currentNick } from "@/shared/store/auth-store";
@@ -125,6 +125,26 @@ export function createActionHandlers(store: StreamStore) {
       if (!node) return;
       await apiDeleteItem(node.uuid);
       store.setPosts((prev) => prev.filter((p) => p.mid !== mid));
+    },
+
+    async handleEdit(mid: string, body: string, title = ""): Promise<void> {
+      const node = findNode(store.posts(), mid);
+      if (!node) return;
+      await apiEditItem(node.uuid, body, title);
+      const detail = await fetchItemDetail(node.uuid);
+      const item = detail?.item;
+      if (!item) return;
+      const mapped = mapActivityToPost(item);
+      store.setPosts((prev) =>
+        updateNode(prev, mid, (n) => ({
+          ...n,
+          body: mapped.body,
+          rawBody: mapped.rawBody,
+          title: mapped.title,
+          summary: mapped.summary,
+          edited: mapped.edited,
+        })),
+      );
     },
 
     handleComment(

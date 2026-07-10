@@ -68,6 +68,7 @@ export function mapActivityToPost(activity: any): Post {
     top_mid: activity.message_top,
     parent: activity.uuid,
     body,
+    rawBody,
     summary,
     title: activity.title ?? "",
     authorName: activity.author?.name ?? "",

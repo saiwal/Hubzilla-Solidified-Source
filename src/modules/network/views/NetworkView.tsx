@@ -15,7 +15,7 @@ import {
   viewMode, posts, loadNetwork, resetPosts,
   loading, loadMore, loadingMore, hasMore, newPosts, flushNewPosts,
   handleLike, handleDislike, handleRepeat,
-  handleStar, handleDelete,
+  handleStar, handleDelete, handleEdit,
   handleComment, loadComments, handleRefresh,
 } from "../store";
 const handlers: StreamHandlers = {
@@ -26,6 +26,7 @@ const handlers: StreamHandlers = {
   onLoadComments:   loadComments,
   onStar:           handleStar,
   onDelete:         handleDelete,
+  onEdit:           handleEdit,
   onRefresh:        handleRefresh,
 };
 

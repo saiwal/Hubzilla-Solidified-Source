@@ -61,4 +61,5 @@ export const post: RawDictionary["post"] = {
   delivery_report:       "डिलीवरी रिपोर्ट",
   delivery_no_data:      "कोई डिलीवरी रिकॉर्ड नहीं मिला।",
   edited:                "संपादित",
+  edit:                  "संपादित करें",
 };

@@ -13,6 +13,7 @@ export interface StreamHandlers {
   onLoadComments: (mid: string, uuid: string) => Promise<void>;
   onStar?: (mid: string) => void;
   onDelete?: (mid: string) => Promise<void>;
+  onEdit?: (mid: string, body: string, title?: string) => Promise<void>;
   onRefresh?: (mid: string, uuid: string) => Promise<void>;
 }
 

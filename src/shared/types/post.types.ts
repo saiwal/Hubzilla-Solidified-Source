@@ -37,6 +37,7 @@ export interface Post {
   top_mid: string;
   parent: string;
   body: string;
+  rawBody?: string; // unconverted bbcode source, needed to seed the edit form
   title: string;
   summary?: string;
   authorName: string;

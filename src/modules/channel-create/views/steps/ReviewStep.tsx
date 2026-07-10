@@ -10,6 +10,7 @@ export default function ReviewStep(props: {
   role: string;
   roles: ChannelRole[];
   protocols: string[];
+  integrations: string[];
   colorScheme: ThemeId;
 }) {
   const { t } = useI18n();
@@ -40,6 +41,14 @@ export default function ReviewStep(props: {
             props.protocols.length > 0
               ? props.protocols.join(", ")
               : t("channel_create.protocols_none")
+          }
+        />
+        <Row
+          label={t("channel_create.integrations_review_label")}
+          value={
+            props.integrations.length > 0
+              ? props.integrations.join(", ")
+              : t("channel_create.integrations_none")
           }
         />
         <Row label={t("channel_create.color_scheme_label")} value={schemeLabel()} />

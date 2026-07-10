@@ -24,50 +24,50 @@ export default function RichEditor(props: Props) {
   const { t } = useI18n();
   let editorRef: HTMLDivElement | undefined;
   let textareaRef: HTMLTextAreaElement | undefined;
-  let isUserTyping = false;
+  // (mimetype, body) signature the DOM currently reflects — set whenever *we*
+  // write to the DOM, whether from typing (DOM→body echo) or an external body
+  // change. The sync effect only re-renders when props no longer match this,
+  // so an external update (e.g. inserting an attachment) is never dropped.
+  // A prior isUserTyping boolean tried to infer this from event timing, but a
+  // stray "input" event (e.g. fired on blur when focus moved to an unrelated
+  // button) could leave it stuck true and silently swallow the next sync.
+  let domSig: string | null = null;
 
   const mime = (): MimeType => props.mimetype ?? "text/bbcode";
+  const sig = () => `${mime()} ${props.body}`;
   const minH = () =>
     props.minHeight ??
     (props.capabilities.toolbar === "comment" ? "60px" : "140px");
 
   // Seed WYSIWYG on mount: convert source body → HTML for display
   onMount(() => {
-    if (editorRef) editorRef.innerHTML = sourceToHtml(props.body, mime());
+    if (!editorRef) return;
+    editorRef.innerHTML = sourceToHtml(props.body, mime());
+    domSig = sig();
   });
 
-  // When body resets to "" externally (post-submit), clear the editor too.
+  // Re-render whenever body/mimetype changed for a reason other than us
+  // echoing the DOM back (attachment insert, draft load, tab switch, reset, …).
   createEffect(() => {
-    if (props.body === "" && editorRef && editorRef.innerHTML !== "") {
-      editorRef.innerHTML = "";
-    }
-  });
-
-  // When switching source→wysiwyg, re-render the source body as HTML
-  createEffect(() => {
-    if (props.tab === "wysiwyg" && editorRef && !isUserTyping) {
-      const rendered = sourceToHtml(props.body, mime());
-      if (editorRef.innerHTML !== rendered) {
-        editorRef.innerHTML = rendered;
-        const range = document.createRange();
-        const sel = window.getSelection();
-        range.selectNodeContents(editorRef);
-        range.collapse(false);
-        sel?.removeAllRanges();
-        sel?.addRange(range);
-      }
+    const nextSig = sig();
+    if (props.tab === "wysiwyg" && editorRef && nextSig !== domSig) {
+      editorRef.innerHTML = sourceToHtml(props.body, mime());
+      domSig = nextSig;
+      const range = document.createRange();
+      const sel = window.getSelection();
+      range.selectNodeContents(editorRef);
+      range.collapse(false);
+      sel?.removeAllRanges();
+      sel?.addRange(range);
     }
   });
 
   const onEditorInput = () => {
-    isUserTyping = true;
-    if (editorRef) {
-      // Convert WYSIWYG HTML back to the chosen source format before storing
-      props.onInput(htmlToSource(editorRef.innerHTML, mime()));
-    }
-    // Reset after Solid's effect microtask has already run — if we reset synchronously
-    // the effect sees isUserTyping=false and re-writes innerHTML, clearing the selection.
-    queueMicrotask(() => { isUserTyping = false; });
+    if (!editorRef) return;
+    // Convert WYSIWYG HTML back to the chosen source format before storing
+    const next = htmlToSource(editorRef.innerHTML, mime());
+    domSig = `${mime()} ${next}`;
+    props.onInput(next);
   };
 
   const onTextareaInput = (e: InputEvent) => {

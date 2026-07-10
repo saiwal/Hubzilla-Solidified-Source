@@ -53,6 +53,9 @@ import { BiRegularLinkExternal, BiSolidShareAlt } from "solid-icons/bi";
 const CommentComposer = lazy(
   () => import("@/shared/editor/composers/CommentComposer"),
 );
+import RichEditor from "@/shared/editor/core/RichEditor";
+import { CAPABILITIES } from "@/shared/editor/types/editor.types";
+import type { EditorTab } from "@/shared/editor/types/editor.types";
 const ReshareComposer = lazy(
   () => import("@/shared/editor/composers/ReshareComposer"),
 );
@@ -102,6 +105,66 @@ function subtreeContainsUuid(nodes: ThreadNode[], uuid: string): boolean {
 // Persists across remounts caused by setNodeChildren updating the post reference.
 const openedByMid = new Set<string>();
 
+function InlineEditForm(props: {
+  body: string;
+  onBodyChange: (v: string) => void;
+  title?: string;
+  onTitleChange?: (v: string) => void;
+  showTitle: boolean;
+  tab: EditorTab;
+  onTabChange: (t: EditorTab) => void;
+  onSave: () => void;
+  onCancel: () => void;
+  saving: boolean;
+  error: string | null;
+  minHeight: string;
+}) {
+  const { t } = useI18n();
+  return (
+    <div class="mt-2 space-y-2">
+      <Show when={props.showTitle}>
+        <input
+          type="text"
+          value={props.title ?? ""}
+          onInput={(e) => props.onTitleChange?.(e.currentTarget.value)}
+          placeholder={t("editor.title_placeholder")}
+          class="w-full px-2 py-1.5 text-sm font-medium rounded-lg border border-rim bg-surface text-txt outline-none focus:border-rim-strong"
+        />
+      </Show>
+      <RichEditor
+        body={props.body}
+        onInput={props.onBodyChange}
+        capabilities={CAPABILITIES.comment}
+        tab={props.tab}
+        onTabChange={props.onTabChange}
+        onCtrlEnter={props.onSave}
+        minHeight={props.minHeight}
+      />
+      <Show when={props.error}>
+        <div class="text-xs text-red-500">{props.error}</div>
+      </Show>
+      <div class="flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={props.onCancel}
+          class="px-3 py-1 text-xs rounded-lg border border-rim text-muted hover:bg-elevated transition-colors"
+        >
+          {t("editor.cancel_btn")}
+        </button>
+        <button
+          type="button"
+          onClick={props.onSave}
+          disabled={props.saving || !props.body.trim()}
+          class="px-3 py-1 text-xs font-medium rounded-lg bg-accent text-accent-fg
+                 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+        >
+          {props.saving ? t("editor.saving") : t("editor.save_changes")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function PostCard(props: {
   post: ThreadNode;
   handlers: StreamHandlers;
@@ -131,6 +194,12 @@ export default function PostCard(props: {
   );
   const [commentsLoading, setCommentsLoading] = createSignal(false);
   const [deleteConfirming, setDeleteConfirming] = createSignal(false);
+  const [isEditing, setIsEditing] = createSignal(false);
+  const [editBody, setEditBody] = createSignal("");
+  const [editTitle, setEditTitle] = createSignal("");
+  const [editTab, setEditTab] = createSignal<EditorTab>("wysiwyg");
+  const [editSaving, setEditSaving] = createSignal(false);
+  const [editError, setEditError] = createSignal<string | null>(null);
   const [refreshing, setRefreshing] = createSignal(false);
   const [following, setFollowing] = createSignal(
     props.post.viewerFollowing ?? false,
@@ -241,6 +310,45 @@ export default function PostCard(props: {
       !!props.post.authorAddress && props.post.authorAddress === viewerAddr
     );
   };
+
+  // Edit: same author-address gate as delete
+  const canEdit = () => {
+    const a = auth();
+    if (!props.handlers.onEdit || !a?.isLocal || !a.nick) return false;
+    const viewerAddr = `${a.nick}@${window.location.hostname}`;
+    return (
+      !!props.post.authorAddress && props.post.authorAddress === viewerAddr
+    );
+  };
+
+  function startEdit() {
+    setEditTitle(props.post.title ?? "");
+    setEditBody(props.post.rawBody ?? "");
+    setEditTab("wysiwyg");
+    setEditError(null);
+    setIsEditing(true);
+    setMoreDropdownOpen(false);
+  }
+
+  function cancelEdit() {
+    setIsEditing(false);
+    setEditError(null);
+  }
+
+  async function saveEdit() {
+    const body = editBody().trim();
+    if (!body) return;
+    setEditSaving(true);
+    setEditError(null);
+    try {
+      await props.handlers.onEdit?.(props.post.mid, body, editTitle().trim());
+      setIsEditing(false);
+    } catch (e) {
+      setEditError(e instanceof Error ? e.message : "Edit failed");
+    } finally {
+      setEditSaving(false);
+    }
+  }
 
   function persistShow(v: boolean) {
     if (v) openedByMid.add(props.post.mid);
@@ -728,19 +836,37 @@ export default function PostCard(props: {
         </Show>
 
         {/* Body — no title rendered for comments */}
-        <Show when={!eventData() && !props.post.poll}>
-          <div
-            ref={setBodyRef}
-            class="mt-1.5 prose prose-sm dark:prose-invert max-w-none text-muted
-                   prose-a:text-accent prose-a:no-underline hover:prose-a:underline
-                   prose-blockquote:not-italic prose-blockquote:border-accent
-                   prose-code:bg-overlay prose-code:px-1 prose-code:rounded prose-code:text-xs prose-code:text-txt
-                   prose-code:before:content-none prose-code:after:content-none
-                   prose-img:rounded-lg prose-img:my-1 break-words
-                   prose-p:my-1 prose-p:leading-snug"
-            innerHTML={props.post.body}
-            onClick={handleBodyClick}
-          />
+        <Show
+          when={!isEditing()}
+          fallback={
+            <InlineEditForm
+              body={editBody()}
+              onBodyChange={setEditBody}
+              showTitle={false}
+              tab={editTab()}
+              onTabChange={setEditTab}
+              onSave={saveEdit}
+              onCancel={cancelEdit}
+              saving={editSaving()}
+              error={editError()}
+              minHeight="60px"
+            />
+          }
+        >
+          <Show when={!eventData() && !props.post.poll}>
+            <div
+              ref={setBodyRef}
+              class="mt-1.5 prose prose-sm dark:prose-invert max-w-none text-muted
+                     prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+                     prose-blockquote:not-italic prose-blockquote:border-accent
+                     prose-code:bg-overlay prose-code:px-1 prose-code:rounded prose-code:text-xs prose-code:text-txt
+                     prose-code:before:content-none prose-code:after:content-none
+                     prose-img:rounded-lg prose-img:my-1 break-words
+                     prose-p:my-1 prose-p:leading-snug"
+              innerHTML={props.post.body}
+              onClick={handleBodyClick}
+            />
+          </Show>
         </Show>
 
         <Show when={(props.post.attachments?.length ?? 0) > 0}>
@@ -918,6 +1044,7 @@ export default function PostCard(props: {
           <Show
             when={
               canDelete() ||
+              canEdit() ||
               canFollow() ||
               canViewSource() ||
               canDeliveryReport() ||
@@ -1024,6 +1151,15 @@ export default function PostCard(props: {
                   >
                     <MdOutlineSend size={13} />
                     <span>{t("post.delivery_report")}</span>
+                  </button>
+                </Show>
+                <Show when={canEdit()}>
+                  <button
+                    onClick={startEdit}
+                    class="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-overlay transition-colors text-left text-txt"
+                  >
+                    <MdOutlineEdit size={13} />
+                    <span>{t("post.edit")}</span>
                   </button>
                 </Show>
                 <Show when={canDelete()}>
@@ -1205,38 +1341,58 @@ export default function PostCard(props: {
         </div>
       </div>
 
-      {/* Title */}
-      <Show when={props.post.title}>
-        <div
-          class="mt-6 prose prose-sm dark:prose-invert max-w-none
-                 [&>*]:font-bold [&>*]:tracking-tight [&>*]:text-lg [&>*]:text-txt"
-          innerHTML={DOMPurify.sanitize(props.post.title!)}
-        />
-      </Show>
+      <Show
+        when={!isEditing()}
+        fallback={
+          <InlineEditForm
+            body={editBody()}
+            onBodyChange={setEditBody}
+            title={editTitle()}
+            onTitleChange={setEditTitle}
+            showTitle={!!props.post.title}
+            tab={editTab()}
+            onTabChange={setEditTab}
+            onSave={saveEdit}
+            onCancel={cancelEdit}
+            saving={editSaving()}
+            error={editError()}
+            minHeight="100px"
+          />
+        }
+      >
+        {/* Title */}
+        <Show when={props.post.title}>
+          <div
+            class="mt-6 prose prose-sm dark:prose-invert max-w-none
+                   [&>*]:font-bold [&>*]:tracking-tight [&>*]:text-lg [&>*]:text-txt"
+            innerHTML={DOMPurify.sanitize(props.post.title!)}
+          />
+        </Show>
 
-      {/* Event card */}
-      <Show when={eventData()}>
-        {(ev) => <EventCard post={props.post} event={ev()} />}
-      </Show>
+        {/* Event card */}
+        <Show when={eventData()}>
+          {(ev) => <EventCard post={props.post} event={ev()} />}
+        </Show>
 
-      {/* Poll card */}
-      <Show when={props.post.poll}>
-        {(poll) => <PollCard uuid={props.post.uuid} poll={poll()} />}
-      </Show>
+        {/* Poll card */}
+        <Show when={props.post.poll}>
+          {(poll) => <PollCard uuid={props.post.uuid} poll={poll()} />}
+        </Show>
 
-      {/* Body — hidden for pure event/poll posts (body is just BBCode tags) */}
-      <Show when={!eventData() && !props.post.poll}>
-        <div
-          ref={setBodyRef}
-          class="mt-4 prose-code:break-all prose prose-sm dark:prose-invert max-w-none
-                 prose-a:text-accent prose-a:no-underline hover:prose-a:underline
-                 prose-blockquote:not-italic prose-blockquote:border-accent
-                 prose-code:bg-overlay prose-code:px-1 prose-code:rounded prose-code:text-sm prose-code:text-txt
-                 prose-code:before:content-none prose-code:after:content-none
-                 prose-img:rounded-lg prose-img:my-2 break-words text-muted"
-          innerHTML={props.post.body}
-          onClick={handleBodyClick}
-        />
+        {/* Body — hidden for pure event/poll posts (body is just BBCode tags) */}
+        <Show when={!eventData() && !props.post.poll}>
+          <div
+            ref={setBodyRef}
+            class="mt-4 prose-code:break-all prose prose-sm dark:prose-invert max-w-none
+                   prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+                   prose-blockquote:not-italic prose-blockquote:border-accent
+                   prose-code:bg-overlay prose-code:px-1 prose-code:rounded prose-code:text-sm prose-code:text-txt
+                   prose-code:before:content-none prose-code:after:content-none
+                   prose-img:rounded-lg prose-img:my-2 break-words text-muted"
+            innerHTML={props.post.body}
+            onClick={handleBodyClick}
+          />
+        </Show>
       </Show>
 
       <Show when={(props.post.attachments?.length ?? 0) > 0}>
@@ -1536,6 +1692,15 @@ export default function PostCard(props: {
               >
                 <MdOutlineSend size={15} />
                 <span>{t("post.delivery_report")}</span>
+              </button>
+            </Show>
+            <Show when={canEdit()}>
+              <button
+                onClick={startEdit}
+                class="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-overlay transition-colors text-left text-txt"
+              >
+                <MdOutlineEdit size={15} />
+                <span>{t("post.edit")}</span>
               </button>
             </Show>
             <Show when={canDelete()}>
