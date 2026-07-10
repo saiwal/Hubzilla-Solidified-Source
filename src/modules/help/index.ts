@@ -1,5 +1,6 @@
 // src/modules/help/index.tsx
 import { registerModule } from "@/shared/lib/module-registry";
+import { useI18n } from "@/i18n";
 
 registerModule({
   id: "help",
@@ -11,7 +12,7 @@ registerModule({
     },
   ],
   navItem: {
-    label: () => "Help",
+    label: () => useI18n().t("nav.help"),
     href: "/help/user/",
     path: "/help",
     icon: "help",

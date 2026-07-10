@@ -14,7 +14,7 @@ import { isAdmin } from "../store/auth-store";
 import type { NavItemDef } from "../types/module.types";
 import type { NavActions, NavChannelTab, NavApp } from "../lib/nav-api";
 import { biToNavIcon } from "../lib/nav-api";
-import { getNavItems, getRoutes, getSpaExclusiveNavItems, getModule, moduleIdForPath } from "./module-registry";
+import { getRoutes, getSpaExclusiveNavItems, getModule, moduleIdForPath } from "./module-registry";
 import { useI18n } from "@/i18n";
 import { useViewerRole } from "../store/site-config";
 import { applyNavItemOrder } from "../store/nav-order";
@@ -68,15 +68,20 @@ function tabToNavItem(tab: NavChannelTab): NavItemDef {
   };
 }
 
-function appToNavItem(app: NavApp, moduleLabelMap: Map<string, NavItemDef["label"]>): NavItemDef {
+// Server-provided app URLs don't necessarily match the owning module's own
+// registered path (e.g. the Calendar app URL is "/cdav/calendar" while the
+// module's SPA route/navItem use "/cal"). Route matching via
+// `moduleIdForPath` resolves either URL back to the owning module, so we
+// prefer that module's own i18n-aware label over the server's raw one.
+function appToNavItem(app: NavApp): NavItemDef {
   const href = toSpaHref(app.url);
-  const root = href.split("/").filter(Boolean)[0] ?? "";
-  const label = moduleLabelMap.get(root) ?? app.label;
+  const path = urlToPath(href);
+  const registeredLabel = getModule(moduleIdForPath(path))?.navItem?.label;
   return {
-    label,
+    label: registeredLabel ?? app.label,
     icon: biToNavIcon(app.bi_icon),
     href,
-    path: urlToPath(href),
+    path,
   };
 }
 
@@ -86,18 +91,6 @@ function buildSpaRoots(): Set<string> {
   return new Set(
     getRoutes()().map((r) => r.path.split("/").filter(Boolean)[0] ?? ""),
   );
-}
-
-// Map path root → registered module label so server-provided app names are
-// replaced with the i18n-aware label from the module registration.
-// e.g. "network" → () => t("nav.network")
-function buildModuleLabelMap(): Map<string, NavItemDef["label"]> {
-  const map = new Map<string, NavItemDef["label"]>();
-  for (const item of getNavItems()()) {
-    const root = item.path.split("/").filter(Boolean)[0];
-    if (root) map.set(root, item.label);
-  }
-  return map;
 }
 
 function isSpaApp(app: NavApp, spaRoots: Set<string>): boolean {
@@ -171,7 +164,6 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
     const role = viewerRole();
     const nick = subjectNick();
     const spaRoots = buildSpaRoots();
-    const moduleLabelMap = buildModuleLabelMap();
 
     // Logged-in local user visiting someone else's channel → channel tabs only.
     // System apps are excluded because they carry the viewer's own nick in
@@ -187,7 +179,7 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
       const tabs = (channelNav()?.channel_tabs ?? []).map(tabToNavItem);
       const sysApps = systemApps()
         .filter((a) => isSpaApp(a, spaRoots))
-        .map((a) => appToNavItem(a, moduleLabelMap));
+        .map((a) => appToNavItem(a));
       return dedupByHref([...tabs, ...sysApps]);
     }
 
@@ -203,7 +195,7 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
           (installed.size === 0 || installed.has(a.name)),
       );
       const items: NavItemDef[] = [...filteredPinned, ...filteredFeatured].map((a) =>
-        appToNavItem(a, moduleLabelMap),
+        appToNavItem(a),
       );
 
       // SPA-exclusive modules (no appName) opt in with hidden: false
@@ -219,7 +211,7 @@ export function useNav(subjectNick: () => string): () => NavItemDef[] {
     // Visitor (anon/remote) not on a channel → system apps only
     return systemApps()
       .filter((a) => isSpaApp(a, spaRoots))
-      .map((a) => appToNavItem(a, moduleLabelMap));
+      .map((a) => appToNavItem(a));
   });
 }
 

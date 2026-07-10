@@ -1,5 +1,5 @@
 import { registerModule } from "@/shared/lib/module-registry";
-// import { useI18n } from "@/i18n";
+import { useI18n } from "@/i18n";
 import type { SubPageItem } from "@/shared/views/SubPageLayout";
 
 export const CONNECTIONS_ITEMS: SubPageItem[] = [
@@ -40,7 +40,7 @@ registerModule({
     ...subRoutes,
   ],
   navItem: {
-    label: "Directory",
+    label: () => useI18n().t("nav.directory"),
     icon: "directory",
     path: "/directory",
     href: "/directory",

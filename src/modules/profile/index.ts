@@ -1,4 +1,5 @@
 import { registerModule } from "@/shared/lib/module-registry";
+import { useI18n } from "@/i18n";
 
 registerModule({
   id: "profile",
@@ -6,7 +7,7 @@ registerModule({
     { path: "/profile/:nick", component: () => import("./views/ProfilePageView") },
   ],
   navItem: {
-    label: "Profile",
+    label: () => useI18n().t("nav.profile"),
     icon: "profile",
     path: "/profile",
     href: "/profile",
