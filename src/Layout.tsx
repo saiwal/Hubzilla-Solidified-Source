@@ -2,7 +2,9 @@ import { type ParentComponent, createSignal, Show, createMemo, createEffect, on,
 import { For } from "solid-js";
 import { A, useLocation, useIsRouting } from "@solidjs/router";
 import NavItem, { getNavIcon } from "./shared/views/NavItem";
-import { useNav, useNavActionItems } from "./shared/lib/useNav";
+import { useNav, useNavActionItems, navItemHelpTarget } from "./shared/lib/useNav";
+import { helpable } from "./shared/lib/helpable";
+void helpable;
 import { moduleIdForPath, getModule } from "./shared/lib/module-registry";
 import { createDragReorder } from "./shared/lib/useDragReorder";
 import { commitNavOrder } from "./shared/store/nav-order";
@@ -256,6 +258,7 @@ const Layout: ParentComponent = (props) => {
                   <div
                     ref={desktopNavDrag.registerRef(item.path)}
                     classList={{ "rounded-xl border border-dashed border-accent/50": editingWidgets() }}
+                    use:helpable={navItemHelpTarget(item)}
                   >
                     <NavItem
                       href={item.href}
@@ -286,11 +289,13 @@ const Layout: ParentComponent = (props) => {
               >
                 <For each={actionItems()}>
                   {(item) => (
-                    <NavItem
-                      href={item.href}
-                      label={item.label}
-                      icon={item.icon}
-                    />
+                    <div use:helpable={navItemHelpTarget(item)}>
+                      <NavItem
+                        href={item.href}
+                        label={item.label}
+                        icon={item.icon}
+                      />
+                    </div>
                   )}
                 </For>
               </div>
@@ -485,6 +490,7 @@ const Layout: ParentComponent = (props) => {
                         "opacity-50": moreDrawerDrag.draggingKey() === item.path,
                         "touch-none rounded-xl border border-dashed border-accent/50": editingWidgets(),
                       }}
+                      use:helpable={navItemHelpTarget(item)}
                     >
                       <A
                         href={
@@ -525,27 +531,29 @@ const Layout: ParentComponent = (props) => {
               >
                 <For each={actionItems()}>
                   {(item) => (
-                    <A
-                      href={
-                        typeof item.href === "function"
-                          ? item.href()
-                          : item.href
-                      }
-                      onClick={closeAll}
-                      class="flex flex-col items-center gap-1.5 py-2.5 px-1
-                             rounded-xl bg-elevated border border-rim
-                             text-txt text-xs font-medium leading-tight text-center
-                             hover:brightness-95 transition-all"
-                    >
-                      <span aria-hidden="true" class="text-muted">
-                        {getNavIcon(item.icon, 20)}
-                      </span>
-                      <span class="truncate w-full text-center">
-                        {typeof item.label === "function"
-                          ? item.label()
-                          : item.label}
-                      </span>
-                    </A>
+                    <div use:helpable={navItemHelpTarget(item)}>
+                      <A
+                        href={
+                          typeof item.href === "function"
+                            ? item.href()
+                            : item.href
+                        }
+                        onClick={closeAll}
+                        class="flex flex-col items-center gap-1.5 py-2.5 px-1
+                               rounded-xl bg-elevated border border-rim
+                               text-txt text-xs font-medium leading-tight text-center
+                               hover:brightness-95 transition-all"
+                      >
+                        <span aria-hidden="true" class="text-muted">
+                          {getNavIcon(item.icon, 20)}
+                        </span>
+                        <span class="truncate w-full text-center">
+                          {typeof item.label === "function"
+                            ? item.label()
+                            : item.label}
+                        </span>
+                      </A>
+                    </div>
                   )}
                 </For>
               </div>
@@ -578,6 +586,7 @@ const Layout: ParentComponent = (props) => {
                     "touch-none rounded-xl border border-dashed border-accent/50": editingWidgets(),
                   }}
                   class="flex-1 min-w-0 flex"
+                  use:helpable={navItemHelpTarget(item)}
                 >
                   <MobileTab
                     href={item.href}
@@ -597,6 +606,7 @@ const Layout: ParentComponent = (props) => {
                 }}
                 aria-expanded={moreOpen()}
                 aria-controls="more-drawer"
+                use:helpable="nav.more_drawer"
                 class={`flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl
                         text-[0.625rem] font-medium transition-colors min-w-0
                         ${
@@ -619,6 +629,7 @@ const Layout: ParentComponent = (props) => {
               aria-expanded={rightOpen()}
               aria-controls="right-sidebar"
               aria-label={rightOpen() ? "Close panel" : "Open panel"}
+              use:helpable="nav.panel"
               class={`flex-none px-2 flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl
                       text-[0.625rem] font-medium transition-colors
                       ${
@@ -654,6 +665,7 @@ const Layout: ParentComponent = (props) => {
             aria-expanded={rightOpen()}
             aria-controls="right-sidebar"
             aria-label={rightOpen() ? "Close panel" : "Open panel"}
+            use:helpable="nav.panel"
             class="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full shadow-lg
                    bg-elevated border border-rim
                    hidden lg:flex xl:hidden items-center justify-center

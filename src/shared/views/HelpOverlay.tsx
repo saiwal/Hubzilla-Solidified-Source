@@ -95,17 +95,18 @@ function HelpModalHeader(props: { target: string; onClose: () => void }) {
 function DocContent(props: { target: string }) {
   const { t, locale } = useI18n();
   const { docType } = useHelpMode();
-  const [module, section] = props.target.split(".");
+  const module = () => props.target.split(".")[0];
+  const section = () => props.target.split(".")[1];
   const [md] = useDocs(module, docType);
 
   function renderHtml(): string {
-    const html = marked.parse(extractSection(md()!, section)) as string;
+    const html = marked.parse(extractSection(md()!, section())) as string;
 
     // module is the doc path relative to the lang root (e.g. "hq" for
     // docs/user/en/hq.txt, or "network/index" for docs/user/en/network/index.txt).
     // Relative image srcs in the markdown are relative to that same directory.
-    const slashIdx = module.lastIndexOf("/");
-    const topicDir = slashIdx === -1 ? "" : module.slice(0, slashIdx);
+    const slashIdx = module().lastIndexOf("/");
+    const topicDir = slashIdx === -1 ? "" : module().slice(0, slashIdx);
     const assetBase = `/view/theme/solidified/docs/${docType()}/${locale()}/${topicDir ? topicDir + "/" : ""}`;
 
     return html.replace(
@@ -122,7 +123,7 @@ function DocContent(props: { target: string }) {
         when={md()}
         fallback={
           <p class="text-sm text-muted">
-            {docType() === "dev" ? t("help.no_dev_docs") : t("help.no_user_docs")}
+            {t("help.no_user_docs")}
           </p>
         }
       >

@@ -14,7 +14,7 @@ import { isAdmin } from "../store/auth-store";
 import type { NavItemDef } from "../types/module.types";
 import type { NavActions, NavChannelTab, NavApp } from "../lib/nav-api";
 import { biToNavIcon } from "../lib/nav-api";
-import { getNavItems, getRoutes, getSpaExclusiveNavItems } from "./module-registry";
+import { getNavItems, getRoutes, getSpaExclusiveNavItems, getModule, moduleIdForPath } from "./module-registry";
 import { useI18n } from "@/i18n";
 import { useViewerRole } from "../store/site-config";
 import { applyNavItemOrder } from "../store/nav-order";
@@ -117,6 +117,35 @@ function visibleForOwner(context: NavItemDef["context"]): boolean {
       (c) => c === "owner" || c === "local" || c === "all" || (c === "admin" && isAdmin()),
     );
   return false;
+}
+
+// ── Help-mode targets ─────────────────────────────────────────────────────────
+
+// Path roots whose doc topic name doesn't match the path segment itself.
+const NAV_HELP_SLUGS: Record<string, string> = {
+  cloud: "files",
+  cal: "calendar",
+  rmagic: "remote_login",
+};
+
+/**
+ * Help-mode target for a nav item, in "nav.<topic>" form (see
+ * src/docs/user/en/nav.txt).
+ *
+ * Items for `appName`-gated modules (Calendar, Photos, Wiki, ...) are built
+ * from the *server's* app URL (see `appToNavItem` below), which doesn't
+ * necessarily match the module's own registered path (e.g. the Calendar app
+ * URL is "/cdav/calendar" while the module's SPA route/navItem use "/cal").
+ * Route matching via `moduleIdForPath` resolves either URL back to the
+ * owning module, so we derive the topic from that module's own registered
+ * `navItem` rather than trusting the item's runtime `path` directly.
+ */
+export function navItemHelpTarget(item: NavItemDef): string {
+  if (item.helpTarget) return item.helpTarget;
+  const registered = getModule(moduleIdForPath(item.path))?.navItem;
+  if (registered?.helpTarget) return registered.helpTarget;
+  const seg = (registered?.path ?? item.path).replace(/^\//, "").split(/[/?#]/)[0] || "hq";
+  return `nav.${NAV_HELP_SLUGS[seg] ?? seg}`;
 }
 
 function dedupByHref(items: NavItemDef[]): NavItemDef[] {

@@ -4,7 +4,7 @@ import { type Accessor } from "solid-js";
 import { createQueryResource } from "@/shared/lib/createQueryResource";
 import type { DocType } from "@/shared/store/help-mode";
 
-export function useDocs(path: string, docType: Accessor<DocType>) {
+export function useDocs(path: Accessor<string>, docType: Accessor<DocType>) {
   const { locale } = useI18n();
 
   return createQueryResource(
@@ -12,9 +12,9 @@ export function useDocs(path: string, docType: Accessor<DocType>) {
     () => ({
       lang: locale(),
       type: docType(),
-      path,
+      path: path(),
     }),
-    async ({ lang, type }) => {
+    async ({ lang, type, path }) => {
       const res = await fetch(
         `/view/theme/solidified/docs/${type}/${lang}/${path}.txt`
       );

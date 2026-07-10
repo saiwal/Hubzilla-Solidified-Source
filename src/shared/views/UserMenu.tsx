@@ -2,6 +2,8 @@ import type { NavViewer, NavActions } from "@/shared/lib/nav-api";
 import { Show } from "solid-js";
 import { useI18n } from "@/i18n";
 import NavItem from "./NavItem";
+import { helpable } from "@/shared/lib/helpable";
+void helpable;
 
 interface NavUtilitiesProps {
   viewer?: NavViewer;
@@ -25,6 +27,7 @@ const Usermenu = (props: NavUtilitiesProps) => {
           <button
             onClick={props.onUserMenuToggle}
             title={props.viewer!.name}
+            use:helpable="nav.account_menu"
             class={`
               w-full p-1.5 rounded-xl transition-all duration-150 ease-out
               flex items-center gap-2.5 min-w-0
@@ -68,9 +71,13 @@ const Usermenu = (props: NavUtilitiesProps) => {
       <Show when={isAnonymous() && props.actions?.login}>
         <div class="my-2 h-px bg-rim" />
         <div class="flex flex-col gap-0.5">
-          <NavItem href={props.actions!.login!} label={t("nav.login")} icon="login" />
+          <div use:helpable="nav.login">
+            <NavItem href={props.actions!.login!} label={t("nav.login")} icon="login" />
+          </div>
           <Show when={props.actions?.register}>
-            <NavItem href={props.actions!.register!} label={t("nav.register")} icon="register" />
+            <div use:helpable="nav.register">
+              <NavItem href={props.actions!.register!} label={t("nav.register")} icon="register" />
+            </div>
           </Show>
         </div>
       </Show>

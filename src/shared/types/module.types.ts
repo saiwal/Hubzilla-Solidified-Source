@@ -15,6 +15,14 @@ export interface NavItemDef {
   href: string | (() => string);
   context?: NavContext | NavContext[]; // single or array of allowed roles
   hidden?: boolean;
+  /**
+   * Help-mode target for this nav item, in "nav.<topic>" form. Resolved the
+   * same way as the `use:helpable` directive: fetches src/docs/user/en/nav.txt
+   * and extracts the "## <topic>" heading (underscores become spaces). Falls
+   * back to a topic derived from the item's path when unset — see
+   * `navItemHelpTarget()` in `useNav.ts`.
+   */
+  helpTarget?: string;
 }
 
 type SlotLoader = () => Promise<{ default: Component }>;
