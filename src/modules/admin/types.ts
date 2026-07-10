@@ -167,6 +167,7 @@ export interface AdminFeatures {
 // ── Addons ────────────────────────────────────────────────────────────────────
 
 export interface AdminAddon {
+  slug: string;
   name: string;
   description: string;
   version: string;

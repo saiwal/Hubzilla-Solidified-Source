@@ -100,6 +100,10 @@ export async function fetchAdminAddons(): Promise<AdminAddon[]> {
   return r.addons;
 }
 
+export async function toggleAddon(slug: string): Promise<{ name: string; active: boolean }> {
+  return post("addons", { action: "toggle", name: slug });
+}
+
 // ── Themes ────────────────────────────────────────────────────────────────────
 
 export async function fetchAdminThemes(): Promise<{ themes: AdminTheme[]; current: string }> {

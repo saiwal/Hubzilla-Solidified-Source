@@ -77,21 +77,30 @@ export default function FeaturesSection() {
 function FeatureRow(props: { item: FeatureItem }) {
   const { t } = useI18n();
   return (
-    <label class={`flex items-start gap-3 p-3 rounded-lg border border-rim hover:bg-elevated/50 transition-colors ${props.item.locked ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}>
-      <input
-        type="checkbox"
-        name={props.item.id}
-        checked={props.item.enabled}
-        disabled={props.item.locked}
-        class="mt-0.5 rounded accent-[var(--color-accent)]"
-      />
-      <div class="space-y-0.5">
+    <label class={`flex items-center justify-between gap-4 p-3 rounded-lg border border-rim hover:bg-elevated/50 transition-colors ${props.item.locked ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}>
+      <div class="min-w-0 space-y-0.5">
         <p class="text-sm font-medium text-txt">{props.item.label}</p>
         <p class="text-xs text-muted">{props.item.desc}</p>
         <Show when={props.item.locked}>
           <p class="text-xs text-accent">{t("admin.locked_by_admin")}</p>
         </Show>
       </div>
+      <input
+        type="checkbox"
+        name={props.item.id}
+        checked={props.item.enabled}
+        disabled={props.item.locked}
+        class="appearance-none relative h-6 w-11 shrink-0 cursor-pointer rounded-full
+               bg-elevated border border-rim transition-colors
+               checked:bg-accent checked:border-accent
+               disabled:cursor-not-allowed
+               after:absolute after:top-1/2 after:-translate-y-1/2 after:translate-x-1
+               after:h-4 after:w-4 after:rounded-full after:bg-muted
+               after:transition-transform after:duration-150 motion-reduce:after:transition-none
+               checked:after:translate-x-6 checked:after:bg-accent-fg
+               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60
+               focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+      />
     </label>
   );
 }

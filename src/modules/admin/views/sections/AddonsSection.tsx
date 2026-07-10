@@ -1,12 +1,17 @@
 import { For, Show } from "solid-js";
 import { createQueryResource } from "@/shared/lib/createQueryResource";
 import SubPageContent from "@/shared/views/SubPageContent";
-import { fetchAdminAddons } from "../../api";
+import { fetchAdminAddons, toggleAddon } from "../../api";
 import { useI18n } from "@/i18n";
 
 export default function AddonsSection() {
   const { t } = useI18n();
-  const [addons] = createQueryResource("admin-addons", fetchAdminAddons);
+  const [addons, { refetch }] = createQueryResource("admin-addons", fetchAdminAddons);
+
+  async function onToggle(slug: string) {
+    await toggleAddon(slug);
+    refetch();
+  }
 
   return (
     <SubPageContent title={t("admin.addons_title")} description={t("admin.addons_desc")}>
@@ -40,9 +45,26 @@ export default function AddonsSection() {
                         </Show>
                       </div>
                     </div>
-                    <span class={`shrink-0 px-2 py-0.5 text-xs rounded border ${addon.installed ? "border-accent text-accent" : "border-rim text-muted"}`}>
-                      {addon.installed ? t("admin.installed_badge") : t("admin.not_installed_badge")}
-                    </span>
+                    <div class="flex items-center gap-3 shrink-0">
+                      <span class={`px-2 py-0.5 text-xs rounded border ${addon.installed ? "border-accent text-accent" : "border-rim text-muted"}`}>
+                        {addon.installed ? t("admin.installed_badge") : t("admin.not_installed_badge")}
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={addon.active}
+                        onChange={() => onToggle(addon.slug)}
+                        aria-label={addon.active ? "Disable" : "Enable"}
+                        class="appearance-none relative h-6 w-11 shrink-0 cursor-pointer rounded-full
+                               bg-elevated border border-rim transition-colors
+                               checked:bg-accent checked:border-accent
+                               after:absolute after:top-1/2 after:-translate-y-1/2 after:translate-x-1
+                               after:h-4 after:w-4 after:rounded-full after:bg-muted
+                               after:transition-transform after:duration-150 motion-reduce:after:transition-none
+                               checked:after:translate-x-6 checked:after:bg-accent-fg
+                               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60
+                               focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                      />
+                    </div>
                   </div>
                 )}
               </For>

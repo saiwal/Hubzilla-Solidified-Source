@@ -67,15 +67,21 @@ export default function ThemesSection() {
                             Configure
                           </button>
                         </Show>
-                        <button
-                          onClick={() => onToggle(theme.name)}
-                          class={`px-2 py-1 text-xs rounded border transition-colors
-                            ${theme.allowed
-                              ? "border-green-300 text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-900/20"
-                              : "border-rim text-muted hover:bg-elevated"}`}
-                        >
-                          {theme.allowed ? "Allowed" : "Disabled"}
-                        </button>
+                        <input
+                          type="checkbox"
+                          checked={theme.allowed}
+                          onChange={() => onToggle(theme.name)}
+                          aria-label={theme.allowed ? "Disable" : "Allow"}
+                          class="appearance-none relative h-6 w-11 shrink-0 cursor-pointer rounded-full
+                                 bg-elevated border border-rim transition-colors
+                                 checked:bg-accent checked:border-accent
+                                 after:absolute after:top-1/2 after:-translate-y-1/2 after:translate-x-1
+                                 after:h-4 after:w-4 after:rounded-full after:bg-muted
+                                 after:transition-transform after:duration-150 motion-reduce:after:transition-none
+                                 checked:after:translate-x-6 checked:after:bg-accent-fg
+                                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60
+                                 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                        />
                       </div>
                     </div>
 
