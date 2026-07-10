@@ -1,0 +1,51 @@
+import type { RawDictionary } from "../namespaces/types";
+
+export const hq: RawDictionary["hq"] = {
+  // Widget titles
+  activity:             "Aktivität",
+  drafts:               "Entwürfe",
+  messages:             "Nachrichten",
+  performance:          "Leistung",
+  post_composer:        "Beitrags-Editor",
+  stats:                "Statistiken",
+  upcoming_events:      "Anstehende Termine",
+  // Empty states
+  no_activity:          "Keine aktuelle Aktivität",
+  no_drafts:            "Keine gespeicherten Entwürfe",
+  no_messages:          "Nichts hier",
+  no_filter_matches:    "Keine Treffer für diesen Filter",
+  no_upcoming_events:   "Keine anstehenden Termine in den nächsten 30 Tagen",
+  // Loading
+  loading:              "Lädt…",
+  // Actions
+  view_all:             "Alle anzeigen",
+  create_one:           "Erstellen",
+  retry:                "Erneut versuchen",
+  // Server performance labels
+  server_performance:   "Serverleistung",
+  // HqMessagesWidget tab labels
+  msg_tab_all:          "Alle",
+  msg_tab_direct:       "Direkt",
+  msg_tab_starred:      "Markiert",
+  msg_tab_notices:      "Hinweise",
+  msg_tab_folders:      "Ordner",
+  no_folders:           "Keine gespeicherten Ordner",
+  filter_placeholder:   "Filter…",
+  // DraftsWidget
+  draft_post:           "Beitrag",
+  draft_reply:          "Antwort",
+  draft_comment:        "Kommentar",
+  draft_article:        "Artikel",
+  draft_webpage:        "Webseite",
+  draft_wiki:           "Wiki-Seite",
+  draft_event:          "Termin",
+  draft_label:          "Entwurf",
+  just_now:             "gerade eben",
+  empty_draft:          "Leerer Entwurf",
+  load_in_composer:     "Im Editor laden",
+  load:                 "Laden",
+  delete_draft:         "Entwurf löschen",
+  // UpcomingEventsWidget
+  new_event:            "Neu",
+  all_day:              "Ganztägig",
+};

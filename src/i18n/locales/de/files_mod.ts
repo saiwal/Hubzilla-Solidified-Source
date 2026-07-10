@@ -1,0 +1,35 @@
+import type { RawDictionary } from "../namespaces/types";
+
+export const files_mod: RawDictionary["files_mod"] = {
+  new_folder:       "Neuer Ordner",
+  upload:           "Hochladen",
+  uploading:        "Wird hochgeladen…",
+  creating:         "Wird erstellt…",
+  create:           "Erstellen",
+  cancel:           "Abbrechen",
+  name_col:         "Name",
+  access_col:       "Zugriff",
+  size_col:         "Größe",
+  created_col:      "Erstellt",
+  folder_empty:     "Dieser Ordner ist leer.",
+  load_failed:      "Dateien konnten nicht geladen werden.",
+  retry:            "Erneut versuchen",
+  restricted:       "Eingeschränkt",
+  public_access:    "Öffentlich",
+  switch_grid:      "Zur Rasteransicht wechseln",
+  switch_list:      "Zur Listenansicht wechseln",
+  folder_name_placeholder: "Ordnername…",
+  // Permissions panel
+  permissions:      "Berechtigungen",
+  restricted_msg:   "Eingeschränkt — nur ausgewählte Gruppen können es sehen",
+  public_msg:       "Öffentlich — jeder mit Speicherzugriff kann es sehen",
+  allow_access_to:  "Zugriff erlauben für",
+  no_groups:        "Keine Privatsphäre-Gruppen. Erstelle eine unter Verzeichnis → Privatsphäre-Gruppen.",
+  apply_recursive:  "Auf alle Dateien und Unterordner anwenden",
+  saving:           "Speichern…",
+  save:             "Speichern",
+  // Tooltips
+  download:         "Herunterladen",
+  delete:           "Löschen",
+  permissions_title: "Berechtigungen",
+};

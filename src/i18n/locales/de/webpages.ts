@@ -1,0 +1,30 @@
+import type { RawDictionary } from "../namespaces/types";
+
+export const webpages: RawDictionary["webpages"] = {
+  title:            "Webseiten",
+  new_page:         "Neue Seite",
+  col_title:        "Titel",
+  col_page_link:    "Seitenlink",
+  col_last_edited:  "Zuletzt bearbeitet",
+  col_visibility:   "Sichtbarkeit",
+  col_actions:      "Aktionen",
+  private_label:    "Privat",
+  public_label:     "Öffentlich",
+  view:             "Ansehen",
+  edit:             "Bearbeiten",
+  delete:           "Löschen",
+  delete_confirm:   "Löschen?",
+  yes:              "Ja",
+  no:               "Nein",
+  no_webpages:      "Noch keine Webseiten.",
+  create_first:     "Erstelle deine erste Seite",
+  untitled:         "(unbenannt)",
+  // PageView
+  back:             "← Webseiten",
+  load_failed:      "Seite konnte nicht geladen werden",
+  // Editor
+  new_page_title:   "Neue Seite",
+  edit_page_title:  "Seite bearbeiten",
+  title_placeholder: "Seitentitel…",
+  saving_failed:    "Speichern fehlgeschlagen",
+};
