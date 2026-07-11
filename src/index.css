@@ -40,6 +40,14 @@
      border-radius:inherit directly on its own background. */
   border-radius: 0.75rem;
 }
+.plyr--video {
+  /* Embeds: Plyr wraps our .plyr-embed-wrap div (which carries the 560px
+     cap below) inside a *new* outer .plyr container that has no width cap
+     of its own, so it was free to grow wider than the embed div nested
+     inside it — leaving a gap between the player chrome and the actual
+     video. Cap the outer container to match. */
+  max-width: 560px;
+}
 .plyr--audio .plyr__controls {
   border-radius: 0.75rem;
   border: 1px solid var(--color-rim);

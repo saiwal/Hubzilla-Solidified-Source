@@ -109,7 +109,7 @@ export async function wallUpload(
   const body = (await xhrRaw(`/wall_upload/${encodeURIComponent(nick)}`, file, onProgress)).trim();
   if (!body) throw new Error("Empty response from wall_upload");
 
-  const hashMatch = body.match(/\/image\/([a-f0-9]+)/i);
+  const hashMatch = body.match(/\/image\/([a-f0-9-]+)/i);
   if (!hashMatch) throw new Error("Could not parse photo hash from wall_upload response");
   const resource_id = hashMatch[1];
 
@@ -149,7 +149,7 @@ export async function wallAttach(
   if (!message) throw new Error("Empty message from wall_attach");
 
   // Photo response: [zrl=.../photos/nick/image/HASH][zmg=URL]filename[/zmg][/zrl]
-  const photoHashMatch = message.match(/\/image\/([a-f0-9]+)/i);
+  const photoHashMatch = message.match(/\/image\/([a-f0-9-]+)/i);
   if (photoHashMatch) {
     const hash = photoHashMatch[1];
     const zmgMatch = message.match(/\[zmg=([^\]]+)\]/i);
