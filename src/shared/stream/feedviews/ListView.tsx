@@ -12,13 +12,17 @@ import { markItemSeen } from "@/shared/lib/markSeen";
 import CommentComposer from "@/shared/editor/composers/CommentComposer";
 import { useAuth } from "@/shared/store/auth-store";
 import { useListBehavior } from "@/shared/store/list-behavior";
+import { MdOutlineSchedule, MdOutlineTimer } from "solid-icons/md";
 
 const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 function stripHtml(html: string): string {
-  const raw = html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  const raw = html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   const el = document.createElement("textarea");
   el.innerHTML = raw;
   return el.value;
@@ -36,10 +40,7 @@ function getParticipants(thread: ThreadNode) {
 
 // ── vote gutter (shared by both row modes) ────────────────────────────────────
 
-function VoteGutter(props: {
-  post: ThreadNode;
-  handlers: StreamHandlers;
-}) {
+function VoteGutter(props: { post: ThreadNode; handlers: StreamHandlers }) {
   const p = props.post;
   const score = () => (p.likeCount ?? 0) - (p.dislikeCount ?? 0);
 
@@ -131,9 +132,18 @@ function RowDetails(props: {
           "text-muted hover:text-txt hover:bg-elevated": !p.viewerRepeated,
         }}
       >
-        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        <svg
+          class="w-3 h-3"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+          />
         </svg>
         <Show when={p.repeatCount > 0}>
           <span>{p.repeatCount}</span>
@@ -149,9 +159,18 @@ function RowDetails(props: {
           "text-muted hover:text-txt hover:bg-elevated": !props.repliesActive,
         }}
       >
-        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        <svg
+          class="w-3 h-3"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+          />
         </svg>
         <Show when={props.replyCount > 0}>
           <span>{props.replyCount}</span>
@@ -165,9 +184,18 @@ function RowDetails(props: {
           class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-md
                  text-muted hover:text-txt hover:bg-elevated transition-colors min-w-0"
         >
-          <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          <svg
+            class="w-3 h-3 shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
           </svg>
           <span>via</span>
           <span class="font-medium truncate max-w-[120px]">{p.via!.name}</span>
@@ -182,9 +210,18 @@ function RowDetails(props: {
           class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-md
                  text-muted hover:text-txt hover:bg-elevated transition-colors"
         >
-          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          <svg
+            class="w-3 h-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+            />
           </svg>
           <span class="hidden sm:inline">{t("post.original")}</span>
         </a>
@@ -224,9 +261,24 @@ function ListRow(props: {
     observer.observe(rowRef);
     onCleanup(() => observer.disconnect());
   });
+  const isExpired = () => props.post.flags.includes("expired");
+  // Expiry set and still in the future — the post will self-destruct.
+  const isExpiring = () =>
+    !isExpired() &&
+    !!props.post.expires &&
+    new Date(props.post.expires + "Z").getTime() > Date.now();
+  const expiresTitle = () =>
+    `${t("post.expires")}: ${new Date(props.post.expires! + "Z").toLocaleString(locale())}`;
+  // Delayed publish — created holds the future publish time until the cron fires.
+  const isScheduled = () => props.post.flags.includes("scheduled");
+  const scheduledTitle = () =>
+    `${t("post.scheduled_title")}: ${new Date(props.post.created + "Z").toLocaleString(locale())}`;
 
   return (
-    <div ref={rowRef} class="group flex items-stretch border-b border-rim last:border-0 hover:bg-overlay transition-colors">
+    <div
+      ref={rowRef}
+      class="group flex items-stretch border-b border-rim last:border-0 hover:bg-overlay transition-colors"
+    >
       <VoteGutter post={p} handlers={props.handlers} />
 
       <div class="flex-1 min-w-0 flex flex-col">
@@ -253,6 +305,37 @@ function ListRow(props: {
                 innerHTML={DOMPurify.sanitize(p.title!)}
               />
             </Show>
+            <div class="ml-auto flex items-center gap-2 shrink-0">
+              <Show when={isExpired()}>
+                <span
+                  class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-muted/30 text-muted leading-none"
+                  title={t("post.expired_title")}
+                >
+                  {t("post.expired_badge")}
+                </span>
+              </Show>
+              <Show when={isExpiring()}>
+                <span
+                  class="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 leading-none"
+                  title={expiresTitle()}
+                >
+                  <MdOutlineTimer size={11} />
+                  <span>{formatPostDate(props.post.expires!, locale())}</span>
+                </span>
+              </Show>
+              <Show when={isScheduled()}>
+                <span
+                  class="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/15 text-sky-600 dark:text-sky-400 leading-none"
+                  title={scheduledTitle()}
+                >
+                  <MdOutlineSchedule size={11} />
+                  <span>
+                    {t("post.scheduled_badge")} ·{" "}
+                    {formatPostDate(props.post.created, locale())}
+                  </span>
+                </span>
+              </Show>
+            </div>
           </div>
 
           <Show when={p.title && preview()}>
@@ -293,7 +376,9 @@ function ListRow(props: {
           post={p}
           replyCount={replyCount()}
           replyLabel={
-            replyCount() === 1 ? t("post.comments_singular") : t("post.comments_plural")
+            replyCount() === 1
+              ? t("post.comments_singular")
+              : t("post.comments_plural")
           }
           onReplies={() => props.onOpenModal()}
           handlers={props.handlers}
@@ -333,10 +418,14 @@ function MessageRow(props: {
       </Show>
       <div class="flex-1 min-w-0">
         <div class="flex items-baseline gap-1.5 mb-0.5">
-          <span class="text-[11px] font-semibold text-txt">{props.msg.authorName}</span>
+          <span class="text-[11px] font-semibold text-txt">
+            {props.msg.authorName}
+          </span>
           <span
             class="text-[10px] text-muted"
-            title={new Date(props.msg.created + "Z").toLocaleString(props.locale)}
+            title={new Date(props.msg.created + "Z").toLocaleString(
+              props.locale,
+            )}
           >
             {formatPostDate(props.msg.created, props.locale)}
           </span>
@@ -353,8 +442,18 @@ function MessageRow(props: {
             "text-subtle hover:text-accent": !props.msg.viewerLiked,
           }}
         >
-          <svg class="w-3 h-3" fill={props.msg.viewerLiked ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 15l-6-6-6 6" />
+          <svg
+            class="w-3 h-3"
+            fill={props.msg.viewerLiked ? "currentColor" : "none"}
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M18 15l-6-6-6 6"
+            />
           </svg>
           <Show when={props.msg.likeCount > 0}>{props.msg.likeCount}</Show>
           <span>{t("post.like")}</span>
@@ -374,9 +473,19 @@ function ThreadedNodes(props: {
     <For each={props.nodes}>
       {(node) => (
         <>
-          <MessageRow msg={node} depth={props.depth} handlers={props.handlers} locale={props.locale} />
+          <MessageRow
+            msg={node}
+            depth={props.depth}
+            handlers={props.handlers}
+            locale={props.locale}
+          />
           <Show when={node.children.length > 0}>
-            <ThreadedNodes nodes={node.children} depth={props.depth + 1} handlers={props.handlers} locale={props.locale} />
+            <ThreadedNodes
+              nodes={node.children}
+              depth={props.depth + 1}
+              handlers={props.handlers}
+              locale={props.locale}
+            />
           </Show>
         </>
       )}
@@ -414,8 +523,18 @@ function InlineThread(props: {
             </For>
           }
         >
-          <MessageRow msg={props.thread} depth={0} handlers={props.handlers} locale={locale()} />
-          <ThreadedNodes nodes={props.thread.children} depth={1} handlers={props.handlers} locale={locale()} />
+          <MessageRow
+            msg={props.thread}
+            depth={0}
+            handlers={props.handlers}
+            locale={locale()}
+          />
+          <ThreadedNodes
+            nodes={props.thread.children}
+            depth={1}
+            handlers={props.handlers}
+            locale={locale()}
+          />
         </Show>
       </div>
 
@@ -451,7 +570,9 @@ function InboxRow(props: {
 }) {
   const p = props.thread;
   const [expanded, setExpanded] = createSignal(expandedByMid.has(p.mid));
-  const [commentsLoaded, setCommentsLoaded] = createSignal(p.children.length > 0);
+  const [commentsLoaded, setCommentsLoaded] = createSignal(
+    p.children.length > 0,
+  );
   const [commentsLoading, setCommentsLoading] = createSignal(false);
   const { locale, t } = useI18n();
   let rowRef!: HTMLDivElement;
@@ -473,7 +594,8 @@ function InboxRow(props: {
 
   const replyCount = () =>
     p.children.length > 0
-      ? flattenThread(p).filter(n => !REACTION_VERBS.has(n.verb ?? '')).length - 1
+      ? flattenThread(p).filter((n) => !REACTION_VERBS.has(n.verb ?? ""))
+          .length - 1
       : (p.commentCount ?? 0);
   const participants = () => getParticipants(p);
 
@@ -530,7 +652,10 @@ function InboxRow(props: {
             >
               <p
                 class="text-sm font-semibold leading-snug line-clamp-1"
-                classList={{ "text-accent": isUnread(), "text-txt": !isUnread() }}
+                classList={{
+                  "text-accent": isUnread(),
+                  "text-txt": !isUnread(),
+                }}
                 innerHTML={DOMPurify.sanitize(p.title!)}
               />
             </Show>
@@ -546,7 +671,9 @@ function InboxRow(props: {
             <div class="flex -space-x-1 shrink-0">
               <For each={participants().slice(0, 3)}>
                 {(name) => {
-                  const node = flattenThread(p).find((n) => n.authorName === name);
+                  const node = flattenThread(p).find(
+                    (n) => n.authorName === name,
+                  );
                   return (
                     <Show
                       when={node?.authorAvatar}
@@ -571,7 +698,9 @@ function InboxRow(props: {
               {participants().slice(0, 2).join(", ")}
             </span>
             <Show when={participants().length > 2}>
-              <span class="text-[11px] text-muted">+{participants().length - 2}</span>
+              <span class="text-[11px] text-muted">
+                +{participants().length - 2}
+              </span>
             </Show>
 
             <span class="text-[11px] text-muted/50">·</span>
@@ -590,7 +719,12 @@ function InboxRow(props: {
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </div>
         </div>

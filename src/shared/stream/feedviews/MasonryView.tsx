@@ -18,6 +18,7 @@ import DOMPurify from "dompurify";
 import EventCard from "@/shared/stream/components/EventCard";
 import { parseEventData } from "@/shared/lib/activity.mapper";
 import { markItemSeen } from "@/shared/lib/markSeen";
+import { MdOutlineSchedule, MdOutlineTimer } from "solid-icons/md";
 function useColumnCount(): () => number {
   const getCount = () => {
     const w = window.innerWidth;
@@ -42,7 +43,11 @@ function splitIntoColumns<T>(items: T[], n: number): T[][] {
 
 const COLLAPSED_MAX_PX = 200;
 
-function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers; onOpenModal: () => void }) {
+function MasonryCard(props: {
+  post: ThreadNode;
+  handlers: StreamHandlers;
+  onOpenModal: () => void;
+}) {
   const p = props.post;
   const replyCount = () =>
     p.children.length > 0
@@ -71,7 +76,8 @@ function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers; onOpen
     checkOverflow();
     const imgs = bodyRef?.querySelectorAll("img");
     imgs?.forEach((img) => {
-      if (!img.complete) img.addEventListener("load", checkOverflow, { once: true });
+      if (!img.complete)
+        img.addEventListener("load", checkOverflow, { once: true });
     });
 
     if (p.uuid && p.flags.includes("unseen")) {
@@ -88,6 +94,18 @@ function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers; onOpen
       onCleanup(() => observer.disconnect());
     }
   });
+  const isExpired = () => props.post.flags.includes("expired");
+  // Expiry set and still in the future — the post will self-destruct.
+  const isExpiring = () =>
+    !isExpired() &&
+    !!props.post.expires &&
+    new Date(props.post.expires + "Z").getTime() > Date.now();
+  const expiresTitle = () =>
+    `${t("post.expires")}: ${new Date(props.post.expires! + "Z").toLocaleString(locale())}`;
+  // Delayed publish — created holds the future publish time until the cron fires.
+  const isScheduled = () => props.post.flags.includes("scheduled");
+  const scheduledTitle = () =>
+    `${t("post.scheduled_title")}: ${new Date(props.post.created + "Z").toLocaleString(locale())}`;
 
   return (
     <>
@@ -100,7 +118,7 @@ function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers; onOpen
           <span class="absolute top-2.5 right-2.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-accent text-accent-fg leading-none z-10">
             New
           </span>
-        </Show>
+        </Show>{" "}
         {/* Author */}
         <div class="flex items-center gap-2 mb-3">
           <Show
@@ -124,12 +142,24 @@ function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers; onOpen
               </p>
               <Show when={p.via}>
                 <div class="flex items-center gap-1 shrink-0">
-                  <svg class="w-2.5 h-2.5 text-muted shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  <svg
+                    class="w-2.5 h-2.5 text-muted shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
                   </svg>
                   <span class="text-xs text-muted">via</span>
-                  <a href={p.via!.url} class="text-xs text-muted hover:underline font-medium truncate">
+                  <a
+                    href={p.via!.url}
+                    class="text-xs text-muted hover:underline font-medium truncate"
+                  >
                     {p.via!.name}
                   </a>
                 </div>
@@ -142,8 +172,38 @@ function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers; onOpen
               {formatPostDate(p.created, locale())}
             </p>
           </div>
+          <div class="ml-auto flex items-center gap-2 shrink-0">
+            <Show when={isExpired()}>
+              <span
+                class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-muted/30 text-muted leading-none"
+                title={t("post.expired_title")}
+              >
+                {t("post.expired_badge")}
+              </span>
+            </Show>
+            <Show when={isExpiring()}>
+              <span
+                class="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 leading-none"
+                title={expiresTitle()}
+              >
+                <MdOutlineTimer size={11} />
+                <span>{formatPostDate(props.post.expires!, locale())}</span>
+              </span>
+            </Show>
+            <Show when={isScheduled()}>
+              <span
+                class="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/15 text-sky-600 dark:text-sky-400 leading-none"
+                title={scheduledTitle()}
+              >
+                <MdOutlineSchedule size={11} />
+                <span>
+                  {t("post.scheduled_badge")} ·{" "}
+                  {formatPostDate(props.post.created, locale())}
+                </span>
+              </span>
+            </Show>
+          </div>
         </div>
-
         <Show when={p.title}>
           <p
             class="text-sm font-semibold text-txt mb-2 leading-snug"
@@ -154,81 +214,80 @@ function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers; onOpen
         <Show when={eventData()}>
           {(ev) => <EventCard post={p} event={ev()} />}
         </Show>
-
         {/* Body with height cap — hidden for pure event posts */}
         <Show when={!eventData()}>
-        <div class="relative">
-          <div
-            class="overflow-hidden transition-[max-height] duration-300 ease-in-out"
-            style={{
-              "max-height": expanded() ? "2000px" : `${COLLAPSED_MAX_PX}px`,
-            }}
-          >
+          <div class="relative">
             <div
-              ref={bodyRef}
-              class="post-body text-sm text-muted leading-relaxed wrap-anywhere
-                     [&>p]:my-0.5 [&_img:not(.share-avatar)]:w-full [&_img:not(.share-avatar)]:rounded-lg [&_img:not(.share-avatar)]:mt-2 [&_img:not(.share-avatar)]:mb-1
-                     [&>blockquote]:border-l-2 [&>blockquote]:border-accent [&>blockquote]:pl-2 [&>blockquote]:text-accent"
-              innerHTML={p.body}
-            />
-          </div>
-          <Show when={overflows() && !expanded()}>
-            <div
-              class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-surface to-transparent flex items-end justify-center pb-1"
-              onClick={(e) => {
-                e.stopPropagation();
-                setExpanded(true);
+              class="overflow-hidden transition-[max-height] duration-300 ease-in-out"
+              style={{
+                "max-height": expanded() ? "2000px" : `${COLLAPSED_MAX_PX}px`,
               }}
             >
-              <button
-                class="flex items-center gap-1 text-xs text-accent hover:text-accent-txt
-                             bg-overlay/90 px-2 py-0.5 rounded-full border border-accent/50 transition-colors"
-              >
-                <svg
-                  class="w-3 h-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-                {t("ui.show_more")}
-              </button>
-            </div>
-          </Show>
-        </div>
-
-        <Show when={overflows() && expanded()}>
-          <button
-            class="flex items-center justify-center gap-1 text-xs text-accent hover:text-accent-txt mt-1 w-full transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              setExpanded(false);
-            }}
-          >
-            <svg
-              class="w-3 h-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M5 15l7-7 7 7"
+              <div
+                ref={bodyRef}
+                class="post-body text-sm text-muted leading-relaxed wrap-anywhere
+                     [&>p]:my-0.5 [&_img:not(.share-avatar)]:w-full [&_img:not(.share-avatar)]:rounded-lg [&_img:not(.share-avatar)]:mt-2 [&_img:not(.share-avatar)]:mb-1
+                     [&>blockquote]:border-l-2 [&>blockquote]:border-accent [&>blockquote]:pl-2 [&>blockquote]:text-accent"
+                innerHTML={p.body}
               />
-            </svg>
-            {t("ui.show_less")}
-          </button>
-        </Show>
-        </Show>{/* end !eventData */}
+            </div>
+            <Show when={overflows() && !expanded()}>
+              <div
+                class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-surface to-transparent flex items-end justify-center pb-1"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setExpanded(true);
+                }}
+              >
+                <button
+                  class="flex items-center gap-1 text-xs text-accent hover:text-accent-txt
+                             bg-overlay/90 px-2 py-0.5 rounded-full border border-accent/50 transition-colors"
+                >
+                  <svg
+                    class="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                  {t("ui.show_more")}
+                </button>
+              </div>
+            </Show>
+          </div>
 
+          <Show when={overflows() && expanded()}>
+            <button
+              class="flex items-center justify-center gap-1 text-xs text-accent hover:text-accent-txt mt-1 w-full transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded(false);
+              }}
+            >
+              <svg
+                class="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 15l7-7 7 7"
+                />
+              </svg>
+              {t("ui.show_less")}
+            </button>
+          </Show>
+        </Show>
+        {/* end !eventData */}
         {/* Actions */}
         <div
           class="flex items-center gap-3 mt-3 pt-3 border-t border-rim"
@@ -284,12 +343,12 @@ function MasonryCard(props: { post: ThreadNode; handlers: StreamHandlers; onOpen
 
           <Show when={replyCount() > 0}>
             <span class="ml-auto text-xs text-muted">
-              {replyCount()} {replyCount() === 1 ? t("ui.reply") : t("ui.replies")}
+              {replyCount()}{" "}
+              {replyCount() === 1 ? t("ui.reply") : t("ui.replies")}
             </span>
           </Show>
         </div>
       </div>
-
     </>
   );
 }
