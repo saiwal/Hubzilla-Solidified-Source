@@ -82,5 +82,6 @@ export const photos: RawDictionary["photos"] = {
   nsfw_mark:            "Als NSFW markieren",
   nsfw_unmark:          "NSFW-Markierung entfernen",
   nsfw_error:           "NSFW-Markierung konnte nicht aktualisiert werden.",
+  nsfw_show:            "Foto anzeigen",
   share:                "Foto teilen",
 };

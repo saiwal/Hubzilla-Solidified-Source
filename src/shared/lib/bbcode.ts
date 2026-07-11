@@ -693,6 +693,15 @@ export function bbcode(text: string, options: BbcodeOptions = {}): string {
   );
 
   // ------------------------------------------------------------------
+  // Compact [share=<item id>][/share] — compose-time token (expanded to the
+  // full attribute block server-side on save); only seen in editor previews
+  // ------------------------------------------------------------------
+  text = text.replace(
+    /\[share=(\d+)\]([\s\S]*?)\[\/share\]/gi,
+    (_m, id) => `<div class="bb-share bb-share-compact">🔁 Shared post #${id}</div>`
+  );
+
+  // ------------------------------------------------------------------
   // [share] (nested, up to 10 levels)
   // ------------------------------------------------------------------
   let shareLoop = 0;

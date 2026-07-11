@@ -94,6 +94,18 @@ export const apiCreateComment = (parentUuid: string, content: string, title = ''
 export const apiEditItem = (uuid: string, content: string, title = '') =>
   post<{ success: boolean }>(`${BASE}/${encodeId(uuid)}/edit`, { body: content, title });
 
+export interface ComposeSource {
+  success: boolean;
+  body: string;
+  title: string;
+  summary: string;
+  mimetype: string;
+}
+
+/** Item source for the edit composer — [share …] blocks collapsed to [share=<id>]. */
+export const apiFetchComposeSource = (uuid: string) =>
+  apiFetch(`${BASE}/${encodeId(uuid)}/compose`).then(r => r.json()) as Promise<ComposeSource>;
+
 export const apiDeleteItem = (uuid: string) =>
   post<{ success: boolean }>(`${BASE}/${encodeId(uuid)}/delete`);
 
@@ -116,26 +128,3 @@ export const apiFollowPost = (uuid: string): Promise<void> =>
 export const apiUnfollowPost = (uuid: string): Promise<void> =>
   post<{ success?: boolean; error?: string }>(`${BASE}/${encodeId(uuid)}/unfollow`)
     .then(r => { if (!r.success) throw new Error(r.error || 'Unfollow failed'); });
-
-export async function postComment(params: {
-  body: string;
-  parent_iid: number;
-  profile_uid: number;
-}): Promise<void> {
-  const formData = new URLSearchParams();
-  formData.set("type", "net-comment");
-  formData.set("profile_uid", String(params.profile_uid));
-  formData.set("parent", String(params.parent_iid));
-  formData.set("body", params.body);
-  formData.set("return", "");
-  formData.set("jsreload", "");
-  formData.set("preview", "0");
-  formData.set("conv_mode", "");
-  const res = await fetch("/item", {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: formData.toString(),
-  });
-  if (!res.ok) throw new Error(`Comment failed: ${res.status}`);
-}

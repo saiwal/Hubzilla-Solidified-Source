@@ -17,6 +17,7 @@ import {
   createEffect,
   on,
   createSignal,
+  lazy,
   For,
   Show,
 } from "solid-js";
@@ -25,8 +26,8 @@ import { useI18n } from "@/i18n";
 import { toast } from "@/shared/store/toast";
 import formatPostDate from "@/shared/lib/date";
 import DOMPurify from "dompurify";
-import PostDetailModal from "@/shared/views/PostDetailModal";
 import type { StreamHandlers } from "../types";
+const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
 
 // ---------------------------------------------------------------------------
 // Types

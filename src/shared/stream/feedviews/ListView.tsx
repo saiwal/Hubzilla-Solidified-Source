@@ -422,8 +422,7 @@ function InlineThread(props: {
       <Show when={props.thread.iid}>
         <div class="px-3 py-2.5 border-t border-rim bg-surface/40">
           <CommentComposer
-            parentMid={props.thread.mid}
-            parentIid={props.thread.iid!}
+            parentUuid={props.thread.uuid}
             profileUid={props.profileUid}
             onSubmitted={(body) =>
               props.handlers.onComment(

@@ -1,5 +1,5 @@
 import { A } from "@solidjs/router";
-import { createEffect, createMemo, createSignal, lazy, onCleanup, Show, For } from "solid-js";
+import { createEffect, createMemo, createSignal, lazy, on, onCleanup, Show, For } from "solid-js";
 import { Portal } from "solid-js/web";
 import { useParams, useNavigate, useLocation } from "@solidjs/router";
 import { useI18n } from "@/i18n";
@@ -26,8 +26,6 @@ import {
 } from "solid-icons/md";
 import PhotoSwipe from "photoswipe";
 import "photoswipe/style.css";
-
-const knownDims = new Map<string, { w: number; h: number }>();
 
 // Replace the Hubzilla size suffix (-0/-1/-2/-3) in a photo URL
 const variantSrc = (src: string, size: number) =>
@@ -388,190 +386,7 @@ function AlbumGrid() {
   const [uploadProgress, setUploadProgress] =
     createSignal<{ done: number; total: number } | null>(null);
   let fileInputRef: HTMLInputElement | undefined;
-  let pswpRef: PhotoSwipe | null = null;
   const [isDragging, setIsDragging] = createSignal(false);
-
-  onCleanup(() => { pswpRef?.close(); });
-
-  function openLightbox(startIndex: number) {
-    pswpRef?.close();
-    const list = sortedPhotos();
-
-    let currentSize = 2; // open at medium (-2); grid thumbs are -3
-
-    const items = list.map(p => ({
-      src:         variantSrc(p.src, currentSize),
-      msrc:        variantSrc(p.src, 3), // small thumbnail as placeholder while larger loads
-      alt:         p.filename,
-      width:       0, // let PhotoSwipe read naturalWidth/naturalHeight after load
-      height:      0,
-      resource_id: p.resource_id,
-      title:       p.title ?? '',
-      description: p.description ?? '',
-      is_nsfw:     p.is_nsfw ?? false,
-    }));
-
-    const pswp = new PhotoSwipe({
-      dataSource: items,
-      index: startIndex,
-      bgOpacity: 0.95,
-      wheelToZoom: true,
-    });
-
-    // After each image loads, propagate real pixel dimensions into every layer
-    // PhotoSwipe consults so that recycled slide holders never stretch:
-    //   • items[i]   — data source, read when new Content is constructed
-    //   • content    — the cached Content object, read when its Slide is (re)created
-    //   • slide      — the live Slide, needed for the immediate calculateSize call
-    pswp.on('loadComplete', (e) => {
-      const { slide, content } = e;
-      const img = content.element;
-      if (!(img instanceof HTMLImageElement)) return;
-      const w = img.naturalWidth;
-      const h = img.naturalHeight;
-      if (!w || !h) return;
-      items[slide.index].width  = w;   // fresh Content construction path
-      items[slide.index].height = h;
-      (content as any).width   = w;   // cached Content reuse path
-      (content as any).height  = h;
-      const wasAtInitial = slide.currZoomLevel === slide.zoomLevels.initial;
-      (slide as any).width  = w;
-      (slide as any).height = h;
-      slide.calculateSize();
-      slide.updateContentSize(true);
-      if (wasAtInitial) slide.zoomTo(slide.zoomLevels.initial, undefined, 0);
-    });
-
-    pswp.on('uiRegister', () => {
-      // Size selector
-      pswp.ui?.registerElement({
-        name: 'size-selector',
-        order: 8,
-        isButton: false,
-        tagName: 'div',
-        onInit: (el: HTMLElement) => {
-          const SIZES = [
-            { label: 'S', title: t('photos.size_small'),    size: 3 },
-            { label: 'M', title: t('photos.size_medium'),   size: 2 },
-            { label: 'L', title: t('photos.size_large'),    size: 1 },
-            { label: 'XL', title: t('photos.size_original'), size: 0 },
-          ] as const;
-
-          el.style.cssText = 'display:flex;align-items:center;gap:3px;padding:0 4px;';
-
-          const btns: HTMLButtonElement[] = [];
-
-          const refresh = (activeSize: number) => {
-            btns.forEach((btn, i) => {
-              const on = SIZES[i].size === activeSize;
-              btn.style.color    = on ? 'rgba(255,255,255,1)'    : 'rgba(255,255,255,0.45)';
-              btn.style.background = on ? 'rgba(255,255,255,0.18)' : 'transparent';
-              btn.style.borderColor = on ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.2)';
-            });
-          };
-
-          SIZES.forEach(({ label, title, size }) => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.textContent = label;
-            btn.title = title;
-            btn.style.cssText =
-              'padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;' +
-              'border:1px solid;cursor:pointer;transition:all 0.12s;line-height:1.6;';
-            btn.addEventListener('click', () => {
-              if (size === currentSize) return;
-              currentSize = size;
-              items.forEach((item, i) => {
-                item.src    = variantSrc(list[i].src, size);
-                item.width  = 0;
-                item.height = 0;
-              });
-              const curr = pswp.currIndex;
-              [curr - 1, curr, curr + 1]
-                .filter(i => i >= 0 && i < list.length)
-                .forEach(i => pswp.refreshSlideContent(i));
-              refresh(size);
-            });
-            btns.push(btn);
-            el.appendChild(btn);
-          });
-
-          refresh(currentSize);
-
-          // Caption — gradient bar at the bottom showing title, description, NSFW badge
-          pswp.ui?.registerElement({
-            name: 'description-caption',
-            order: 10,
-            isButton: false,
-            appendTo: 'root',
-            onInit: (cap: HTMLElement) => {
-              cap.style.cssText =
-                'position:absolute;bottom:0;left:0;right:0;' +
-                'padding:40px 56px 18px;' + // 56px clears prev/next arrow buttons
-                'background:linear-gradient(transparent,rgba(0,0,0,0.6));' +
-                'color:rgba(255,255,255,0.92);font-size:14px;line-height:1.5;' +
-                'text-align:center;pointer-events:none;';
-              const update = () => {
-                const photo = list[pswp.currIndex];
-                const title = photo?.title ?? '';
-                const desc  = photo?.description ?? '';
-                const nsfw  = photo?.is_nsfw ?? false;
-                if (!title && !desc && !nsfw) { cap.style.display = 'none'; return; }
-                cap.style.display = '';
-                cap.innerHTML = '';
-                if (nsfw) {
-                  const badge = document.createElement('span');
-                  badge.textContent = 'NSFW';
-                  badge.style.cssText =
-                    'display:inline-block;margin-bottom:6px;padding:1px 7px;' +
-                    'background:rgba(239,68,68,0.25);color:#fca5a5;' +
-                    'border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.05em;';
-                  const br = document.createElement('br');
-                  cap.appendChild(badge);
-                  cap.appendChild(br);
-                }
-                if (title) {
-                  const t = document.createElement('strong');
-                  t.textContent = title;
-                  t.style.cssText = 'display:block;font-size:15px;';
-                  cap.appendChild(t);
-                }
-                if (desc) {
-                  const d = document.createElement('span');
-                  d.textContent = desc;
-                  d.style.cssText = 'display:block;font-size:13px;opacity:0.8;margin-top:2px;';
-                  cap.appendChild(d);
-                }
-              };
-              update();
-              pswp.on('change', update);
-            },
-          });
-
-          // Details link — appended into the same row as size buttons
-          const sep = document.createElement('span');
-          sep.style.cssText = 'width:1px;height:16px;background:rgba(255,255,255,0.2);margin:0 4px;flex-shrink:0;';
-          el.appendChild(sep);
-
-          const link = document.createElement('a');
-          link.title = t('photos.view_details');
-          link.style.cssText = 'display:flex;align-items:center;opacity:0.75;color:white;padding:2px 4px;';
-          link.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>';
-          const setHref = () => {
-            const photo = list[pswp.currIndex];
-            if (photo) link.href = `/photos/${params.nick}/image/${photo.resource_id}`;
-          };
-          setHref();
-          pswp.on('change', setHref);
-          el.appendChild(link);
-        },
-      });
-    });
-
-    pswp.on('close', () => { pswpRef = null; });
-    pswpRef = pswp;
-    pswp.init();
-  }
 
   const isOwner = () => !!auth()?.nick && auth()!.nick === params.nick;
 
@@ -868,26 +683,35 @@ function AlbumGrid() {
       {/* Photo grid */}
       <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
         <For each={sortedPhotos()}>
-          {(photo, index) => {
+          {(photo) => {
             const isSelected = () => selected().has(photo.resource_id);
             const isPending  = () => pendingDelete() === photo.resource_id;
             return (
               <div class="group relative aspect-[4/3] overflow-hidden rounded-xl bg-surface">
                 <button
-                  onClick={() => selectMode() ? toggleOne(photo.resource_id) : openLightbox(index())}
+                  onClick={() => selectMode()
+                    ? toggleOne(photo.resource_id)
+                    : navigate(`/photos/${params.nick}/image/${photo.resource_id}`)}
                   class="block w-full h-full cursor-pointer"
                 >
                   <img
                     src={variantSrc(photo.src, 3)}
                     alt={photo.filename}
                     loading="lazy"
-                    onLoad={(e) => {
-                      const el = e.currentTarget;
-                      knownDims.set(photo.resource_id, { w: el.naturalWidth, h: el.naturalHeight });
-                    }}
-                    class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    class={`w-full h-full object-cover ${photo.is_nsfw
+                      ? 'blur-xl scale-110'
+                      : 'transition-transform duration-300 group-hover:scale-105'}`}
                   />
                 </button>
+
+                {/* NSFW badge */}
+                <Show when={photo.is_nsfw}>
+                  <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span class="px-2 py-0.5 rounded-md bg-black/60 text-red-400 text-xs font-bold tracking-wide">
+                      {t("photos.nsfw")}
+                    </span>
+                  </div>
+                </Show>
 
                 {/* Checkbox overlay */}
                 <Show when={selectMode()}>
@@ -1022,10 +846,166 @@ function ImageView() {
   let moreRef!: HTMLDivElement;
   let morePortalRef!: HTMLDivElement;
   let deleteTimer: ReturnType<typeof setTimeout> | null = null;
+  let pswpRef: PhotoSwipe | null = null;
 
-  onCleanup(() => { if (deleteTimer) clearTimeout(deleteTimer); });
+  onCleanup(() => {
+    if (deleteTimer) clearTimeout(deleteTimer);
+    pswpRef?.close();
+  });
 
   const isOwner = () => !!auth()?.nick && auth()!.nick === params.nick;
+
+  // NSFW blur — revealed per photo, resets when navigating to a sibling
+  const [nsfwRevealed, setNsfwRevealed] = createSignal(false);
+  createEffect(on(() => d()?.resource_id, () => setNsfwRevealed(false)));
+  const nsfwBlurred = () => !!d()?.is_nsfw && !nsfwRevealed();
+
+  function openLightbox() {
+    const photo = d();
+    if (!photo) return;
+    pswpRef?.close();
+
+    let currentSize = 0; // open at original (-0); the page shows medium (-2)
+
+    const item = {
+      src:    variantSrc(photo.src, currentSize),
+      msrc:   variantSrc(photo.src, 2), // medium is already loaded on the page
+      alt:    photo.filename,
+      width:  photo.width  || 0, // original dimensions; reset on size switch
+      height: photo.height || 0,
+    };
+
+    const pswp = new PhotoSwipe({
+      dataSource: [item],
+      index: 0,
+      bgOpacity: 0.95,
+      wheelToZoom: true,
+    });
+
+    // After the image loads, propagate real pixel dimensions into every layer
+    // PhotoSwipe consults so that the slide holder never stretches:
+    //   • item       — data source, read when new Content is constructed
+    //   • content    — the cached Content object, read when its Slide is (re)created
+    //   • slide      — the live Slide, needed for the immediate calculateSize call
+    pswp.on('loadComplete', (e) => {
+      const { slide, content } = e;
+      const img = content.element;
+      if (!(img instanceof HTMLImageElement)) return;
+      const w = img.naturalWidth;
+      const h = img.naturalHeight;
+      if (!w || !h) return;
+      item.width  = w;   // fresh Content construction path
+      item.height = h;
+      (content as any).width   = w;   // cached Content reuse path
+      (content as any).height  = h;
+      const wasAtInitial = slide.currZoomLevel === slide.zoomLevels.initial;
+      (slide as any).width  = w;
+      (slide as any).height = h;
+      slide.calculateSize();
+      slide.updateContentSize(true);
+      if (wasAtInitial) slide.zoomTo(slide.zoomLevels.initial, undefined, 0);
+    });
+
+    pswp.on('uiRegister', () => {
+      // Size selector
+      pswp.ui?.registerElement({
+        name: 'size-selector',
+        order: 8,
+        isButton: false,
+        tagName: 'div',
+        onInit: (el: HTMLElement) => {
+          const SIZES = [
+            { label: 'S', title: t('photos.size_small'),    size: 3 },
+            { label: 'M', title: t('photos.size_medium'),   size: 2 },
+            { label: 'L', title: t('photos.size_large'),    size: 1 },
+            { label: 'XL', title: t('photos.size_original'), size: 0 },
+          ] as const;
+
+          el.style.cssText = 'display:flex;align-items:center;gap:3px;padding:0 4px;';
+
+          const btns: HTMLButtonElement[] = [];
+
+          const refresh = (activeSize: number) => {
+            btns.forEach((btn, i) => {
+              const on = SIZES[i].size === activeSize;
+              btn.style.color    = on ? 'rgba(255,255,255,1)'    : 'rgba(255,255,255,0.45)';
+              btn.style.background = on ? 'rgba(255,255,255,0.18)' : 'transparent';
+              btn.style.borderColor = on ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.2)';
+            });
+          };
+
+          SIZES.forEach(({ label, title, size }) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = label;
+            btn.title = title;
+            btn.style.cssText =
+              'padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;' +
+              'border:1px solid;cursor:pointer;transition:all 0.12s;line-height:1.6;';
+            btn.addEventListener('click', () => {
+              if (size === currentSize) return;
+              currentSize = size;
+              item.src    = variantSrc(photo.src, size);
+              item.width  = 0;
+              item.height = 0;
+              pswp.refreshSlideContent(0);
+              refresh(size);
+            });
+            btns.push(btn);
+            el.appendChild(btn);
+          });
+
+          refresh(currentSize);
+
+          // Caption — gradient bar at the bottom showing title, description, NSFW badge
+          pswp.ui?.registerElement({
+            name: 'description-caption',
+            order: 10,
+            isButton: false,
+            appendTo: 'root',
+            onInit: (cap: HTMLElement) => {
+              const title = photo.title ?? '';
+              const desc  = photo.description ?? '';
+              const nsfw  = photo.is_nsfw ?? false;
+              if (!title && !desc && !nsfw) { cap.style.display = 'none'; return; }
+              cap.style.cssText =
+                'position:absolute;bottom:0;left:0;right:0;' +
+                'padding:40px 56px 18px;' +
+                'background:linear-gradient(transparent,rgba(0,0,0,0.6));' +
+                'color:rgba(255,255,255,0.92);font-size:14px;line-height:1.5;' +
+                'text-align:center;pointer-events:none;';
+              if (nsfw) {
+                const badge = document.createElement('span');
+                badge.textContent = 'NSFW';
+                badge.style.cssText =
+                  'display:inline-block;margin-bottom:6px;padding:1px 7px;' +
+                  'background:rgba(239,68,68,0.25);color:#fca5a5;' +
+                  'border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.05em;';
+                cap.appendChild(badge);
+                cap.appendChild(document.createElement('br'));
+              }
+              if (title) {
+                const el = document.createElement('strong');
+                el.textContent = title;
+                el.style.cssText = 'display:block;font-size:15px;';
+                cap.appendChild(el);
+              }
+              if (desc) {
+                const el = document.createElement('span');
+                el.textContent = desc;
+                el.style.cssText = 'display:block;font-size:13px;opacity:0.8;margin-top:2px;';
+                cap.appendChild(el);
+              }
+            },
+          });
+        },
+      });
+    });
+
+    pswp.on('close', () => { pswpRef = null; });
+    pswpRef = pswp;
+    pswp.init();
+  }
 
   createEffect(() => {
     if (!moreOpen()) return;
@@ -1237,12 +1217,30 @@ function ImageView() {
       <div class="bg-surface border border-rim rounded-2xl overflow-hidden shadow-sm mb-4">
 
         {/* Image */}
-        <div class="relative bg-overlay flex items-center justify-center min-h-48">
+        <div class="relative bg-overlay flex items-center justify-center min-h-48 overflow-hidden">
           <img
-            src={d()?.src_full ?? d()?.src}
+            src={d() ? variantSrc(d()!.src, 1) : undefined}
             alt={d()?.filename}
-            class="max-h-[70vh] w-full object-contain"
+            onClick={() => { if (!nsfwBlurred()) openLightbox(); }}
+            title={nsfwBlurred() ? undefined : t("photos.size_original")}
+            class={`max-h-[70vh] w-full object-contain
+                   ${nsfwBlurred() ? 'blur-2xl' : 'cursor-zoom-in'}`}
           />
+
+          {/* NSFW reveal overlay */}
+          <Show when={nsfwBlurred()}>
+            <button
+              onClick={() => setNsfwRevealed(true)}
+              class="absolute inset-0 flex flex-col items-center justify-center gap-2 cursor-pointer"
+            >
+              <span class="px-2 py-0.5 rounded-md bg-black/60 text-red-400 text-xs font-bold tracking-wide">
+                {t("photos.nsfw")}
+              </span>
+              <span class="px-3 py-1.5 rounded-lg bg-black/60 text-white text-sm font-medium">
+                {t("photos.nsfw_show")}
+              </span>
+            </button>
+          </Show>
           <Show when={prevPath()}>
             <A
               href={prevPath()!}
@@ -1573,8 +1571,7 @@ function ImageView() {
           {/* Reply composer */}
           <Show when={replyOpen() && d()?.item_id}>
             <CommentComposer
-              parentMid={d()?.item_mid ?? undefined}
-              parentIid={d()?.item_id ?? undefined}
+              parentUuid={d()?.item_uuid ?? undefined}
               profileUid={profileUid()}
               onSubmitted={(body) => {
                 addComment({

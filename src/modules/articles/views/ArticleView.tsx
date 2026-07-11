@@ -510,8 +510,7 @@ export default function ArticleView() {
                 {/* Comment composer */}
                 <Show when={replyOpen() && d().article.iid && d().article.profileUid}>
                   <CommentComposer
-                    parentMid={d().article.mid}
-                    parentIid={d().article.iid!}
+                    parentUuid={d().article.uuid}
                     profileUid={d().article.profileUid!}
                     onSubmitted={(body) => {
                       const a = auth();

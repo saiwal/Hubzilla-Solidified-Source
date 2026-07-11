@@ -47,6 +47,9 @@ import {
   MdFillUnfold_more,
   MdFillMore_vert,
   MdOutlineSend,
+  MdOutlineLocation_on,
+  MdOutlineTimer,
+  MdOutlineSchedule,
 } from "solid-icons/md";
 import { useI18n } from "@/i18n";
 import { BiRegularLinkExternal, BiSolidShareAlt } from "solid-icons/bi";
@@ -56,8 +59,8 @@ const CommentComposer = lazy(
 import RichEditor from "@/shared/editor/core/RichEditor";
 import { CAPABILITIES } from "@/shared/editor/types/editor.types";
 import type { EditorTab } from "@/shared/editor/types/editor.types";
-const ReshareComposer = lazy(
-  () => import("@/shared/editor/composers/ReshareComposer"),
+const PostComposer = lazy(
+  () => import("@/shared/editor/composers/PostComposer"),
 );
 import DOMPurify from "dompurify";
 import { decryptPayload, getPayloadHint } from "@/shared/lib/postCrypto";
@@ -68,6 +71,7 @@ import {
   apiUnfollowPost,
   apiFetchItemFolders,
   apiSaveToFolder,
+  apiFetchComposeSource,
 } from "@/shared/lib/item-api";
 import { fetchFolders } from "@/modules/network/api";
 import EventCard from "./EventCard";
@@ -255,6 +259,21 @@ export default function PostCard(props: {
   // parsing the body directly (handles cases where obj_type wasn't "Event").
   const isUnseen = () => props.post.flags.includes("unseen");
   const isExpired = () => props.post.flags.includes("expired");
+  // Expiry set and still in the future — the post will self-destruct.
+  const isExpiring = () =>
+    !isExpired() &&
+    !!props.post.expires &&
+    new Date(props.post.expires + "Z").getTime() > Date.now();
+  const expiresTitle = () =>
+    `${t("post.expires")}: ${new Date(props.post.expires! + "Z").toLocaleString(locale())}`;
+  // Delayed publish — created holds the future publish time until the cron fires.
+  const isScheduled = () => props.post.flags.includes("scheduled");
+  const scheduledTitle = () =>
+    `${t("post.scheduled_title")}: ${new Date(props.post.created + "Z").toLocaleString(locale())}`;
+  const locationHref = () =>
+    props.post.coord
+      ? `https://www.openstreetmap.org/search?query=${encodeURIComponent(props.post.coord)}`
+      : undefined;
   const isRepeat = () => props.post.verb === "Announce";
   const editedAt = () =>
     props.post.edited && props.post.edited !== props.post.created
@@ -322,12 +341,23 @@ export default function PostCard(props: {
   };
 
   function startEdit() {
+    const initialBody = props.post.rawBody ?? "";
     setEditTitle(props.post.title ?? "");
-    setEditBody(props.post.rawBody ?? "");
+    setEditBody(initialBody);
     setEditTab("wysiwyg");
     setEditError(null);
     setIsEditing(true);
     setMoreDropdownOpen(false);
+    // Upgrade to the server's compose source, which collapses [share …]
+    // blocks to compact [share=<id>] tags the editor can round-trip. Skip
+    // if the user already started typing meanwhile.
+    apiFetchComposeSource(props.post.uuid)
+      .then((src) => {
+        if (src?.success && src.body && editBody() === initialBody) {
+          setEditBody(src.body);
+        }
+      })
+      .catch(() => {});
   }
 
   function cancelEdit() {
@@ -818,9 +848,36 @@ export default function PostCard(props: {
           <Show when={isExpired()}>
             <span
               class="shrink-0 px-1 py-px rounded text-[10px] font-bold leading-none bg-muted/30 text-muted"
-              title="This post has expired and is only visible to you"
+              title={t("post.expired_title")}
             >
-              expired
+              {t("post.expired_badge")}
+            </span>
+          </Show>
+          <Show when={isExpiring()}>
+            <span
+              class="flex items-center gap-0.5 shrink-0 px-1 py-px rounded text-[10px] font-medium leading-none bg-amber-500/15 text-amber-600 dark:text-amber-400"
+              title={expiresTitle()}
+            >
+              <MdOutlineTimer size={10} />
+              {formatPostDate(props.post.expires!, locale())}
+            </span>
+          </Show>
+          <Show when={isScheduled()}>
+            <span
+              class="flex items-center gap-0.5 shrink-0 px-1 py-px rounded text-[10px] font-medium leading-none bg-sky-500/15 text-sky-600 dark:text-sky-400"
+              title={scheduledTitle()}
+            >
+              <MdOutlineSchedule size={10} />
+              {t("post.scheduled_badge")} · {formatPostDate(props.post.created, locale())}
+            </span>
+          </Show>
+          <Show when={props.post.location}>
+            <span
+              class="flex items-center gap-0.5 min-w-0 text-[10px] text-muted"
+              title={props.post.location}
+            >
+              <MdOutlineLocation_on size={10} class="shrink-0" />
+              <span class="truncate max-w-[8rem]">{props.post.location}</span>
             </span>
           </Show>
         </div>
@@ -1183,8 +1240,7 @@ export default function PostCard(props: {
 
         <Show when={replyOpen() && props.post.iid && props.post.profileUid}>
           <CommentComposer
-            parentMid={props.post.mid}
-            parentIid={props.post.iid!}
+            parentUuid={props.post.uuid}
             profileUid={props.post.profileUid!}
             onSubmitted={(body) => {
               props.handlers.onComment(
@@ -1198,11 +1254,13 @@ export default function PostCard(props: {
             }}
           />
         </Show>
-        <Show when={reshareOpen() && props.post.uuid}>
-          <ReshareComposer
-            postUuid={props.post.uuid}
-            onSubmitted={() => setReshareOpen(false)}
-            onCancel={() => setReshareOpen(false)}
+        <Show when={reshareOpen() && props.post.iid && auth()?.uid}>
+          <PostComposer
+            open={true}
+            onClose={() => setReshareOpen(false)}
+            profileUid={auth()!.uid}
+            initialBody={`\n[share=${props.post.iid}][/share]\n`}
+            scopeKey={`post:reshare:${props.post.iid}`}
           />
         </Show>
         <Show when={showStats()}>
@@ -1329,10 +1387,62 @@ export default function PostCard(props: {
             >
               {formatPostDate(props.post.created, locale())}
             </span>
+            <Show when={props.post.location}>
+              <span
+                class="flex items-center gap-0.5 min-w-0 text-sm text-muted"
+                title={props.post.location}
+              >
+                <span class="opacity-60">·</span>
+                <MdOutlineLocation_on size={14} class="shrink-0" />
+                <Show
+                  when={locationHref()}
+                  fallback={
+                    <span class="truncate max-w-[12rem]">
+                      {props.post.location}
+                    </span>
+                  }
+                >
+                  <a
+                    href={locationHref()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="truncate max-w-[12rem] hover:underline"
+                  >
+                    {props.post.location}
+                  </a>
+                </Show>
+              </span>
+            </Show>
           </div>
         </div>
 
         <div class="ml-auto flex items-center gap-2 shrink-0">
+          <Show when={isExpired()}>
+            <span
+              class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-muted/30 text-muted leading-none"
+              title={t("post.expired_title")}
+            >
+              {t("post.expired_badge")}
+            </span>
+          </Show>
+          <Show when={isExpiring()}>
+            <span
+              class="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 leading-none"
+              title={expiresTitle()}
+            >
+              <MdOutlineTimer size={11} />
+              <span>{formatPostDate(props.post.expires!, locale())}</span>
+            </span>
+          </Show>
+          <Show when={isScheduled()}>
+            <span
+              class="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/15 text-sky-600 dark:text-sky-400 leading-none"
+              title={scheduledTitle()}
+            >
+              <MdOutlineSchedule size={11} />
+              <span>{t("post.scheduled_badge")} · {formatPostDate(props.post.created, locale())}</span>
+            </span>
+          </Show>
           <Show when={isUnseen()}>
             <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-accent text-accent-fg leading-none">
               {t("post.new_badge")}
@@ -1738,7 +1848,7 @@ export default function PostCard(props: {
               class="w-full flex items-center gap-2 px-3 py-2 text-sm text-txt hover:bg-overlay transition-colors text-left"
             >
               <BiSolidShareAlt size={15} />
-              <span>{t("post.reshare_with_comment")}</span>
+              <span>{t("post.reshare_with_comment")} #{props.post.iid}</span>
             </button>
           </div>
         </Show>
@@ -1771,8 +1881,7 @@ export default function PostCard(props: {
 
       <Show when={replyOpen() && props.post.iid && props.post.profileUid}>
         <CommentComposer
-          parentMid={props.post.mid}
-          parentIid={props.post.iid!}
+          parentUuid={props.post.uuid}
           profileUid={props.post.profileUid!}
           onSubmitted={(body) => {
             props.handlers.onComment(
@@ -1786,11 +1895,13 @@ export default function PostCard(props: {
           }}
         />
       </Show>
-      <Show when={reshareOpen() && props.post.uuid}>
-        <ReshareComposer
-          postUuid={props.post.uuid}
-          onSubmitted={() => setReshareOpen(false)}
-          onCancel={() => setReshareOpen(false)}
+      <Show when={reshareOpen() && props.post.iid && auth()?.uid}>
+        <PostComposer
+          open={true}
+          onClose={() => setReshareOpen(false)}
+          profileUid={auth()!.uid}
+          initialBody={`\n[share=${props.post.iid}][/share]\n`}
+          scopeKey={`post:reshare:${props.post.iid}`}
         />
       </Show>
       <Show when={commentsLoading()}>

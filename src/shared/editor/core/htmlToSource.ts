@@ -22,9 +22,21 @@ function getStyle(el: Element, prop: string): string {
 }
 
 function nodeTobbcode(node: Node): string {
-  if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? "";
+  // Zero-width spaces are caret anchors around share chips (sourceToHtml) —
+  // keep them out of the stored bbcode.
+  if (node.nodeType === Node.TEXT_NODE)
+    return (node.textContent ?? "").replace(/\u200B/g, "");
 
   const el = node as Element;
+
+  // Share chips emitted by sourceToHtml — map straight back to their bbcode
+  if (el.getAttribute) {
+    const shareId = el.getAttribute("data-share-id");
+    if (shareId) return `[share=${shareId}][/share]`;
+    const shareRaw = el.getAttribute("data-share-raw");
+    if (shareRaw) return decodeURIComponent(shareRaw);
+  }
+
   const children = () => Array.from(el.childNodes).map(nodeTobbcode).join("");
   const tag = el.tagName?.toLowerCase();
 
@@ -66,8 +78,20 @@ function nodeTobbcode(node: Node): string {
 
     case "img": {
       const src = el.getAttribute("src") ?? "";
-      const alt = el.getAttribute("alt") ?? "";
-      return alt ? `[img alt="${alt}"]${src}[/img]` : `[img]${src}[/img]`;
+      // "Image/photo" is the default alt bbcodeToHtml stamps on images that
+      // had none — writing it back would grow every round-trip.
+      const alt0 = el.getAttribute("alt") ?? "";
+      const alt = alt0 === "Image/photo" ? "" : alt0;
+      // Core bbcode.php (bb_imgoptions) format: [img width='400']url[/img],
+      // px units, single-quoted. Width alone keeps the aspect ratio; height
+      // is only carried through when it was already in the source.
+      const width = parseInt(getStyle(el, "width") || el.getAttribute("width") || "", 10);
+      const height = parseInt(getStyle(el, "height") || el.getAttribute("height") || "", 10);
+      const attrs: string[] = [];
+      if (width > 0) attrs.push(`width='${width}'`);
+      if (height > 0) attrs.push(`height='${height}'`);
+      if (alt) attrs.push(`alt="${alt}"`);
+      return attrs.length ? `[img ${attrs.join(" ")}]${src}[/img]` : `[img]${src}[/img]`;
     }
 
     case "video": {

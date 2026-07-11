@@ -70,4 +70,11 @@ export const post: RawDictionary["post"] = {
   delivery_no_data:      "Keine Zustelldaten gefunden.",
   edited:                "Bearbeitet",
   edit:                  "Bearbeiten",
+  // expiry
+  expires:               "Läuft ab",
+  expired_badge:         "Abgelaufen",
+  expired_title:         "Dieser Beitrag ist abgelaufen und nur für dich sichtbar",
+  // scheduled (delayed publish)
+  scheduled_badge:       "Geplant",
+  scheduled_title:       "Wird veröffentlicht am",
 };

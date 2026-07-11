@@ -70,4 +70,11 @@ export const post: RawDictionary["post"] = {
   delivery_no_data:      "No delivery records found.",
   edited:                "Edited",
   edit:                  "Edit",
+  // expiry
+  expires:               "Expires",
+  expired_badge:         "Expired",
+  expired_title:         "This post has expired and is only visible to you",
+  // scheduled (delayed publish)
+  scheduled_badge:       "Scheduled",
+  scheduled_title:       "Publishes at",
 };

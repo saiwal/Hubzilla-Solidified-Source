@@ -18,7 +18,7 @@ import type { AclEntry } from "@/modules/network/api";
 import { useDropdown } from "@/shared/lib/useDropdown";
 import { motion } from "solid-motionone";
 import { useI18n } from "@/i18n";
-import { MdOutlinePublic, MdFillLock, MdOutlineTune, MdFillCheck, MdOutlineGroup } from "solid-icons/md";
+import { MdOutlinePublic, MdFillLock, MdOutlineTune, MdFillCheck, MdOutlineGroup, MdOutlinePerson } from "solid-icons/md";
 void motion;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -70,38 +70,35 @@ const AclPicker: Component<AclPickerProps> = (props) => {
 
   const totalSelected = () => props.allowEntries.size + props.denyEntries.size;
 
-  const modePills: { mode: AclMode; icon: () => JSX.Element; label: () => string }[] = [
-    { mode: "public",      icon: () => <MdOutlinePublic class="w-3.5 h-3.5" />, label: () => "Public" },
-    { mode: "connections", icon: () => <MdFillLock class="w-3.5 h-3.5" />,      label: () => "Connections" },
-    { mode: "custom",      icon: () => <MdOutlineTune class="w-3.5 h-3.5" />,   label: () => `Custom${totalSelected() > 0 ? ` (${totalSelected()})` : ""}` },
+  const modes: { mode: AclMode; icon: () => JSX.Element; label: () => string }[] = [
+    { mode: "public",      icon: () => <MdOutlinePublic class="w-3.5 h-3.5" />, label: () => t("editor.acl_public") },
+    { mode: "connections", icon: () => <MdFillLock class="w-3.5 h-3.5" />,      label: () => t("editor.acl_connections") },
+    { mode: "custom",      icon: () => <MdOutlineTune class="w-3.5 h-3.5" />,   label: () => `${t("editor.acl_custom")}${totalSelected() > 0 ? ` (${totalSelected()})` : ""}` },
   ];
+
+  const current = () => modes.find((m) => m.mode === props.mode) ?? modes[0];
 
   return (
     <div class="shrink-0">
-      {/* Mode pills */}
-      <div ref={setTriggerRef} class="flex items-center gap-1">
-        {modePills.map(({ mode: m, icon, label }) => (
-          <button
-            type="button"
-            onClick={() => {
-              props.onModeChange(m);
-              if (m === "custom") toggle();
-              else setOpen(false);
-            }}
-            class={
-              "flex items-center gap-1 px-2.5 py-1 rounded-md text-xs border transition-all " +
-              (props.mode === m
-                ? "border-accent text-accent bg-accent/10"
-                : "border-rim text-muted hover:border-rim-strong hover:text-txt")
-            }
-          >
-            {icon()} {label()}
-          </button>
-        ))}
-      </div>
+      {/* Trigger — shows the active mode */}
+      <button
+        ref={setTriggerRef}
+        type="button"
+        onClick={toggle}
+        class="flex items-center gap-1 px-2.5 py-1 rounded-md text-xs border border-rim
+               text-muted hover:border-rim-strong hover:text-txt transition-all"
+      >
+        {current().icon()} {current().label()}
+        <svg
+          class={`w-3 h-3 transition-transform ${open() ? "rotate-180" : "rotate-0"}`}
+          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
 
       {/* Dropdown — Portal to escape the modal's z-50 stacking context */}
-      <Show when={open() && props.mode === "custom"}>
+      <Show when={open()}>
         <Portal>
           <div
             ref={(el) => setPanelRef(el)}
@@ -111,8 +108,34 @@ const AclPicker: Component<AclPickerProps> = (props) => {
               transition: { duration: 0.15 },
             }}
             style={floatStyle()}
-            class="z-[60] w-80 rounded-xl border border-rim bg-surface shadow-xl overflow-hidden flex flex-col max-h-96"
+            class={`z-[60] rounded-xl border border-rim bg-surface shadow-xl overflow-hidden
+                    flex flex-col max-h-96 ${props.mode === "custom" ? "w-80" : "w-56"}`}
           >
+          {/* Mode options */}
+          <div class={"py-1 shrink-0" + (props.mode === "custom" ? " border-b border-rim" : "")}>
+            <For each={modes}>
+              {({ mode: m, icon, label }) => (
+                <button
+                  type="button"
+                  onClick={() => {
+                    props.onModeChange(m);
+                    if (m !== "custom") setOpen(false);
+                  }}
+                  class={
+                    "w-full flex items-center gap-2 px-3 py-1.5 text-xs text-left transition-colors " +
+                    (props.mode === m ? "text-accent bg-accent/10" : "text-txt hover:bg-elevated")
+                  }
+                >
+                  {icon()} {label()}
+                  <Show when={props.mode === m}>
+                    <MdFillCheck class="w-3.5 h-3.5 ml-auto shrink-0" />
+                  </Show>
+                </button>
+              )}
+            </For>
+          </div>
+
+          <Show when={props.mode === "custom"}>
           {/* Search */}
           <div class="px-3 py-2 border-b border-rim shrink-0">
             <input
@@ -231,8 +254,10 @@ const AclPicker: Component<AclPickerProps> = (props) => {
                       <Show
                         when={c.photo}
                         fallback={
-                          <span class="w-6 h-6 rounded-full shrink-0 bg-elevated flex items-center justify-center text-[10px] text-muted">
-                            {c.type === "g" ? "g" : "?"}
+                          <span class="w-6 h-6 rounded-full shrink-0 bg-elevated flex items-center justify-center text-muted">
+                            {c.type === "g"
+                              ? <MdOutlineGroup class="w-4 h-4" />
+                              : <MdOutlinePerson class="w-4 h-4" />}
                           </span>
                         }
                       >
@@ -245,7 +270,6 @@ const AclPicker: Component<AclPickerProps> = (props) => {
 
                       <span class="flex flex-col min-w-0 flex-1">
                         <span class="truncate text-xs font-medium text-txt">
-                          {c.type === "g" ? <MdOutlineGroup class="w-3.5 h-3.5 inline-block mr-0.5" /> : null}
                           {c.name}
                         </span>
                         <Show when={c.link}>
@@ -281,6 +305,7 @@ const AclPicker: Component<AclPickerProps> = (props) => {
               }}
             </For>
           </ul>
+          </Show>
           </div>
         </Portal>
       </Show>

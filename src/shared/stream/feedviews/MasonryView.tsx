@@ -6,11 +6,12 @@ import {
   createMemo,
   onMount,
   onCleanup,
+  lazy,
 } from "solid-js";
 import type { ThreadNode } from "@/shared/lib/thread";
 import { countAllComments } from "@/shared/lib/thread";
 import type { StreamHandlers } from "../types";
-import PostDetailModal from "@/shared/views/PostDetailModal";
+const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
 import formatPostDate from "@/shared/lib/date";
 import { useI18n } from "@/i18n";
 import DOMPurify from "dompurify";

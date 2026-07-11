@@ -118,15 +118,22 @@ export default function PhotosWidget() {
               {(photo, index) => (
                 <button
                   onClick={() => openLightbox(index())}
-                  class="aspect-square rounded-lg overflow-hidden bg-surface block cursor-pointer"
+                  class="relative aspect-square rounded-lg overflow-hidden bg-surface block cursor-pointer"
                 >
                   <img
                     src={photo.src}
                     alt={photo.filename}
                     loading="lazy"
-                    class="w-full h-full object-cover hover:scale-105
-                           transition-transform duration-200"
+                    class={`w-full h-full object-cover ${photo.is_nsfw
+                      ? 'blur-lg scale-110'
+                      : 'hover:scale-105 transition-transform duration-200'}`}
                   />
+                  <Show when={photo.is_nsfw}>
+                    <span class="absolute inset-0 flex items-center justify-center
+                                 text-[9px] font-bold text-red-400 pointer-events-none">
+                      {t("photos.nsfw")}
+                    </span>
+                  </Show>
                 </button>
               )}
             </For>

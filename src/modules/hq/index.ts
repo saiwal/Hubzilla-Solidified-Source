@@ -48,6 +48,17 @@ registerModule({
       helpTarget: "hq.drafts_widget",
     },
     {
+      // Delayed-publish queue in the right sidebar — the component renders
+      // nothing while no posts are scheduled, so the widget self-hides.
+      id: "hq.scheduled",
+      label: () => useI18n().t("hq.scheduled"),
+      loader: () => import("./widgets/ScheduledPostsWidget"),
+      slot: "right",
+      defaultModules: ["hq"],
+      contexts: "any",
+      visitorVisible: false,
+    },
+    {
       // Local users only — mirrors the old `auth()?.isLocal` gate in HqView
       id: "hq.upcoming_events",
       label: () => useI18n().t("hq.upcoming_events"),

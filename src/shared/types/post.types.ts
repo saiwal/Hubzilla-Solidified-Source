@@ -55,6 +55,9 @@ export interface Post {
   item_thread_top: number;
   flags: string[];
   permalink: string;
+  location?: string; // free-text place name set on the post
+  coord?: string; // "lat lon" coordinates, when geotagged
+  expires?: string; // UTC datetime the post self-destructs; unset = never
   children: Post[];
   commentCount?: number;
   likeCount: number;

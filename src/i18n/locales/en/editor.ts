@@ -14,6 +14,8 @@ export const editor = {
   clear_composer:         "Clear composer",
   posting:                "Posting…",
   post_btn:               "Post",
+  post_published:         "Post published",
+  post_scheduled:         "Post scheduled",
   reply_btn:              "Reply",
   sending:                "Sending…",
   reshare_btn:            "Reshare",
@@ -64,6 +66,10 @@ export const editor = {
   html_source_placeholder:    "HTML source…",
 
   // AclPicker
+  img_width:              "Image width",
+  acl_public:             "Public",
+  acl_connections:        "Connections",
+  acl_custom:             "Custom",
   acl_search_placeholder: "Search connections & groups…",
   acl_legend:             "Row = allow | ✕ button = deny",
   acl_allowed:            "allowed",
@@ -120,9 +126,8 @@ export const editor = {
   // HqComposer toolbar
   hq_bold:    "Bold",
   hq_italic:  "Italic",
+  hq_underline: "Underline",
   hq_link:    "Link",
-  hq_mention: "Mention",
-  hq_hashtag: "Hashtag",
   open_full_composer: "Open full composer",
 
   // CameraCapture
@@ -153,6 +158,18 @@ export const editor = {
   poll_remove_answer:       "Remove option",
   poll_expires_label:       "Expires in",
   posting_to_wall:          "Posting to wall",
+
+  // Location / delayed publish / comment lock
+  location_toggle:          "Location",
+  location_placeholder:     "Where are you right now?",
+  location_use_browser:     "Use browser location",
+  location_locating:        "Locating…",
+  location_clear_coord:     "Clear coordinates",
+  publish_at:               "Set publish date",
+  nocomment_toggle:         "Disable comments",
+  expire_at:                "Expires",
+  dtp_clear:                "Clear",
+  dtp_done:                 "Done",
 
   // Encryption (PostComposer)
   encrypt_toggle:              "Encrypt",

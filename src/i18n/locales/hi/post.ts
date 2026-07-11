@@ -62,4 +62,11 @@ export const post: RawDictionary["post"] = {
   delivery_no_data:      "कोई डिलीवरी रिकॉर्ड नहीं मिला।",
   edited:                "संपादित",
   edit:                  "संपादित करें",
+  // expiry
+  expires:               "समाप्ति",
+  expired_badge:         "समाप्त",
+  expired_title:         "यह पोस्ट समाप्त हो चुकी है और केवल आपको दिखाई देती है",
+  // scheduled (delayed publish)
+  scheduled_badge:       "निर्धारित",
+  scheduled_title:       "प्रकाशित होगा",
 };

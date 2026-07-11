@@ -21,10 +21,12 @@ import {
 } from "solid-js";
 import { DraftsList } from "../components/DraftsList";
 import { Portal } from "solid-js/web";
+import { MdOutlineTimer, MdOutlineSchedule } from "solid-icons/md";
 import { createComposerStore } from "../store/createComposerStore";
 import RichEditor from "../core/RichEditor";
 import { CAPABILITIES } from "../types/editor.types";
 import AclPicker, { entryKey } from "../components/AclPicker";
+import DateTimePicker from "../components/DateTimePicker";
 import type { AclMode } from "../components/AclPicker";
 import type { AclEntry } from "@/modules/network/api";
 import {
@@ -40,9 +42,10 @@ import { helpable } from "@/shared/lib/helpable";
 import AttachmentBar from "../attachments/AttachmentBar";
 import { createAttachmentStore } from "../attachments/useAttachments";
 import { currentNick, isFeatureEnabled } from "@/shared/store/auth-store";
-import { bbcodeToInsert } from "../attachments/insertHelpers";
+import { bbcodeToInsert, patchInsertedAlt } from "../attachments/insertHelpers";
 import type { FileAcl } from "@/modules/files/api";
 import { useI18n } from "@/i18n";
+import { toast } from "@/shared/store/toast";
 import { getCsrfToken } from "@/shared/lib/csrf";
 import { isEncryptedBody } from "@/shared/lib/postCrypto";
 import { useEncrypt } from "../useEncrypt";
@@ -66,6 +69,10 @@ export interface ComposerProps {
   /** Hide the ACL picker and lock scope to "connections" (channel owner's default).
    *  Use when the poster is a visitor — they don't control the wall's privacy. */
   hideAcl?: boolean;
+  /** Override the draft/attachment scope key (default "post:new" /
+   *  "post:reply:<parentId>"). Pass a distinct key for special flows like
+   *  reshares so their autosave never clobbers the regular composer draft. */
+  scopeKey?: string;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -75,9 +82,9 @@ const PostComposer: Component<ComposerProps> = (props) => {
   const caps = CAPABILITIES.post;
 
   // ── Scope (shared by both stores for matching IDB keys) ───────────────────
-  const scope = props.parentId
-    ? `post:reply:${props.parentId}`
-    : "post:new";
+  const scope =
+    props.scopeKey ??
+    (props.parentId ? `post:reply:${props.parentId}` : "post:new");
 
   // ── Attachment store ───────────────────────────────────────────────────────
   const attach = createAttachmentStore(currentNick(), scope);
@@ -95,6 +102,27 @@ const PostComposer: Component<ComposerProps> = (props) => {
   const [expiry, setExpiry] = createSignal("");
   const [fullscreen, setFullscreen] = createSignal(false);
   const [draftsOpen, setDraftsOpen] = createSignal(false);
+
+  // ── Location / delayed publish / comment lock ─────────────────────────────
+  const [locationOpen, setLocationOpen] = createSignal(false);
+  const [location, setLocation] = createSignal("");
+  const [coord, setCoord] = createSignal("");
+  const [locating, setLocating] = createSignal(false);
+  const [publishAt, setPublishAt] = createSignal("");
+  const [noComment, setNoComment] = createSignal(false);
+
+  function geotag() {
+    if (!navigator.geolocation) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        // Core stores browser coordinates as "lat lon" (jot_geotag.tpl)
+        setCoord(`${pos.coords.latitude} ${pos.coords.longitude}`);
+        setLocating(false);
+      },
+      () => setLocating(false),
+    );
+  }
 
   // ── Poll state ─────────────────────────────────────────────────────────────
   const [pollEnabled, setPollEnabled] = createSignal(false);
@@ -156,6 +184,13 @@ const PostComposer: Component<ComposerProps> = (props) => {
       if (meta.summary) payload.summary = meta.summary;
       if (meta.category) payload.category = meta.category;
       if (expiry()) payload.expire = expiry();
+      if (location().trim()) payload.location = location().trim();
+      if (coord()) payload.coord = coord();
+      if (publishAt()) {
+        payload.created = publishAt();
+        payload.delayed = 1;
+      }
+      if (noComment()) payload.nocomment = 1;
 
       if (mode === "public") {
         payload.scope = "public";
@@ -217,6 +252,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
         throw new Error("Server reported failure. Check Hubzilla logs.");
       }
 
+      toast.success(publishAt() ? t("editor.post_scheduled") : t("editor.post_published"));
       props.onPosted?.(json.data.post.iid ?? 0);
       attach.clear();
       props.onClose();
@@ -304,6 +340,11 @@ const PostComposer: Component<ComposerProps> = (props) => {
     setAllowEntries(() => new Set<string>());
     setDenyEntries(() => new Set<string>());
     setExpiry("");
+    setLocationOpen(false);
+    setLocation("");
+    setCoord("");
+    setPublishAt("");
+    setNoComment(false);
     setPollEnabled(false);
     setPollAnswers(["", ""]);
     setPollExpireValue("1");
@@ -548,6 +589,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
                 onTabChange={store.setTab}
                 mimetype={store.mimetype()}
                 onCtrlEnter={() => { if (!mention.open()) void store.submit(); }}
+                onPasteFiles={(files) => attach.addUploads(files)}
                 placeholder={props.parentId ? t("editor.write_reply_placeholder") : t("editor.write_placeholder")}
                 minHeight="200px"
               />
@@ -558,8 +600,56 @@ const PostComposer: Component<ComposerProps> = (props) => {
                 onInsert={(bbcode) => {
                   store.setBody(store.body() + "\n" + bbcodeToInsert(bbcode, store.mimetype()));
                 }}
+                onAltChange={(att) => {
+                  store.setBody(patchInsertedAlt(store.body(), att, store.mimetype()));
+                }}
               />
             </div>
+
+            {/* ── Location panel ── */}
+            <Show when={locationOpen()}>
+              <div class="flex flex-wrap items-center gap-2 px-4 py-3 border-t border-rim bg-elevated/40 shrink-0">
+                <input
+                  type="text"
+                  value={location()}
+                  placeholder={t("editor.location_placeholder")}
+                  onInput={(e) => setLocation(e.currentTarget.value)}
+                  class="flex-1 min-w-40 bg-transparent border border-rim rounded px-2.5 py-1 text-sm
+                         text-txt placeholder:text-muted outline-none focus:border-rim-strong transition-colors"
+                />
+                <Show
+                  when={!coord()}
+                  fallback={
+                    <button
+                      type="button"
+                      onClick={() => setCoord("")}
+                      title={t("editor.location_clear_coord")}
+                      class="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs border bg-accent/10 text-accent border-accent/30 hover:opacity-80 transition-opacity"
+                    >
+                      <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      {coord().split(" ").map((c) => Number(c).toFixed(3)).join(", ")}
+                    </button>
+                  }
+                >
+                  <button
+                    type="button"
+                    onClick={geotag}
+                    disabled={locating()}
+                    title={t("editor.location_use_browser")}
+                    class="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs border border-rim text-muted
+                           hover:text-txt hover:bg-elevated transition-colors disabled:opacity-40"
+                  >
+                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="3" stroke-width="2" />
+                      <path stroke-linecap="round" stroke-width="2" d="M12 2v3m0 14v3M2 12h3m14 0h3" />
+                    </svg>
+                    {locating() ? t("editor.location_locating") : t("editor.location_use_browser")}
+                  </button>
+                </Show>
+              </div>
+            </Show>
 
             {/* ── Poll panel ── */}
             <Show when={pollEnabled()}>
@@ -656,15 +746,71 @@ const PostComposer: Component<ComposerProps> = (props) => {
 
               {/* Expiry — gated behind Settings → Features → Content Expiration */}
               <Show when={isFeatureEnabled("content_expire") && !props.parentId}>
-                <div class="hidden sm:flex items-center gap-1.5 min-w-0">
-                  <span class="text-muted text-xs shrink-0" title="Post expiry">⏱</span>
-                  <input
-                    type="datetime-local"
+                <div class="hidden sm:block">
+                  <DateTimePicker
                     value={expiry()}
-                    onChange={(e) => setExpiry(e.currentTarget.value)}
-                    class="bg-transparent border border-rim rounded px-1.5 py-0.5 text-xs text-muted focus:outline-none focus:border-rim-strong focus:text-txt transition-colors"
+                    onChange={setExpiry}
+                    min={() => new Date()}
+                    icon={<MdOutlineTimer size={14} />}
+                    title={t("editor.expire_at")}
+                    placeholder={t("editor.expire_at")}
                   />
                 </div>
+              </Show>
+
+              {/* Location toggle */}
+              <button
+                type="button"
+                onClick={() => setLocationOpen((o) => !o)}
+                title={t("editor.location_toggle")}
+                class={
+                  "hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-md text-xs border transition-colors " +
+                  (locationOpen() || location().trim() || coord()
+                    ? "bg-accent/10 text-accent border-accent/30"
+                    : "text-muted hover:text-txt hover:bg-elevated border-rim")
+                }
+              >
+                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <circle cx="12" cy="11" r="3" stroke-width="2" />
+                </svg>
+                {t("editor.location_toggle")}
+              </button>
+
+              {/* Delayed publish — gated behind Settings → Features → Delayed Posting */}
+              <Show when={isFeatureEnabled("delayed_posting") && !props.parentId}>
+                <div class="hidden sm:block">
+                  <DateTimePicker
+                    value={publishAt()}
+                    onChange={setPublishAt}
+                    min={() => new Date()}
+                    icon={<MdOutlineSchedule size={14} />}
+                    title={t("editor.publish_at")}
+                    placeholder={t("editor.publish_at")}
+                  />
+                </div>
+              </Show>
+
+              {/* Disable comments — gated behind Settings → Features → Disable Comments */}
+              <Show when={isFeatureEnabled("disable_comments") && !props.parentId}>
+                <button
+                  type="button"
+                  onClick={() => setNoComment((v) => !v)}
+                  title={t("editor.nocomment_toggle")}
+                  class={
+                    "hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-md text-xs border transition-colors " +
+                    (noComment()
+                      ? "bg-accent/10 text-accent border-accent/30"
+                      : "text-muted hover:text-txt hover:bg-elevated border-rim")
+                  }
+                >
+                  <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M8 12h8m-4-9a9 9 0 100 18 9 9 0 000-18z" />
+                  </svg>
+                  {t("editor.nocomment_toggle")}
+                </button>
               </Show>
 
               {/* Poll toggle */}

@@ -9,7 +9,7 @@ import type { Post } from "../types/post.types";
 import { mapActivityToPost } from "../lib/activity.mapper";
 import { BiRegularX } from "solid-icons/bi";
 import { useI18n } from "@/i18n";
-import { apiDeleteItem, apiToggleStar } from "@/shared/lib/item-api";
+import { apiDeleteItem, apiEditItem, apiToggleStar } from "@/shared/lib/item-api";
 import { toggleVerb, repeatItem } from "@/shared/stream/store/actions-store";
 
 async function fetchDisplay(uuid: string): Promise<ThreadNode> {
@@ -160,6 +160,12 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
         setLocalReactions(prev => ({ ...prev, [mid]: { ...(prev[mid] ?? {}), viewerStarred: current } }));
       });
     },
+    async onEdit(mid, body, title) {
+      const found = findInTree(nodeData(), mid);
+      if (!found?.uuid) throw new Error("Item not found");
+      await apiEditItem(found.uuid, body, title ?? "");
+      await loadNode(props.uuid);
+    },
     async onDelete(mid) {
       const found = findInTree(nodeData(), mid);
       if (found?.uuid) await apiDeleteItem(found.uuid);
@@ -216,6 +222,18 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
           refetch();
         },
         onLoadComments: (mid, uuid) => props.handlers!.onLoadComments(mid, uuid),
+        // Root edits go through the parent feed handler so its copy stays in
+        // sync; comments usually aren't in the feed store, so edit directly.
+        onEdit: async (mid: string, body: string, title?: string) => {
+          if (nodeData()?.mid === mid && props.handlers!.onEdit) {
+            await props.handlers!.onEdit(mid, body, title);
+          } else {
+            const found = findInTree(nodeData(), mid);
+            if (!found?.uuid) throw new Error("Item not found");
+            await apiEditItem(found.uuid, body, title ?? "");
+          }
+          await loadNode(props.uuid);
+        },
         onStar: props.handlers!.onStar
           ? (mid: string) => {
               props.handlers!.onStar!(mid);

@@ -174,8 +174,9 @@ function HqComposer() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json().catch(() => ({})) as { success?: boolean };
-      if (!json.success) { toast.error("Server reported failure."); return; }
+      const json = await res.json().catch(() => ({})) as { data?: { post?: unknown } };
+      if (!json.data?.post) { toast.error("Server reported failure."); return; }
+      toast.success(t("editor.post_published"));
       resetComposer();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Submission failed.");
@@ -196,12 +197,11 @@ function HqComposer() {
   const toolbar = [
     { title: () => t("editor.hq_bold"),    label: "B",  cls: "font-bold", action: () => wrapBb("[b]", "[/b]") },
     { title: () => t("editor.hq_italic"),  label: "I",  cls: "italic",    action: () => wrapBb("[i]", "[/i]") },
+    { title: () => t("editor.hq_underline"), label: "U", cls: "underline", action: () => wrapBb("[u]", "[/u]") },
     { title: () => t("editor.hq_link"),    label: <MdOutlineLink class="w-4 h-4" /> as JSX.Element, cls: "",          action: () => {
       const url = window.prompt("URL:", "https://");
       if (url) wrapBb(`[url=${url}]`, "[/url]", "Link text");
     }},
-    { title: () => t("editor.hq_mention"), label: "@",  cls: "",          action: () => wrapBb("@", "") },
-    { title: () => t("editor.hq_hashtag"), label: "#",  cls: "",          action: () => wrapBb("#", "", "tag") },
   ];
 
   return (

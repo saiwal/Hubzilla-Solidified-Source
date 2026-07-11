@@ -1,4 +1,3 @@
-import PostDetailModal from '@/shared/views/PostDetailModal';
 import { markItemSeen } from '@/shared/lib/markSeen';
 import { useI18n } from "@/i18n";
 import { fetchFolders } from "@/modules/network/api";
@@ -8,10 +7,12 @@ import {
   createEffect,
   createMemo,
   onCleanup,
+  lazy,
   For,
   Show,
   type Component,
 } from "solid-js";
+const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
 import { createQueryResource } from "@/shared/lib/createQueryResource";
 
 // ── Types ─────────────────────────────────────────────────────────────────

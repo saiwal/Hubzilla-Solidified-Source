@@ -60,13 +60,23 @@ export default function AlbumStripWidget(props: WidgetProps) {
             <div class="p-2 grid grid-cols-3 gap-1">
               <For each={data()!.photos.slice(0, MAX_THUMBS)}>
                 {(photo) => (
-                  <A href={`/photos/${nick()}/image/${photo.resource_id}`}>
+                  <A
+                    href={`/photos/${nick()}/image/${photo.resource_id}`}
+                    class="relative block aspect-square overflow-hidden rounded"
+                  >
                     <img
                       src={photo.src}
                       alt={photo.title || photo.filename}
-                      class="aspect-square w-full object-cover rounded hover:opacity-80 transition-opacity"
+                      class={`w-full h-full object-cover hover:opacity-80 transition-opacity
+                             ${photo.is_nsfw ? 'blur-lg scale-110' : ''}`}
                       loading="lazy"
                     />
+                    <Show when={photo.is_nsfw}>
+                      <span class="absolute inset-0 flex items-center justify-center
+                                   text-[9px] font-bold text-red-400 pointer-events-none">
+                        {t("photos.nsfw")}
+                      </span>
+                    </Show>
                   </A>
                 )}
               </For>

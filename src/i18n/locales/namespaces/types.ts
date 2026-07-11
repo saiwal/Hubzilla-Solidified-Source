@@ -566,6 +566,8 @@ export type RawDictionary = {
     delivery_report: string; delivery_no_data: string;
     edited: string;
     edit: string;
+    expires: string; expired_badge: string; expired_title: string;
+    scheduled_badge: string; scheduled_title: string;
   };
   editor: {
     // PostComposer
@@ -583,6 +585,8 @@ export type RawDictionary = {
     clear_composer:         string;
     posting:                string;
     post_btn:               string;
+    post_published:         string;
+    post_scheduled:         string;
     reply_btn:              string;
     sending:                string;
     reshare_btn:            string;
@@ -630,6 +634,10 @@ export type RawDictionary = {
     html_source_placeholder:    string;
     // AclPicker
     acl_search_placeholder: string;
+    img_width:              string;
+    acl_public:             string;
+    acl_connections:        string;
+    acl_custom:             string;
     acl_legend:             string;
     acl_allowed:            string;
     acl_denied:             string;
@@ -678,9 +686,8 @@ export type RawDictionary = {
     // HqComposer toolbar
     hq_bold:    string;
     hq_italic:  string;
+    hq_underline: string;
     hq_link:    string;
-    hq_mention: string;
-    hq_hashtag: string;
     open_full_composer: string;
     // CameraCapture
     cam_title:        string;
@@ -710,6 +717,16 @@ export type RawDictionary = {
     poll_remove_answer:       string;
     poll_expires_label:       string;
     posting_to_wall:          string;
+    location_toggle:          string;
+    location_placeholder:     string;
+    location_use_browser:     string;
+    location_locating:        string;
+    location_clear_coord:     string;
+    publish_at:               string;
+    nocomment_toggle:         string;
+    expire_at:                string;
+    dtp_clear:                string;
+    dtp_done:                 string;
     encrypt_toggle:              string;
     encrypt_panel_title:         string;
     encrypt_password_label:      string;
@@ -1193,6 +1210,10 @@ export type RawDictionary = {
     post_composer:        string;
     stats:                string;
     upcoming_events:      string;
+    scheduled:            string;
+    scheduled_for:        string;
+    publish_now:          string;
+    cancel_scheduled:     string;
     no_activity:          string;
     no_drafts:            string;
     no_messages:          string;
@@ -1349,6 +1370,7 @@ export type RawDictionary = {
     nsfw_mark:            string;
     nsfw_unmark:          string;
     nsfw_error:           string;
+    nsfw_show:            string;
     share:                string;
   };
   articles: {

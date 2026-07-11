@@ -1,4 +1,5 @@
 import { Show, onCleanup, createEffect } from "solid-js";
+import { apiFetch } from "@/shared/lib/fetch";
 import { createComposerStore } from "../store/createComposerStore";
 import RichEditor from "../core/RichEditor";
 import { CAPABILITIES } from "../types/editor.types";
@@ -15,11 +16,11 @@ import { useEmoji, getWysiwygEmojiQuery, getTextareaEmojiQuery } from "@/shared/
 import EmojiPopup from "@/shared/editor/emoji/EmojiPopup";
 import AttachmentBar from "../attachments/AttachmentBar";
 import { createAttachmentStore } from "../attachments/useAttachments";
-import { bbcodeToInsert } from "../attachments/insertHelpers";
+import { bbcodeToInsert, patchInsertedAlt } from "../attachments/insertHelpers";
 
 interface Props {
-  parentMid?: string;
-  parentIid?: number;
+  /** Parent item uuid — full-URL mids break the /api/item/:id path (slashes). */
+  parentUuid?: string;
   profileUid: number;
   onSubmitted?: (body: string) => void;
 }
@@ -29,14 +30,12 @@ export default function CommentComposer(props: Props) {
   const auth = useAuth();
   const caps = CAPABILITIES.comment;
 
-  const scope = `comment:${props.parentMid ?? "new"}`;
+  const scope = `comment:${props.parentUuid ?? "new"}`;
   const attach = createAttachmentStore(currentNick(), scope);
 
   const store = createComposerStore(
     async (body) => {
-      const csrf =
-        document.querySelector<HTMLMetaElement>('meta[name="api-token"]')
-          ?.content ?? "";
+      if (!props.parentUuid) throw new Error("Missing parent item");
 
       const fileTags = attach.attachments()
         .filter((a) => a.status === "ready" && (a.hash || a.resourceId))
@@ -44,22 +43,21 @@ export default function CommentComposer(props: Props) {
         .join("\n");
       const augmentedBody = fileTags ? `${body}\n${fileTags}` : body;
 
-      const fd = new FormData();
-      fd.append("body", augmentedBody);
-      fd.append("mimetype", "text/bbcode");
-      fd.append("type", "wall-comment");
-      if (props.parentIid) fd.append("parent", String(props.parentIid));
-      fd.append("profile_uid", String(props.profileUid));
+      const res = await apiFetch(
+        `/api/item/${encodeURIComponent(props.parentUuid)}/comment`,
+        {
+          method: "POST",
+          body: JSON.stringify({ body: augmentedBody, mimetype: "text/bbcode" }),
+        },
+      );
+      if (!res.ok) throw new Error(`Comment failed: ${res.status}`);
+      // The endpoint reports permission problems as { error } in a 200 body
+      const json = (await res.json().catch(() => ({}))) as {
+        success?: boolean;
+        error?: string;
+      };
+      if (!json.success) throw new Error(json.error ?? "Comment failed");
 
-      const res = await fetch("/item", {
-        method: "POST",
-        headers: { "X-CSRF-Token": csrf },
-        credentials: "include",
-        redirect: "manual",
-        body: fd,
-      });
-
-      if (res.type !== "opaqueredirect" && !res.ok) throw new Error("Comment failed");
       attach.clear();
       props.onSubmitted?.(body);
     },
@@ -154,6 +152,7 @@ export default function CommentComposer(props: Props) {
             onCtrlEnter={() => {
               if (!mention.open()) store.submit();
             }}
+            onPasteFiles={(files) => attach.addUploads(files)}
             placeholder={t("editor.write_reply_ctrl")}
             minHeight="60px"
           />
@@ -163,6 +162,9 @@ export default function CommentComposer(props: Props) {
             accept="both"
             onInsert={(bbcode) => {
               store.setBody(store.body() + "\n" + bbcodeToInsert(bbcode, "text/bbcode"));
+            }}
+            onAltChange={(att) => {
+              store.setBody(patchInsertedAlt(store.body(), att, "text/bbcode"));
             }}
           />
         </div>

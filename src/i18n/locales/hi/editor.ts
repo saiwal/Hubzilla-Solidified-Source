@@ -16,6 +16,8 @@ export const editor: RawDictionary["editor"] = {
   clear_composer:         "कंपोज़र साफ़ करें",
   posting:                "पोस्ट हो रहा है…",
   post_btn:               "पोस्ट करें",
+  post_published:         "पोस्ट प्रकाशित हुई",
+  post_scheduled:         "पोस्ट शेड्यूल हुई",
   reply_btn:              "जवाब दें",
   sending:                "भेजा जा रहा है…",
   reshare_btn:            "पुनः साझा करें",
@@ -62,6 +64,10 @@ export const editor: RawDictionary["editor"] = {
   markdown_source_placeholder: "Markdown स्रोत…",
   html_source_placeholder:    "HTML स्रोत…",
   // AclPicker
+  img_width:              "छवि की चौड़ाई",
+  acl_public:             "सार्वजनिक",
+  acl_connections:        "कनेक्शन",
+  acl_custom:             "कस्टम",
   acl_search_placeholder: "कनेक्शन और समूह खोजें…",
   acl_legend:             "पंक्ति = अनुमति दें | ✕ बटन = अस्वीकार करें",
   acl_allowed:            "अनुमत",
@@ -111,9 +117,8 @@ export const editor: RawDictionary["editor"] = {
   // HqComposer toolbar
   hq_bold:    "बोल्ड",
   hq_italic:  "इटैलिक",
+  hq_underline: "रेखांकित",
   hq_link:    "लिंक",
-  hq_mention: "उल्लेख",
-  hq_hashtag: "हैशटैग",
   open_full_composer: "पूरा कंपोज़र खोलें",
 
   // CameraCapture
@@ -144,6 +149,18 @@ export const editor: RawDictionary["editor"] = {
   poll_remove_answer:       "हटाएँ",
   poll_expires_label:       "समाप्ति",
   posting_to_wall:          "वॉल पर पोस्ट हो रही है",
+
+  // Location / delayed publish / comment lock
+  location_toggle:          "स्थान",
+  location_placeholder:     "आप अभी कहाँ हैं?",
+  location_use_browser:     "ब्राउज़र स्थान उपयोग करें",
+  location_locating:        "पता लगाया जा रहा है…",
+  location_clear_coord:     "निर्देशांक हटाएँ",
+  publish_at:               "प्रकाशन तिथि निर्धारित करें",
+  nocomment_toggle:         "टिप्पणियाँ अक्षम करें",
+  expire_at:                "समाप्ति",
+  dtp_clear:                "हटाएँ",
+  dtp_done:                 "हो गया",
 
   // Encryption
   encrypt_toggle:              "एन्क्रिप्ट",

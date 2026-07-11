@@ -14,6 +14,8 @@ export const editor = {
   clear_composer:         "Editor leeren",
   posting:                "Wird veröffentlicht…",
   post_btn:               "Veröffentlichen",
+  post_published:         "Beitrag veröffentlicht",
+  post_scheduled:         "Beitrag geplant",
   reply_btn:              "Antworten",
   sending:                "Wird gesendet…",
   reshare_btn:            "Erneut teilen",
@@ -64,6 +66,10 @@ export const editor = {
   html_source_placeholder:    "HTML-Quelltext…",
 
   // AclPicker
+  img_width:              "Bildbreite",
+  acl_public:             "Öffentlich",
+  acl_connections:        "Verbindungen",
+  acl_custom:             "Benutzerdefiniert",
   acl_search_placeholder: "Verbindungen & Gruppen durchsuchen…",
   acl_legend:             "Zeile = erlauben | ✕-Schaltfläche = verweigern",
   acl_allowed:            "erlaubt",
@@ -120,9 +126,8 @@ export const editor = {
   // HqComposer toolbar
   hq_bold:    "Fett",
   hq_italic:  "Kursiv",
+  hq_underline: "Unterstrichen",
   hq_link:    "Link",
-  hq_mention: "Erwähnung",
-  hq_hashtag: "Hashtag",
   open_full_composer: "Vollständigen Editor öffnen",
 
   // CameraCapture
@@ -153,6 +158,18 @@ export const editor = {
   poll_remove_answer:       "Option entfernen",
   poll_expires_label:       "Läuft ab in",
   posting_to_wall:          "Wird an Pinnwand veröffentlicht",
+
+  // Location / delayed publish / comment lock
+  location_toggle:          "Standort",
+  location_placeholder:     "Wo bist du gerade?",
+  location_use_browser:     "Browser-Standort verwenden",
+  location_locating:        "Wird ermittelt…",
+  location_clear_coord:     "Koordinaten löschen",
+  publish_at:               "Veröffentlichungsdatum festlegen",
+  nocomment_toggle:         "Kommentare deaktivieren",
+  expire_at:                "Läuft ab",
+  dtp_clear:                "Löschen",
+  dtp_done:                 "Fertig",
 
   // Encryption (PostComposer)
   encrypt_toggle:              "Verschlüsseln",

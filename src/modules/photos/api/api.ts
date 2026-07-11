@@ -106,6 +106,7 @@ export interface PhotoDetail {
   viewer_disliked: boolean;
   item_id:         number | null;
   item_mid:        string | null;
+  item_uuid:       string | null;
   comments:        PhotoComment[];
 }
 

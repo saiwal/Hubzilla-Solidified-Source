@@ -37,9 +37,10 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
     aclPicker: true,
     submitOnCtrlEnter: true,
   },
-  // Inline comment box under a PostCard
+  // Inline comment box under a PostCard — same full toolbar as the post
+  // composer, only the meta fields (title/summary/ACL/…) are stripped.
   comment: {
-    toolbar: "comment",
+    toolbar: "full",
     preview: true,
     title: false,
     summary: false,

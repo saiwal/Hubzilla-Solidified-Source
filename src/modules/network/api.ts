@@ -130,7 +130,13 @@ export async function fetchConnections(): Promise<AclConnection[]> {
   const res = await fetch('/acl');
   if (!res.ok) return [];
   const data = await res.json();
-  return (data.items ?? []);
+  const items: AclConnection[] = data.items ?? [];
+  // Core marks groups/profiles/forums with a placeholder image path that
+  // doesn't resolve under the SPA origin — drop it so consumers render
+  // their icon fallback instead of a broken <img>
+  return items.map((c) =>
+    c.photo?.endsWith('twopeople.png') ? { ...c, photo: undefined } : c,
+  );
 }
 
 export async function fetchFolders(): Promise<string[]> {

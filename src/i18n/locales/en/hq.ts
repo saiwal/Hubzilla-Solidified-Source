@@ -9,6 +9,10 @@ export const hq: RawDictionary["hq"] = {
   post_composer:        "Post Composer",
   stats:                "Stats",
   upcoming_events:      "Upcoming Events",
+  scheduled:            "Scheduled posts",
+  scheduled_for:        "Publishes at",
+  publish_now:          "Publish now",
+  cancel_scheduled:     "Cancel",
   // Empty states
   no_activity:          "No recent activity",
   no_drafts:            "No saved drafts",

@@ -6,7 +6,7 @@ import {
   type Component,
 } from "solid-js";
 import AttachmentPreview from "./AttachmentPreview";
-import type { AttachmentStore } from "./types";
+import type { Attachment, AttachmentStore } from "./types";
 import type { FileMeta } from "@/modules/files/api";
 import type { Photo } from "@/modules/photos/api/api";
 import { useI18n } from "@/i18n";
@@ -24,6 +24,9 @@ interface Props {
   accept?: AttachmentAccept;
   /** Called when user clicks "Insert" on an image attachment */
   onInsert?: (bbcode: string) => void;
+  /** Called after an attachment's alt text changes (att carries the new value) —
+   *  lets the composer patch an already-inserted copy in the body. */
+  onAltChange?: (att: Attachment) => void;
 }
 
 const AttachmentBar: Component<Props> = (props) => {
@@ -149,7 +152,10 @@ const AttachmentBar: Component<Props> = (props) => {
                 attachment={att}
                 onRemove={() => props.store.remove(att.id)}
                 onInsert={props.onInsert}
-                onAltTextChange={(text) => props.store.setAltText(att.id, text)}
+                onAltTextChange={(text) => {
+                  props.store.setAltText(att.id, text);
+                  props.onAltChange?.({ ...att, altText: text });
+                }}
                 insertBBCode={props.store.insertBBCode}
               />
             )}
