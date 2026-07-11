@@ -67,12 +67,18 @@ export default function RichEditor(props: Props) {
       domSig = nextSig;
       hydrateShareEmbeds(editorRef);
       setImgSel(null); // DOM was replaced — a selected <img> no longer exists
-      const range = document.createRange();
-      const sel = window.getSelection();
-      range.selectNodeContents(editorRef);
-      range.collapse(false);
-      sel?.removeAllRanges();
-      sel?.addRange(range);
+      // Placing a selection inside a contenteditable focuses it, so only move
+      // the caret when focus isn't in another field (e.g. the alt-text box,
+      // whose per-keystroke body patches land here).
+      const active = document.activeElement;
+      if (editorRef.contains(active) || active === document.body || active === null) {
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.selectNodeContents(editorRef);
+        range.collapse(false);
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      }
     }
   });
 

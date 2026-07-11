@@ -54,6 +54,7 @@ export interface Post {
   obj_type?: string;
   item_thread_top: number;
   flags: string[];
+  canComment?: boolean; // viewer may reply (comment policy / closed / owner perms)
   permalink: string;
   location?: string; // free-text place name set on the post
   coord?: string; // "lat lon" coordinates, when geotagged

@@ -91,6 +91,7 @@ export function mapActivityToPost(activity: any): Post {
     obj_type: activity.obj_type,
     item_thread_top: activity.item_thread_top ?? 0,
     flags: activity.flags ?? [],
+    canComment: activity.can_comment ?? true,
     permalink: activity.permalink ?? "",
     location: activity.location || undefined,
     coord: activity.coord || undefined,

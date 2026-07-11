@@ -305,7 +305,10 @@ export default function PostCard(props: {
     !!props.post.uuid &&
     (props.post.item_thread_top === 1 || props.post.mid === props.post.top_mid);
 
-  // Reshare: only local users can reshare posts that have a local iid
+  // Reshare: only local users can reshare posts that have a local iid.
+  // Private posts can't be reshared at all (the server refuses to embed or
+  // announce them), so their reshare controls are hidden entirely.
+  const isPrivate = () => props.post.flags?.includes("private") ?? false;
   const canReshare = () => auth()?.isLocal === true && !!props.post.iid;
 
   const canViewSource = () => auth()?.isLocal === true && !!props.post.iid;
@@ -976,6 +979,7 @@ export default function PostCard(props: {
               </Show>
             </button>
           </Show>
+          <Show when={!isPrivate()}>
           <Show
             when={canReshare()}
             fallback={
@@ -1019,6 +1023,7 @@ export default function PostCard(props: {
                 <MdFillKeyboard_arrow_down size={12} />
               </button>
             </div>
+          </Show>
           </Show>
 
           <Show when={canFolder()}>
@@ -1089,14 +1094,19 @@ export default function PostCard(props: {
             </button>
           </Show>
 
-          <button
-            onClick={() => setReplyOpen((v) => !v)}
-            class="ml-auto flex items-center gap-1 px-2 py-1 rounded-md text-xs
-                   text-subtle hover:bg-overlay hover:text-txt transition-colors"
-            title={t("post.reply")}
-          >
-            <MdOutlineReply size={14} />
-          </button>
+          {/* spacer keeps the trailing controls right-aligned even when the
+              reply button is hidden (comments not allowed) */}
+          <span class="ml-auto" />
+          <Show when={props.post.canComment !== false}>
+            <button
+              onClick={() => setReplyOpen((v) => !v)}
+              class="flex items-center gap-1 px-2 py-1 rounded-md text-xs
+                     text-subtle hover:bg-overlay hover:text-txt transition-colors"
+              title={t("post.reply")}
+            >
+              <MdOutlineReply size={14} />
+            </button>
+          </Show>
 
           <Show
             when={
@@ -1254,6 +1264,29 @@ export default function PostCard(props: {
             }}
           />
         </Show>
+        <Portal>
+          <Show when={repeatDropdownOpen() && dropdownAnchor()}>
+            <div
+              ref={repeatDropdownPortalRef}
+              class="fixed z-[9999] min-w-[10rem] bg-surface border border-rim rounded-lg shadow-lg py-1"
+              style={{
+                top: `${dropdownAnchor()!.top}px`,
+                left: `${dropdownAnchor()!.left}px`,
+              }}
+            >
+              <button
+                onClick={() => {
+                  setRepeatDropdownOpen(false);
+                  setReshareOpen(true);
+                }}
+                class="w-full flex items-center gap-2 px-3 py-2 text-xs text-txt hover:bg-overlay transition-colors text-left"
+              >
+                <BiSolidShareAlt size={13} />
+                <span>{t("post.reshare_with_comment")} #{props.post.iid}</span>
+              </button>
+            </div>
+          </Show>
+        </Portal>
         <Show when={reshareOpen() && props.post.iid && auth()?.uid}>
           <PostComposer
             open={true}
@@ -1556,6 +1589,7 @@ export default function PostCard(props: {
             </Show>
           </button>
         </Show>
+        <Show when={!isPrivate()}>
         <Show
           when={canReshare()}
           fallback={
@@ -1600,6 +1634,7 @@ export default function PostCard(props: {
               <MdFillKeyboard_arrow_down size={14} />
             </button>
           </div>
+        </Show>
         </Show>
 
         {/* ── Save to folder (after repeat) ── */}
@@ -1661,15 +1696,18 @@ export default function PostCard(props: {
           </button>
         </Show>
 
-        {/* ── Reply (pushes to right) ── */}
-        <button
-          onClick={() => setReplyOpen((v) => !v)}
-          class="ml-auto flex items-center px-2 py-1.5 rounded-lg text-sm font-medium
-                 text-muted hover:bg-overlay hover:text-txt transition-colors"
-          title={t("post.reply")}
-        >
-          <MdOutlineReply size={17} />
-        </button>
+        {/* ── Reply (pushes to right; spacer keeps alignment when hidden) ── */}
+        <span class="ml-auto" />
+        <Show when={props.post.canComment !== false}>
+          <button
+            onClick={() => setReplyOpen((v) => !v)}
+            class="flex items-center px-2 py-1.5 rounded-lg text-sm font-medium
+                   text-muted hover:bg-overlay hover:text-txt transition-colors"
+            title={t("post.reply")}
+          >
+            <MdOutlineReply size={17} />
+          </button>
+        </Show>
 
         {/* ── More actions dropdown (vertical three dots, after Reply) ── */}
         <div ref={moreDropdownRef} class="relative">

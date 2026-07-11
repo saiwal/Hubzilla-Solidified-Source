@@ -124,32 +124,34 @@ function RowDetails(props: {
       class="flex items-center gap-0.5 px-2 pb-1.5 flex-wrap"
       onClick={(e) => e.stopPropagation()}
     >
-      <button
-        onClick={() => props.handlers.onRepeat(p.mid)}
-        class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-md transition-colors"
-        classList={{
-          "text-accent bg-accent-muted": p.viewerRepeated,
-          "text-muted hover:text-txt hover:bg-elevated": !p.viewerRepeated,
-        }}
-      >
-        <svg
-          class="w-3 h-3"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      <Show when={!p.flags?.includes("private")}>
+        <button
+          onClick={() => props.handlers.onRepeat(p.mid)}
+          class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-md transition-colors"
+          classList={{
+            "text-accent bg-accent-muted": p.viewerRepeated,
+            "text-muted hover:text-txt hover:bg-elevated": !p.viewerRepeated,
+          }}
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-          />
-        </svg>
-        <Show when={p.repeatCount > 0}>
-          <span>{p.repeatCount}</span>
-        </Show>
-        <span class="hidden sm:inline">{t("post.repeat")}</span>
-      </button>
+          <svg
+            class="w-3 h-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
+          </svg>
+          <Show when={p.repeatCount > 0}>
+            <span>{p.repeatCount}</span>
+          </Show>
+          <span class="hidden sm:inline">{t("post.repeat")}</span>
+        </button>
+      </Show>
 
       <button
         onClick={() => props.onReplies()}
@@ -538,7 +540,7 @@ function InlineThread(props: {
         </Show>
       </div>
 
-      <Show when={props.thread.iid}>
+      <Show when={props.thread.iid && props.thread.canComment !== false}>
         <div class="px-3 py-2.5 border-t border-rim bg-surface/40">
           <CommentComposer
             parentUuid={props.thread.uuid}
