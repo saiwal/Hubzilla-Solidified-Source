@@ -337,36 +337,38 @@ const Layout: ParentComponent = (props) => {
                 <Slot name="mainTop" moduleId={activeModuleId()} editable />
               </Show>
 
-              <ErrorBoundary fallback={(_, reset) => (
-                <div class="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-8 text-center">
-                  <span aria-hidden="true" class="text-8xl font-bold text-gray-200 dark:text-gray-700 select-none">!</span>
-                  <h1 class="text-2xl font-semibold">{t("ui.error_title")}</h1>
-                  <p class="text-muted max-w-sm">{t("ui.error_desc")}</p>
-                  <div class="flex gap-3 mt-2">
-                    <button
-                      onClick={reset}
-                      class="px-4 py-2 rounded-lg border border-rim hover:bg-elevated transition-colors text-sm"
-                    >
-                      {t("ui.try_again")}
-                    </button>
-                    <a
-                      href="/hq"
-                      class="px-4 py-2 rounded-lg bg-accent text-accent-fg hover:opacity-90 transition-opacity text-sm"
-                    >
-                      {t("ui.go_home")}
-                    </a>
+              <div class="min-w-0">
+                <ErrorBoundary fallback={(_, reset) => (
+                  <div class="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-8 text-center">
+                    <span aria-hidden="true" class="text-8xl font-bold text-gray-200 dark:text-gray-700 select-none">!</span>
+                    <h1 class="text-2xl font-semibold">{t("ui.error_title")}</h1>
+                    <p class="text-muted max-w-sm">{t("ui.error_desc")}</p>
+                    <div class="flex gap-3 mt-2">
+                      <button
+                        onClick={reset}
+                        class="px-4 py-2 rounded-lg border border-rim hover:bg-elevated transition-colors text-sm"
+                      >
+                        {t("ui.try_again")}
+                      </button>
+                      <a
+                        href="/hq"
+                        class="px-4 py-2 rounded-lg bg-accent text-accent-fg hover:opacity-90 transition-opacity text-sm"
+                      >
+                        {t("ui.go_home")}
+                      </a>
+                    </div>
                   </div>
-                </div>
-              )}>
-                <Suspense>
-                  {props.children}
-                </Suspense>
-              </ErrorBoundary>
+                )}>
+                  <Suspense>
+                    {props.children}
+                  </Suspense>
+                </ErrorBoundary>
+              </div>
 
               <Show when={showScrollTop()}>
                 <button
                   onClick={() => mainRef.scrollTo({ top: 0, behavior: "smooth" })}
-                  class="sticky bottom-2 lg:bottom-14 xl:bottom-2 float-right z-10
+                  class="sticky bottom-2 lg:bottom-14 xl:bottom-2 self-end z-10
                          w-10 h-10 rounded-full flex items-center justify-center
                          bg-elevated border border-rim
                          shadow hover:shadow-md transition-all"
