@@ -2,6 +2,7 @@
 import { generateSW } from 'workbox-build';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -79,5 +80,39 @@ const { count, size } = await generateSW({
     },
   ],
 });
+
+// Workbox's generateSW() only produces precaching/runtimeCaching logic — it has
+// no notion of Web Push. Append a plain push/notificationclick listener to the
+// generated file rather than switching to injectManifest for this one addition.
+const PUSH_SW_SNIPPET = `
+self.addEventListener('push', function (event) {
+  var data = {};
+  try { data = event.data ? event.data.json() : {}; } catch (e) {}
+  var title = data.title || 'Hubzilla';
+  var options = {
+    body: data.body || '',
+    icon: data.icon || undefined,
+    tag: data.tag || undefined,
+    data: { url: data.url || '/' },
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', function (event) {
+  event.notification.close();
+  var url = (event.notification.data && event.notification.data.url) || '/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then(function (clientList) {
+      for (var i = 0; i < clientList.length; i++) {
+        if (clientList[i].url === url && 'focus' in clientList[i]) {
+          return clientList[i].focus();
+        }
+      }
+      if (clients.openWindow) return clients.openWindow(url);
+    })
+  );
+});
+`;
+fs.appendFileSync(path.join(OUT_DIR, 'sw.js'), PUSH_SW_SNIPPET);
 
 console.log(`[SW] ${count} files precached, ${(size / 1024).toFixed(1)} KB`);
