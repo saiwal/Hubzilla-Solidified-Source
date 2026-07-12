@@ -1,4 +1,4 @@
-import { Show, createSignal } from "solid-js";
+import { Show, createSignal, onMount } from "solid-js";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { fetchNotificationSettings, saveNotificationSettings } from "../../api/api";
 import { useSectionForm } from "../../store/useSectionForm";
@@ -17,6 +17,12 @@ import {
   enableDesktopNotify,
   disableDesktopNotify,
 } from "@/shared/lib/desktopNotify";
+import {
+  isPushSupported,
+  getCurrentPushSubscription,
+  subscribeToPush,
+  unsubscribeFromPush,
+} from "@/shared/lib/webPush";
 
 const NOTIFY_FIELDS = [
   "notify1","notify2","notify3","notify4","notify5",
@@ -110,6 +116,7 @@ export default function NotificationsSection() {
               <SwitchRow name="always_show_in_notices"    label={t("settings.notif_show_in_notices")}  checked={!!d().always_show_in_notices} />
               <SwitchRow name="update_notices_per_parent" label={t("settings.notif_mark_thread_read")} checked={!!d().update_notices_per_parent} />
               <DesktopNotifyRow />
+              <PushNotifyRow />
               <div class="flex items-center justify-between gap-4 py-2.5">
                 <span class="min-w-0">
                   <span class="block text-sm text-txt">{t("settings.notif_event_advance_days")}</span>
@@ -171,13 +178,76 @@ function DesktopNotifyRow() {
         disabled={!supported || blocked() || busy()}
         class={
           "appearance-none relative h-6 w-11 shrink-0 cursor-pointer rounded-full p-0 " +
-          "bg-elevated border border-rim transition-colors disabled:opacity-50 disabled:cursor-not-allowed " +
-          "after:absolute after:top-1/2 after:-translate-y-1/2 after:translate-x-1 " +
-          "after:h-4 after:w-4 after:rounded-full after:bg-muted " +
+          "border transition-colors disabled:opacity-50 disabled:cursor-not-allowed " +
+          "after:absolute after:top-1/2 after:left-1 after:-translate-y-1/2 " +
+          "after:h-4 after:w-4 after:rounded-full " +
           "after:transition-transform after:duration-150 motion-reduce:after:transition-none " +
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 " +
           "focus-visible:ring-offset-2 focus-visible:ring-offset-surface " +
-          (on() ? "bg-accent border-accent after:translate-x-6 after:bg-accent-fg" : "")
+          (on()
+            ? "bg-accent border-accent after:translate-x-5 after:bg-accent-fg"
+            : "bg-elevated border-rim after:bg-muted")
+        }
+      />
+    </div>
+  );
+}
+
+function PushNotifyRow() {
+  const { t } = useI18n();
+  const [busy, setBusy] = createSignal(false);
+  const [subscribed, setSubscribed] = createSignal(false);
+  const supported = isPushSupported();
+  const blocked = () => supported && desktopNotifyPermission() === "denied";
+
+  onMount(async () => {
+    if (!supported) return;
+    setSubscribed(!!(await getCurrentPushSubscription()));
+  });
+
+  const toggle = async () => {
+    if (busy() || blocked() || !supported) return;
+    setBusy(true);
+    try {
+      if (subscribed()) {
+        await unsubscribeFromPush();
+        setSubscribed(false);
+      } else {
+        let perm = Notification.permission;
+        if (perm === "default") perm = await Notification.requestPermission();
+        if (perm !== "granted") return;
+        setSubscribed(await subscribeToPush());
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div class="flex items-center justify-between gap-4 py-2.5">
+      <span class="min-w-0">
+        <span class="block text-sm text-txt">{t("settings.notif_push_title")}</span>
+        <span class="block text-xs text-muted">
+          {blocked() ? t("settings.notif_desktop_blocked") : t("settings.notif_push_hint")}
+        </span>
+      </span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={subscribed()}
+        onClick={toggle}
+        disabled={!supported || blocked() || busy()}
+        class={
+          "appearance-none relative h-6 w-11 shrink-0 cursor-pointer rounded-full p-0 " +
+          "border transition-colors disabled:opacity-50 disabled:cursor-not-allowed " +
+          "after:absolute after:top-1/2 after:left-1 after:-translate-y-1/2 " +
+          "after:h-4 after:w-4 after:rounded-full " +
+          "after:transition-transform after:duration-150 motion-reduce:after:transition-none " +
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 " +
+          "focus-visible:ring-offset-2 focus-visible:ring-offset-surface " +
+          (subscribed()
+            ? "bg-accent border-accent after:translate-x-5 after:bg-accent-fg"
+            : "bg-elevated border-rim after:bg-muted")
         }
       />
     </div>

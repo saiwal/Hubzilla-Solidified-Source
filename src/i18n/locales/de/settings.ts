@@ -164,6 +164,8 @@ export const settings: RawDictionary["settings"] = {
   notif_desktop_title:     "Desktop-Benachrichtigungen",
   notif_desktop_hint:      "Zeigt eine Browser-Benachrichtigung für neue Aktivitäten, wenn dieser Tab nicht im Fokus ist.",
   notif_desktop_blocked:   "In den Website-Einstellungen deines Browsers blockiert.",
+  notif_push_title:       "Push-Benachrichtigungen",
+  notif_push_hint:        "Erhalte Benachrichtigungen über neue Aktivitäten, auch wenn Hubzilla nicht in einem Tab geöffnet ist.",
   // Integrations
   integ_search_placeholder: "Apps durchsuchen…",
   integ_tab_all:            "Alle",

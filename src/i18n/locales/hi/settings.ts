@@ -163,6 +163,8 @@ export const settings: RawDictionary["settings"] = {
   notif_desktop_title:     "डेस्कटॉप सूचनाएं",
   notif_desktop_hint:      "जब यह टैब फ़ोकस में न हो तो नई गतिविधि के लिए ब्राउज़र सूचना दिखाएं।",
   notif_desktop_blocked:   "आपके ब्राउज़र की साइट सेटिंग्स में अवरुद्ध है।",
+  notif_push_title:       "पुश सूचनाएं",
+  notif_push_hint:        "जब Hubzilla किसी टैब में खुला न हो तब भी नई गतिविधि की सूचना पाएं।",
   // Integrations
   integ_search_placeholder: "ऐप्स खोजें…",
   integ_tab_all:            "सभी",

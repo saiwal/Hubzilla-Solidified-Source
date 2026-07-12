@@ -1023,6 +1023,8 @@ export type RawDictionary = {
     notif_desktop_title:     string;
     notif_desktop_hint:      string;
     notif_desktop_blocked:   string;
+    notif_push_title:       string;
+    notif_push_hint:        string;
     // Integrations
     integ_search_placeholder: string;
     integ_tab_all:            string;
