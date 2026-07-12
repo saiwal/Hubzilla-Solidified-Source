@@ -29,7 +29,7 @@ type SlotLoader = () => Promise<{ default: Component }>;
 
 export type ComponentLoader<P extends Record<string, any> = {}> = () => Promise<{ default: Component<P> }>;
 
-export type WidgetSlotName = "right" | "leftBottom" | "mainTop" | "rightVisitor";
+export type WidgetSlotName = "right" | "leftBottom" | "mainTop" | "rightVisitor" | "header" | "footer";
 
 /** Props every widget component is mounted with. */
 export interface WidgetProps {

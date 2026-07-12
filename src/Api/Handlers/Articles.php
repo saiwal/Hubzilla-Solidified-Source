@@ -150,7 +150,6 @@ if ($slug) {
         if ($dend) {
             $sql_extra .= " AND item.created < '"  . dbesc($dend)   . "' ";
         }
-
         $r = dbq("SELECT item.id AS item_id FROM item
             WHERE item.uid = $profile_uid
             AND item.item_type = " . ITEM_TYPE_ARTICLE . "

@@ -10,6 +10,16 @@ registerModule({
   routes: [],
   widgets: [
     {
+      // Site copyright + "Powered by Hubzilla" + active theme — global, so it
+      // always renders in the footer slot on every page, on by default.
+      id: "blocks.credits",
+      label: () => useI18n().t("widgets.credits"),
+      loader: () => import("./widgets/CreditsWidget"),
+      slot: "footer",
+      contexts: "any",
+      global: true,
+    },
+    {
       id: "blocks.rss",
       label: () => useI18n().t("widgets.rss_feed"),
       loader: () => import("./widgets/RssWidget"),
@@ -126,6 +136,31 @@ registerModule({
       contexts: ["hq"],
       multiInstance: true,
       configComponent: () => import("./widgets/EmbedConfig"),
+    },
+    {
+      // Horizontal nav bar fed by a Hubzilla menu — header only (always
+      // full-width, unlike mainTop's masonry-packed banner widgets)
+      id: "blocks.menu_bar",
+      label: () => useI18n().t("widgets.menu_bar"),
+      loader: () => import("./widgets/MenuBarWidget"),
+      slot: "header",
+      defaultModules: [],
+      contexts: "any",
+      multiInstance: true,
+      configComponent: () => import("./widgets/MenuConfig"),
+      helpTarget: "widgets.menu_widgets",
+    },
+    {
+      // Vertical multilevel menu fed by a Hubzilla menu — right sidebar only
+      id: "blocks.menu_tree",
+      label: () => useI18n().t("widgets.menu_tree"),
+      loader: () => import("./widgets/MenuTreeWidget"),
+      slot: "right",
+      defaultModules: [],
+      contexts: "any",
+      multiInstance: true,
+      configComponent: () => import("./widgets/MenuConfig"),
+      helpTarget: "widgets.menu_widgets",
     },
     {
       id: "blocks.links",

@@ -49,7 +49,7 @@ export function makeInstanceKey(widgetId: string): string {
 }
 
 const LS_KEY = "hz-widget-layout";
-const SLOT_NAMES = new Set<string>(["right", "leftBottom", "mainTop", "rightVisitor"]);
+const SLOT_NAMES = new Set<string>(["right", "leftBottom", "mainTop", "rightVisitor", "header", "footer"]);
 
 function parseEntry(raw: unknown): LayoutEntry | null {
   if (typeof raw === "string") return raw;

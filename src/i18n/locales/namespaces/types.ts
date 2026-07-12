@@ -374,6 +374,12 @@ export type RawDictionary = {
     cfg_too_large:      string;
     cfg_post:           string;
     cfg_article:        string;
+    menu_bar:           string;
+    menu_tree:          string;
+    cfg_menu:           string;
+    cfg_no_menus:       string;
+    credits:            string;
+    credits_theme:      string;
     cfg_album:          string;
     cfg_room:           string;
     cfg_event:          string;
@@ -1643,6 +1649,24 @@ export type RawDictionary = {
     edit_page_title:  string;
     title_placeholder: string;
     saving_failed:    string;
+    // Menu manager
+    manage_menus:     string;
+    new_menu:         string;
+    menu_name:        string;
+    menu_desc:        string;
+    no_menus:         string;
+    items_label:      string;
+    add_item:         string;
+    no_items:         string;
+    item_label:       string;
+    item_order:       string;
+    item_zid:         string;
+    item_newwin:      string;
+    item_locked:      string;
+    submenu_label:    string;
+    submenu_hint:     string;
+    save:             string;
+    cancel:           string;
   };
   notepad: {
     title:            string;

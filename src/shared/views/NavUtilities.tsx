@@ -41,7 +41,7 @@ export default function NavUtilities(props: NavUtilitiesProps) {
           <A
             href="/siteinfo"
             title={t("ui.site_info")}
-            class="p-2 rounded-lg text-muted hover:bg-elevated hover:text-txt transition-colors"
+            class="inline-flex items-center justify-center p-2 rounded-lg text-muted hover:bg-elevated hover:text-txt transition-colors"
           >
             <BiRegularInfoCircle size={18} />
           </A>

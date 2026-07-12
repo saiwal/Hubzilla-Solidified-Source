@@ -228,9 +228,17 @@ const Slot: Component<SlotProps> = (props) => {
   // different heights (a heatmap vs. a one-line quote, or a tall messages
   // panel vs. a short stats card) that reads as a grid full of dead space,
   // not a packed layout. CSS columns avoid that: each item flows into the
-  // next slot in its column at its own height. Other slots keep the plain
-  // single-column stack.
+  // next slot in its column at its own height.
+  //
+  // header (above mainTop) and footer (below all page content) are always
+  // full-width, single-column — for banner-like widgets (e.g. a horizontal
+  // nav menu) that must span the whole row rather than pack into a column.
+  //
+  // All three need their own margin and a conditional wrapper (the
+  // surrounding <main> has no space-y, unlike the sidebar <aside>). Other
+  // slots return the bare content and rely on their parent's spacing.
   const isMainTop = props.name === "mainTop";
+  const isFullWidth = props.name === "header" || props.name === "footer";
   const hasContent = createMemo(
     () => globalWidgets().length > 0 || localEntries().length > 0 || editing(),
   );
@@ -397,6 +405,17 @@ const Slot: Component<SlotProps> = (props) => {
       </Show>
     </>
   );
+
+  if (isFullWidth) {
+    const marginClass = props.name === "footer" ? "mt-4" : "mb-4";
+    return (
+      <Show when={hasContent()}>
+        <div class={`space-y-4 ${marginClass}`}>
+          {content}
+        </div>
+      </Show>
+    );
+  }
 
   if (!isMainTop) {
     return content;

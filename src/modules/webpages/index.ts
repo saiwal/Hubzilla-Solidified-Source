@@ -6,6 +6,7 @@ registerModule({
   id: 'webpages',
   routes: [
     { path: '/webpages/:nick/new',       component: () => import('./views/WebpageEditorView') },
+    { path: '/webpages/:nick/menus',     component: () => import('./views/MenusView') },
     { path: '/webpages/:nick/edit/:iid', component: () => import('./views/WebpageEditorView') },
     { path: '/webpages',                 component: () => import('./views/WebpagesView') },
     { path: '/webpages/:nick',           component: () => import('./views/WebpagesView') },
