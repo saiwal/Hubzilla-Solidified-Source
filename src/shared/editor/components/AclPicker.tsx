@@ -6,6 +6,8 @@
 
 import {
   createSignal,
+  createEffect,
+  on,
   Show,
   For,
   type Component,
@@ -26,6 +28,12 @@ void motion;
 export type AclMode = "public" | "connections" | "custom";
 export type { AclEntry };
 
+// Minimum characters before the contacts list is searched on the server —
+// privacy groups are cheap and pre-fetched in full, but the contact list
+// can be huge so it's never fetched in full.
+const ACL_MIN_CHARS = 3;
+const ACL_DEBOUNCE_MS = 250;
+
 // Key format: "{type}:{xid}" — e.g. "c:abc123..." or "g:d7ac40c2-..."
 export function entryKey(e: AclEntry): string {
   return `${e.type}:${e.xid}`;
@@ -40,6 +48,12 @@ export interface AclPickerProps {
   onClear: () => void;
   /** Optional pre-fetched entries — skips internal fetchConnections when provided. */
   entries?: AclEntry[];
+  /**
+   * Entries the caller already knows about (e.g. a DM recipient picked from
+   * a profile popover) that should resolve to a name/photo in the allow/deny
+   * chips even though they weren't returned by a fetch or search.
+   */
+  seedEntries?: AclEntry[];
   /** Show deny buttons per row (default: true). */
   showDeny?: boolean;
 }
@@ -48,24 +62,100 @@ export interface AclPickerProps {
 
 const AclPicker: Component<AclPickerProps> = (props) => {
   const { t } = useI18n();
-  const [fetched] = createQueryResource("network-connections", () => !props.entries, fetchConnections);
   const [query, setQuery] = createSignal("");
-  const loading = () => !props.entries && fetched.loading;
-  const allEntries = () => props.entries ?? fetched() ?? [];
+
+  // Privacy groups are cheap and few — pre-fetch them in full and filter
+  // client-side as the user types.
+  const [groupsRes] = createQueryResource(
+    "acl-groups",
+    () => !props.entries,
+    () => fetchConnections({ type: "g", count: 100 }),
+  );
+
+  // A small initial page of contacts so the picker isn't empty on open —
+  // replaced by the server search once the user types ACL_MIN_CHARS+.
+  const [initialContactsRes] = createQueryResource(
+    "acl-contacts-initial",
+    () => !props.entries,
+    () => fetchConnections({ type: "c", count: 10 }),
+  );
+
+  // Contacts can be huge — only fetched via debounced server search once
+  // the query is ACL_MIN_CHARS or longer, so the full list is never polled.
+  const [debouncedQuery, setDebouncedQuery] = createSignal("");
+  let debounceTimer: number | undefined;
+  createEffect(on(query, (q) => {
+    window.clearTimeout(debounceTimer);
+    const trimmed = q.trim();
+    if (trimmed.length < ACL_MIN_CHARS) {
+      setDebouncedQuery("");
+      return;
+    }
+    debounceTimer = window.setTimeout(() => setDebouncedQuery(trimmed), ACL_DEBOUNCE_MS);
+  }));
+
+  const [contactsRes] = createQueryResource(
+    "acl-contacts-search",
+    () => (!props.entries && debouncedQuery()) || false,
+    (q) => fetchConnections({ type: "c", search: q, count: 50 }),
+  );
+
+  const searching = () => query().trim().length >= ACL_MIN_CHARS;
+  const loading = () =>
+    !props.entries &&
+    (groupsRes.loading ||
+      (searching() ? contactsRes.loading : initialContactsRes.loading));
+
+  // Accumulate every entry we've ever seen — fetched, searched, or seeded
+  // by the caller — so an already-selected chip keeps its name/photo even
+  // after the search box is cleared or changed to a different query.
+  const [resolvedCache, setResolvedCache] = createSignal<Map<string, AclEntry>>(new Map());
+  createEffect(() => {
+    const incoming = [
+      ...(props.entries ?? []),
+      ...(props.seedEntries ?? []),
+      ...(groupsRes() ?? []),
+      ...(initialContactsRes() ?? []),
+      ...(contactsRes() ?? []),
+    ];
+    if (!incoming.length) return;
+    setResolvedCache((prev) => {
+      let changed = false;
+      const next = new Map(prev);
+      for (const e of incoming) {
+        const key = entryKey(e);
+        if (!next.has(key)) {
+          next.set(key, e);
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  });
 
   const { open, setOpen, toggle, floatStyle, setTriggerRef, setPanelRef } =
     useDropdown({ placement: "top-start", offset: 8 });
 
-  const filtered = () => {
+  const filtered = (): AclEntry[] => {
     const q = query().toLowerCase().trim();
-    const all = allEntries();
-    if (!q) return all;
-    return all.filter(
-      (c) =>
-        c.name.toLowerCase().includes(q) ||
-        (c.nick ?? "").toLowerCase().includes(q) ||
-        (c.link ?? "").toLowerCase().includes(q),
-    );
+    if (props.entries) {
+      if (!q) return props.entries;
+      return props.entries.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          (c.nick ?? "").toLowerCase().includes(q) ||
+          (c.link ?? "").toLowerCase().includes(q),
+      );
+    }
+    const matchesQuery = (c: AclEntry) =>
+      !q ||
+      c.name.toLowerCase().includes(q) ||
+      (c.nick ?? "").toLowerCase().includes(q);
+    const groups = (groupsRes() ?? []).filter(matchesQuery);
+    if (!searching()) {
+      return [...groups, ...(initialContactsRes() ?? []).filter(matchesQuery)];
+    }
+    return [...groups, ...(contactsRes() ?? [])];
   };
 
   const totalSelected = () => props.allowEntries.size + props.denyEntries.size;
@@ -154,9 +244,7 @@ const AclPicker: Component<AclPickerProps> = (props) => {
             <div class="flex flex-wrap gap-1 px-3 py-2 border-b border-rim shrink-0 max-h-24 overflow-y-auto">
               <For each={[...props.allowEntries]}>
                 {(key) => {
-                  const conn = allEntries().find(
-                    (c) => entryKey(c) === key,
-                  );
+                  const conn = resolvedCache().get(key);
                   return (
                     <span
                       class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs
@@ -177,9 +265,7 @@ const AclPicker: Component<AclPickerProps> = (props) => {
               </For>
               <For each={[...props.denyEntries]}>
                 {(key) => {
-                  const conn = allEntries().find(
-                    (c) => entryKey(c) === key,
-                  );
+                  const conn = resolvedCache().get(key);
                   return (
                     <span
                       class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs

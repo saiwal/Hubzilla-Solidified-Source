@@ -126,8 +126,18 @@ export type AclEntry = {
   photo?: string;
 };
 
-export async function fetchConnections(): Promise<AclConnection[]> {
-  const res = await fetch('/acl');
+export type AclSearchParams = {
+  search?: string;
+  type?: '' | 'c' | 'g';
+  count?: number;
+};
+
+export async function fetchConnections(params: AclSearchParams = {}): Promise<AclConnection[]> {
+  const qs = new URLSearchParams();
+  if (params.search) qs.set('search', params.search);
+  if (params.type)   qs.set('type', params.type);
+  qs.set('count', String(params.count ?? 100));
+  const res = await fetch(`/acl?${qs.toString()}`);
   if (!res.ok) return [];
   const data = await res.json();
   const items: AclConnection[] = data.items ?? [];

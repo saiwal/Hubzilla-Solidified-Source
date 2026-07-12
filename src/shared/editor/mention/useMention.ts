@@ -11,8 +11,9 @@
  * duplicate network requests.
  */
 
-import { createSignal, createMemo, createResource } from "solid-js";
-import { fetchConnections } from "@/modules/network/api";
+import { createSignal, createMemo, createEffect, on } from "solid-js";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
+import { fetchConnections, type AclConnection } from "@/modules/network/api";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -24,22 +25,20 @@ export interface MentionEntry {
   photo?: string;
 }
 
-// ── Module-level connections cache ────────────────────────────────────────────
-// createResource at module scope → fetched once, shared across all composers.
+// Minimum query length before we search the server — avoids firing a
+// request (and showing a popup) on every single keystroke.
+const MENTION_MIN_CHARS = 3;
+const MENTION_DEBOUNCE_MS = 250;
 
-const [_connections] = createResource(fetchConnections);
-
-function toMentionEntries(): MentionEntry[] {
-  return (_connections() ?? [])
-    .filter((c) => c.type === "c" && c.nick)
-    .map((c) => ({
-      nick: c.nick ?? "",
-      name: c.name,
-      addr: c.link
-        ? c.link.replace(/^https?:\/\//, "").replace(/\/.*$/, "")
-        : (c.nick ?? ""),
-      photo: c.photo,
-    }));
+function toMentionEntry(c: AclConnection): MentionEntry {
+  return {
+    nick: c.nick ?? "",
+    name: c.name,
+    addr: c.link
+      ? c.link.replace(/^https?:\/\//, "").replace(/\/.*$/, "")
+      : (c.nick ?? ""),
+    photo: c.photo,
+  };
 }
 
 // ── Caret utilities ───────────────────────────────────────────────────────────
@@ -124,29 +123,41 @@ export interface MentionState {
 }
 
 export function useMention(): MentionState {
-  const allEntries = createMemo<MentionEntry[]>(toMentionEntries);
-
   const [query, setQuery]       = createSignal<string | null>(null);
   const [rect, setRect]         = createSignal<DOMRect | null>(null);
   const [activeIdx, setActiveIdx] = createSignal(0);
 
-  const filtered = createMemo<MentionEntry[]>(() => {
-    const q = query();
-    if (q === null) return [];
-    const lq = q.toLowerCase();
-    const all = allEntries();
-    if (!lq) return all.slice(0, 8);
-    return all
-      .filter(
-        (e) =>
-          e.nick.toLowerCase().includes(lq) ||
-          e.name.toLowerCase().includes(lq) ||
-          e.addr.toLowerCase().includes(lq),
-      )
-      .slice(0, 8);
-  });
+  // Debounce the raw query into a search term — only fires once the user
+  // has typed at least MENTION_MIN_CHARS, so we never poll the full
+  // connections list.
+  const [debouncedQuery, setDebouncedQuery] = createSignal("");
+  let debounceTimer: number | undefined;
+  createEffect(on(query, (q) => {
+    window.clearTimeout(debounceTimer);
+    const trimmed = (q ?? "").trim();
+    if (trimmed.length < MENTION_MIN_CHARS) {
+      setDebouncedQuery("");
+      return;
+    }
+    debounceTimer = window.setTimeout(() => setDebouncedQuery(trimmed), MENTION_DEBOUNCE_MS);
+  }));
 
-  const open = () => query() !== null && filtered().length > 0;
+  const [searchResult] = createQueryResource(
+    "mention-search",
+    () => debouncedQuery() || false,
+    (q) => fetchConnections({ search: q, type: "c", count: 8 }),
+  );
+
+  const filtered = createMemo<MentionEntry[]>(() =>
+    (searchResult() ?? [])
+      .filter((c) => c.type === "c" && c.nick)
+      .map(toMentionEntry),
+  );
+
+  const open = () =>
+    query() !== null &&
+    (query() ?? "").trim().length >= MENTION_MIN_CHARS &&
+    filtered().length > 0;
 
   function close() {
     setQuery(null);

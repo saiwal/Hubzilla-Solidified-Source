@@ -66,6 +66,9 @@ export interface ComposerProps {
   initialBody?: string;
   initialAclMode?: AclMode;
   initialAllowEntries?: Set<string>;
+  /** Entries the caller already knows about (e.g. a DM recipient) so their
+   *  allow/deny chip resolves to a name/photo immediately. */
+  initialResolvedEntries?: AclEntry[];
   parentId?: number;
   /** Hide the ACL picker and lock scope to "connections" (channel owner's default).
    *  Use when the poster is a visitor — they don't control the wall's privacy. */
@@ -742,6 +745,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
                   denyEntries={denyEntries()}
                   onToggle={toggleEntry}
                   onClear={clearEntries}
+                  seedEntries={props.initialResolvedEntries}
                 />
               </Show>
 

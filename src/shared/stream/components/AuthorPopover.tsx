@@ -574,6 +574,15 @@ export default function AuthorPopover(props: Props) {
           profileUid={auth()!.uid}
           initialAclMode="custom"
           initialAllowEntries={new Set([`c:${xchanHash()!}`])}
+          initialResolvedEntries={[{
+            type: "c",
+            xid: xchanHash()!,
+            id: xchanHash()!,
+            name: props.name,
+            nick: props.address ?? "",
+            link: props.address ?? "",
+            photo: props.avatar,
+          }]}
         />
       </Show>
     </>

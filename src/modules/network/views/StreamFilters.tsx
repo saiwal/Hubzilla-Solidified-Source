@@ -8,6 +8,7 @@
 import {
   createSignal,
   createEffect,
+  on,
   lazy,
   For,
   Show,
@@ -52,6 +53,11 @@ const ORDER_OPTS: { value: Order; key: string; Icon: any }[] = [
   { value: "unthreaded", key: "unthreaded", Icon: MdFillFormat_list_bulleted },
 ];
 
+// Minimum characters before the connection typeahead searches the server —
+// avoids polling the full connections/groups list.
+const CONN_SEARCH_MIN_CHARS = 3;
+const CONN_SEARCH_DEBOUNCE_MS = 250;
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const str = (v: string | string[] | undefined): string =>
@@ -84,7 +90,22 @@ export default function StreamFilters() {
   // Connection typeahead
   const [connInput, setConnInput]             = createSignal("");
   const [connSuggestOpen, setConnSuggestOpen] = createSignal(false);
-  const [connections] = createQueryResource("network-connections", fetchConnections);
+  const [debouncedConnQuery, setDebouncedConnQuery] = createSignal("");
+  let connDebounceTimer: number | undefined;
+  createEffect(on(connInput, (q) => {
+    window.clearTimeout(connDebounceTimer);
+    const trimmed = q.trim();
+    if (trimmed.length < CONN_SEARCH_MIN_CHARS) {
+      setDebouncedConnQuery("");
+      return;
+    }
+    connDebounceTimer = window.setTimeout(() => setDebouncedConnQuery(trimmed), CONN_SEARCH_DEBOUNCE_MS);
+  }));
+  const [connResults] = createQueryResource(
+    "acl-stream-search",
+    () => debouncedConnQuery() || false,
+    (q) => fetchConnections({ search: q, count: 8 }),
+  );
 
   let searchInputRef: HTMLInputElement | undefined;
   let connInputRef:   HTMLInputElement | undefined;
@@ -252,11 +273,8 @@ export default function StreamFilters() {
   }
 
   const suggestions = () => {
-    const q = connInput().toLowerCase().trim();
-    if (!q || connections.loading) return [];
-    return (connections() ?? [])
-      .filter((c) => c.name.toLowerCase().includes(q) || c.link.toLowerCase().includes(q))
-      .slice(0, 8);
+    if (connInput().trim().length < CONN_SEARCH_MIN_CHARS || connResults.loading) return [];
+    return connResults() ?? [];
   };
 
   function selectConnection(c: AclConnection) {

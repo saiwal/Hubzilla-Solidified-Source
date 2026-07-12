@@ -335,6 +335,15 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
           profileUid={auth()!.uid}
           initialAclMode="custom"
           initialAllowEntries={new Set([`c:${props.conn.xchan_hash}`])}
+          initialResolvedEntries={[{
+            type: "c",
+            xid: props.conn.xchan_hash,
+            id: props.conn.xchan_hash,
+            name: props.conn.name,
+            nick: props.conn.address,
+            link: props.conn.address,
+            photo: props.conn.photo,
+          }]}
         />
       </Show>
     </div>
