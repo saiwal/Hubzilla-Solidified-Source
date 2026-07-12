@@ -12,6 +12,9 @@ export default function StreamList(props: {
   posts: ThreadNode[];
   viewMode: ViewMode;
   handlers: StreamHandlers;
+  // Masonry-only: trailing pagination-skeleton count, woven into the same
+  // column split as posts. See MasonryView.
+  appendingCount?: number;
 }) {
   return (
     <Switch>
@@ -19,7 +22,11 @@ export default function StreamList(props: {
         <FeedView posts={props.posts} handlers={props.handlers} />
       </Match>
       <Match when={props.viewMode === "masonry"}>
-        <MasonryView posts={props.posts} handlers={props.handlers} />
+        <MasonryView
+          posts={props.posts}
+          handlers={props.handlers}
+          appendingCount={props.appendingCount}
+        />
       </Match>
       <Match when={props.viewMode === "list"}>
         <ListView posts={props.posts} handlers={props.handlers} />

@@ -186,17 +186,27 @@ export default function PubstreamView() {
             </Switch>
           }
         >
-          <StreamList posts={threads()} viewMode={viewMode()} handlers={handlers} />
+          <StreamList
+            posts={threads()}
+            viewMode={viewMode()}
+            handlers={handlers}
+            appendingCount={
+              loading() && threads().length > 0 && viewMode() === "masonry"
+                ? 3
+                : undefined
+            }
+          />
         </Show>
 
         {/* Append skeleton while loading more */}
-        <Show when={loading() && threads().length > 0}>
+        <Show
+          when={
+            loading() && threads().length > 0 && viewMode() !== "masonry"
+          }
+        >
           <Switch>
             <Match when={viewMode() === "list"}>
               <ListPlaceholder count={3} />
-            </Match>
-            <Match when={viewMode() === "masonry"}>
-              <MasonryPlaceholder count={3} />
             </Match>
             <Match when={true}>
               <For each={Array(2).fill(0)}>{() => <FeedPlaceholder />}</For>

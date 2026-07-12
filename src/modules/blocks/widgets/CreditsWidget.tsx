@@ -40,7 +40,7 @@ export default function CreditsWidget() {
           )}
         </Show>
         {" · "}
-        {t("widgets.credits_theme")}: {themeLabel()}
+        {t("widgets.credits_theme")}: Solidified - {themeLabel()}
       </p>
     </footer>
   );

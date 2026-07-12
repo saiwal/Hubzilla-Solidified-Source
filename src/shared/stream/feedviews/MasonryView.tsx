@@ -355,18 +355,69 @@ function MasonryCard(props: {
   );
 }
 
+const SKELETON_HEIGHTS = [
+  "h-24",
+  "h-36",
+  "h-20",
+  "h-32",
+  "h-28",
+  "h-16",
+  "h-40",
+  "h-24",
+  "h-20",
+  "h-32",
+  "h-28",
+  "h-36",
+];
+
+function SkeletonMasonryCard(props: { index: number }) {
+  return (
+    <div class="mb-3 bg-surface border border-rim rounded-xl p-4 shadow-sm animate-pulse">
+      <div class="flex items-center gap-2 mb-3">
+        <div class="w-7 h-7 rounded-full bg-accent-muted shrink-0" />
+        <div class="flex flex-col gap-1.5 min-w-0">
+          <div class="h-2.5 bg-accent-muted rounded w-24" />
+          <div class="h-2 bg-accent-muted rounded w-16" />
+        </div>
+      </div>
+      <div
+        class={`${SKELETON_HEIGHTS[props.index % SKELETON_HEIGHTS.length]} bg-accent-muted rounded-lg`}
+      />
+      <div class="flex items-center gap-3 mt-3 pt-3 border-t border-rim">
+        <div class="h-2.5 bg-accent-muted rounded w-6" />
+        <div class="h-2.5 bg-accent-muted rounded w-6" />
+      </div>
+    </div>
+  );
+}
+
+type MasonryItem =
+  | { kind: "post"; post: ThreadNode }
+  | { kind: "skeleton"; index: number };
+
 export default function MasonryView(props: {
   posts: ThreadNode[];
   handlers: StreamHandlers;
+  // Number of trailing pagination-skeleton cards to weave into the same
+  // column split as the real posts, so they continue the existing columns
+  // instead of appearing as a second, disjointed grid below.
+  appendingCount?: number;
 }) {
   const [modalUuid, setModalUuid] = createSignal<string | null>(null);
   const colCount = useColumnCount();
-  const columns = createMemo(() => splitIntoColumns(props.posts, colCount()));
+  const items = createMemo<MasonryItem[]>(() => [
+    ...props.posts.map((post): MasonryItem => ({ kind: "post", post })),
+    ...Array.from(
+      { length: props.appendingCount ?? 0 },
+      (_, index): MasonryItem => ({ kind: "skeleton", index }),
+    ),
+  ]);
+  const columns = createMemo(() => splitIntoColumns(items(), colCount()));
 
   return (
     <>
       <Show
-        when={props.posts.length > 0}
+        when={items().length > 0}
         fallback={
           <p class="text-center py-16 text-muted text-sm">Nothing here yet.</p>
         }
@@ -376,12 +427,23 @@ export default function MasonryView(props: {
             {(col) => (
               <div class="flex-1 flex flex-col min-w-0">
                 <For each={col}>
-                  {(post) => (
-                    <MasonryCard
-                      post={post}
-                      handlers={props.handlers}
-                      onOpenModal={() => setModalUuid(post.uuid)}
-                    />
+                  {(item) => (
+                    <Show
+                      when={item.kind === "post" ? item.post : null}
+                      fallback={
+                        <SkeletonMasonryCard
+                          index={item.kind === "skeleton" ? item.index : 0}
+                        />
+                      }
+                    >
+                      {(post) => (
+                        <MasonryCard
+                          post={post()}
+                          handlers={props.handlers}
+                          onOpenModal={() => setModalUuid(post().uuid)}
+                        />
+                      )}
+                    </Show>
                   )}
                 </For>
               </div>
@@ -404,20 +466,6 @@ export default function MasonryView(props: {
 
 export function MasonryPlaceholder(props: { count?: number }) {
   const colCount = useColumnCount();
-  const heights = [
-    "h-24",
-    "h-36",
-    "h-20",
-    "h-32",
-    "h-28",
-    "h-16",
-    "h-40",
-    "h-24",
-    "h-20",
-    "h-32",
-    "h-28",
-    "h-36",
-  ];
   const placeholders = createMemo(() =>
     Array(props.count ?? 12)
       .fill(0)
@@ -433,24 +481,7 @@ export function MasonryPlaceholder(props: { count?: number }) {
         {(col) => (
           <div class="flex-1 flex flex-col">
             <For each={col}>
-              {({ i }) => (
-                <div class="mb-3 bg-surface border border-rim rounded-xl p-4 shadow-sm animate-pulse">
-                  <div class="flex items-center gap-2 mb-3">
-                    <div class="w-7 h-7 rounded-full bg-accent-muted shrink-0" />
-                    <div class="flex flex-col gap-1.5 min-w-0">
-                      <div class="h-2.5 bg-accent-muted rounded w-24" />
-                      <div class="h-2 bg-accent-muted rounded w-16" />
-                    </div>
-                  </div>
-                  <div
-                    class={`${heights[i % heights.length]} bg-accent-muted rounded-lg`}
-                  />
-                  <div class="flex items-center gap-3 mt-3 pt-3 border-t border-rim">
-                    <div class="h-2.5 bg-accent-muted rounded w-6" />
-                    <div class="h-2.5 bg-accent-muted rounded w-6" />
-                  </div>
-                </div>
-              )}
+              {({ i }) => <SkeletonMasonryCard index={i} />}
             </For>
           </div>
         )}

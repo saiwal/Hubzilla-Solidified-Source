@@ -249,15 +249,19 @@ export default function ChannelView() {
           <p class="text-sm text-muted py-4 text-center">{t("channel.no_posts")}</p>
         </Show>
 
-        <StreamList posts={posts()} viewMode={viewMode()} handlers={handlers} />
+        <StreamList
+          posts={posts()}
+          viewMode={viewMode()}
+          handlers={handlers}
+          appendingCount={
+            loadingMore() && viewMode() === "masonry" ? 6 : undefined
+          }
+        />
 
-        <Show when={loadingMore()}>
+        <Show when={loadingMore() && viewMode() !== "masonry"}>
           <Switch>
             <Match when={viewMode() === "list"}>
               <ListPlaceholder count={4} />
-            </Match>
-            <Match when={viewMode() === "masonry"}>
-              <MasonryPlaceholder count={6} />
             </Match>
             <Match when={true}>
               <For each={Array(3).fill(0)}>{() => <FeedPlaceholder />}</For>
