@@ -12,12 +12,16 @@
  */
 
 // Cheap existence check before paying for the katex import.
-const SCAN_RE = /\$\$[^$]+?\$\$|\$[^\s$][^$\n]*?[^\s$]\$(?!\d)|\$[^\s$]\$(?!\d)/;
+// Exported for reuse by the WYSIWYG editor's own hydrator (sourceToHtml.ts),
+// which needs the same match logic but wraps results in editable chips
+// instead of replacing text in place.
+export const SCAN_RE = /\$\$[^$]+?\$\$|\$[^\s$][^$\n]*?[^\s$]\$(?!\d)|\$[^\s$]\$(?!\d)/;
 // Block ($$…$$) tried first so it isn't misread as two empty inline matches.
-const MATCH_RE = /\$\$([^$]+?)\$\$|\$([^\s$](?:[^$\n]*[^\s$])?)\$(?!\d)/g;
+export const MATCH_RE = /\$\$([^$]+?)\$\$|\$([^\s$](?:[^$\n]*[^\s$])?)\$(?!\d)/g;
 
 let katexPromise: Promise<typeof import("katex").default> | null = null;
-function loadKatex() {
+// Shared cache so the editor hydrator doesn't pay for a second katex import.
+export function loadKatex() {
   if (!katexPromise) {
     katexPromise = Promise.all([
       import("katex"),

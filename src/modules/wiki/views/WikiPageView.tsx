@@ -472,6 +472,7 @@ export default function WikiPageView() {
                 </Show>
                 <Show when={!previewLoading()}>
                   <article
+                    ref={(el) => createEffect(() => { previewHtml(); hydrateLatex(el); })}
                     class="prose prose-neutral dark:prose-invert max-w-none
                            [&_a]:text-accent [&_a]:no-underline [&_a:hover]:underline
                            [&_pre]:bg-elevated [&_pre]:border [&_pre]:border-rim [&_pre]:rounded-xl

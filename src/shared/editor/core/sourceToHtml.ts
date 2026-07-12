@@ -2,6 +2,7 @@ import { marked } from "marked";
 import DOMPurify from "dompurify";
 import { bbcodeToHtml } from "@/shared/lib/bbcode";
 import { apiFetch } from "@/shared/lib/fetch";
+import { SCAN_RE, MATCH_RE, loadKatex } from "@/shared/lib/hydrateLatex";
 import type { MimeType } from "../types/editor.types";
 
 /** Convert source-format body to HTML for the WYSIWYG editor. */
@@ -68,6 +69,73 @@ export function hydrateShareEmbeds(root: HTMLElement): void {
       el.innerHTML = renderShareHtml(block);
     } catch {
       /* placeholder stays */
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Live LaTeX chips ($…$ / $$…$$)
+//
+// Mirrors the [share] embed approach above: a rendered KaTeX chip can't be
+// inverted back to its $…$ source by htmlToSource, so the raw source is
+// carried in a data-latex-raw attribute on a non-editable element and
+// htmlToSource restores it verbatim (see unwrapLatexEmbeds in htmlToSource.ts).
+// ---------------------------------------------------------------------------
+
+const latexEmbed = (isBlock: boolean, raw: string, innerHtml: string) =>
+  `${ZWSP}<${isBlock ? "div" : "span"} class="bb-latex-embed" data-latex-raw="${encodeURIComponent(raw)}" contenteditable="false">${innerHtml}</${isBlock ? "div" : "span"}>${ZWSP}`;
+
+/**
+ * Walks `root`'s text nodes (skipping code/pre/script/style/already-rendered
+ * math) and replaces any $…$ / $$…$$ found with a rendered, non-editable
+ * KaTeX chip — the WYSIWYG-editing counterpart to hydrateLatex() (which does
+ * the same thing for already-published, read-only pages).
+ */
+export function hydrateLatexEmbeds(root: HTMLElement): void {
+  if (!SCAN_RE.test(root.textContent ?? "")) return;
+
+  void loadKatex().then((katex) => {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        const el = node.parentElement;
+        if (el?.closest("code, pre, script, style, .katex")) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    });
+    const targets: Text[] = [];
+    let n: Node | null;
+    while ((n = walker.nextNode())) targets.push(n as Text);
+
+    for (const textNode of targets) {
+      const text = textNode.textContent ?? "";
+      MATCH_RE.lastIndex = 0;
+      if (!MATCH_RE.test(text)) continue;
+
+      const frag = document.createDocumentFragment();
+      let last = 0;
+      let m: RegExpExecArray | null;
+      MATCH_RE.lastIndex = 0;
+      while ((m = MATCH_RE.exec(text))) {
+        if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+        const isBlock = m[1] !== undefined;
+        const expr = (isBlock ? m[1] : m[2]) ?? "";
+        let inner: string;
+        try {
+          inner = katex.renderToString(expr.trim(), {
+            displayMode: isBlock,
+            throwOnError: false,
+            output: "html",
+          });
+        } catch {
+          inner = m[0];
+        }
+        const wrap = document.createElement("div");
+        wrap.innerHTML = latexEmbed(isBlock, m[0], inner);
+        while (wrap.firstChild) frag.appendChild(wrap.firstChild);
+        last = m.index + m[0].length;
+      }
+      if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+      textNode.replaceWith(frag);
     }
   });
 }

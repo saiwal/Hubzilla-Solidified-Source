@@ -2,7 +2,7 @@ import { createEffect, createSignal, onCleanup, For, Show } from "solid-js";
 import { Portal } from "solid-js/web";
 import type { EditorCapabilities, EditorTab, MimeType } from "../types/editor.types";
 import EditorToolbar from "./EditorToolbar";
-import { sourceToHtml, hydrateShareEmbeds } from "./sourceToHtml";
+import { sourceToHtml, hydrateShareEmbeds, hydrateLatexEmbeds } from "./sourceToHtml";
 import { htmlToSource } from "./htmlToSource";
 import { useI18n } from "@/i18n";
 
@@ -54,6 +54,7 @@ export default function RichEditor(props: Props) {
     el.innerHTML = sourceToHtml(props.body, mime());
     domSig = sig();
     hydrateShareEmbeds(el);
+    if (props.capabilities.latexMode === "live") hydrateLatexEmbeds(el);
     setImgSel(null);
   };
 
@@ -65,6 +66,7 @@ export default function RichEditor(props: Props) {
       editorRef.innerHTML = sourceToHtml(props.body, mime());
       domSig = nextSig;
       hydrateShareEmbeds(editorRef);
+      if (props.capabilities.latexMode === "live") hydrateLatexEmbeds(editorRef);
       setImgSel(null); // DOM was replaced — a selected <img> no longer exists
       // Placing a selection inside a contenteditable focuses it, so only move
       // the caret when focus isn't in another field (e.g. the alt-text box,
@@ -91,6 +93,14 @@ export default function RichEditor(props: Props) {
 
   const onTextareaInput = (e: InputEvent) => {
     props.onInput((e.target as HTMLTextAreaElement).value);
+  };
+
+  // Renders any $…$ / $$…$$ math typed since the last hydration once focus
+  // leaves the editor. Not done on every keystroke — replacing DOM nodes
+  // while the caret is mid-expression would fight cursor position (the same
+  // reason the body-sync effect above only re-renders on external changes).
+  const onEditorBlur = () => {
+    if (props.capabilities.latexMode === "live" && editorRef) hydrateLatexEmbeds(editorRef);
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
@@ -217,6 +227,7 @@ export default function RichEditor(props: Props) {
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
           onClick={onEditorClick}
+          onBlur={onEditorBlur}
           data-placeholder={props.placeholder ?? t("editor.write_placeholder")}
           style={{ "min-height": minH() }}
           class="grow overflow-y-auto p-3 outline-none text-sm text-txt

@@ -5,9 +5,35 @@ const td = new TurndownService({ headingStyle: "atx", bulletListMarker: "-" });
 
 /** Convert WYSIWYG HTML to the chosen source format. */
 export function htmlToSource(html: string, mimetype: MimeType): string {
-  if (mimetype === "text/html") return html;
-  if (mimetype === "text/markdown") return td.turndown(html);
-  return htmlToBBCode(html);
+  const clean = unwrapLatexEmbeds(html);
+  if (mimetype === "text/html") return clean;
+  if (mimetype === "text/markdown") return td.turndown(clean);
+  return htmlToBBCode(clean);
+}
+
+// Rendered KaTeX chips (see hydrateLatexEmbeds in sourceToHtml.ts) can't be
+// serialized by walking their children — katex.renderToString()'s internal
+// markup isn't invertible. Swap each chip back for its original $…$ / $$…$$
+// source text before any format-specific conversion runs.
+const ZWSP = "\u200B";
+
+function unwrapLatexEmbeds(html: string): string {
+  if (!html.includes("data-latex-raw")) return html;
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  doc.body.querySelectorAll<HTMLElement>("[data-latex-raw]").forEach((el) => {
+    const raw = decodeURIComponent(el.getAttribute("data-latex-raw") ?? "");
+    // Strip the zero-width caret anchors sourceToHtml placed on either side.
+    const prev = el.previousSibling;
+    if (prev?.nodeType === Node.TEXT_NODE && prev.textContent?.endsWith(ZWSP)) {
+      prev.textContent = prev.textContent.slice(0, -1);
+    }
+    const next = el.nextSibling;
+    if (next?.nodeType === Node.TEXT_NODE && next.textContent?.startsWith(ZWSP)) {
+      next.textContent = next.textContent.slice(1);
+    }
+    el.replaceWith(document.createTextNode(raw));
+  });
+  return doc.body.innerHTML;
 }
 
 function htmlToBBCode(html: string): string {
