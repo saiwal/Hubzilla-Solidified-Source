@@ -1,8 +1,8 @@
 import { createSignal, createEffect, Show, onCleanup, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 import { createMediaQuery } from "@solid-primitives/media";
-import { MdOutlinePerson, MdOutlinePerson_add, MdOutlineEdit, MdOutlineEmail, MdOutlineChat_bubble, MdOutlineCheck } from "solid-icons/md";
-import { useAuth } from "@/shared/store/auth-store";
+import { MdOutlinePerson, MdOutlinePerson_add, MdOutlineEdit, MdOutlineEmail, MdOutlineChat_bubble, MdOutlineCheck, MdOutlineBlock, MdOutlineGavel } from "solid-icons/md";
+import { useAuth, isAdmin } from "@/shared/store/auth-store";
 import { useNavViewer, useInstalledApps } from "@/shared/store/nav-store";
 import { addConnection } from "@/modules/directory/people/api";
 import { fetchConnectionByAddress } from "@/modules/directory/connections/api";
@@ -10,6 +10,7 @@ import type { Connection } from "@/modules/directory/connections/api";
 import ConnectionEditorModal from "@/shared/views/ConnectionEditorModal";
 import PostComposer from "@/shared/editor/composers/PostComposer";
 import { createRoom } from "@/modules/chat/api";
+import { blockChannel, blockChannelFromSite } from "@/shared/lib/blocklist-api";
 import { useNavigate } from "@solidjs/router";
 import { useI18n } from "@/i18n";
 
@@ -70,6 +71,8 @@ export default function AuthorPopover(props: Props) {
   const [chatCustomMode, setChatCustomMode] = createSignal(false);
   const [chatCustomInput, setChatCustomInput] = createSignal("60");
   const [sendInvite, setSendInvite] = createSignal(true);
+  const [blockState, setBlockState] = createSignal<"idle" | "loading" | "blocked">("idle");
+  const [siteBlockState, setSiteBlockState] = createSignal<"idle" | "loading" | "blocked">("idle");
   const [popoverPos, setPopoverPos] = createSignal<{ top: number; left: number } | null>(null);
   const canHover = createMediaQuery("(hover: hover) and (pointer: fine)");
   const auth = useAuth();
@@ -234,6 +237,34 @@ export default function AuthorPopover(props: Props) {
       // ignore — chat app may not be installed
     } finally {
       setChatCreating(false);
+    }
+  }
+
+  async function handleBlock(e: MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    const hash = xchanHash() || props.hash;
+    if (!hash || blockState() !== "idle") return;
+    setBlockState("loading");
+    try {
+      await blockChannel(hash);
+      setBlockState("blocked");
+    } catch {
+      setBlockState("idle");
+    }
+  }
+
+  async function handleSiteBlock(e: MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    const hash = xchanHash() || props.hash;
+    if (!hash || siteBlockState() !== "idle") return;
+    setSiteBlockState("loading");
+    try {
+      await blockChannelFromSite(hash);
+      setSiteBlockState("blocked");
+    } catch {
+      setSiteBlockState("idle");
     }
   }
 
@@ -414,8 +445,41 @@ export default function AuthorPopover(props: Props) {
                         </Show>
                       </button>
                     </Show>
+
+                    <button
+                      onClick={handleBlock}
+                      disabled={blockState() !== "idle"}
+                      title={blockState() === "blocked" ? t("blocklist.blocked") : t("blocklist.block")}
+                      class="w-8 h-8 flex items-center justify-center rounded-lg border border-rim text-muted
+                             hover:border-red-500 hover:text-red-500 transition-colors
+                             disabled:cursor-default"
+                      classList={{ "text-red-500 border-red-500": blockState() === "blocked" }}
+                    >
+                      <Show when={blockState() !== "loading"} fallback={<span class="w-3.5 h-3.5 border border-current border-t-transparent rounded-full animate-spin" />}>
+                        <Show when={blockState() === "blocked"} fallback={<MdOutlineBlock size={16} />}>
+                          <MdOutlineCheck size={16} />
+                        </Show>
+                      </Show>
+                    </button>
                   </Show>
                 </Show>
+              </div>
+            </Show>
+
+            {/* Site-wide block — admins only */}
+            <Show when={isAdmin() && isLocal() && !isSelf() && xchanHash()}>
+              <div class="px-3 pb-3">
+                <button
+                  onClick={handleSiteBlock}
+                  disabled={siteBlockState() !== "idle"}
+                  class="w-full flex items-center justify-center gap-1.5 text-[11px] font-medium
+                         text-red-500/80 hover:text-red-500 transition-colors disabled:cursor-default"
+                >
+                  <Show when={siteBlockState() !== "loading"} fallback={<span class="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />}>
+                    <MdOutlineGavel size={13} />
+                  </Show>
+                  {siteBlockState() === "blocked" ? t("blocklist.site_blocked") : t("blocklist.block_from_site")}
+                </button>
               </div>
             </Show>
 

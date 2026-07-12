@@ -16,6 +16,8 @@ export const settings: RawDictionary["settings"] = {
   desc_integrations:   "Install apps and pin them to your nav or app tray.",
   title_features:      "Features",
   desc_features:       "Enable or disable optional channel features.",
+  title_blocked:       "Blocked channels",
+  desc_blocked:        "Channels whose content is hidden from your streams, comments and search results.",
   title_danger:        "Danger zone",
   desc_danger:         "Irreversible actions. Proceed with care.",
   // Features section

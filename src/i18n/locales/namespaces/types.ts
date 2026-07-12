@@ -864,6 +864,8 @@ export type RawDictionary = {
     desc_integrations:   string;
     title_features:      string;
     desc_features:       string;
+    title_blocked:       string;
+    desc_blocked:        string;
     title_danger:        string;
     desc_danger:         string;
     // Features section
@@ -1920,6 +1922,21 @@ export type RawDictionary = {
     visit:            string;
     chat_badge:       string;
     untitled_folder:  string;
+  };
+  blocklist: {
+    block:               string;
+    blocking:            string;
+    blocked:              string;
+    block_from_site:      string;
+    site_blocked:         string;
+    unblock:              string;
+    unblocking:           string;
+    no_blocked:           string;
+    no_blocked_desc:      string;
+    add_placeholder:      string;
+    add_error:            string;
+    remove_error:         string;
+    permalink_blocked:    string;
   };
   channel_create: {
     title:                    string;

@@ -16,6 +16,8 @@ export const settings: RawDictionary["settings"] = {
   desc_integrations:   "ऐप्स इंस्टॉल करें और उन्हें नेव या ऐप ट्रे में पिन करें।",
   title_features:      "सुविधाएँ",
   desc_features:       "वैकल्पिक चैनल सुविधाएँ सक्षम या अक्षम करें।",
+  title_blocked:       "अवरुद्ध चैनल",
+  desc_blocked:        "वे चैनल जिनकी सामग्री आपकी स्ट्रीम, टिप्पणियों और खोज परिणामों से छिपी है।",
   title_danger:        "खतरनाक क्षेत्र",
   desc_danger:         "अपरिवर्तनीय क्रियाएँ। सावधानी से आगे बढ़ें।",
   feat_toggle_on:      "चालू",

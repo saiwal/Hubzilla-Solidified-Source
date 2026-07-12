@@ -16,6 +16,8 @@ export const settings: RawDictionary["settings"] = {
   desc_integrations:   "Installiere Apps und hefte sie an deine Navigation oder App-Leiste an.",
   title_features:      "Funktionen",
   desc_features:       "Optionale Kanalfunktionen aktivieren oder deaktivieren.",
+  title_blocked:       "Blockierte Kanäle",
+  desc_blocked:        "Kanäle, deren Inhalte in deinen Streams, Kommentaren und Suchergebnissen ausgeblendet sind.",
   title_danger:        "Gefahrenzone",
   desc_danger:         "Unumkehrbare Aktionen. Mit Vorsicht fortfahren.",
   // Features section

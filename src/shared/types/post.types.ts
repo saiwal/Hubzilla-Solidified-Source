@@ -81,4 +81,5 @@ export interface Post {
   item_origin?: number; // 1 = authored by this channel (viewer is the author)
   dislikeCount: number;
   repeatCount: number;
+  blocked?: boolean; // author or owner is on the viewer's personal block list
 }

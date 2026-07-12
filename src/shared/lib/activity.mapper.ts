@@ -112,6 +112,7 @@ export function mapActivityToPost(activity: any): Post {
     dislikeCount: activity.dislike_count ?? 0,
     repeatCount: activity.announce_count ?? 0,
     commentCount: activity.comment_count ?? 0,
+    blocked: activity.blocked ?? false,
     eventData,
     poll,
     attachments: Array.isArray(activity.attach)

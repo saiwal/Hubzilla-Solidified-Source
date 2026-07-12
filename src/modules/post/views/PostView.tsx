@@ -15,6 +15,7 @@ import {
   apiToggleStar,
 } from "@/shared/lib/item-api";
 import { toggleVerb, repeatItem } from "@/shared/stream/store/actions-store";
+import { unblockChannel } from "@/shared/lib/blocklist-api";
 
 async function fetchPost(uuid: string): Promise<ThreadNode> {
   const res = await fetch(`/api/display/${uuid}`);
@@ -177,13 +178,48 @@ export default function PostView() {
 
       <Show when={displayNode()}>
         {(n) => (
-          <PostCard
-            post={n()}
-            initiallyExpanded
-            handlers={handlers}
-          />
+          <Show
+            when={!n().blocked}
+            fallback={<BlockedPlaceholder authorHash={n().authorHash} onUnblocked={refetch} />}
+          >
+            <PostCard
+              post={n()}
+              initiallyExpanded
+              handlers={handlers}
+            />
+          </Show>
         )}
       </Show>
+    </div>
+  );
+}
+
+function BlockedPlaceholder(props: { authorHash?: string; onUnblocked: () => void }) {
+  const { t } = useI18n();
+  const [unblocking, setUnblocking] = createSignal(false);
+
+  async function handleUnblock() {
+    if (!props.authorHash || unblocking()) return;
+    setUnblocking(true);
+    try {
+      await unblockChannel(props.authorHash);
+      props.onUnblocked();
+    } finally {
+      setUnblocking(false);
+    }
+  }
+
+  return (
+    <div class="bg-surface rounded-2xl p-6 text-center space-y-3">
+      <p class="text-sm text-muted">{t("blocklist.permalink_blocked")}</p>
+      <button
+        onClick={handleUnblock}
+        disabled={unblocking()}
+        class="text-xs px-3 py-1.5 rounded-lg border border-rim text-muted
+               hover:border-accent hover:text-accent transition-colors disabled:opacity-50"
+      >
+        {unblocking() ? t("blocklist.unblocking") : t("blocklist.unblock")}
+      </button>
     </div>
   );
 }
