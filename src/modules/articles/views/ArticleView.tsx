@@ -13,6 +13,7 @@ import ArticleComposer from "@/shared/editor/composers/ArticleComposer";
 import CommentComposer from "@/shared/editor/composers/CommentComposer";
 import PostComposer from "@/shared/editor/composers/PostComposer";
 import DOMPurify from "dompurify";
+import { hydrateLatex } from "@/shared/lib/hydrateLatex";
 import { usePageNick, useViewerRole } from "@/shared/store/site-config";
 import { useAuth } from "@/shared/store/auth-store";
 import { BiRegularEdit, BiRegularTrash } from "solid-icons/bi";
@@ -296,6 +297,7 @@ export default function ArticleView() {
 
   createEffect(() => {
     if (!rendered() || !bodyRef) return;
+    hydrateLatex(bodyRef);
     requestAnimationFrame(() => {
       if (!bodyRef) return;
       const entries = extractHeadings(bodyRef);

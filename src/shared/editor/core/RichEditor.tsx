@@ -216,6 +216,7 @@ export default function RichEditor(props: Props) {
       <Show when={props.tab !== "preview"}>
         <EditorToolbar
           level={props.capabilities.toolbar}
+          latexMode={props.capabilities.latexMode}
           tab={props.tab as "wysiwyg" | "source"}
           editorRef={() => editorRef}
           textareaRef={() => textareaRef}

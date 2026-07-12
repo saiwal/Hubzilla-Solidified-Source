@@ -7,6 +7,7 @@ import { toast } from "@/shared/store/toast";
 import { useParams, A, useNavigate } from "@solidjs/router";
 import { useI18n } from "@/i18n";
 import DOMPurify from "dompurify";
+import { hydrateLatex } from "@/shared/lib/hydrateLatex";
 import {
   pageData, pageLoading, pageNotFound, editMode, draftContent, canWrite,
   pages, currentWiki, pagesLoading,
@@ -433,6 +434,7 @@ export default function WikiPageView() {
           {/* Rendered view */}
           <Show when={!editMode()}>
             <article
+              ref={(el) => createEffect(() => { safeHtml(); hydrateLatex(el); })}
               class="prose prose-neutral dark:prose-invert max-w-none
                      [&_a]:text-accent [&_a]:no-underline [&_a:hover]:underline
                      [&_pre]:bg-elevated [&_pre]:border [&_pre]:border-rim [&_pre]:rounded-xl

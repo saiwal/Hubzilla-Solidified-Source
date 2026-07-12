@@ -1,8 +1,9 @@
-import { Show } from "solid-js";
+import { createEffect, Show } from "solid-js";
 import { useParams, A } from "@solidjs/router";
 import { createQueryResource } from "@/shared/lib/createQueryResource";
 import DOMPurify from "dompurify";
 import { bbcodeToHtml } from "@/shared/lib/bbcode";
+import { hydrateLatex } from "@/shared/lib/hydrateLatex";
 import { fetchWebPageByPagelink } from "../api";
 import { useI18n } from "@/i18n";
 
@@ -48,6 +49,12 @@ export default function PageView() {
     return renderBody(d.body ?? "", d.mimetype ?? "text/bbcode");
   };
 
+  let bodyRef: HTMLDivElement | undefined;
+  createEffect(() => {
+    rendered();
+    if (bodyRef) hydrateLatex(bodyRef);
+  });
+
   return (
     <div class="max-w-4xl mx-auto space-y-4 py-4">
       {/* Breadcrumb */}
@@ -87,6 +94,7 @@ export default function PageView() {
             <h1 class="text-2xl font-bold text-txt">{detail()!.title}</h1>
           </Show>
           <div
+            ref={bodyRef}
             class="prose dark:prose-invert max-w-none"
             // eslint-disable-next-line solid/no-innerhtml
             innerHTML={rendered()}

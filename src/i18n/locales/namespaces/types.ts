@@ -756,6 +756,17 @@ export type RawDictionary = {
     decrypt_btn:                 string;
     decrypt_cancel:              string;
     decrypt_decrypting:          string;
+    latex_toolbar_title:  string;
+    latex_modal_title:    string;
+    latex_source_label:   string;
+    latex_source_placeholder: string;
+    latex_mode_inline:    string;
+    latex_mode_block:     string;
+    latex_preview_label:  string;
+    latex_preview_empty:  string;
+    latex_rendering:      string;
+    latex_uploading:      string;
+    latex_insert_btn:     string;
   };
   profiles: {
     title:             string;

@@ -185,4 +185,17 @@ export const editor: RawDictionary["editor"] = {
   decrypt_btn:                 "डिक्रिप्ट करें",
   decrypt_cancel:              "रद्द करें",
   decrypt_decrypting:          "डिक्रिप्ट हो रहा है…",
+
+  // LatexComposerModal
+  latex_toolbar_title:  "LaTeX समीकरण डालें",
+  latex_modal_title:    "समीकरण डालें",
+  latex_source_label:   "LaTeX",
+  latex_source_placeholder: "जैसे, e^{i\\pi} + 1 = 0",
+  latex_mode_inline:    "इनलाइन",
+  latex_mode_block:     "ब्लॉक समीकरण",
+  latex_preview_label:  "पूर्वावलोकन",
+  latex_preview_empty:  "पूर्वावलोकन देखने के लिए एक LaTeX अभिव्यक्ति लिखें।",
+  latex_rendering:      "रेंडर हो रहा है…",
+  latex_uploading:      "अपलोड हो रहा है…",
+  latex_insert_btn:     "डालें",
 };

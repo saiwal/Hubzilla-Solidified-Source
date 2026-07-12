@@ -194,4 +194,17 @@ export const editor = {
   decrypt_btn:                 "Entschlüsseln",
   decrypt_cancel:              "Abbrechen",
   decrypt_decrypting:          "Wird entschlüsselt…",
+
+  // LatexComposerModal
+  latex_toolbar_title:  "LaTeX-Gleichung einfügen",
+  latex_modal_title:    "Gleichung einfügen",
+  latex_source_label:   "LaTeX",
+  latex_source_placeholder: "z. B. e^{i\\pi} + 1 = 0",
+  latex_mode_inline:    "Inline",
+  latex_mode_block:     "Blockgleichung",
+  latex_preview_label:  "Vorschau",
+  latex_preview_empty:  "Gib einen LaTeX-Ausdruck ein, um ihn hier in der Vorschau zu sehen.",
+  latex_rendering:      "Wird gerendert…",
+  latex_uploading:      "Wird hochgeladen…",
+  latex_insert_btn:     "Einfügen",
 } as const;

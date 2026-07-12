@@ -1,10 +1,13 @@
-import { Show } from "solid-js";
-import type { ToolbarLevel } from "../types/editor.types";
+import { createSignal, lazy, Show } from "solid-js";
+import type { LatexInsertMode, ToolbarLevel } from "../types/editor.types";
 import { useI18n } from "@/i18n";
 import { MdOutlineLink, MdOutlineImage } from "solid-icons/md";
 
+const LatexComposerModal = lazy(() => import("../latex/LatexComposerModal"));
+
 interface Props {
   level: ToolbarLevel;
+  latexMode: LatexInsertMode;
   tab: "wysiwyg" | "source";
   editorRef: () => HTMLDivElement | undefined;
   textareaRef: () => HTMLTextAreaElement | undefined;
@@ -13,6 +16,7 @@ interface Props {
 
 export default function EditorToolbar(props: Props) {
   const { t } = useI18n();
+  const [latexOpen, setLatexOpen] = createSignal(false);
 
   const isSource  = () => props.tab === "source";
   const isWysiwyg = () => props.tab === "wysiwyg";
@@ -195,6 +199,31 @@ export default function EditorToolbar(props: Props) {
     }
   };
 
+  // The text/bbcode is built by LatexComposerModal (it knows inline vs.
+  // block, and image vs. live mode); here we just splice it in, mirroring
+  // how img()/video()/audio() insert raw bbcode for source and a real DOM
+  // node for wysiwyg.
+  const insertLatex = (text: string) => {
+    if (isSource()) {
+      insertSource(text);
+      return;
+    }
+    if (props.latexMode === "live") {
+      // Plain $…$ / $$…$$ text — rendered later by hydrateLatex() wherever
+      // this content is displayed, so wysiwyg just gets the literal text.
+      exec("insertText", text.trim());
+      return;
+    }
+    const trimmed = text.trim();
+    const isBlock = trimmed.startsWith("[center]");
+    const inner = isBlock ? trimmed.slice("[center]".length, -"[/center]".length) : trimmed;
+    const m = /^\[img alt="([^"]*)"\](.+)\[\/img\]$/s.exec(inner);
+    if (!m) return;
+    const [, alt, src] = m;
+    const html = `<img src="${src}" alt="${alt}" />`;
+    exec("insertHTML", isBlock ? `<div style="text-align:center">${html}</div>` : html);
+  };
+
   const table = () => {
     const colsRaw = prompt("Number of columns:", "2");
     if (!colsRaw) return;
@@ -228,6 +257,7 @@ export default function EditorToolbar(props: Props) {
   };
 
   return (
+    <>
     <div class="flex flex-wrap items-center gap-0.5 px-2 py-1 bg-surface border-b border-rim">
 
       {/* ── Group 1: Inline formatting — all levels ── */}
@@ -332,6 +362,9 @@ export default function EditorToolbar(props: Props) {
           <Btn title="Audio [audio]" onPress={audio}>
             <span class="text-xs">♪</span>
           </Btn>
+          <Btn title={t("editor.latex_toolbar_title")} onPress={() => setLatexOpen(true)}>
+            <span class="text-xs font-serif italic">∑</span>
+          </Btn>
 
           {/* ── Group 6: Rich structure — full only ── */}
           <Show when={isFull()}>
@@ -361,6 +394,14 @@ export default function EditorToolbar(props: Props) {
         </>
       </Show>
     </div>
+    <Show when={latexOpen()}>
+      <LatexComposerModal
+        mode={props.latexMode}
+        onClose={() => setLatexOpen(false)}
+        onInsert={insertLatex}
+      />
+    </Show>
+    </>
   );
 }
 

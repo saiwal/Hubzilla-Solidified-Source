@@ -194,4 +194,17 @@ export const editor = {
   decrypt_btn:                 "Decrypt",
   decrypt_cancel:              "Cancel",
   decrypt_decrypting:          "Decrypting…",
+
+  // LatexComposerModal
+  latex_toolbar_title:  "Insert LaTeX equation",
+  latex_modal_title:    "Insert equation",
+  latex_source_label:   "LaTeX",
+  latex_source_placeholder: "e.g. e^{i\\pi} + 1 = 0",
+  latex_mode_inline:    "Inline",
+  latex_mode_block:     "Block equation",
+  latex_preview_label:  "Preview",
+  latex_preview_empty:  "Type a LaTeX expression to preview it here.",
+  latex_rendering:      "Rendering…",
+  latex_uploading:      "Uploading…",
+  latex_insert_btn:     "Insert",
 } as const;
