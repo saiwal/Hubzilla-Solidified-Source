@@ -386,6 +386,8 @@ export type RawDictionary = {
     photo_albums:       string;
     bookmarked_rooms:   string;
     wiki_list:          string;
+    help_nav:           string;
+    help_chooser:       string;
     // Layout edit mode UI
     edit_layout:   string;
     done_editing:  string;

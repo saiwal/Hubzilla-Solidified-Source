@@ -18,4 +18,20 @@ registerModule({
     icon: "help",
     context: "all",
   },
+  widgets: [
+    {
+      id: "help.chooser",
+      label: () => useI18n().t("widgets.help_chooser"),
+      loader: () => import("./widgets/HelpChooserWidget"),
+      slot: "mainTop",
+      defaultModules: ["help"],
+    },
+    {
+      id: "help.nav",
+      label: () => useI18n().t("widgets.help_nav"),
+      loader: () => import("./widgets/HelpNavWidget"),
+      slot: "right",
+      defaultModules: ["help"],
+    },
+  ],
 });
