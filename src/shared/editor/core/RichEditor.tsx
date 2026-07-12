@@ -2,7 +2,6 @@ import { createEffect, createSignal, onCleanup, For, Show } from "solid-js";
 import { Portal } from "solid-js/web";
 import type { EditorCapabilities, EditorTab, MimeType } from "../types/editor.types";
 import EditorToolbar from "./EditorToolbar";
-import EditorPreview from "./EditorPreview";
 import { sourceToHtml, hydrateShareEmbeds } from "./sourceToHtml";
 import { htmlToSource } from "./htmlToSource";
 import { useI18n } from "@/i18n";
@@ -175,12 +174,8 @@ export default function RichEditor(props: Props) {
     props.onPasteFiles(files);
   };
 
-  const isComment = () => props.capabilities.toolbar === "comment";
-  const showTabs = () => !isComment() || props.capabilities.preview;
-  // Every tabbed composer gets the BBCode source tab — including comments.
-  // Untabbed surfaces (chat input: comment toolbar + preview:false) stay plain.
-  const showSourceTab = () => showTabs();
-  const showPreviewTab = () => props.capabilities.preview;
+  // Every composer gets the tab bar (write/source) except chat's plain input.
+  const showTabs = () => props.capabilities.toolbar !== "comment";
 
   return (
     <div class="rich-editor border border-rim overflow-hidden bg-surface flex flex-col flex-1 min-h-0">
@@ -193,36 +188,24 @@ export default function RichEditor(props: Props) {
           >
             {t("editor.write_tab")}
           </TabBtn>
-          <Show when={showSourceTab()}>
-            <TabBtn
-              active={props.tab === "source"}
-              onClick={() => props.onTabChange("source")}
-            >
-              {t("editor.source_tab")}
-            </TabBtn>
-          </Show>
-          <Show when={showPreviewTab()}>
-            <TabBtn
-              active={props.tab === "preview"}
-              onClick={() => props.onTabChange("preview")}
-            >
-              {t("editor.preview_tab")}
-            </TabBtn>
-          </Show>
+          <TabBtn
+            active={props.tab === "source"}
+            onClick={() => props.onTabChange("source")}
+          >
+            {t("editor.source_tab")}
+          </TabBtn>
         </div>
       </Show>
 
       {/* ── Unified toolbar (wysiwyg + source tabs) ── */}
-      <Show when={props.tab !== "preview"}>
-        <EditorToolbar
-          level={props.capabilities.toolbar}
-          latexMode={props.capabilities.latexMode}
-          tab={props.tab as "wysiwyg" | "source"}
-          editorRef={() => editorRef}
-          textareaRef={() => textareaRef}
-          onSourceChange={(v) => { props.onInput(v); }}
-        />
-      </Show>
+      <EditorToolbar
+        level={props.capabilities.toolbar}
+        latexMode={props.capabilities.latexMode}
+        tab={props.tab}
+        editorRef={() => editorRef}
+        textareaRef={() => textareaRef}
+        onSourceChange={(v) => { props.onInput(v); }}
+      />
 
       {/* ── WYSIWYG surface ───────────────────────────────── */}
       <Show when={props.tab === "wysiwyg"}>
@@ -320,15 +303,6 @@ export default function RichEditor(props: Props) {
         </Portal>
       </Show>
 
-      {/* ── Preview panel ────────────────────────────────── */}
-      <Show when={props.tab === "preview"}>
-        <div
-          class="grow overflow-y-auto flex flex-col"
-          style={{ "min-height": minH() }}
-        >
-          <EditorPreview body={props.body} mimetype={mime()} />
-        </div>
-      </Show>
     </div>
   );
 }

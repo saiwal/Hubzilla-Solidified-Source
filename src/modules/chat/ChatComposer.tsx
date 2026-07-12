@@ -38,7 +38,7 @@ interface Props {
 
 export default function ChatComposer(props: Props) {
   const { t } = useI18n();
-  const [tab, setTab] = createSignal<"wysiwyg" | "source" | "preview">("wysiwyg");
+  const [tab, setTab] = createSignal<"wysiwyg" | "source">("wysiwyg");
   const [uploading, setUploading] = createSignal(false);
   const [uploadPct, setUploadPct] = createSignal(0);
   const [cameraOpen, setCameraOpen] = createSignal(false);

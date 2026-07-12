@@ -4,7 +4,7 @@ import { MdOutlineLink, MdOutlineImage } from "solid-icons/md";
 interface Props {
   textareaRef: () => HTMLTextAreaElement | undefined;
   editorRef: () => HTMLDivElement | undefined;
-  tab: "wysiwyg" | "source" | "preview";
+  tab: "wysiwyg" | "source";
   onSourceChange: (v: string) => void;
 }
 

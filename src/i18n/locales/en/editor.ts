@@ -58,7 +58,6 @@ export const editor = {
   // RichEditor tabs
   write_tab:   "Write",
   source_tab:  "Source",
-  preview_tab: "Preview",
 
   // RichEditor source placeholders
   bbcode_source_placeholder:  "BBCode source…",

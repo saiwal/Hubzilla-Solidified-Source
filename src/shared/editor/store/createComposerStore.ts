@@ -55,7 +55,7 @@ export function createComposerStore(
   const [mimetype, setMimetype] = createSignal<MimeType>("text/bbcode");
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError]       = createSignal<string | null>(null);
-  const [tab, setTab]           = createSignal<"wysiwyg" | "source" | "preview">("wysiwyg");
+  const [tab, setTab]           = createSignal<"wysiwyg" | "source">("wysiwyg");
   const [savedDrafts, setSavedDrafts] = createSignal<SavedDraft[]>([]);
   const [loadedDraftId, setLoadedDraftId] = createSignal<string | null>(null);
   // Prevents the autosave effect from running (and deleting the draft) before

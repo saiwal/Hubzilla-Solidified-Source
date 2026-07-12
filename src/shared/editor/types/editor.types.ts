@@ -1,4 +1,4 @@
-export type EditorTab = "wysiwyg" | "source" | "preview";
+export type EditorTab = "wysiwyg" | "source";
 export type MimeType = "text/bbcode" | "text/html" | "text/markdown";
 
 export type ToolbarLevel = "full" | "minimal" | "comment";
@@ -12,7 +12,6 @@ export type LatexInsertMode = "image" | "live";
 
 export type EditorCapabilities = {
   toolbar: ToolbarLevel;
-  preview: boolean;
   title: boolean;
   summary: boolean;
   slug: boolean;
@@ -35,7 +34,6 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
   // Wall post (HQ / network composer)
   post: {
     toolbar: "full",
-    preview: true,
     title: true,
     summary: true,
     slug: false,
@@ -49,7 +47,6 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
   // composer, only the meta fields (title/summary/ACL/…) are stripped.
   comment: {
     toolbar: "full",
-    preview: true,
     title: false,
     summary: false,
     slug: false,
@@ -64,7 +61,6 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
   // renders live (KaTeX) rather than as an uploaded image.
   article: {
     toolbar: "full",
-    preview: true,
     title: true,
     summary: true,
     slug: true,
@@ -78,7 +74,6 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
   // a standalone object, so LaTeX renders live (KaTeX) rather than as an image.
   webpage: {
     toolbar: "full",
-    preview: true,
     title: true,
     summary: true,
     slug: true,
@@ -92,7 +87,6 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
   // same reasoning as webpage above.
   wiki: {
     toolbar: "minimal",
-    preview: true,
     title: false,
     summary: false,
     slug: false,
@@ -105,7 +99,6 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
   // Personal note — always private, minimal toolbar
   note: {
     toolbar: "minimal",
-    preview: true,
     title: false,
     summary: false,
     slug: false,
@@ -115,10 +108,9 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
     submitOnCtrlEnter: true,
     latexMode: "image",
   },
-  // Chat room message input — comment toolbar, no preview, Ctrl+Enter sends
+  // Chat room message input — comment toolbar, untabbed, Ctrl+Enter sends
   chat: {
     toolbar: "comment",
-    preview: false,
     title: false,
     summary: false,
     slug: false,

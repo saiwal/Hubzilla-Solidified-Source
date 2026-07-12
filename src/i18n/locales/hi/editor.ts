@@ -58,7 +58,6 @@ export const editor: RawDictionary["editor"] = {
   // RichEditor tabs
   write_tab:   "लिखें",
   source_tab:  "स्रोत",
-  preview_tab: "पूर्वावलोकन",
   // RichEditor source placeholders
   bbcode_source_placeholder:  "BBCode स्रोत…",
   markdown_source_placeholder: "Markdown स्रोत…",

@@ -636,7 +636,6 @@ export type RawDictionary = {
     // RichEditor tabs
     write_tab:   string;
     source_tab:  string;
-    preview_tab: string;
     // RichEditor source placeholders
     bbcode_source_placeholder:  string;
     markdown_source_placeholder: string;
