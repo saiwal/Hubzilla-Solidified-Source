@@ -407,7 +407,7 @@ const Slot: Component<SlotProps> = (props) => {
   );
 
   if (isFullWidth) {
-    const marginClass = props.name === "footer" ? "mt-4" : "mb-4";
+    const marginClass = props.name === "footer" ? "mt-3" : "mb-4";
     return (
       <Show when={hasContent()}>
         <div class={`space-y-4 ${marginClass}`}>

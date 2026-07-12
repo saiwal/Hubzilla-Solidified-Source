@@ -19,7 +19,7 @@ export default function CreditsWidget() {
   const year = new Date().getFullYear();
 
   return (
-    <footer class="border-t border-rim px-4 py-3 text-center text-xs text-muted">
+    <footer class="border-t border-rim px-4 pt-2 pb-3 text-center text-xs text-muted">
       <p>
         &copy; {year}{" "}
         <Show when={info()} fallback="…">

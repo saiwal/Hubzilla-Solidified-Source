@@ -5,6 +5,7 @@ import {
   For,
   Show,
   createMemo,
+  onMount,
   onCleanup,
   lazy,
 } from "solid-js";
@@ -201,8 +202,11 @@ function toRelativePath(href?: string): string {
 
 function relativeTime(when?: string): string {
   if (!when) return "";
-  const d = new Date(when.replace(" ", "T") + "Z");
-  const diff = Math.floor((Date.now() - d.getTime()) / 1000);
+  // Enotify::format() (Zotlabs/Lib/Enotify.php) converts `created` from UTC to
+  // the server's configured local timezone before sending it as `when` — so it
+  // must be parsed as local time here, not UTC (no "Z" suffix).
+  const d = new Date(when.replace(" ", "T"));
+  const diff = Math.max(0, Math.floor((Date.now() - d.getTime()) / 1000));
   if (diff < 60) return "just now";
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
@@ -237,6 +241,16 @@ function NotifRow(props: {
 }) {
   const [hidden, setHidden] = createSignal(false);
   const uuid = () => getDisplayUuid(props.n);
+
+  const [tick, setTick] = createSignal(0);
+  onMount(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 30000);
+    onCleanup(() => clearInterval(id));
+  });
+  const when = () => {
+    tick();
+    return relativeTime(props.n.when);
+  };
 
   const dismiss = () => {
     if (props.n.b64mid || props.n.notify_id) setHidden(true);
@@ -284,7 +298,7 @@ function NotifRow(props: {
           </p>
           <div class="flex items-center gap-1.5 mt-0.5">
             <Show when={props.n.when}>
-              <p class="text-[10px] text-muted">{relativeTime(props.n.when)}</p>
+              <p class="text-[10px] text-muted">{when()}</p>
             </Show>
           </div>
         </div>

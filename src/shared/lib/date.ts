@@ -1,4 +1,16 @@
+import { createSignal } from "solid-js";
+
+const [tick, setTick] = createSignal(0);
+let started = false;
+function ensureTicking() {
+  if (started) return;
+  started = true;
+  setInterval(() => setTick((t) => t + 1), 30000);
+}
+
 export default function formatPostDate(dateStr: string, locale = "en"): string {
+  ensureTicking();
+  tick();
   const date = new Date(dateStr + "Z");
   const now = new Date();
   const diffMs = date.getTime() - now.getTime();
