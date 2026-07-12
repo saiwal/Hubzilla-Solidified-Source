@@ -116,6 +116,11 @@ function nodeTobbcode(node: Node): string {
       const attrs: string[] = [];
       if (width > 0) attrs.push(`width='${width}'`);
       if (height > 0) attrs.push(`height='${height}'`);
+      // Marks a LaTeX-equation image (see LatexComposerModal.tsx) so it keeps
+      // rendering inline (not Tailwind preflight's block default) after a
+      // round-trip through this editor — must be preserved, not just
+      // stamped once on insert.
+      if (el.classList.contains("bb-latex-img")) attrs.push(`class='bb-latex-img'`);
       if (alt) attrs.push(`alt="${alt}"`);
       return attrs.length ? `[img ${attrs.join(" ")}]${src}[/img]` : `[img]${src}[/img]`;
     }

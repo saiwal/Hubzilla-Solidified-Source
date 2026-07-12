@@ -161,6 +161,9 @@ export const settings: RawDictionary["settings"] = {
   notif_mark_thread_read:  "Gesamten Thread als gelesen markieren, wenn ein Hinweis angeklickt wird",
   notif_event_advance_days: "Terminvorankündigung (Tage)",
   notif_event_advance_hint: "Benachrichtige so viele Tage vor einem bevorstehenden Termin.",
+  notif_desktop_title:     "Desktop-Benachrichtigungen",
+  notif_desktop_hint:      "Zeigt eine Browser-Benachrichtigung für neue Aktivitäten, wenn dieser Tab nicht im Fokus ist.",
+  notif_desktop_blocked:   "In den Website-Einstellungen deines Browsers blockiert.",
   // Integrations
   integ_search_placeholder: "Apps durchsuchen…",
   integ_tab_all:            "Alle",

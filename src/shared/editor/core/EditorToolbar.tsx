@@ -217,10 +217,14 @@ export default function EditorToolbar(props: Props) {
     const trimmed = text.trim();
     const isBlock = trimmed.startsWith("[center]");
     const inner = isBlock ? trimmed.slice("[center]".length, -"[/center]".length) : trimmed;
-    const m = /^\[img alt="([^"]*)"\](.+)\[\/img\]$/s.exec(inner);
+    const m = /^\[img width='(\d+)' class='bb-latex-img' alt="([^"]*)"\](.+)\[\/img\]$/s.exec(inner);
     if (!m) return;
-    const [, alt, src] = m;
-    const html = `<img src="${src}" alt="${alt}" />`;
+    const [, width, alt, src] = m;
+    // Constrain to the un-scaled width so the retina (3x) raster displays at
+    // its intended inline size — same convention as applyImgWidth() below.
+    // class="bb-latex-img" (see index.css) overrides Tailwind preflight's
+    // `img { display: block }` so it flows inline like the saved post will.
+    const html = `<img src="${src}" alt="${alt}" class="bb-latex-img" style="width:${width}px" />`;
     exec("insertHTML", isBlock ? `<div style="text-align:center">${html}</div>` : html);
   };
 

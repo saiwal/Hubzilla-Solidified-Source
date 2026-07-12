@@ -160,6 +160,9 @@ export const settings: RawDictionary["settings"] = {
   notif_mark_thread_read:  "नोटिस क्लिक करने पर पूरा थ्रेड पढ़ा हुआ चिह्नित करें",
   notif_event_advance_days: "कार्यक्रम अग्रिम सूचना (दिन)",
   notif_event_advance_hint: "आगामी कार्यक्रम से इतने दिन पहले सूचित करें।",
+  notif_desktop_title:     "डेस्कटॉप सूचनाएं",
+  notif_desktop_hint:      "जब यह टैब फ़ोकस में न हो तो नई गतिविधि के लिए ब्राउज़र सूचना दिखाएं।",
+  notif_desktop_blocked:   "आपके ब्राउज़र की साइट सेटिंग्स में अवरुद्ध है।",
   // Integrations
   integ_search_placeholder: "ऐप्स खोजें…",
   integ_tab_all:            "सभी",

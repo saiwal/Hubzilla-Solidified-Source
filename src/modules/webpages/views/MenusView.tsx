@@ -13,6 +13,7 @@ import {
   createMenuItem, editMenuItem, deleteMenuItem,
   type MenuSummary, type RawMenuItem, type MenuItemInput,
 } from "@/shared/lib/menus";
+import AclPicker, { entryKey, type AclEntry, type AclMode } from "@/shared/editor/components/AclPicker";
 import {
   MdFillAdd, MdFillClose, MdFillDelete, MdFillLock, MdOutlineEdit_note, MdOutlineMenu,
 } from "solid-icons/md";
@@ -98,17 +99,82 @@ function ItemForm(props: {
   const [busy, setBusy] = createSignal(false);
   const [error, setError] = createSignal("");
 
+  const hasAcl = !!props.initial && (
+    props.initial.allow_cid.length > 0 || props.initial.allow_gid.length > 0 ||
+    props.initial.deny_cid.length > 0 || props.initial.deny_gid.length > 0
+  );
+  const [aclMode, setAclMode] = createSignal<AclMode>(hasAcl ? "custom" : "public");
+  const [allowEntries, setAllowEntries] = createSignal<Set<string>>(
+    new Set<string>([
+      ...(props.initial?.allow_cid ?? []).map((xid) => `c:${xid}`),
+      ...(props.initial?.allow_gid ?? []).map((xid) => `g:${xid}`),
+    ]),
+  );
+  const [denyEntries, setDenyEntries] = createSignal<Set<string>>(
+    new Set<string>([
+      ...(props.initial?.deny_cid ?? []).map((xid) => `c:${xid}`),
+      ...(props.initial?.deny_gid ?? []).map((xid) => `g:${xid}`),
+    ]),
+  );
+
+  function toggleAclEntry(entry: AclEntry, list: "allow" | "deny") {
+    const key = entryKey(entry);
+    const [setSet, setOther] =
+      list === "allow" ? [setAllowEntries, setDenyEntries] : [setDenyEntries, setAllowEntries];
+    setSet((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+    setOther((prev) => {
+      const next = new Set(prev);
+      next.delete(key);
+      return next;
+    });
+  }
+
+  function clearAclEntries() {
+    setAllowEntries(new Set<string>());
+    setDenyEntries(new Set<string>());
+  }
+
+  function splitEntries(entries: Set<string>): { cid: string[]; gid: string[] } {
+    const cid: string[] = [];
+    const gid: string[] = [];
+    for (const key of entries) {
+      const [type, ...rest] = key.split(":");
+      const xid = rest.join(":");
+      if (type === "c") cid.push(xid);
+      if (type === "g") gid.push(xid);
+    }
+    return { cid, gid };
+  }
+
   const submit = async () => {
     setBusy(true);
     setError("");
     try {
-      await props.onSubmit({
+      const mode = aclMode();
+      const item: MenuItemInput = {
         label: label().trim(),
         link: link().trim(),
         order: order(),
         zid: zid(),
         newwin: newwin(),
-      });
+        scope: mode,
+      };
+      if (mode === "custom") {
+        if (allowEntries().size === 0) {
+          throw new Error(t("webpages.acl_custom_requires_allow") as string);
+        }
+        const allow = splitEntries(allowEntries());
+        const deny = splitEntries(denyEntries());
+        item.contact_allow = allow.cid;
+        item.group_allow = allow.gid;
+        item.contact_deny = deny.cid;
+        item.group_deny = deny.gid;
+      }
+      await props.onSubmit(item);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -144,6 +210,14 @@ function ItemForm(props: {
           <input type="checkbox" checked={newwin()} onChange={(e) => setNewwin(e.currentTarget.checked)} />
           {t("webpages.item_newwin")}
         </label>
+        <AclPicker
+          mode={aclMode()}
+          onModeChange={setAclMode}
+          allowEntries={allowEntries()}
+          denyEntries={denyEntries()}
+          onToggle={toggleAclEntry}
+          onClear={clearAclEntries}
+        />
       </div>
       <Show when={error()}>
         <p class="text-xs text-red-500">{error()}</p>
@@ -193,7 +267,7 @@ export default function MenusView() {
   const [editingItemId, setEditingItemId] = createSignal<number | null>(null);
 
   const handleDeleteMenu = async (m: MenuSummary) => {
-    if (!confirm(`${t("webpages.delete")} "${m.name}"?`)) return;
+    if (!confirm(`${t("webpages.delete")} "${m.desc || m.name}"?`)) return;
     await deleteMenu(m.id);
     if (selectedId() === m.id) setSelectedId(null);
   };

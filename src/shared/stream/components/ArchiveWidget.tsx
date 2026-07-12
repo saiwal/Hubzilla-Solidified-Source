@@ -133,15 +133,8 @@ const ArchiveWidget: Component<ArchiveWidgetProps> = (props) => {
 
   const years = (): ArchiveYear[] => remote() ?? [];
 
-  // Start with the most-recent year expanded.
+  // All years start collapsed.
   const [expanded, setExpanded] = createSignal<Set<number>>(new Set());
-  createEffect(
-    on(years, (ys) => {
-      if (ys.length > 0 && expanded().size === 0) {
-        setExpanded(new Set([ys[0].year]));
-      }
-    }),
-  );
 
   const toggleYear = (year: number) => {
     setExpanded((prev) => {

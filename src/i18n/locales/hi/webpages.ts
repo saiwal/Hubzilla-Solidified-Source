@@ -39,6 +39,7 @@ export const webpages: RawDictionary["webpages"] = {
   item_zid:         "पहचान भेजें (zid)",
   item_newwin:      "नई विंडो",
   item_locked:      "कस्टम एक्सेस सूची",
+  acl_custom_requires_allow: "अनुमति देने के लिए कम से कम एक कनेक्शन या समूह चुनें।",
   submenu_label:    "उपमेनू",
   submenu_hint:     "सुझाव: किसी आइटम का लिंक menu:<name> रखें ताकि वह मेनू उपमेनू के रूप में जुड़ जाए।",
   save:             "सहेजें",

@@ -161,6 +161,9 @@ export const settings: RawDictionary["settings"] = {
   notif_mark_thread_read:  "Mark entire thread read when clicking a notice",
   notif_event_advance_days: "Event advance notice (days)",
   notif_event_advance_hint: "Notify this many days before an upcoming event.",
+  notif_desktop_title:     "Desktop notifications",
+  notif_desktop_hint:      "Show a browser notification for new activity while this tab isn't focused.",
+  notif_desktop_blocked:   "Blocked in your browser's site settings.",
   // Integrations
   integ_search_placeholder: "Search apps…",
   integ_tab_all:            "All",

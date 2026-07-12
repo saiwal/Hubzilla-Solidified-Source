@@ -208,6 +208,16 @@
     margin: 0.375rem 0;
   }
   .bb-share-embed .bb-share { margin-top: 0; }
+
+  /* LaTeX equation rendered to an image (post/comment composer — federated
+     content can't rely on client-side KaTeX). Tailwind's preflight sets
+     `img { display: block }`, which both breaks inline flow with
+     surrounding text and defeats `text-align:center` on the [center]-wrapped
+     block-equation case, so it's overridden back to inline-block here. */
+  .bb-latex-img {
+    display: inline-block;
+    vertical-align: middle;
+  }
 }
 
 /* ── Rich editor WYSIWYG content ─────────────────────────────────── */

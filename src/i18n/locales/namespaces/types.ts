@@ -1020,6 +1020,9 @@ export type RawDictionary = {
     notif_mark_thread_read:  string;
     notif_event_advance_days: string;
     notif_event_advance_hint: string;
+    notif_desktop_title:     string;
+    notif_desktop_hint:      string;
+    notif_desktop_blocked:   string;
     // Integrations
     integ_search_placeholder: string;
     integ_tab_all:            string;
@@ -1684,6 +1687,7 @@ export type RawDictionary = {
     item_zid:         string;
     item_newwin:      string;
     item_locked:      string;
+    acl_custom_requires_allow: string;
     submenu_label:    string;
     submenu_hint:     string;
     save:             string;

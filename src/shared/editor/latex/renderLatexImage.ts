@@ -225,7 +225,7 @@ export async function renderLatexToPngFile(
   source: string,
   displayMode: boolean,
   scale = 3,
-): Promise<File> {
+): Promise<{ file: File; width: number; height: number }> {
   const { svg, width, height } = await buildSvg(source, displayMode);
 
   const svgBlob = new Blob([svg], { type: "image/svg+xml" });
@@ -248,7 +248,11 @@ export async function renderLatexToPngFile(
 
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
     if (!blob) throw new LatexRenderError("Could not export the rendered equation.");
-    return new File([blob], `latex-${Date.now()}.png`, { type: "image/png" });
+    // width/height are the un-scaled CSS-pixel dimensions the SVG was
+    // measured at — the canvas raster is `scale`x that for retina sharpness,
+    // so callers must constrain the inserted <img> to these to display it at
+    // the intended inline size instead of the raw (3x) pixel size.
+    return { file: new File([blob], `latex-${Date.now()}.png`, { type: "image/png" }), width, height };
   } finally {
     URL.revokeObjectURL(svgUrl);
   }

@@ -332,10 +332,8 @@ const Layout: ParentComponent = (props) => {
               >
                 {notifCount() > 0 ? `${notifCount()} notification${notifCount() === 1 ? "" : "s"}` : ""}
               </span>
-              <Show when={isOwner()}>
-                <Slot name="header" moduleId={activeModuleId()} editable />
-                <Slot name="mainTop" moduleId={activeModuleId()} editable />
-              </Show>
+              <Slot name="header" moduleId={activeModuleId()} editable />
+              <Slot name="mainTop" moduleId={activeModuleId()} editable />
 
               <div class="min-w-0">
                 <ErrorBoundary fallback={(_, reset) => (
@@ -391,9 +389,7 @@ const Layout: ParentComponent = (props) => {
               </Show>
 
               <div class="mt-auto">
-                <Show when={isOwner()}>
-                  <Slot name="footer" moduleId={activeModuleId()} editable />
-                </Show>
+                <Slot name="footer" moduleId={activeModuleId()} editable />
               </div>
             </div>
           </main>

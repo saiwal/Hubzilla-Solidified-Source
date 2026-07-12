@@ -30,6 +30,7 @@ import {
 import DOMPurify from "dompurify";
 import { setNotifCount } from "@/shared/lib/notificationCount";
 import { markNotifySeen } from "@/shared/lib/markSeen";
+import { showDesktopNotification } from "@/shared/lib/desktopNotify";
 const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -206,6 +207,13 @@ function relativeTime(when?: string): string {
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   return `${Math.floor(diff / 86400)}d ago`;
+}
+
+function stripHtml(html?: string): string {
+  if (!html) return "";
+  const div = document.createElement("div");
+  div.innerHTML = DOMPurify.sanitize(html);
+  return div.textContent?.trim() ?? "";
 }
 
 function prependDeduped(
@@ -488,18 +496,25 @@ export default function NotificationsAside() {
   const applyRaw = (raw: SseResponse, fromSsePush = false) => {
     const { buckets: incoming, forumKeys: fk } = normalise(raw);
     if (fk.length) setForumKeys(fk);
+    const freshNotifs: { key: string; n: HzNotification }[] = [];
     setBuckets((prev) => {
       const next = { ...prev };
       for (const key of DISPLAY_ORDER) {
         const inc = incoming[key];
         if (!inc) continue;
         if (fromSsePush && inc.notifications.length) {
+          const prevList = prev[key]?.notifications ?? [];
+          const existingMids = new Set(
+            prevList.map((n) => n.b64mid).filter(Boolean),
+          );
+          for (const n of inc.notifications) {
+            if (!n.b64mid || !existingMids.has(n.b64mid)) {
+              freshNotifs.push({ key, n });
+            }
+          }
           next[key] = {
             count: inc.count,
-            notifications: prependDeduped(
-              prev[key]?.notifications ?? [],
-              inc.notifications,
-            ),
+            notifications: prependDeduped(prevList, inc.notifications),
           };
         } else {
           next[key] = inc;
@@ -507,6 +522,21 @@ export default function NotificationsAside() {
       }
       return next;
     });
+    if (fromSsePush) {
+      for (const { key, n } of freshNotifs) {
+        const meta = KNOWN_META[key];
+        showDesktopNotification(n.name || meta?.label || "Hubzilla", {
+          body: stripHtml(n.message),
+          icon: n.photo,
+          tag: n.b64mid ?? `${key}-${n.notify_id ?? ""}`,
+          onClick: () => {
+            const uuid = getDisplayUuid(n);
+            if (uuid) setModalUuid(uuid);
+            else window.location.assign(toRelativePath(n.notify_link ?? meta?.href));
+          },
+        });
+      }
+    }
     const nn = raw["notice"] as { notifications: HzNotification[] } | undefined;
     const ni = raw["info"] as { notifications: HzNotification[] } | undefined;
     setNotices([...(nn?.notifications ?? []), ...(ni?.notifications ?? [])]);

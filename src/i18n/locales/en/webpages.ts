@@ -41,6 +41,7 @@ export const webpages: RawDictionary["webpages"] = {
   item_zid:         "Send identity (zid)",
   item_newwin:      "New window",
   item_locked:      "Custom access list",
+  acl_custom_requires_allow: "Select at least one connection or group to allow.",
   submenu_label:    "Submenu",
   submenu_hint:     "Tip: set an item's link to menu:<name> to nest that menu as a submenu.",
   save:             "Save",

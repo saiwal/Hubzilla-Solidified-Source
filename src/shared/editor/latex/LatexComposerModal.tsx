@@ -57,14 +57,22 @@ const LatexComposerModal: Component<Props> = (props) => {
   });
 
   async function insertAsImage() {
-    const file = await renderLatexToPngFile(source(), displayMode());
+    const { file, width } = await renderLatexToPngFile(source(), displayMode());
     setInserting(false);
     setUploading(true);
     const res = await wallAttach(currentNick(), file);
     const url = res.isPhoto && res.src ? res.src : null;
     if (!url) throw new LatexRenderError("Upload succeeded but returned no image URL.");
     const alt = source().trim().replace(/[[\]"\r\n]/g, " ").slice(0, 160);
-    const img = `[img alt="${alt}"]${url}[/img]`;
+    // width alone (no height) keeps the raster's aspect ratio — same
+    // convention as a hand-resized image (see htmlToSource.ts's img case).
+    // Without it the browser displays the PNG at its native (3x, for retina
+    // sharpness) pixel size instead of the intended inline size.
+    // class='bb-latex-img' (see index.css) overrides Tailwind preflight's
+    // `img { display: block }`, which would otherwise both break inline flow
+    // with surrounding text and defeat the [center] wrapper's text-align on
+    // block equations.
+    const img = `[img width='${width}' class='bb-latex-img' alt="${alt}"]${url}[/img]`;
     return displayMode() ? `\n[center]${img}[/center]\n` : img;
   }
 

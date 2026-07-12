@@ -67,7 +67,7 @@ export default function MenuBarWidget(props: WidgetProps) {
                   class="w-full flex items-center justify-between px-4 py-2.5 text-sm
                          font-semibold text-txt hover:bg-elevated transition-colors"
                 >
-                  <span class="truncate">{title() || tree()!.name}</span>
+                  <span class="truncate">{title() || tree()!.desc || tree()!.name}</span>
                   <Show when={mobileOpen()} fallback={<MdFillMenu size={18} class="shrink-0" />}>
                     <MdFillClose size={18} class="shrink-0" />
                   </Show>

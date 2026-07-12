@@ -39,8 +39,13 @@ export interface RawMenuItem {
   order: number;
   zid: boolean;
   newwin: boolean;
-  /** Item carries a non-public ACL (set via the stock Menus app). */
+  /** Item carries a non-public ACL. */
   locked: boolean;
+  /** xchan hashes / group ids currently allowed or denied. */
+  allow_cid: string[];
+  allow_gid: string[];
+  deny_cid: string[];
+  deny_gid: string[];
 }
 
 export interface RawMenu {
@@ -110,6 +115,12 @@ export interface MenuItemInput {
   order: number;
   zid: boolean;
   newwin: boolean;
+  /** Omit to leave an existing item's ACL untouched. */
+  scope?: "public" | "connections" | "custom";
+  contact_allow?: string[];
+  group_allow?: string[];
+  contact_deny?: string[];
+  group_deny?: string[];
 }
 
 export async function createMenuItem(menuId: number, item: MenuItemInput): Promise<void> {
