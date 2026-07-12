@@ -189,4 +189,6 @@ export const settings: RawDictionary["settings"] = {
   danger_type_to_confirm:  "Gib {{nick}} ein, um zu bestätigen",
   danger_removing:         "Wird entfernt…",
   danger_remove_btn:       "Kanal dauerhaft entfernen",
+  danger_password_label:   "Gib dein Konto-Passwort ein, um zu bestätigen",
+  danger_password_placeholder: "Passwort",
 };

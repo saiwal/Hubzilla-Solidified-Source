@@ -9,6 +9,7 @@ import { useViewerRole } from "@/shared/store/site-config";
 import { BiRegularEdit, BiRegularX } from "solid-icons/bi";
 import ArticleComposer from "@/shared/editor/composers/ArticleComposer";
 import PostComposer from "@/shared/editor/composers/PostComposer";
+import { hydrateLatex } from "@/shared/lib/hydrateLatex";
 import {
   posts, loading, hasMore,
   loadArticles, resetPosts, loadMore,
@@ -65,7 +66,10 @@ function ArticleCard(props: { post: Post; nick: string; onOpen: () => void; onSh
       </h2>
 
       <Show when={ex().text}>
-        <p class={`text-sm leading-relaxed ${ex().fromSummary ? "text-txt" : "text-muted"}`}>
+        <p
+          class={`text-sm leading-relaxed ${ex().fromSummary ? "text-txt" : "text-muted"}`}
+          ref={(el) => createEffect(() => { ex(); hydrateLatex(el); })}
+        >
           {ex().text}
         </p>
       </Show>
@@ -163,7 +167,7 @@ function ArticleModal(props: {
       >
         {/* Panel */}
         <div class="relative w-full max-w-3xl rounded-xl bg-base border border-rim shadow-xl">
-          <div class="flex items-center justify-between px-4 py-3 border-b border-rim sticky top-0 bg-base z-10 rounded-t-xl">
+          <div class="flex items-center justify-between px-4 py-3 border-b border-rim bg-base rounded-t-xl">
             <h2 class="text-sm font-semibold text-txt">{t("articles.new_article")}</h2>
             <button
               type="button"

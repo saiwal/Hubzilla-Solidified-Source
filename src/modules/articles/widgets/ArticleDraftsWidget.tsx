@@ -179,47 +179,40 @@ export default function ArticleDraftsWidget() {
                 const isEdit = () => scopeParts(entry.scope).action === "edit";
 
                 return (
-                  <div class="flex items-start gap-3 px-4 py-3 hover:bg-elevated group transition-colors"
+                  <div class="px-4 py-3 hover:bg-elevated group transition-colors"
                     classList={{ "opacity-50 pointer-events-none": isDeleting() }}>
 
-                    {/* Type badge */}
-                    <span class="mt-0.5 shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded
-                                 border leading-none select-none bg-emerald-500/10 text-emerald-600
-                                 dark:text-emerald-400 border-emerald-500/25">
-                      {isEdit() ? t("articles.draft_edit") : t("articles.draft_new")}
-                    </span>
+                    <div class="flex items-start gap-3">
+                      {/* Type badge */}
+                      <span class="mt-0.5 shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded
+                                   border leading-none select-none bg-emerald-500/10 text-emerald-600
+                                   dark:text-emerald-400 border-emerald-500/25">
+                        {isEdit() ? t("articles.draft_edit") : t("articles.draft_new")}
+                      </span>
 
-                    {/* Content */}
-                    <div
-                      class="flex-1 min-w-0 cursor-pointer"
-                      onClick={() => void handleLoad(entry)}
-                    >
-                      <Show when={entry.draft.title}>
-                        <p class="text-xs font-medium text-txt truncate leading-snug">
-                          {entry.draft.title}
-                        </p>
-                      </Show>
-                      <p class="text-xs text-muted truncate">
-                        <Show when={entry.draft.preview} fallback={<em>{t("articles.empty_draft")}</em>}>
-                          {entry.draft.preview}
+                      {/* Content */}
+                      <div
+                        class="flex-1 min-w-0 cursor-pointer"
+                        onClick={() => void handleLoad(entry)}
+                      >
+                        <Show when={entry.draft.title}>
+                          <p class="text-xs font-medium text-txt truncate leading-snug">
+                            {entry.draft.title}
+                          </p>
                         </Show>
-                      </p>
-                      <div class="flex items-center gap-1.5 mt-0.5">
-                        <span class="text-[10px] text-muted/60">{timeAgo(entry.draft.updated)}</span>
+                        <p class="text-xs text-muted truncate">
+                          <Show when={entry.draft.preview} fallback={<em>{t("articles.empty_draft")}</em>}>
+                            {entry.draft.preview}
+                          </Show>
+                        </p>
+                        <div class="flex items-center gap-1.5 mt-0.5">
+                          <span class="text-[10px] text-muted/60">{timeAgo(entry.draft.updated)}</span>
+                        </div>
                       </div>
                     </div>
 
                     {/* Actions */}
-                    <div class="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        type="button"
-                        title={t("articles.load_draft")}
-                        onClick={() => void handleLoad(entry)}
-                        class="px-2 py-0.5 text-[10px] rounded border border-rim text-muted
-                               hover:text-txt hover:border-rim-strong transition-colors"
-                      >
-                        {t("articles.load_draft")}
-                      </button>
+                    <div class="flex items-center justify-end gap-1 mt-1.5">
                       <button
                         type="button"
                         onClick={() => void deleteDraft(entry.scope, entry.draft.id)}

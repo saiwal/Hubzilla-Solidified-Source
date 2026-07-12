@@ -21,15 +21,6 @@ registerModule({
     // renders above the routed view — same slot the "sleek" blocks.* / _top
     // widgets use, so users can rearrange, remove, or add to these too.
     {
-      id: "hq.perfstats",
-      label: () => useI18n().t("hq.performance"),
-      loader: () => import("./widgets/PerfStatsWidget"),
-      slot: "mainTop",
-      defaultModules: ["hq"],
-      contexts: ["hq"],
-      helpTarget: "hq.performance_widget",
-    },
-    {
       id: "hq.composer",
       label: () => useI18n().t("hq.post_composer"),
       loader: () => import("./widgets/HqComposer"),

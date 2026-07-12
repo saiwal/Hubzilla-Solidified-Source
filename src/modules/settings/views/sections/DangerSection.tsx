@@ -20,18 +20,19 @@ export default function DangerSection() {
   const data = () => query.data;
 
   const [confirm, setConfirm] = createSignal("");
+  const [password, setPassword] = createSignal("");
   const [busy, setBusy] = createSignal(false);
 
   const removeChannel = async () => {
-    if (confirm() !== data()?.nick) return;
+    if (confirm() !== data()?.nick || !password()) return;
     setBusy(true);
     try {
       const res = await apiFetch("/api/settings/danger", {
         method: "POST",
-        body: JSON.stringify({ action: "remove_channel" }),
+        body: JSON.stringify({ action: "remove_channel", password: password() }),
       });
-      if (!res.ok) throw new Error("Failed");
       const json = await res.json();
+      if (!res.ok) throw new Error(json?.error?.message ?? "Failed");
       window.location.href = json.data?.redirect ?? "/";
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed");
@@ -68,9 +69,24 @@ export default function DangerSection() {
               />
             </div>
 
+            <div class="space-y-2">
+              <label class="block text-xs font-medium text-red-700">
+                {t("settings.danger_password_label")}
+              </label>
+              <input
+                type="password"
+                value={password()}
+                onInput={(e) => setPassword(e.currentTarget.value)}
+                placeholder={t("settings.danger_password_placeholder")}
+                autocomplete="current-password"
+                class="w-full max-w-xs px-3 py-2 rounded-lg border border-red-300 bg-surface
+                       text-txt text-sm outline-none focus:border-red-500 transition-colors"
+              />
+            </div>
+
             <button
               type="button"
-              disabled={confirm() !== data()!.nick || busy()}
+              disabled={confirm() !== data()!.nick || !password() || busy()}
               onClick={removeChannel}
               class="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white
                      hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed

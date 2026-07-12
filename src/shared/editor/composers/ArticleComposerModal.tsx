@@ -35,7 +35,7 @@ export default function ArticleComposerModal(props: {
         onClick={(e) => { if (e.target === e.currentTarget) props.onClose(); }}
       >
         <div class="relative w-full max-w-3xl rounded-xl bg-base border border-rim shadow-xl">
-          <div class="flex items-center justify-between px-4 py-3 border-b border-rim sticky top-0 bg-base z-10 rounded-t-xl">
+          <div class="flex items-center justify-between px-4 py-3 border-b border-rim bg-base rounded-t-xl">
             <h2 class="text-sm font-semibold text-txt">{props.heading}</h2>
             <button
               type="button"

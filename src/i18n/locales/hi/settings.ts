@@ -188,4 +188,6 @@ export const settings: RawDictionary["settings"] = {
   danger_type_to_confirm:  "पुष्टि करने के लिए {{nick}} टाइप करें",
   danger_removing:         "हटाया जा रहा है…",
   danger_remove_btn:       "चैनल स्थायी रूप से हटाएँ",
+  danger_password_label:   "पुष्टि करने के लिए अपना खाता पासवर्ड दर्ज करें",
+  danger_password_placeholder: "पासवर्ड",
 };

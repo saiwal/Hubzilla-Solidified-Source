@@ -1048,6 +1048,8 @@ export type RawDictionary = {
     danger_type_to_confirm:  string;
     danger_removing:         string;
     danger_remove_btn:       string;
+    danger_password_label:   string;
+    danger_password_placeholder: string;
   };
   network: {
     latest:               string;

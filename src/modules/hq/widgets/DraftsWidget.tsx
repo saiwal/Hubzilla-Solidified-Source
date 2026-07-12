@@ -6,6 +6,7 @@ import PostComposer from "@/shared/editor/composers/PostComposer";
 import ArticleComposerModal from "@/shared/editor/composers/ArticleComposerModal";
 import { useAuth } from "@/shared/store/auth-store";
 import { useI18n } from "@/i18n";
+import { MdFillDelete } from "solid-icons/md";
 
 // ── Scope helpers ─────────────────────────────────────────────────────────────
 
@@ -217,10 +218,33 @@ export default function DraftsWidget() {
                 const isDeleting = () => deleting() === entry.draft.id;
 
                 return (
-                  <div class="px-3.5 py-2.5 hover:bg-elevated group transition-colors"
+                  <div class="relative px-3.5 py-2.5 hover:bg-elevated group transition-colors"
                     classList={{ "opacity-50 pointer-events-none": isDeleting() }}>
 
-                    <div class="flex items-start gap-2.5">
+                    {/* Delete — floating icon, top-right corner over the title */}
+                    <button
+                      type="button"
+                      title={t("hq.delete_draft")}
+                      onClick={() => void deleteDraft(entry.scope, entry.draft.id)}
+                      class="absolute top-1.5 right-1.5 p-1 rounded-lg text-muted
+                             opacity-0 group-hover:opacity-100 hover:text-red-500
+                             hover:bg-elevated transition-all"
+                    >
+                      <Show
+                        when={!isDeleting()}
+                        fallback={
+                          <svg class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0
+                                 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                        }
+                      >
+                        <MdFillDelete size={13} />
+                      </Show>
+                    </button>
+
+                    <div class="flex items-start gap-2.5 pr-6">
                       {/* Type badge */}
                       <span class={`mt-0.5 shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded
                                     border leading-none select-none ${badgeClass(entry.scope)}`}>
@@ -246,41 +270,6 @@ export default function DraftsWidget() {
                           <span class="text-[10px] text-muted/60">{timeAgo(entry.draft.updated)}</span>
                         </div>
                       </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div class="flex items-center justify-end gap-1 mt-1.5">
-                      <Show when={loadable()}>
-                        <button
-                          type="button"
-                          title={t("hq.load_in_composer")}
-                          onClick={() => void handleLoad(entry)}
-                          class="px-2 py-0.5 text-[10px] rounded border border-rim text-muted
-                                 hover:text-txt hover:border-rim-strong transition-colors"
-                        >
-                          {t("hq.load")}
-                        </button>
-                      </Show>
-                      <button
-                        type="button"
-                        onClick={() => void deleteDraft(entry.scope, entry.draft.id)}
-                        class="px-2 py-0.5 text-[10px] rounded border border-rim text-muted
-                               hover:text-red-500 hover:border-red-400/50 transition-colors
-                               flex items-center gap-1"
-                      >
-                        <Show
-                          when={!isDeleting()}
-                          fallback={
-                            <svg class="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0
-                                   0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                          }
-                        >
-                          {t("hq.delete_draft")}
-                        </Show>
-                      </button>
                     </div>
                   </div>
                 );
