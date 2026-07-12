@@ -169,6 +169,7 @@ export type RawDictionary = {
     comment_plural:          string;
     recent_posts:            string;
     remote_hosted_on:        string;
+    copy_address:            string;
   };
   help: {
     click_for_help: string;

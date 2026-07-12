@@ -76,4 +76,5 @@ export const ui: RawDictionary["ui"] = {
   comment_plural:         "Kommentare",
   recent_posts:           "Aktuelle Beiträge",
   remote_hosted_on:       "Externes Profil · gehostet auf",
+  copy_address:           "Adresse kopieren",
 };

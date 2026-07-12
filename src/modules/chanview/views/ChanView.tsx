@@ -15,6 +15,8 @@ import {
   MdFillPublic,
   MdOutlineArrow_back,
   MdFillOpen_in_new,
+  MdOutlineContent_copy,
+  MdOutlineCheck,
 } from "solid-icons/md";
 
 interface RemotePost {
@@ -112,6 +114,14 @@ export default function ChanView() {
   const [editConn, setEditConn] = createSignal<Connection | null>(null);
   const [editOpen, setEditOpen] = createSignal(false);
   const [disconnected, setDisconnected] = createSignal(false);
+  const [addressCopied, setAddressCopied] = createSignal(false);
+
+  function copyAddress(address: string) {
+    navigator.clipboard.writeText(address).then(() => {
+      setAddressCopied(true);
+      setTimeout(() => setAddressCopied(false), 1500);
+    });
+  }
 
   const x = () => xchan();
   const isConnected = () => !disconnected() && (x()?.is_connected ?? false);
@@ -217,7 +227,22 @@ export default function ChanView() {
                       {xdata().name}
                     </h1>
                     <Show when={xdata().address}>
-                      <p class="text-sm text-muted mt-0.5">@{xdata().address}</p>
+                      <p class="flex items-center gap-1 text-sm text-muted mt-0.5">
+                        <span class="truncate">@{xdata().address}</span>
+                        <button
+                          onClick={() => copyAddress(xdata().address)}
+                          title={t("ui.copy_address")}
+                          aria-label={t("ui.copy_address")}
+                          class="p-0.5 rounded hover:bg-overlay transition-colors text-muted hover:text-txt shrink-0"
+                        >
+                          <Show
+                            when={addressCopied()}
+                            fallback={<MdOutlineContent_copy size={13} />}
+                          >
+                            <MdOutlineCheck size={13} class="text-accent" />
+                          </Show>
+                        </button>
+                      </p>
                     </Show>
                     <Show when={xdata().pdesc}>
                       <p class="text-xs text-muted mt-0.5 italic">{xdata().pdesc}</p>
