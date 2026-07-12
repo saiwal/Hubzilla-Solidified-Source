@@ -2,6 +2,9 @@ import { createSignal, lazy, Show } from "solid-js";
 import type { LatexInsertMode, ToolbarLevel } from "../types/editor.types";
 import { useI18n } from "@/i18n";
 import { MdOutlineLink, MdOutlineImage } from "solid-icons/md";
+import EmojiPicker from "../emoji/EmojiPicker";
+import type { EmojiEntry } from "@/shared/store/emoji-store";
+import { emojiEntryToImg } from "@/shared/lib/emojify";
 
 const LatexComposerModal = lazy(() => import("../latex/LatexComposerModal"));
 
@@ -228,6 +231,10 @@ export default function EditorToolbar(props: Props) {
     exec("insertHTML", isBlock ? `<div style="text-align:center">${html}</div>` : html);
   };
 
+  const insertEmoji = (entry: EmojiEntry) => {
+    isSource() ? insertSource(entry.shortname + " ") : exec("insertHTML", `${emojiEntryToImg(entry)} `);
+  };
+
   const table = () => {
     const colsRaw = prompt("Number of columns:", "2");
     if (!colsRaw) return;
@@ -369,6 +376,7 @@ export default function EditorToolbar(props: Props) {
           <Btn title={t("editor.latex_toolbar_title")} onPress={() => setLatexOpen(true)}>
             <span class="text-xs font-serif italic">∑</span>
           </Btn>
+          <EmojiPicker onSelect={insertEmoji} />
 
           {/* ── Group 6: Rich structure — full only ── */}
           <Show when={isFull()}>

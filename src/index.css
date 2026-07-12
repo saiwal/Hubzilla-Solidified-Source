@@ -281,9 +281,26 @@
   border-radius: 0 !important;
 }
 
+/* !important on height/width: remote/legacy-federated custom emoji (e.g. from
+   Mastodon-style instances that bake fixed dimensions into their own <img>
+   tags) may arrive with an inline height="20"/"50" — here in our own renderer
+   the class must win over that inline style so emoji stay relative to text
+   size. */
 img.emoji {
-  height: 1.2em;
-  width: auto;
+  height: 1.2em !important;
+  width: auto !important;
   vertical-align: text-bottom;
   display: inline-block;
+  transition: transform 0.15s ease;
+}
+img.emoji:hover {
+  transform: scale(2.2);
+  position: relative;
+  z-index: 1;
+}
+img.emoji.single-emoji {
+  height: 3em !important;
+}
+img.emoji.single-emoji:hover {
+  transform: scale(1.6);
 }

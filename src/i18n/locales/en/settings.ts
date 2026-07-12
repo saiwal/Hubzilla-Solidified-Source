@@ -83,6 +83,8 @@ export const settings: RawDictionary["settings"] = {
   scroll_style_hint:       "How more posts are loaded as you reach the bottom. Takes effect immediately.",
   scroll_style_endless:    "Endless scroll",
   scroll_style_load_more:  "Load more button",
+  show_emoji_images:       "Show emoticons (smilies) as images",
+  show_emoji_images_hint:  "Render :shortcode: emoji as images when reading posts, comments, and titles. When off, the raw shortcode text is shown instead.",
   bg_image_url:            "Background",
   bg_image_url_hint:       "Pick a preset or enter a custom URL. The fit mode is set automatically.",
   bg_clear:                "Clear",

@@ -50,6 +50,7 @@ import { getCsrfToken } from "@/shared/lib/csrf";
 import { isEncryptedBody } from "@/shared/lib/postCrypto";
 import { useEncrypt } from "../useEncrypt";
 import EncryptPanel from "../components/EncryptPanel";
+import { htmlToSource } from "../core/htmlToSource";
 void helpable;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -387,7 +388,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
     const entry = mention.filtered()[mention.activeIdx()];
     if (!entry) return;
     const editor = getEditor();
-    if (editor) { mention.insertWysiwyg(entry, () => store.setBody(editor.innerHTML)); return; }
+    if (editor) { mention.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); return; }
     const ta = getTA();
     if (ta) mention.insertTextarea(entry, ta, store.setBody);
   }
@@ -396,7 +397,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
     const entry = emoji.filtered()[emoji.activeIdx()];
     if (!entry) return;
     const editor = getEditor();
-    if (editor) { emoji.insertWysiwyg(entry, () => store.setBody(editor.innerHTML)); return; }
+    if (editor) { emoji.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); return; }
     const ta = getTA();
     if (ta) emoji.insertTextarea(entry, ta, store.setBody);
   }
@@ -930,7 +931,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
             activeIdx={mention.activeIdx()}
             onSelect={(entry) => {
               const editor = getEditor();
-              if (editor) { mention.insertWysiwyg(entry, () => store.setBody(editor.innerHTML)); return; }
+              if (editor) { mention.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); return; }
               const ta = getTA();
               if (ta) mention.insertTextarea(entry, ta, store.setBody);
             }}
@@ -945,7 +946,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
             activeIdx={emoji.activeIdx()}
             onSelect={(entry) => {
               const editor = getEditor();
-              if (editor) { emoji.insertWysiwyg(entry, () => store.setBody(editor.innerHTML)); return; }
+              if (editor) { emoji.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); return; }
               const ta = getTA();
               if (ta) emoji.insertTextarea(entry, ta, store.setBody);
             }}

@@ -54,6 +54,9 @@ export const editor = {
   blockquote:       "Zitat",
   code_block:       "Codeblock",
   clear_formatting: "Formatierung entfernen",
+  emoji_picker_title:       "Emoji einfügen",
+  emoji_search_placeholder: "Emoji suchen…",
+  emoji_no_results:         "Kein Emoji gefunden",
 
   // RichEditor tabs
   write_tab:   "Schreiben",

@@ -85,6 +85,8 @@ export const settings: RawDictionary["settings"] = {
   list_view_behavior_inbox:     "इनबॉक्स — इनलाइन विस्तारित होती है",
   comment_view:            "टिप्पणी दृश्य",
   comment_view_hint:       "पोस्ट के नीचे उत्तर कैसे दिखाए जाते हैं। तुरंत प्रभावी होता है।",
+  show_emoji_images:       "इमोटिकॉन (स्माइली) चित्रों के रूप में दिखाएँ",
+  show_emoji_images_hint:  "पोस्ट, टिप्पणियाँ और शीर्षक पढ़ते समय :shortcode: इमोजी को चित्रों के रूप में दिखाएँ। बंद होने पर, इसके बजाय कच्चा शॉर्टकोड टेक्स्ट दिखाया जाता है।",
   scroll_style:            "स्क्रॉल शैली",
   scroll_style_hint:       "नीचे पहुँचने पर और पोस्ट कैसे लोड होती हैं। तुरंत प्रभावी होता है।",
   scroll_style_endless:    "अनंत स्क्रॉल",

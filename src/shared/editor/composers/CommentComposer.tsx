@@ -17,6 +17,7 @@ import EmojiPopup from "@/shared/editor/emoji/EmojiPopup";
 import AttachmentBar from "../attachments/AttachmentBar";
 import { createAttachmentStore } from "../attachments/useAttachments";
 import { bbcodeToInsert, patchInsertedAlt } from "../attachments/insertHelpers";
+import { htmlToSource } from "../core/htmlToSource";
 
 interface Props {
   /** Parent item uuid — full-URL mids break the /api/item/:id path (slashes). */
@@ -105,7 +106,7 @@ export default function CommentComposer(props: Props) {
           const entry = mention.filtered()[mention.activeIdx()];
           if (!entry) return;
           const editor = getEditor();
-          if (editor) { mention.insertWysiwyg(entry, () => store.setBody(editor.innerHTML)); return; }
+          if (editor) { mention.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); return; }
           const ta = getTA();
           if (ta) mention.insertTextarea(entry, ta, store.setBody);
         }
@@ -119,7 +120,7 @@ export default function CommentComposer(props: Props) {
           const entry = emoji.filtered()[emoji.activeIdx()];
           if (!entry) return;
           const editor = getEditor();
-          if (editor) { emoji.insertWysiwyg(entry, () => store.setBody(editor.innerHTML)); return; }
+          if (editor) { emoji.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); return; }
           const ta = getTA();
           if (ta) emoji.insertTextarea(entry, ta, store.setBody);
         }
@@ -200,7 +201,7 @@ export default function CommentComposer(props: Props) {
           activeIdx={mention.activeIdx()}
           onSelect={(entry) => {
             const editor = getEditor();
-            if (editor) { mention.insertWysiwyg(entry, () => store.setBody(editor.innerHTML)); return; }
+            if (editor) { mention.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); return; }
             const ta = getTA();
             if (ta) mention.insertTextarea(entry, ta, store.setBody);
           }}
@@ -214,7 +215,7 @@ export default function CommentComposer(props: Props) {
           activeIdx={emoji.activeIdx()}
           onSelect={(entry) => {
             const editor = getEditor();
-            if (editor) { emoji.insertWysiwyg(entry, () => store.setBody(editor.innerHTML)); return; }
+            if (editor) { emoji.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); return; }
             const ta = getTA();
             if (ta) emoji.insertTextarea(entry, ta, store.setBody);
           }}

@@ -8,6 +8,7 @@ import { useListBehavior, setListBehavior, type ListBehavior } from "@/shared/st
 import { useScrollStyle, setScrollStyle, type ScrollStyle } from "@/shared/store/scroll-style";
 import { applyCornerRadius, type CornerRadius } from "@/shared/lib/corner-radius";
 import { useBgUrl, useBgFit, setBgUrl, setBgFit } from "@/shared/lib/background";
+import { setEmojiAsImages } from "@/shared/store/emoji-as-images";
 import PATTERN_PRESETS from "virtual:public-listing/patterns";
 import BG_PRESETS from "virtual:public-listing/bg";
 import { initTheme, useTheme } from "@/shared/lib/useTheme";
@@ -35,9 +36,9 @@ export default function DisplaySection() {
     saver: saveDisplaySettings,
     numericFields: [
       "update_interval", "itemspage",
-      "start_menu",
+      "start_menu", "show_emoji_images",
     ],
-    checkboxFields: ["start_menu"],
+    checkboxFields: ["start_menu", "show_emoji_images"],
     reloadOn: (prev, next) => prev?.theme !== next.theme,
   });
 
@@ -58,6 +59,7 @@ export default function DisplaySection() {
       setCornerRadius(d.corner_radius as CornerRadius);
       applyCornerRadius(d.corner_radius as CornerRadius);
     }
+    setEmojiAsImages(!!d.show_emoji_images);
   });
 
   return (
@@ -372,6 +374,21 @@ export default function DisplaySection() {
               ))}
             </div>
           </Field>
+
+          {/* Show emoji as images */}
+          <div>
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                name="show_emoji_images"
+                value="1"
+                checked={!!data()!.show_emoji_images}
+                class="h-4 w-4 rounded border-rim accent-accent"
+              />
+              <span class="text-sm text-txt">{t("settings.show_emoji_images")}</span>
+            </label>
+            <p class="text-xs text-muted mt-1 ml-7">{t("settings.show_emoji_images_hint")}</p>
+          </div>
 
           {/* Background picker */}
           <BackgroundPicker />

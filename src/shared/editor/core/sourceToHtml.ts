@@ -3,13 +3,18 @@ import DOMPurify from "dompurify";
 import { bbcodeToHtml } from "@/shared/lib/bbcode";
 import { apiFetch } from "@/shared/lib/fetch";
 import { SCAN_RE, MATCH_RE, loadKatex } from "@/shared/lib/hydrateLatex";
+import { emojify } from "@/shared/lib/emojify";
+import { getEmojiMap } from "@/shared/store/emoji-store";
+import { useEmojiAsImages } from "@/shared/store/emoji-as-images";
 import type { MimeType } from "../types/editor.types";
 
 /** Convert source-format body to HTML for the WYSIWYG editor. */
 export function sourceToHtml(body: string, mimetype: MimeType): string {
-  if (mimetype === "text/html") return body;
-  if (mimetype === "text/markdown") return marked.parse(body) as string;
-  return bbcodeToEditorHtml(body);
+  const html =
+    mimetype === "text/html" ? body :
+    mimetype === "text/markdown" ? (marked.parse(body) as string) :
+    bbcodeToEditorHtml(body);
+  return useEmojiAsImages()() ? emojify(html, getEmojiMap()) : html;
 }
 
 // ---------------------------------------------------------------------------

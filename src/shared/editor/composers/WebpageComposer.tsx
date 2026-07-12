@@ -21,6 +21,7 @@ import {
 import MentionPopup from "../mention/MentionPopup";
 import { useEmoji, getWysiwygEmojiQuery, getTextareaEmojiQuery } from "../emoji/useEmoji";
 import EmojiPopup from "../emoji/EmojiPopup";
+import { htmlToSource } from "../core/htmlToSource";
 
 interface Props {
   profileUid: number;
@@ -207,7 +208,7 @@ export default function WebpageComposer(props: Props) {
         const entry = mention.filtered()[mention.activeIdx()];
         if (!entry) return;
         const editor = getEditor();
-        if (editor) { mention.insertWysiwyg(entry, () => store.setBody(editor.innerHTML)); return; }
+        if (editor) { mention.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); return; }
         const ta = getTA();
         if (ta) mention.insertTextarea(entry, ta, store.setBody);
       }
@@ -219,7 +220,7 @@ export default function WebpageComposer(props: Props) {
         const entry = emoji.filtered()[emoji.activeIdx()];
         if (!entry) return;
         const editor = getEditor();
-        if (editor) { emoji.insertWysiwyg(entry, () => store.setBody(editor.innerHTML)); return; }
+        if (editor) { emoji.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); return; }
         const ta = getTA();
         if (ta) emoji.insertTextarea(entry, ta, store.setBody);
       }
@@ -342,7 +343,7 @@ export default function WebpageComposer(props: Props) {
           activeIdx={mention.activeIdx()}
           onSelect={(entry) => {
             const editor = getEditor();
-            if (editor) { mention.insertWysiwyg(entry, () => store.setBody(editor.innerHTML)); return; }
+            if (editor) { mention.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); return; }
             const ta = getTA();
             if (ta) mention.insertTextarea(entry, ta, store.setBody);
           }}
@@ -357,7 +358,7 @@ export default function WebpageComposer(props: Props) {
           activeIdx={emoji.activeIdx()}
           onSelect={(entry) => {
             const editor = getEditor();
-            if (editor) { emoji.insertWysiwyg(entry, () => store.setBody(editor.innerHTML)); return; }
+            if (editor) { emoji.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); return; }
             const ta = getTA();
             if (ta) emoji.insertTextarea(entry, ta, store.setBody);
           }}

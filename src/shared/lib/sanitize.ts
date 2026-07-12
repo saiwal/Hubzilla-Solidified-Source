@@ -3,9 +3,11 @@ import DOMPurify from 'dompurify';
 import { emojify } from './emojify';
 import { shortenUrls } from './shortenUrls';
 import { getEmojiMap } from '../store/emoji-store';
+import { useEmojiAsImages } from '../store/emoji-as-images';
 
 export function sanitizeHtml(html: string): string {
-  return DOMPurify.sanitize(shortenUrls(emojify(html, getEmojiMap())), {
+  const emojified = useEmojiAsImages()() ? emojify(html, getEmojiMap()) : html;
+  return DOMPurify.sanitize(shortenUrls(emojified), {
     ALLOWED_TAGS: [
       'a', 'b', 'i', 'u', 's', 'em', 'strong',
       'p', 'br', 'div', 'span', 'blockquote',

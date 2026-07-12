@@ -15,11 +15,15 @@ import MentionPopup from "@/shared/editor/mention/MentionPopup";
 import {
   useEmoji,
   getWysiwygEmojiQuery,
+  type EmojiEntry,
 } from "@/shared/editor/emoji/useEmoji";
 import EmojiPopup from "@/shared/editor/emoji/EmojiPopup";
+import EmojiPicker from "@/shared/editor/emoji/EmojiPicker";
+import { emojiEntryToImg } from "@/shared/lib/emojify";
 import { sendChatMessage, roomName, roomAcl } from "./store";
 import { currentNick } from "@/shared/store/auth-store";
 import { uploadChatMedia } from "./chatAttach";
+import { htmlToSource } from "@/shared/editor/core/htmlToSource";
 import {
   MdFillSend,
   MdOutlineEmoji_emotions,
@@ -110,7 +114,7 @@ export default function ChatComposer(props: Props) {
           const entry = mention.filtered()[mention.activeIdx()];
           if (!entry) return;
           const editor = getEditor();
-          if (editor) mention.insertWysiwyg(entry, () => store.setBody(editor.innerHTML));
+          if (editor) mention.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype())));
         }
         return;
       }
@@ -122,7 +126,7 @@ export default function ChatComposer(props: Props) {
           const entry = emoji.filtered()[emoji.activeIdx()];
           if (!entry) return;
           const editor = getEditor();
-          if (editor) emoji.insertWysiwyg(entry, () => store.setBody(editor.innerHTML));
+          if (editor) emoji.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype())));
         }
         return;
       }
@@ -132,10 +136,11 @@ export default function ChatComposer(props: Props) {
   window.addEventListener("keydown", onKeyDown);
   onCleanup(() => window.removeEventListener("keydown", onKeyDown));
 
-  function toggleEmoji() {
-    if (emoji.open()) { emoji.close(); return; }
-    const r = wrapperRef?.getBoundingClientRect();
-    if (r) emoji.openWithQuery("", r);
+  function insertEmoji(entry: EmojiEntry) {
+    const editor = getEditor();
+    if (!editor) return;
+    editor.focus();
+    document.execCommand("insertHTML", false, `${emojiEntryToImg(entry)} `);
   }
 
   async function handleMediaFile(file: File) {
@@ -257,9 +262,11 @@ export default function ChatComposer(props: Props) {
           <MediaBtn title="Camera" onClick={() => setCameraOpen(true)} disabled={uploading()}>
             <MdOutlineCamera_alt class="text-lg" />
           </MediaBtn>
-          <MediaBtn title="Emoji" onClick={toggleEmoji} disabled={false}>
-            <MdOutlineEmoji_emotions class="text-lg" />
-          </MediaBtn>
+          <EmojiPicker
+            onSelect={insertEmoji}
+            triggerIcon={<MdOutlineEmoji_emotions class="text-lg" />}
+            triggerClass="p-1.5 rounded-lg text-muted hover:text-accent hover:bg-elevated transition-colors"
+          />
           {/* Session encryption toggle */}
           <Show when={isFeatureEnabled("content_encrypt")}>
             <Show
@@ -326,7 +333,7 @@ export default function ChatComposer(props: Props) {
           activeIdx={mention.activeIdx()}
           onSelect={(entry) => {
             const editor = getEditor();
-            if (editor) mention.insertWysiwyg(entry, () => store.setBody(editor.innerHTML));
+            if (editor) mention.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype())));
           }}
         />
       </Show>
@@ -338,7 +345,7 @@ export default function ChatComposer(props: Props) {
           activeIdx={emoji.activeIdx()}
           onSelect={(entry) => {
             const editor = getEditor();
-            if (editor) { emoji.insertWysiwyg(entry, () => store.setBody(editor.innerHTML)); emoji.close(); }
+            if (editor) { emoji.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); emoji.close(); }
           }}
         />
       </Show>

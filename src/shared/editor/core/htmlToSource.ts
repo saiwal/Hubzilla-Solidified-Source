@@ -103,6 +103,10 @@ function nodeTobbcode(node: Node): string {
     }
 
     case "img": {
+      // Emoji images (see sourceToHtml.ts's emojify() pass) round-trip back
+      // to their plain :shortname: text, not an [img] bbcode tag.
+      if (el.classList.contains("emoji")) return el.getAttribute("alt") ?? "";
+
       const src = el.getAttribute("src") ?? "";
       // "Image/photo" is the default alt bbcodeToHtml stamps on images that
       // had none — writing it back would grow every round-trip.

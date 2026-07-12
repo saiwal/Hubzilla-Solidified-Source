@@ -55,6 +55,9 @@ export const editor: RawDictionary["editor"] = {
   blockquote:       "उद्धरण",
   code_block:       "कोड ब्लॉक",
   clear_formatting: "फ़ॉर्मेटिंग हटाएँ",
+  emoji_picker_title:       "इमोजी डालें",
+  emoji_search_placeholder: "इमोजी खोजें…",
+  emoji_no_results:         "कोई इमोजी नहीं मिली",
   // RichEditor tabs
   write_tab:   "लिखें",
   source_tab:  "स्रोत",

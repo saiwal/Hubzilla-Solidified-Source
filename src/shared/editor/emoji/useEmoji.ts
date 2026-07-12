@@ -131,7 +131,6 @@ export function useEmoji(): EmojiState {
   }
 
   function insertWysiwyg(entry: EmojiEntry, syncBody: () => void) {
-    const tag = entry.shortname;
     const sel = window.getSelection();
     const q = query() ?? "";
     if (sel && sel.rangeCount > 0) {
@@ -139,9 +138,17 @@ export function useEmoji(): EmojiState {
       // Delete the `:query` typed so far (colon + query chars)
       range.setStart(range.startContainer, Math.max(0, range.startOffset - q.length - 1));
       range.deleteContents();
-      const textNode = document.createTextNode(tag + " ");
-      range.insertNode(textNode);
-      range.setStartAfter(textNode);
+      const img = document.createElement("img");
+      img.src = `/${entry.filepath}`;
+      img.className = "emoji";
+      img.alt = entry.shortname;
+      img.title = entry.shortname;
+      const spaceNode = document.createTextNode(" ");
+      const frag = document.createDocumentFragment();
+      frag.appendChild(img);
+      frag.appendChild(spaceNode);
+      range.insertNode(frag);
+      range.setStartAfter(spaceNode);
       range.collapse(true);
       sel.removeAllRanges();
       sel.addRange(range);

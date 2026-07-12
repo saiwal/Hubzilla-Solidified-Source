@@ -633,6 +633,9 @@ export type RawDictionary = {
     blockquote:       string;
     code_block:       string;
     clear_formatting: string;
+    emoji_picker_title:       string;
+    emoji_search_placeholder: string;
+    emoji_no_results:         string;
     // RichEditor tabs
     write_tab:   string;
     source_tab:  string;
@@ -949,6 +952,8 @@ export type RawDictionary = {
     scroll_style_hint:       string;
     scroll_style_endless:    string;
     scroll_style_load_more:  string;
+    show_emoji_images:       string;
+    show_emoji_images_hint:  string;
     bg_image_url:            string;
     bg_image_url_hint:       string;
     bg_clear:                string;

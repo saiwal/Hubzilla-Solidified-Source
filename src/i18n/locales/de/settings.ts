@@ -83,6 +83,8 @@ export const settings: RawDictionary["settings"] = {
   scroll_style_hint:       "Wie weitere Beiträge geladen werden, wenn du das Ende erreichst. Wird sofort wirksam.",
   scroll_style_endless:    "Endloses Scrollen",
   scroll_style_load_more:  "Schaltfläche „Mehr laden“",
+  show_emoji_images:       "Emoticons (Smilies) als Bilder anzeigen",
+  show_emoji_images_hint:  "Zeigt :shortcode:-Emoji beim Lesen von Beiträgen, Kommentaren und Titeln als Bilder an. Wenn deaktiviert, wird stattdessen der rohe Shortcode-Text angezeigt.",
   bg_image_url:            "Hintergrund",
   bg_image_url_hint:       "Wähle eine Voreinstellung oder gib eine eigene URL ein. Der Anpassungsmodus wird automatisch festgelegt.",
   bg_clear:                "Löschen",

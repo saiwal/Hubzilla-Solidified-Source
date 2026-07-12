@@ -13,6 +13,7 @@ export interface DisplaySettings {
   bg_fit: "tile" | "cover";
   scroll_style: "endless" | "load_more";
   corner_radius: "none" | "sm" | "default" | "lg" | "xl";
+  show_emoji_images: number; // 0 | 1
 }
 
 // ── Privacy ──────────────────────────────────────────────────────────────────
