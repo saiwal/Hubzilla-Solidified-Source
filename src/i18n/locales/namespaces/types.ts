@@ -1169,6 +1169,12 @@ export type RawDictionary = {
     system_role:          string;
     no_custom_roles:      string;
     delete_role:          string;
+    edit_permissions:     string;
+    role_perms_title:     string;
+    role_perms_desc:      string;
+    role_perms_loading:   string;
+    role_perms_inherited: string;
+    cancel:               string;
     privacy_groups_title: string;
     privacy_groups_desc:  string;
     no_privacy_groups:    string;

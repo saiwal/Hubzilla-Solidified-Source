@@ -96,6 +96,12 @@ export const directory: RawDictionary["directory"] = {
   system_role:          "Built-in",
   no_custom_roles:      "No custom roles yet.",
   delete_role:          "Delete role",
+  edit_permissions:     "Edit permissions",
+  role_perms_title:     "Role Permissions",
+  role_perms_desc:      "Choose what connections with this role are allowed to do.",
+  role_perms_loading:   "Loading permissions…",
+  role_perms_inherited: "Always allowed by your channel's privacy settings",
+  cancel:               "Cancel",
   // PrivacyGroupsView
   privacy_groups_title: "Privacy Groups",
   privacy_groups_desc:  "Group your connections to control who sees each post.",

@@ -96,6 +96,12 @@ export const directory: RawDictionary["directory"] = {
   system_role:          "Integriert",
   no_custom_roles:      "Noch keine benutzerdefinierten Rollen.",
   delete_role:          "Rolle löschen",
+  edit_permissions:     "Berechtigungen bearbeiten",
+  role_perms_title:     "Rollenberechtigungen",
+  role_perms_desc:      "Lege fest, was Kontakte mit dieser Rolle dürfen.",
+  role_perms_loading:   "Berechtigungen werden geladen…",
+  role_perms_inherited: "Durch deine Kanal-Datenschutzeinstellungen immer erlaubt",
+  cancel:               "Abbrechen",
   // PrivacyGroupsView
   privacy_groups_title: "Privatsphäre-Gruppen",
   privacy_groups_desc:  "Gruppiere deine Verbindungen, um zu steuern, wer welchen Beitrag sieht.",

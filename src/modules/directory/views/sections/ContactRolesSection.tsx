@@ -16,6 +16,7 @@ import type { Connection, Permcat } from "../../connections/api";
 import { useI18n } from "@/i18n";
 import { MdFillAdd, MdFillClose, MdOutlineEdit } from "solid-icons/md";
 import ConnectionEditorModal from "@/shared/views/ConnectionEditorModal";
+import RolePermissionsModal from "./RolePermissionsModal";
 import SubPageContent from "@/shared/views/SubPageContent";
 
 // ── API ───────────────────────────────────────────────────────────────────────
@@ -109,7 +110,9 @@ function CustomRolePill(props: {
   onSelect: () => void;
   onDeleted: (name: string) => void;
   onRenamed: (oldName: string, newPermcat: Permcat) => void;
+  onEditPerms: (name: string, label: string) => void;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = createSignal(false);
   const [renaming, setRenaming] = createSignal(false);
   const [newName, setNewName] = createSignal("");
@@ -240,7 +243,13 @@ function CustomRolePill(props: {
       {/* Dropdown menu */}
       <Show when={open()}>
         <div class="fixed inset-0 z-[9]" onClick={() => setOpen(false)} />
-        <div class="absolute top-full left-0 mt-1 bg-surface border border-rim rounded-lg shadow-lg z-10 py-1 min-w-[110px]">
+        <div class="absolute top-full left-0 mt-1 bg-surface border border-rim rounded-lg shadow-lg z-10 py-1 min-w-[140px]">
+          <button
+            onClick={() => { setOpen(false); props.onEditPerms(props.name, props.label); }}
+            class="w-full text-left px-3 py-1.5 text-xs text-txt hover:bg-overlay transition-colors"
+          >
+            {t("directory.edit_permissions")}
+          </button>
           <button
             onClick={startRename}
             class="w-full text-left px-3 py-1.5 text-xs text-txt hover:bg-overlay transition-colors"
@@ -393,6 +402,7 @@ export default function ContactRolesSection() {
   const [permcats, { mutate: mutatePermcats }] = createQueryResource("permcats", fetchPermcats);
   const [activeRole, setActiveRole] = createSignal<string | null>(null);
   const [showCreate, setShowCreate] = createSignal(false);
+  const [editingPerms, setEditingPerms] = createSignal<{ name: string; label: string } | null>(null);
 
   const roleOptions = createMemo<{ name: string; label: string }[]>(() => {
     const cats = permcats() ?? [];
@@ -445,6 +455,9 @@ export default function ContactRolesSection() {
 
   function handlePermcatCreated(role: Permcat) {
     mutatePermcats((prev) => [...(prev ?? []), role]);
+    // Freshly created roles start as a copy of "default" — send the user
+    // straight into the permission grid so they can actually customize it.
+    setEditingPerms({ name: role.name, label: role.label });
   }
 
   function handlePermcatDeleted(name: string) {
@@ -525,6 +538,7 @@ export default function ContactRolesSection() {
                     onSelect={() => setActiveRole(pill.name)}
                     onDeleted={handlePermcatDeleted}
                     onRenamed={handlePermcatRenamed}
+                    onEditPerms={(name, label) => setEditingPerms({ name, label })}
                   />
                 </Show>
               )}
@@ -551,6 +565,17 @@ export default function ContactRolesSection() {
             </For>
           </div>
         </Show>
+      </Show>
+
+      <Show when={editingPerms()}>
+        {(role) => (
+          <RolePermissionsModal
+            name={role().name}
+            label={role().label}
+            onClose={() => setEditingPerms(null)}
+            onSaved={() => setEditingPerms(null)}
+          />
+        )}
       </Show>
     </SubPageContent>
   );

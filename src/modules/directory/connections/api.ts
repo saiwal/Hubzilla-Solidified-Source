@@ -101,6 +101,17 @@ export interface Permcat {
   system: boolean;
 }
 
+export interface PermcatPermEntry {
+  key: string;
+  label: string;
+  value: boolean;
+  inherited: boolean;
+}
+
+export interface PermcatDetail extends Permcat {
+  perms: PermcatPermEntry[];
+}
+
 export interface PermEntry {
   key: string;
   label: string;
@@ -129,6 +140,27 @@ export async function createPermcat(name: string): Promise<Permcat> {
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body?.error?.message ?? `create permcat HTTP ${res.status}`);
+  }
+  const body = await res.json();
+  return body.data as Permcat;
+}
+
+export async function fetchPermcatDetail(name: string): Promise<PermcatDetail> {
+  const q = new URLSearchParams({ name });
+  const res = await apiFetch(`/api/connections/permcats?${q}`);
+  if (!res.ok) throw new Error(`permcat detail HTTP ${res.status}`);
+  const body = await res.json();
+  return body.data as PermcatDetail;
+}
+
+export async function updatePermcatPerms(name: string, perms: string[]): Promise<Permcat> {
+  const res = await apiFetch("/api/connections/permcats", {
+    method: "POST",
+    body: JSON.stringify({ name, perms }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.error?.message ?? `update permcat HTTP ${res.status}`);
   }
   const body = await res.json();
   return body.data as Permcat;
