@@ -124,12 +124,14 @@ export default function RichEditor(props: Props) {
   // ratio is always preserved; htmlToSource serializes it as [img width='N'].
   const [imgSel, setImgSel] = createSignal<{ el: HTMLImageElement; rect: DOMRect } | null>(null);
   const [widthVal, setWidthVal] = createSignal("");
+  const [altVal, setAltVal] = createSignal("");
   let popupRef: HTMLDivElement | undefined;
 
   const onEditorClick = (e: MouseEvent) => {
     const t = e.target as HTMLElement;
     if (t instanceof HTMLImageElement && !t.closest(".bb-share-embed")) {
       setWidthVal(String(parseInt(t.style.width, 10) || Math.round(t.getBoundingClientRect().width)));
+      setAltVal(t.alt === "Image/photo" ? "" : t.alt);
       setImgSel({ el: t, rect: t.getBoundingClientRect() });
     } else {
       setImgSel(null);
@@ -156,6 +158,15 @@ export default function RichEditor(props: Props) {
     }
     sel.el.style.removeProperty("height");
     setWidthVal(String(Math.round(sel.el.getBoundingClientRect().width)));
+    onEditorInput();
+  };
+
+  const applyImgAlt = (text: string) => {
+    const sel = imgSel();
+    if (!sel) return;
+    // Alt ends up in a single-line [img alt="..."] tag, so collapse any
+    // newlines from the textarea into spaces before writing it back.
+    sel.el.alt = text.trim().replace(/\s+/g, " ");
     onEditorInput();
   };
 
@@ -262,54 +273,72 @@ export default function RichEditor(props: Props) {
         <Portal>
           <div
             ref={popupRef}
-            class="fixed z-[70] flex items-center gap-1 px-2 py-1.5 rounded-lg border border-rim
+            class="fixed z-[70] flex flex-col gap-1.5 px-2 py-1.5 rounded-lg border border-rim
                    bg-surface shadow-xl"
             style={popupStyle()}
           >
-            <For each={[25, 50, 75] as const}>
-              {(pct) => (
-                <button
-                  type="button"
-                  onClick={() => {
-                    const el = imgSel()!.el;
-                    const base = el.naturalWidth || el.getBoundingClientRect().width;
-                    applyImgWidth((base * pct) / 100);
-                  }}
-                  class="px-1.5 py-0.5 rounded text-xs text-muted hover:bg-elevated hover:text-txt transition-colors"
-                >
-                  {pct}%
-                </button>
-              )}
-            </For>
-            <button
-              type="button"
-              onClick={() => applyImgWidth(null)}
-              class="px-1.5 py-0.5 rounded text-xs text-muted hover:bg-elevated hover:text-txt transition-colors"
-            >
-              100%
-            </button>
-            <span class="w-px h-4 bg-rim mx-0.5" />
-            <input
-              type="number"
-              min="16"
-              title={t("editor.img_width")}
-              value={widthVal()}
-              onInput={(e) => setWidthVal(e.currentTarget.value)}
-              onChange={(e) => {
-                const w = parseInt(e.currentTarget.value, 10);
-                if (w > 0) applyImgWidth(w);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  const w = parseInt(widthVal(), 10);
+            <div class="flex items-center gap-1">
+              <For each={[25, 50, 75] as const}>
+                {(pct) => (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const el = imgSel()!.el;
+                      const base = el.naturalWidth || el.getBoundingClientRect().width;
+                      applyImgWidth((base * pct) / 100);
+                    }}
+                    class="px-1.5 py-0.5 rounded text-xs text-muted hover:bg-elevated hover:text-txt transition-colors"
+                  >
+                    {pct}%
+                  </button>
+                )}
+              </For>
+              <button
+                type="button"
+                onClick={() => applyImgWidth(null)}
+                class="px-1.5 py-0.5 rounded text-xs text-muted hover:bg-elevated hover:text-txt transition-colors"
+              >
+                100%
+              </button>
+              <span class="w-px h-4 bg-rim mx-0.5" />
+              <input
+                type="number"
+                min="16"
+                title={t("editor.img_width")}
+                value={widthVal()}
+                onInput={(e) => setWidthVal(e.currentTarget.value)}
+                onChange={(e) => {
+                  const w = parseInt(e.currentTarget.value, 10);
                   if (w > 0) applyImgWidth(w);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    const w = parseInt(widthVal(), 10);
+                    if (w > 0) applyImgWidth(w);
+                  }
+                }}
+                class="w-16 px-1.5 py-0.5 text-xs rounded border border-rim bg-elevated text-txt
+                       outline-none focus:border-accent/50"
+              />
+              <span class="text-[10px] text-muted">px</span>
+            </div>
+            <textarea
+              placeholder={t("editor.img_alt")}
+              title={t("editor.img_alt")}
+              rows={4}
+              value={altVal()}
+              onInput={(e) => setAltVal(e.currentTarget.value)}
+              onChange={(e) => applyImgAlt(e.currentTarget.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                  e.preventDefault();
+                  applyImgAlt(altVal());
                 }
               }}
-              class="w-16 px-1.5 py-0.5 text-xs rounded border border-rim bg-elevated text-txt
-                     outline-none focus:border-accent/50"
+              class="w-full min-w-[220px] px-2 py-1 text-xs rounded border border-rim bg-elevated text-txt
+                     outline-none focus:border-accent/50 resize-none"
             />
-            <span class="text-[10px] text-muted">px</span>
           </div>
         </Portal>
       </Show>

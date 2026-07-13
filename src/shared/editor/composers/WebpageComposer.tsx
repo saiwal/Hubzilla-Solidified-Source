@@ -95,7 +95,7 @@ export default function WebpageComposer(props: Props) {
 
   function withFileAttachments(body: string): string {
     const tags = attach.attachments()
-      .filter((a) => a.status === "ready" && (a.hash || a.resourceId))
+      .filter((a) => a.status === "ready" && !a.isImage && (a.hash || a.resourceId))
       .map((a) => `[attachment]${a.hash ?? a.resourceId},0[/attachment]`)
       .join("\n");
     return tags ? `${body}\n${tags}` : body;

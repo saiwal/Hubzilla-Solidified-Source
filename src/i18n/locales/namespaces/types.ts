@@ -646,6 +646,7 @@ export type RawDictionary = {
     // AclPicker
     acl_search_placeholder: string;
     img_width:              string;
+    img_alt:                string;
     acl_public:             string;
     acl_connections:        string;
     acl_custom:             string;

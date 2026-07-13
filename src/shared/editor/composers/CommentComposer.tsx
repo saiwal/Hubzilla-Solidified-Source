@@ -32,7 +32,7 @@ export default function CommentComposer(props: Props) {
       if (!props.parentUuid) throw new Error("Missing parent item");
 
       const fileTags = attach.attachments()
-        .filter((a) => a.status === "ready" && (a.hash || a.resourceId))
+        .filter((a) => a.status === "ready" && !a.isImage && (a.hash || a.resourceId))
         .map((a) => `[attachment]${a.hash ?? a.resourceId},0[/attachment]`)
         .join("\n");
       const augmentedBody = fileTags ? `${body}\n${fileTags}` : body;

@@ -67,6 +67,7 @@ export const editor: RawDictionary["editor"] = {
   html_source_placeholder:    "HTML स्रोत…",
   // AclPicker
   img_width:              "छवि की चौड़ाई",
+  img_alt:                "ऑल्ट टेक्स्ट",
   acl_public:             "सार्वजनिक",
   acl_connections:        "कनेक्शन",
   acl_custom:             "कस्टम",

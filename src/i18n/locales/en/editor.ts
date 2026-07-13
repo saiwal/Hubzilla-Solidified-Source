@@ -69,6 +69,7 @@ export const editor = {
 
   // AclPicker
   img_width:              "Image width",
+  img_alt:                "Alt text",
   acl_public:             "Public",
   acl_connections:        "Connections",
   acl_custom:             "Custom",
