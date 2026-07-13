@@ -23,6 +23,7 @@ import {
   MdFillShare,
   MdFillChat,
   MdOutlineShare,
+  MdOutlineToc,
 } from "solid-icons/md";
 import { apiToggleLike, apiToggleDislike, apiToggleRepeat } from "@/shared/lib/item-api";
 import type { Post } from "@/shared/types/post.types";
@@ -101,6 +102,76 @@ function TableOfContents(props: { entries: TocEntry[]; activeId: string }) {
         </div>
       </Show>
     </nav>
+  );
+}
+
+// ── Floating TOC (small screens) ────────────────────────────────────────────────
+
+function FloatingToc(props: { entries: TocEntry[]; activeId: string }) {
+  const { t } = useI18n();
+  const [open, setOpen] = createSignal(false);
+  const minLevel = () => Math.min(...props.entries.map((e) => e.level));
+  const indent = (level: number) => {
+    const d = level - minLevel();
+    return d === 0 ? "" : d === 1 ? "pl-3" : "pl-6";
+  };
+
+  return (
+    <div class="xl:hidden fixed top-20 right-4 z-40 flex flex-col items-end">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open()}
+        aria-label={t("articles.on_this_page")}
+        class="w-11 h-11 rounded-full flex items-center justify-center
+               bg-elevated border border-rim shadow-lg hover:shadow-xl
+               text-muted hover:text-txt transition-all"
+      >
+        <MdOutlineToc size={20} />
+      </button>
+      <Show when={open()}>
+        <div
+          class="mt-2 w-64 max-w-[calc(100vw-2rem)] max-h-[60vh] overflow-y-auto
+                 bg-surface border border-rim rounded-xl shadow-2xl p-3"
+        >
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold uppercase tracking-wide text-muted">
+              {t("articles.on_this_page")}
+            </span>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Close table of contents"
+              class="p-1 rounded text-muted hover:bg-elevated hover:text-txt transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+          <div class="space-y-0.5">
+            <For each={props.entries}>
+              {(entry) => (
+                <a
+                  href={`#${entry.id}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById(entry.id)?.scrollIntoView({ behavior: "smooth" });
+                    setOpen(false);
+                  }}
+                  class={`block text-xs py-0.5 px-1 rounded transition-colors truncate
+                    ${indent(entry.level)}
+                    ${props.activeId === entry.id
+                      ? "text-accent font-medium"
+                      : "text-muted hover:text-txt"
+                    }`}
+                >
+                  {entry.text}
+                </a>
+              )}
+            </For>
+          </div>
+        </div>
+      </Show>
+    </div>
   );
 }
 
@@ -329,7 +400,7 @@ export default function ArticleView() {
         {(d) => (
           <div class="xl:flex xl:gap-8">
             {/* ── Article ── */}
-            <article class="min-w-0 flex-1 max-w-3xl space-y-6">
+            <article class="min-w-0 flex-1 max-w-none xl:max-w-3xl space-y-6">
               {/* Back link */}
               <A
                 href={`/articles/${nick()}`}
@@ -367,32 +438,9 @@ export default function ArticleView() {
               <Show when={!editing()}>
                 {/* Header */}
                 <header class="space-y-2 border-b border-rim pb-4">
-                  <div class="flex items-start justify-between gap-4">
-                    <h1 class="text-3xl font-bold leading-tight text-txt">
-                      {d().article.title || "(Untitled)"}
-                    </h1>
-                    {/* Owner actions */}
-                    <Show when={isOwner()}>
-                      <div class="flex items-center gap-1 shrink-0 pt-1">
-                        <button
-                          type="button"
-                          onClick={() => { setConfirmDelete(false); setEditing(true); }}
-                          title="Edit article"
-                          class="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-txt transition-colors"
-                        >
-                          <BiRegularEdit class="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => { setEditing(false); setConfirmDelete(true); }}
-                          title="Delete article"
-                          class="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-red-500 transition-colors"
-                        >
-                          <BiRegularTrash class="w-4 h-4" />
-                        </button>
-                      </div>
-                    </Show>
-                  </div>
+                  <h1 class="text-3xl font-bold leading-tight text-txt">
+                    {d().article.title || "(Untitled)"}
+                  </h1>
 
                   <Show when={d().article.summary}>
                     <p class="text-lg text-muted italic leading-snug">
@@ -411,13 +459,6 @@ export default function ArticleView() {
                     </a>
                   </p>
                 </header>
-
-                {/* TOC inline on small screens */}
-                <Show when={toc().length > 1}>
-                  <div class="xl:hidden">
-                    <TableOfContents entries={toc()} activeId={activeId()} />
-                  </div>
-                </Show>
 
                 {/* Body */}
                 <div
@@ -489,6 +530,28 @@ export default function ArticleView() {
                     >
                       <MdFillChat size={17} />
                       <span>{t("articles.comment")}</span>
+                    </button>
+                  </Show>
+
+                  {/* Owner actions */}
+                  <Show when={isOwner()}>
+                    <button
+                      type="button"
+                      onClick={() => { setConfirmDelete(false); setEditing(true); }}
+                      title="Edit article"
+                      class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                             transition-colors hover:bg-overlay text-muted hover:text-txt"
+                    >
+                      <BiRegularEdit size={17} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setEditing(false); setConfirmDelete(true); }}
+                      title="Delete article"
+                      class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                             transition-colors hover:bg-overlay text-muted hover:text-red-500"
+                    >
+                      <BiRegularTrash size={17} />
                     </button>
                   </Show>
                 </div>
@@ -583,11 +646,12 @@ export default function ArticleView() {
               </Show>
             </article>
 
-            {/* ── Floating TOC — fixed sidebar on xl+ ── */}
+            {/* ── TOC — fixed sidebar on xl+, floating collapsed launcher below xl ── */}
             <Show when={toc().length > 1}>
               <aside class="hidden xl:block shrink-0 w-52">
                 <TableOfContents entries={toc()} activeId={activeId()} />
               </aside>
+              <FloatingToc entries={toc()} activeId={activeId()} />
             </Show>
           </div>
         )}

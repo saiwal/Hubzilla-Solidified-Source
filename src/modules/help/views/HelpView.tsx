@@ -4,6 +4,7 @@ import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { useParams, A } from "@solidjs/router";
 import DOMPurify from "dompurify";
 import { useI18n } from "@/i18n";
+import { MdOutlineToc } from "solid-icons/md";
 import { fetchTopic } from "../api";
 
 // ── types ─────────────────────────────────────────────────────────────────────
@@ -77,6 +78,76 @@ function TableOfContents(props: { entries: TocEntry[]; activeId: string }) {
         </div>
       </Show>
     </nav>
+  );
+}
+
+// ── Floating TOC (small screens) ────────────────────────────────────────────────
+
+function FloatingToc(props: { entries: TocEntry[]; activeId: string }) {
+  const { t } = useI18n();
+  const [open, setOpen] = createSignal(false);
+  const minLevel = () => Math.min(...props.entries.map((e) => e.level));
+  const indent = (level: number) => {
+    const d = level - minLevel();
+    return d === 0 ? "" : d === 1 ? "pl-3" : "pl-6";
+  };
+
+  return (
+    <div class="xl:hidden fixed top-20 right-4 z-40 flex flex-col items-end">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open()}
+        aria-label={t("help.on_this_page")}
+        class="w-11 h-11 rounded-full flex items-center justify-center
+               bg-elevated border border-rim shadow-lg hover:shadow-xl
+               text-muted hover:text-txt transition-all"
+      >
+        <MdOutlineToc size={20} />
+      </button>
+      <Show when={open()}>
+        <div
+          class="mt-2 w-64 max-w-[calc(100vw-2rem)] max-h-[60vh] overflow-y-auto
+                 bg-surface border border-rim rounded-xl shadow-2xl p-3"
+        >
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold uppercase tracking-wide text-muted">
+              {t("help.on_this_page")}
+            </span>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Close table of contents"
+              class="p-1 rounded text-muted hover:bg-elevated hover:text-txt transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+          <div class="space-y-0.5">
+            <For each={props.entries}>
+              {(entry) => (
+                <a
+                  href={`#${entry.id}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById(entry.id)?.scrollIntoView({ behavior: "smooth" });
+                    setOpen(false);
+                  }}
+                  class={`block text-xs py-0.5 px-1 rounded transition-colors truncate
+                    ${indent(entry.level)}
+                    ${props.activeId === entry.id
+                      ? "text-accent font-medium"
+                      : "text-muted hover:text-txt"
+                    }`}
+                >
+                  {entry.text}
+                </a>
+              )}
+            </For>
+          </div>
+        </div>
+      </Show>
+    </div>
   );
 }
 
@@ -167,7 +238,7 @@ export default function HelpView() {
     <div class="relative max-w-5xl mx-auto py-4">
       <div class="xl:flex xl:gap-8">
         {/* ── Content ── */}
-        <article class="min-w-0 flex-1 max-w-3xl space-y-5">
+        <article class="min-w-0 flex-1 max-w-none xl:max-w-3xl space-y-5">
           <Show when={topicData.loading}>
             <ContentSkeleton />
           </Show>
@@ -188,13 +259,6 @@ export default function HelpView() {
 
           <Show when={!topicData.loading && topicData()}>
             <>
-              {/* TOC inline on small screens */}
-              <Show when={toc().length > 1}>
-                <div class="xl:hidden">
-                  <TableOfContents entries={toc()} activeId={activeId()} />
-                </div>
-              </Show>
-
               {/* Body */}
               <div
                 ref={bodyRef}
@@ -210,11 +274,12 @@ export default function HelpView() {
           </Show>
         </article>
 
-        {/* ── Floating TOC — fixed column on xl+ ── */}
+        {/* ── TOC — fixed sidebar on xl+, floating collapsed launcher below xl ── */}
         <Show when={toc().length > 1}>
           <aside class="hidden xl:block shrink-0 w-52">
             <TableOfContents entries={toc()} activeId={activeId()} />
           </aside>
+          <FloatingToc entries={toc()} activeId={activeId()} />
         </Show>
       </div>
     </div>

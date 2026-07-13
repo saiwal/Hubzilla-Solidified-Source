@@ -7,6 +7,7 @@ import { toast } from "@/shared/store/toast";
 import { useParams, A, useNavigate } from "@solidjs/router";
 import { useI18n } from "@/i18n";
 import DOMPurify from "dompurify";
+import { MdOutlineList } from "solid-icons/md";
 import { hydrateLatex } from "@/shared/lib/hydrateLatex";
 import {
   pageData, pageLoading, pageNotFound, editMode, draftContent, canWrite,
@@ -17,6 +18,146 @@ import {
   loadRevisionPreview, closePreview,
 } from "../store";
 import { savePage, deletePage, revertPage, renamePage } from "../api";
+
+// ── Floating page list (small screens) ──────────────────────────────────────────
+
+function FloatingPageList(props: { nick: string; wikiName: string; pageName: string }) {
+  const { t } = useI18n();
+  const navigate = useNavigate();
+  const [open, setOpen] = createSignal(false);
+  const [creatingPage, setCreatingPage] = createSignal(false);
+  const [newPageInput, setNewPageInput] = createSignal("");
+
+  function handleNewPage(e: Event) {
+    e.preventDefault();
+    const name = newPageInput().trim();
+    if (!name) return;
+    const encoded = encodeURIComponent(name);
+    setCreatingPage(false);
+    setNewPageInput("");
+    setOpen(false);
+    navigate(`/wiki/${props.nick}/${props.wikiName}/${encoded}`);
+  }
+
+  return (
+    <div class="md:hidden fixed top-20 right-4 z-40 flex flex-col items-end">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open()}
+        aria-label={t("wiki.wikis")}
+        class="w-11 h-11 rounded-full flex items-center justify-center
+               bg-elevated border border-rim shadow-lg hover:shadow-xl
+               text-muted hover:text-txt transition-all"
+      >
+        <MdOutlineList size={20} />
+      </button>
+      <Show when={open()}>
+        <div
+          class="mt-2 w-64 max-w-[calc(100vw-2rem)] max-h-[60vh] overflow-y-auto
+                 bg-surface border border-rim rounded-xl shadow-2xl p-3 space-y-1"
+        >
+          <div class="flex items-center justify-between mb-1 gap-2">
+            <Show when={currentWiki()}>
+              <span class="text-xs font-semibold uppercase tracking-wide text-muted truncate">
+                {currentWiki()!.name}
+              </span>
+            </Show>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Close page list"
+              class="p-1 rounded text-muted hover:bg-elevated hover:text-txt transition-colors shrink-0"
+            >
+              ✕
+            </button>
+          </div>
+
+          <Show when={pagesLoading()}>
+            <For each={[1, 2, 3]}>
+              {() => <div class="h-6 rounded bg-elevated animate-pulse" />}
+            </For>
+          </Show>
+
+          <Show when={!pagesLoading()}>
+            <For each={pages()}>
+              {(p) => (
+                <A
+                  href={`/wiki/${props.nick}/${props.wikiName}/${p.url_name}`}
+                  onClick={() => setOpen(false)}
+                  class="block text-sm px-2 py-1 rounded-lg truncate transition-colors"
+                  classList={{
+                    "bg-elevated text-txt": p.url_name === props.pageName,
+                    "text-muted hover:bg-elevated hover:text-txt":
+                      p.url_name !== props.pageName,
+                  }}
+                >
+                  {p.name}
+                </A>
+              )}
+            </For>
+          </Show>
+
+          <Show when={canWrite()}>
+            <div class="pt-2 border-t border-rim mt-2">
+              <Show
+                when={!creatingPage()}
+                fallback={
+                  <form onSubmit={handleNewPage} class="space-y-1.5">
+                    <input
+                      type="text"
+                      autofocus
+                      class="w-full bg-surface border border-rim text-txt rounded-lg px-2 py-1 text-xs
+                             hover:border-rim-strong focus:outline-none"
+                      placeholder={t("wiki.page_name_placeholder") as string}
+                      value={newPageInput()}
+                      onInput={(e) => setNewPageInput(e.currentTarget.value)}
+                    />
+                    <div class="flex gap-1">
+                      <button
+                        type="submit"
+                        disabled={!newPageInput().trim()}
+                        class="flex-1 text-xs bg-accent-muted text-accent px-2 py-1 rounded-md
+                               hover:bg-elevated disabled:opacity-50 transition-colors"
+                      >
+                        {t("wiki.create_page")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setCreatingPage(false); setNewPageInput(""); }}
+                        class="text-xs text-muted hover:text-txt px-2 py-1 rounded-md transition-colors"
+                      >
+                        {t("wiki.cancel")}
+                      </button>
+                    </div>
+                  </form>
+                }
+              >
+                <button
+                  type="button"
+                  onClick={() => setCreatingPage(true)}
+                  class="w-full text-left text-xs text-muted hover:text-txt transition-colors px-2 py-1"
+                >
+                  + {t("wiki.new_page")}
+                </button>
+              </Show>
+            </div>
+          </Show>
+
+          <div class="pt-2 border-t border-rim mt-2">
+            <A
+              href={`/wiki/${props.nick}`}
+              onClick={() => setOpen(false)}
+              class="text-xs text-muted hover:text-txt transition-colors"
+            >
+              {t("wiki.all_wikis")}
+            </A>
+          </div>
+        </div>
+      </Show>
+    </div>
+  );
+}
 
 export default function WikiPageView() {
   const { t } = useI18n();
@@ -144,6 +285,9 @@ export default function WikiPageView() {
 
   return (
     <div class="flex gap-4 max-w-6xl mx-auto p-4">
+      {/* ── Floating page list — collapsed launcher below md ── */}
+      <FloatingPageList nick={params.nick} wikiName={params.wikiName} pageName={params.pageName} />
+
       {/* ── Sidebar: page list ──────────────────────────────────────────── */}
       <aside class="hidden md:flex flex-col w-52 shrink-0 gap-2">
         <div class="bg-surface border border-rim rounded-xl p-3 space-y-1 sticky top-20">
