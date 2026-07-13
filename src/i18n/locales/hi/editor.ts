@@ -200,4 +200,12 @@ export const editor: RawDictionary["editor"] = {
   latex_rendering:      "रेंडर हो रहा है…",
   latex_uploading:      "अपलोड हो रहा है…",
   latex_insert_btn:     "डालें",
+
+  // DMComposer
+  dm_new_message:        "नया संदेश",
+  to_label:               "प्रति:",
+  to_search_placeholder:  "लोगों को खोजें…",
+  send_btn:               "भेजें",
+  sending_dm:              "भेजा जा रहा है…",
+  dm_recipient_required:  "कम से कम एक प्राप्तकर्ता चुनें।",
 };

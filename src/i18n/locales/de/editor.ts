@@ -209,4 +209,12 @@ export const editor = {
   latex_rendering:      "Wird gerendert…",
   latex_uploading:      "Wird hochgeladen…",
   latex_insert_btn:     "Einfügen",
+
+  // DMComposer
+  dm_new_message:        "Neue Nachricht",
+  to_label:               "An:",
+  to_search_placeholder:  "Personen suchen…",
+  send_btn:               "Senden",
+  sending_dm:              "Wird gesendet…",
+  dm_recipient_required:  "Mindestens einen Empfänger auswählen.",
 } as const;

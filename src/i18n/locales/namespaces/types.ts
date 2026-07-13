@@ -769,6 +769,12 @@ export type RawDictionary = {
     latex_rendering:      string;
     latex_uploading:      string;
     latex_insert_btn:     string;
+    dm_new_message:        string;
+    to_label:               string;
+    to_search_placeholder:  string;
+    send_btn:               string;
+    sending_dm:              string;
+    dm_recipient_required:  string;
   };
   profiles: {
     title:             string;

@@ -1,28 +1,27 @@
-import { createSignal, Show, For, onCleanup } from "solid-js";
+import { createSignal, Show, onCleanup } from "solid-js";
 import { DraftsList } from "../components/DraftsList";
 import { createComposerStore } from "../store/createComposerStore";
 import { useI18n } from "@/i18n";
 import RichEditor from "../core/RichEditor";
 import { CAPABILITIES } from "../types/editor.types";
 import { apiFetch } from "@/shared/lib/fetch";
-import AclPicker, { entryKey, type AclMode, type AclEntry } from "../components/AclPicker";
+import AclPicker from "../components/AclPicker";
 import { useEncrypt } from "../useEncrypt";
 import EncryptPanel from "../components/EncryptPanel";
 import { isEncryptedBody } from "@/shared/lib/postCrypto";
 import { isFeatureEnabled } from "@/shared/store/auth-store";
-import {
-  useMention,
-  getWysiwygMentionQuery,
-  getTextareaMentionQuery,
-  getCaretRect,
-} from "../mention/useMention";
-import MentionPopup from "../mention/MentionPopup";
-import { useEmoji, getWysiwygEmojiQuery, getTextareaEmojiQuery } from "../emoji/useEmoji";
-import EmojiPopup from "../emoji/EmojiPopup";
+import { useMentionEmojiWiring } from "../mention/useMentionEmojiWiring";
+import MentionEmojiPopups from "../mention/MentionEmojiPopups";
 import AttachmentBar from "../attachments/AttachmentBar";
 import { createAttachmentStore } from "../attachments/useAttachments";
 import { bbcodeToInsert } from "../attachments/insertHelpers";
-import { htmlToSource } from "../core/htmlToSource";
+import { useAclState } from "../components/useAclState";
+import { useCategoryTags } from "../components/useCategoryTags";
+import CategoryTagsField from "../components/CategoryTagsField";
+import SlugField from "../components/SlugField";
+import SummaryField from "../components/SummaryField";
+import { PrimarySubmitButton, SecondaryButton, ToggleButton } from "../components/buttons";
+import { slugify } from "../lib/slugify";
 
 interface Props {
   profileUid: number;
@@ -54,84 +53,8 @@ export default function ArticleComposer(props: Props) {
   // ── Attachment store ─────────────────────────────────────────────────────────
   const attach = createAttachmentStore(props.nick, scope);
 
-  // ── Multi-category helpers ────────────────────────────────────────────────────
-  const [pendingCategory, setPendingCategory] = createSignal("");
-
-  const categoryTags = () =>
-    store.category().split(",").map((s) => s.trim()).filter(Boolean);
-
-  function addCategoryTag(raw: string) {
-    const incoming = raw.split(",").map((s) => s.trim()).filter(Boolean);
-    if (!incoming.length) return;
-    const merged = [...new Set([...categoryTags(), ...incoming])];
-    store.setCategory(merged.join(","));
-    setPendingCategory("");
-  }
-
-  function removeCategoryTag(tag: string) {
-    store.setCategory(categoryTags().filter((t) => t !== tag).join(","));
-  }
-
-  function onCategoryKeyDown(e: KeyboardEvent) {
-    const val = pendingCategory().trim();
-    if ((e.key === "Enter" || e.key === ",") && val) {
-      e.preventDefault();
-      addCategoryTag(pendingCategory());
-    } else if (e.key === "Backspace" && !pendingCategory() && categoryTags().length) {
-      store.setCategory(categoryTags().slice(0, -1).join(","));
-    }
-  }
-
-  // ── Poll state ───────────────────────────────────────────────────────────────
-  const [pollEnabled, setPollEnabled] = createSignal(false);
-  const [pollAnswers, setPollAnswers] = createSignal<string[]>(["", ""]);
-  const [pollExpireValue, setPollExpireValue] = createSignal("1");
-  const [pollExpireUnit, setPollExpireUnit] = createSignal("Days");
-
-  function updatePollAnswer(i: number, val: string) {
-    setPollAnswers((prev) => prev.map((a, j) => (j === i ? val : a)));
-  }
-  function addPollAnswer() {
-    if (pollAnswers().length < 10) setPollAnswers((prev) => [...prev, ""]);
-  }
-  function removePollAnswer(i: number) {
-    setPollAnswers((prev) => prev.filter((_, j) => j !== i));
-  }
-
   // ── ACL state ────────────────────────────────────────────────────────────────
-  const [aclMode, setAclMode] = createSignal<AclMode>("connections");
-  const [allowEntries, setAllowEntries] = createSignal<Set<string>>(new Set<string>());
-  const [denyEntries, setDenyEntries] = createSignal<Set<string>>(new Set<string>());
-
-  function toggleEntry(entry: AclEntry, list: "allow" | "deny") {
-    const key = entryKey(entry);
-    const [getSet, setSet] = list === "allow"
-      ? [allowEntries, setAllowEntries]
-      : [denyEntries, setDenyEntries];
-    const setOther = list === "allow" ? setDenyEntries : setAllowEntries;
-    void getSet();
-    setSet((prev) => {
-      const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
-      return next;
-    });
-    setOther((prev) => { const next = new Set(prev); next.delete(key); return next; });
-  }
-
-  function clearEntries() {
-    setAllowEntries(new Set<string>());
-    setDenyEntries(new Set<string>());
-  }
-
-  // ── Mention + emoji autocomplete ─────────────────────────────────────────────
-  const mention = useMention();
-  const emoji   = useEmoji();
-  let editorWrapRef: HTMLDivElement | undefined;
-
-  const getEditor = () =>
-    editorWrapRef?.querySelector<HTMLDivElement>("[contenteditable]") ?? null;
-  const getTA = () =>
-    editorWrapRef?.querySelector<HTMLTextAreaElement>("textarea") ?? null;
+  const acl = useAclState({ mode: "connections" });
 
   // ── Composer store ────────────────────────────────────────────────────────────
   // Append [attachment]hash,0[/attachment] BBCode for non-image files.
@@ -147,7 +70,7 @@ export default function ArticleComposer(props: Props) {
   const store = createComposerStore(async (body, meta) => {
     if (isEditing()) {
       // ── Edit existing article ─────────────────────────────────────────────────
-      const mode = aclMode();
+      const mode = acl.mode();
       const aclPayload: Record<string, unknown> = {};
       if (mode === "public") {
         aclPayload.contact_allow = [];
@@ -162,18 +85,18 @@ export default function ArticleComposer(props: Props) {
         aclPayload.group_deny    = [];
         aclPayload.public_policy = "contacts";
       } else {
-        if (allowEntries().size === 0)
+        if (acl.allowEntries().size === 0)
           throw new Error("Select at least one connection or group to allow.");
         const cAllow: string[] = [];
         const gAllow: string[] = [];
         const cDeny: string[]  = [];
         const gDeny: string[]  = [];
-        for (const key of allowEntries()) {
+        for (const key of acl.allowEntries()) {
           const [type, ...rest] = key.split(":");
           if (type === "c") cAllow.push(rest.join(":"));
           if (type === "g") gAllow.push(rest.join(":"));
         }
-        for (const key of denyEntries()) {
+        for (const key of acl.denyEntries()) {
           const [type, ...rest] = key.split(":");
           if (type === "c") cDeny.push(rest.join(":"));
           if (type === "g") gDeny.push(rest.join(":"));
@@ -226,7 +149,7 @@ export default function ArticleComposer(props: Props) {
       if (csrf) fd.append("form_security_token", csrf);
 
       // ACL
-      const mode = aclMode();
+      const mode = acl.mode();
       if (mode === "public") {
         fd.append("contact_allow", "");
         fd.append("group_allow",   "");
@@ -240,30 +163,20 @@ export default function ArticleComposer(props: Props) {
         fd.append("group_deny",    "");
         fd.append("public_policy", "contacts");
       } else {
-        if (allowEntries().size === 0)
+        if (acl.allowEntries().size === 0)
           throw new Error("Select at least one connection or group to allow.");
-        for (const key of allowEntries()) {
+        for (const key of acl.allowEntries()) {
           const [type, ...rest] = key.split(":");
           const xid = rest.join(":");
           if (type === "c") fd.append("contact_allow[]", xid);
           if (type === "g") fd.append("group_allow[]", xid);
         }
-        for (const key of denyEntries()) {
+        for (const key of acl.denyEntries()) {
           const [type, ...rest] = key.split(":");
           const xid = rest.join(":");
           if (type === "c") fd.append("contact_deny[]", xid);
           if (type === "g") fd.append("group_deny[]", xid);
         }
-      }
-
-      // ── Poll ──
-      if (pollEnabled()) {
-        const answers = pollAnswers().filter((a) => a.trim());
-        if (answers.length < 2)
-          throw new Error("At least 2 poll options are required.");
-        for (const a of answers) fd.append("poll_answers[]", a);
-        fd.append("poll_expire_value", pollExpireValue());
-        fd.append("poll_expire_unit", pollExpireUnit());
       }
 
       const res = await fetch("/item", {
@@ -281,6 +194,9 @@ export default function ArticleComposer(props: Props) {
 
   const enc = useEncrypt(() => store.body(), store.setBody);
 
+  // ── Category tags ──────────────────────────────────────────────────────────
+  const categoryTags = useCategoryTags(store.category, store.setCategory);
+
   // Seed from initial if editing
   if (props.initial) {
     store.setTitle(props.initial.title);
@@ -290,69 +206,26 @@ export default function ArticleComposer(props: Props) {
     store.setBody(props.initial.body);
   }
 
-  function onKeyDown(e: KeyboardEvent) {
-    if (mention.open()) {
-      const consumed = mention.onKeyDown(e);
-      if (consumed && (e.key === "Enter" || e.key === "Tab")) {
-        const entry = mention.filtered()[mention.activeIdx()];
-        if (!entry) return;
-        const editor = getEditor();
-        if (editor) { mention.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); return; }
-        const ta = getTA();
-        if (ta) mention.insertTextarea(entry, ta, store.setBody);
-      }
-      return;
-    }
-    if (emoji.open()) {
-      const consumed = emoji.onKeyDown(e);
-      if (consumed && (e.key === "Enter" || e.key === "Tab")) {
-        const entry = emoji.filtered()[emoji.activeIdx()];
-        if (!entry) return;
-        const editor = getEditor();
-        if (editor) { emoji.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); return; }
-        const ta = getTA();
-        if (ta) emoji.insertTextarea(entry, ta, store.setBody);
-      }
-      return;
-    }
-  }
+  // ── Mention + emoji autocomplete ─────────────────────────────────────────────
+  const wiring = useMentionEmojiWiring({
+    body: store.body,
+    setBody: store.setBody,
+    mimetype: store.mimetype,
+  });
 
-  window.addEventListener("keydown", onKeyDown);
-  onCleanup(() => window.removeEventListener("keydown", onKeyDown));
+  window.addEventListener("keydown", wiring.onKeyDown);
+  onCleanup(() => window.removeEventListener("keydown", wiring.onKeyDown));
 
   const onBodyChange = (v: string) => {
     store.setBody(v);
     const text = v.replace(/<[^>]*>/g, " ");
     setWordCount(text.trim().split(/\s+/).filter(Boolean).length);
-
-    const editor = getEditor();
-    if (editor) {
-      const mq = getWysiwygMentionQuery();
-      if (mq !== null) { const r = getCaretRect(); if (r) { mention.openWithQuery(mq, r); emoji.close(); return; } }
-      const eq = getWysiwygEmojiQuery();
-      if (eq !== null) { const r = getCaretRect(); if (r) { emoji.openWithQuery(eq, r); mention.close(); return; } }
-      mention.close(); emoji.close();
-      return;
-    }
-    const ta = getTA();
-    if (ta) {
-      const mq = getTextareaMentionQuery(ta);
-      if (mq !== null) { mention.openWithQuery(mq, ta.getBoundingClientRect()); emoji.close(); return; }
-      const eq = getTextareaEmojiQuery(ta);
-      if (eq !== null) { emoji.openWithQuery(eq, ta.getBoundingClientRect()); mention.close(); return; }
-    }
-    mention.close();
-    emoji.close();
   };
 
   const onTitleChange = (v: string) => {
     store.setTitle(v);
     if (!store.slug()) {
-      store.setSlug(
-        v.toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-|-$/g, ""),
-      );
+      store.setSlug(slugify(v));
     }
   };
 
@@ -371,11 +244,10 @@ export default function ArticleComposer(props: Props) {
 
       {/* Summary */}
       <Show when={caps.summary}>
-        <textarea
+        <SummaryField
+          value={store.summary}
+          onInput={store.setSummary}
           placeholder={t("editor.article_summary_placeholder")}
-          value={store.summary()}
-          onInput={(e) => store.setSummary(e.currentTarget.value)}
-          rows={2}
           class="w-full px-0 py-1.5 text-sm bg-transparent text-txt
                  placeholder:text-muted border-0 border-b border-rim outline-none
                  focus:border-accent transition-colors resize-none"
@@ -385,46 +257,24 @@ export default function ArticleComposer(props: Props) {
       {/* Slug + Category row */}
       <div class="flex gap-3">
         <Show when={caps.slug}>
-          <div class="flex-1 min-w-0">
-            <label class="block text-xs text-muted mb-1">{t("editor.slug_label")}</label>
-            <input
-              type="text"
-              placeholder={t("editor.slug_placeholder")}
-              value={store.slug()}
-              onInput={(e) => store.setSlug(e.currentTarget.value)}
-              class="w-full px-2 py-1.5 text-sm font-mono rounded border border-rim bg-surface
-                     text-txt outline-none hover:border-rim-strong focus:border-rim-strong transition-colors"
-            />
-          </div>
+          <SlugField value={store.slug} onInput={store.setSlug} title={store.title} />
         </Show>
         <Show when={caps.category}>
-          <div class="flex-1 min-w-0">
-            <label class="block text-xs text-muted mb-1">{t("editor.category_label")}</label>
-            <div class="flex flex-wrap items-center gap-1.5 px-2 py-1.5 rounded border border-rim bg-surface
-                        hover:border-rim-strong focus-within:border-rim-strong transition-colors">
-              <For each={categoryTags()}>
-                {(tag) => (
-                  <span class="flex items-center gap-1 px-2 py-0.5 rounded bg-elevated text-xs text-txt">
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => removeCategoryTag(tag)}
-                      class="text-muted hover:text-txt leading-none"
-                    >×</button>
-                  </span>
-                )}
-              </For>
-              <input
-                type="text"
-                placeholder={categoryTags().length ? "" : t("editor.category_field_placeholder")}
-                value={pendingCategory()}
-                onInput={(e) => setPendingCategory(e.currentTarget.value)}
-                onKeyDown={onCategoryKeyDown}
-                onBlur={() => { if (pendingCategory().trim()) addCategoryTag(pendingCategory()); }}
-                class="flex-1 min-w-16 bg-transparent text-sm text-txt outline-none placeholder:text-muted"
-              />
-            </div>
-          </div>
+          <CategoryTagsField
+            tags={categoryTags.categoryTags}
+            pending={categoryTags.pendingCategory}
+            onPendingInput={categoryTags.setPendingCategory}
+            onKeyDown={categoryTags.onCategoryKeyDown}
+            onRemove={categoryTags.removeCategoryTag}
+            onBlur={() => {
+              if (categoryTags.pendingCategory().trim()) {
+                categoryTags.addCategoryTag(categoryTags.pendingCategory());
+              }
+            }}
+            placeholder={t("editor.category_field_placeholder")}
+            showLabel
+            label={t("editor.category_label")}
+          />
         </Show>
       </div>
 
@@ -433,7 +283,7 @@ export default function ArticleComposer(props: Props) {
       </div>
 
       {/* Editor */}
-      <div ref={editorWrapRef}>
+      <div ref={wiring.wrapperRef}>
         <RichEditor
           body={store.body()}
           onInput={onBodyChange}
@@ -454,126 +304,12 @@ export default function ArticleComposer(props: Props) {
         />
       </div>
 
-      {/* Poll */}
-      <div class="space-y-2">
-        <button
-          type="button"
-          onClick={() => setPollEnabled((p) => !p)}
-          class={
-            "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm transition-colors " +
-            (pollEnabled()
-              ? "bg-accent/10 text-accent border-accent/30"
-              : "text-muted hover:text-txt hover:bg-elevated border-rim")
-          }
-        >
-          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
-          {t("editor.poll_toggle")}
-        </button>
-        <Show when={pollEnabled()}>
-          <div class="rounded-lg border border-rim bg-elevated/40 p-4 space-y-2">
-            <For each={pollAnswers()}>
-              {(ans, i) => (
-                <div class="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={ans}
-                    placeholder={`${t("editor.poll_answer_placeholder")} ${i() + 1}`}
-                    onInput={(e) => updatePollAnswer(i(), e.currentTarget.value)}
-                    class="flex-1 bg-transparent border border-rim rounded px-2.5 py-1.5 text-sm
-                           text-txt placeholder:text-muted outline-none focus:border-rim-strong transition-colors"
-                  />
-                  <Show when={pollAnswers().length > 2}>
-                    <button
-                      type="button"
-                      onClick={() => removePollAnswer(i())}
-                      title={t("editor.poll_remove_answer")}
-                      class="p-1.5 rounded text-muted hover:text-red-400 hover:bg-red-400/10 transition-colors"
-                    >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </Show>
-                </div>
-              )}
-            </For>
-            <div class="flex flex-wrap items-center gap-3 pt-1">
-              <Show when={pollAnswers().length < 10}>
-                <button
-                  type="button"
-                  onClick={addPollAnswer}
-                  class="text-sm text-accent hover:opacity-80 transition-opacity"
-                >
-                  {t("editor.poll_add_answer")}
-                </button>
-              </Show>
-              <div class="flex items-center gap-2 ml-auto">
-                <span class="text-sm text-muted shrink-0">{t("editor.poll_expires_label")}</span>
-                <input
-                  type="number"
-                  min="1"
-                  max="365"
-                  value={pollExpireValue()}
-                  onInput={(e) => setPollExpireValue(e.currentTarget.value)}
-                  class="w-16 bg-transparent border border-rim rounded px-2 py-1 text-sm text-txt
-                         outline-none focus:border-rim-strong transition-colors"
-                />
-                <select
-                  value={pollExpireUnit()}
-                  onChange={(e) => setPollExpireUnit(e.currentTarget.value)}
-                  class="bg-surface border border-rim rounded px-2 py-1 text-sm text-txt
-                         outline-none focus:border-rim-strong transition-colors cursor-pointer"
-                >
-                  <option value="Days">Days</option>
-                  <option value="Hours">Hours</option>
-                  <option value="Minutes">Minutes</option>
-                  <option value="Weeks">Weeks</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </Show>
-      </div>
-
       {/* Encrypt panel */}
       <Show when={enc.open()}>
         <EncryptPanel enc={enc} />
       </Show>
 
-      {/* Mention popup */}
-      <Show when={mention.open() && mention.rect() !== null}>
-        <MentionPopup
-          query={mention.query()!}
-          entries={mention.filtered()}
-          anchorRect={mention.rect()!}
-          activeIdx={mention.activeIdx()}
-          onSelect={(entry) => {
-            const editor = getEditor();
-            if (editor) { mention.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); return; }
-            const ta = getTA();
-            if (ta) mention.insertTextarea(entry, ta, store.setBody);
-          }}
-        />
-      </Show>
-
-      {/* Emoji popup */}
-      <Show when={emoji.open() && emoji.rect() !== null}>
-        <EmojiPopup
-          entries={emoji.filtered()}
-          anchorRect={emoji.rect()!}
-          activeIdx={emoji.activeIdx()}
-          onSelect={(entry) => {
-            const editor = getEditor();
-            if (editor) { emoji.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); return; }
-            const ta = getTA();
-            if (ta) emoji.insertTextarea(entry, ta, store.setBody);
-          }}
-        />
-      </Show>
-
+      <MentionEmojiPopups wiring={wiring} />
 
       {/* Drafts panel */}
       <Show when={draftsOpen()}>
@@ -589,26 +325,25 @@ export default function ArticleComposer(props: Props) {
       <div class="flex flex-wrap items-center gap-3 border-t border-rim pt-4">
         {/* Left: discard + draft controls */}
         <div class="flex gap-2 items-center">
-          <button
-            type="button"
-            onClick={() => { store.reset(); attach.clear(); clearEntries(); setAclMode("connections"); setPollEnabled(false); setPollAnswers(["", ""]); setPollExpireValue("1"); setPollExpireUnit("Days"); setPendingCategory(""); enc.reset(); }}
-            class="px-3 py-1.5 text-sm rounded-lg border border-rim text-muted
-                   hover:bg-elevated transition-colors"
+          <SecondaryButton
+            onClick={() => {
+              store.reset();
+              attach.clear();
+              acl.reset();
+              categoryTags.setPendingCategory("");
+              enc.reset();
+            }}
           >
             {isEditing() ? t("editor.cancel_btn") : t("editor.discard")}
-          </button>
+          </SecondaryButton>
           <Show when={store.body().trim()}>
-            <button
-              type="button"
-              onClick={() => void store.saveAsDraft()}
-              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rim text-sm text-muted hover:text-txt hover:bg-elevated transition-colors"
-            >
-              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <SecondaryButton onClick={() => void store.saveAsDraft()}>
+              <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V5z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 3v5H9V3m0 14h6" />
               </svg>
               {t("editor.save_draft")}
-            </button>
+            </SecondaryButton>
           </Show>
           <Show when={store.savedDrafts().length > 0}>
             <button
@@ -629,12 +364,12 @@ export default function ArticleComposer(props: Props) {
         {/* Centre: ACL picker */}
         <Show when={caps.aclPicker}>
           <AclPicker
-            mode={aclMode()}
-            onModeChange={setAclMode}
-            allowEntries={allowEntries()}
-            denyEntries={denyEntries()}
-            onToggle={toggleEntry}
-            onClear={clearEntries}
+            mode={acl.mode()}
+            onModeChange={acl.setMode}
+            allowEntries={acl.allowEntries()}
+            denyEntries={acl.denyEntries()}
+            onToggle={acl.toggleEntry}
+            onClear={acl.clearEntries}
           />
         </Show>
 
@@ -643,49 +378,43 @@ export default function ArticleComposer(props: Props) {
           <Show
             when={!isEncryptedBody(store.body())}
             fallback={
-              <span class="flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm bg-yellow-500/10 text-yellow-500 border-yellow-500/30">
+              <span class="flex items-center gap-1 px-2 py-1 rounded-md text-xs border bg-yellow-500/10 text-yellow-500 border-yellow-500/30">
                 🔒 {t("editor.encrypt_badge")}
               </span>
             }
           >
-            <button
-              type="button"
+            <ToggleButton
+              active={enc.open()}
               onClick={() => enc.setOpen((o) => !o)}
-              class={
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm transition-colors " +
-                (enc.open()
-                  ? "bg-accent/10 text-accent border-accent/30"
-                  : "text-muted hover:text-txt hover:bg-elevated border-rim")
-              }
+              title={t("editor.encrypt_toggle")}
             >
-              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
               </svg>
               {t("editor.encrypt_toggle")}
-            </button>
+            </ToggleButton>
           </Show>
         </Show>
 
         {/* Right: publish */}
-        <button
-          type="button"
-          onClick={() => store.submit()}
-          disabled={
-            store.submitting() ||
-            attach.uploading() ||
-            !store.body().trim() ||
-            !store.title().trim()
-          }
-          class="ml-auto px-5 py-1.5 text-sm font-medium rounded-lg bg-accent text-accent-fg
-                 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
-        >
-          {store.submitting()
-            ? t("editor.saving")
-            : isEditing()
-              ? t("editor.save_changes")
-              : t("editor.publish_btn")}
-        </button>
+        <div class="ml-auto">
+          <PrimarySubmitButton
+            disabled={
+              store.submitting() ||
+              attach.uploading() ||
+              !store.body().trim() ||
+              !store.title().trim()
+            }
+            onClick={() => void store.submit()}
+          >
+            {store.submitting()
+              ? t("editor.saving")
+              : isEditing()
+                ? t("editor.save_changes")
+                : t("editor.publish_btn")}
+          </PrimarySubmitButton>
+        </div>
       </div>
     </div>
   );

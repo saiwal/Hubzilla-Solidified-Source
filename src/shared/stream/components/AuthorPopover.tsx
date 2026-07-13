@@ -8,7 +8,7 @@ import { addConnection } from "@/modules/directory/people/api";
 import { fetchConnectionByAddress } from "@/modules/directory/connections/api";
 import type { Connection } from "@/modules/directory/connections/api";
 import ConnectionEditorModal from "@/shared/views/ConnectionEditorModal";
-import PostComposer from "@/shared/editor/composers/PostComposer";
+import DMComposer from "@/shared/editor/composers/DMComposer";
 import { createRoom } from "@/modules/chat/api";
 import { blockChannel, blockChannelFromSite } from "@/shared/lib/blocklist-api";
 import { useNavigate } from "@solidjs/router";
@@ -568,13 +568,11 @@ export default function AuthorPopover(props: Props) {
 
       {/* DM composer */}
       <Show when={dmOpen() && auth() && xchanHash()}>
-        <PostComposer
+        <DMComposer
           open={dmOpen()}
           onClose={() => setDmOpen(false)}
           profileUid={auth()!.uid}
-          initialAclMode="custom"
-          initialAllowEntries={new Set([`c:${xchanHash()!}`])}
-          initialResolvedEntries={[{
+          initialRecipients={[{
             type: "c",
             xid: xchanHash()!,
             id: xchanHash()!,

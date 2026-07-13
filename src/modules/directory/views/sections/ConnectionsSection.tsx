@@ -7,7 +7,7 @@ import type { ConnectionFilter, ConnectionOrder, Connection } from "../../connec
 import { deleteConnection, approveConnection, fetchConnectionByAddress } from "../../connections/api";
 import { addConnection } from "../../people/api";
 import ConnectionEditorModal from "@/shared/views/ConnectionEditorModal";
-import PostComposer from "@/shared/editor/composers/PostComposer";
+import DMComposer from "@/shared/editor/composers/DMComposer";
 import { createRoom } from "@/modules/chat/api";
 import { MdOutlineEdit, MdOutlineEmail, MdOutlineChat_bubble } from "solid-icons/md";
 import { useAuth } from "@/shared/store/auth-store";
@@ -329,13 +329,11 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
       </Show>
 
       <Show when={dmOpen() && auth()}>
-        <PostComposer
+        <DMComposer
           open={dmOpen()}
           onClose={() => setDmOpen(false)}
           profileUid={auth()!.uid}
-          initialAclMode="custom"
-          initialAllowEntries={new Set([`c:${props.conn.xchan_hash}`])}
-          initialResolvedEntries={[{
+          initialRecipients={[{
             type: "c",
             xid: props.conn.xchan_hash,
             id: props.conn.xchan_hash,

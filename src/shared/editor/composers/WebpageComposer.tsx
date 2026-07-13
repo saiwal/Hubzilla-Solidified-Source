@@ -1,4 +1,4 @@
-import { createSignal, Show, onCleanup } from "solid-js";
+import { Show, onCleanup } from "solid-js";
 import { useI18n } from "@/i18n";
 import { createComposerStore } from "../store/createComposerStore";
 import RichEditor from "../core/RichEditor";
@@ -11,17 +11,14 @@ import { isFeatureEnabled } from "@/shared/store/auth-store";
 import AttachmentBar from "../attachments/AttachmentBar";
 import { createAttachmentStore } from "../attachments/useAttachments";
 import { bbcodeToInsert } from "../attachments/insertHelpers";
-import AclPicker, { entryKey, type AclMode, type AclEntry } from "../components/AclPicker";
-import {
-  useMention,
-  getWysiwygMentionQuery,
-  getTextareaMentionQuery,
-  getCaretRect,
-} from "../mention/useMention";
-import MentionPopup from "../mention/MentionPopup";
-import { useEmoji, getWysiwygEmojiQuery, getTextareaEmojiQuery } from "../emoji/useEmoji";
-import EmojiPopup from "../emoji/EmojiPopup";
-import { htmlToSource } from "../core/htmlToSource";
+import AclPicker, { type AclMode } from "../components/AclPicker";
+import { useAclState, splitAclEntries } from "../components/useAclState";
+import { useMentionEmojiWiring } from "../mention/useMentionEmojiWiring";
+import MentionEmojiPopups from "../mention/MentionEmojiPopups";
+import SlugField from "../components/SlugField";
+import SummaryField from "../components/SummaryField";
+import { PrimarySubmitButton, SecondaryButton, ToggleButton } from "../components/buttons";
+import { slugify } from "../lib/slugify";
 
 interface Props {
   profileUid: number;
@@ -45,10 +42,6 @@ interface Props {
   onCancel?: () => void;
 }
 
-function slugify(v: string): string {
-  return v.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-}
-
 export default function WebpageComposer(props: Props) {
   const { t } = useI18n();
   const caps = CAPABILITIES.webpage;
@@ -58,14 +51,6 @@ export default function WebpageComposer(props: Props) {
     : "webpage:new";
 
   const attach = createAttachmentStore(props.nick, scope);
-  const mention = useMention();
-  const emoji   = useEmoji();
-  let editorWrapRef: HTMLDivElement | undefined;
-
-  const getEditor = () =>
-    editorWrapRef?.querySelector<HTMLDivElement>("[contenteditable]") ?? null;
-  const getTA = () =>
-    editorWrapRef?.querySelector<HTMLTextAreaElement>("textarea") ?? null;
 
   // ── ACL state — initialize from existing page data when editing ──────────────
   const initialAclMode = (): AclMode => {
@@ -92,47 +77,19 @@ export default function WebpageComposer(props: Props) {
     ]);
   };
 
-  const [aclMode, setAclMode] = createSignal<AclMode>(initialAclMode());
-  const [allowEntries, setAllowEntries] = createSignal<Set<string>>(initialAllowEntries());
-  const [denyEntries, setDenyEntries]   = createSignal<Set<string>>(initialDenyEntries());
-
-  function toggleEntry(entry: AclEntry, list: "allow" | "deny") {
-    const key = entryKey(entry);
-    const [getSet, setSet] = list === "allow"
-      ? [allowEntries, setAllowEntries]
-      : [denyEntries, setDenyEntries];
-    const setOther = list === "allow" ? setDenyEntries : setAllowEntries;
-    void getSet();
-    setSet((prev) => { const next = new Set(prev); next.has(key) ? next.delete(key) : next.add(key); return next; });
-    setOther((prev) => { const next = new Set(prev); next.delete(key); return next; });
-  }
-
-  function clearEntries() {
-    setAllowEntries(new Set<string>());
-    setDenyEntries(new Set<string>());
-  }
+  const acl = useAclState({
+    mode: initialAclMode(),
+    allowEntries: initialAllowEntries(),
+    denyEntries: initialDenyEntries(),
+  });
 
   function aclJson(): Record<string, unknown> {
-    const mode = aclMode();
+    const mode = acl.mode();
     if (mode === "public")      return { scope: "public" };
     if (mode === "connections") return { scope: "connections" };
 
-    const allow_cid: string[] = [];
-    const allow_gid: string[] = [];
-    const deny_cid:  string[] = [];
-    const deny_gid:  string[] = [];
-    for (const key of allowEntries()) {
-      const [type, ...rest] = key.split(":");
-      const xid = rest.join(":");
-      if (type === "c") allow_cid.push(xid);
-      if (type === "g") allow_gid.push(xid);
-    }
-    for (const key of denyEntries()) {
-      const [type, ...rest] = key.split(":");
-      const xid = rest.join(":");
-      if (type === "c") deny_cid.push(xid);
-      if (type === "g") deny_gid.push(xid);
-    }
+    const { contactIds: allow_cid, groupIds: allow_gid } = splitAclEntries(acl.allowEntries());
+    const { contactIds: deny_cid, groupIds: deny_gid } = splitAclEntries(acl.denyEntries());
     return { scope: "custom", allow_cid, allow_gid, deny_cid, deny_gid };
   }
 
@@ -201,56 +158,15 @@ export default function WebpageComposer(props: Props) {
     if (props.initial.mimetype) store.setMimetype(props.initial.mimetype as any);
   }
 
-  function onKeyDown(e: KeyboardEvent) {
-    if (mention.open()) {
-      const consumed = mention.onKeyDown(e);
-      if (consumed && (e.key === "Enter" || e.key === "Tab")) {
-        const entry = mention.filtered()[mention.activeIdx()];
-        if (!entry) return;
-        const editor = getEditor();
-        if (editor) { mention.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); return; }
-        const ta = getTA();
-        if (ta) mention.insertTextarea(entry, ta, store.setBody);
-      }
-      return;
-    }
-    if (emoji.open()) {
-      const consumed = emoji.onKeyDown(e);
-      if (consumed && (e.key === "Enter" || e.key === "Tab")) {
-        const entry = emoji.filtered()[emoji.activeIdx()];
-        if (!entry) return;
-        const editor = getEditor();
-        if (editor) { emoji.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); return; }
-        const ta = getTA();
-        if (ta) emoji.insertTextarea(entry, ta, store.setBody);
-      }
-      return;
-    }
-  }
+  // ── Mention + emoji autocomplete ─────────────────────────────────────────────
+  const wiring = useMentionEmojiWiring({
+    body: store.body,
+    setBody: store.setBody,
+    mimetype: store.mimetype,
+  });
 
-  window.addEventListener("keydown", onKeyDown);
-  onCleanup(() => window.removeEventListener("keydown", onKeyDown));
-
-  const onBodyChange = (v: string) => {
-    store.setBody(v);
-    const editor = getEditor();
-    if (editor) {
-      const mq = getWysiwygMentionQuery();
-      if (mq !== null) { const r = getCaretRect(); if (r) { mention.openWithQuery(mq, r); emoji.close(); return; } }
-      const eq = getWysiwygEmojiQuery();
-      if (eq !== null) { const r = getCaretRect(); if (r) { emoji.openWithQuery(eq, r); mention.close(); return; } }
-      mention.close(); emoji.close(); return;
-    }
-    const ta = getTA();
-    if (ta) {
-      const mq = getTextareaMentionQuery(ta);
-      if (mq !== null) { mention.openWithQuery(mq, ta.getBoundingClientRect()); emoji.close(); return; }
-      const eq = getTextareaEmojiQuery(ta);
-      if (eq !== null) { emoji.openWithQuery(eq, ta.getBoundingClientRect()); mention.close(); return; }
-    }
-    mention.close();
-    emoji.close();
-  };
+  window.addEventListener("keydown", wiring.onKeyDown);
+  onCleanup(() => window.removeEventListener("keydown", wiring.onKeyDown));
 
   const onTitleChange = (v: string) => {
     store.setTitle(v);
@@ -274,11 +190,10 @@ export default function WebpageComposer(props: Props) {
 
       {/* Summary */}
       <Show when={caps.summary}>
-        <textarea
+        <SummaryField
+          value={store.summary}
+          onInput={store.setSummary}
           placeholder={t("editor.article_summary_placeholder")}
-          value={store.summary()}
-          onInput={(e) => store.setSummary(e.currentTarget.value)}
-          rows={2}
           class="w-full px-0 py-1.5 text-sm bg-transparent text-txt
                  placeholder:text-muted border-0 border-b border-rim outline-none
                  focus:border-accent transition-colors resize-none"
@@ -287,36 +202,14 @@ export default function WebpageComposer(props: Props) {
 
       {/* Slug */}
       <Show when={caps.slug}>
-        <div>
-          <label class="block text-xs text-muted mb-1">{t("editor.slug_label")}</label>
-          <div class="flex items-center gap-1">
-            <input
-              type="text"
-              placeholder={t("editor.slug_placeholder")}
-              value={store.slug()}
-              onInput={(e) => store.setSlug(e.currentTarget.value)}
-              class="flex-1 px-2 py-1.5 text-sm font-mono rounded border border-rim bg-surface
-                     text-txt outline-none hover:border-rim-strong focus:border-rim-strong
-                     transition-colors"
-            />
-            <button
-              type="button"
-              title={t("editor.generate_slug")}
-              onClick={() => store.setSlug(slugify(store.title()))}
-              class="px-2.5 py-1.5 rounded border border-rim text-muted hover:text-txt
-                     hover:border-rim-strong transition-colors text-sm leading-none"
-            >
-              ↻
-            </button>
-          </div>
-        </div>
+        <SlugField value={store.slug} onInput={store.setSlug} title={store.title} />
       </Show>
 
       {/* Editor */}
-      <div ref={editorWrapRef}>
+      <div ref={wiring.wrapperRef}>
         <RichEditor
           body={store.body()}
-          onInput={onBodyChange}
+          onInput={store.setBody}
           capabilities={caps}
           tab={store.tab()}
           onTabChange={store.setTab}
@@ -334,36 +227,7 @@ export default function WebpageComposer(props: Props) {
         />
       </div>
 
-      {/* Mention popup */}
-      <Show when={mention.open() && mention.rect() !== null}>
-        <MentionPopup
-          query={mention.query()!}
-          entries={mention.filtered()}
-          anchorRect={mention.rect()!}
-          activeIdx={mention.activeIdx()}
-          onSelect={(entry) => {
-            const editor = getEditor();
-            if (editor) { mention.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); return; }
-            const ta = getTA();
-            if (ta) mention.insertTextarea(entry, ta, store.setBody);
-          }}
-        />
-      </Show>
-
-      {/* Emoji popup */}
-      <Show when={emoji.open() && emoji.rect() !== null}>
-        <EmojiPopup
-          entries={emoji.filtered()}
-          anchorRect={emoji.rect()!}
-          activeIdx={emoji.activeIdx()}
-          onSelect={(entry) => {
-            const editor = getEditor();
-            if (editor) { emoji.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); return; }
-            const ta = getTA();
-            if (ta) emoji.insertTextarea(entry, ta, store.setBody);
-          }}
-        />
-      </Show>
+      <MentionEmojiPopups wiring={wiring} />
 
       {/* Encrypt panel */}
       <Show when={enc.open()}>
@@ -372,24 +236,27 @@ export default function WebpageComposer(props: Props) {
 
       {/* Actions */}
       <div class="flex flex-wrap items-center gap-3 border-t border-rim pt-4">
-        <button
-          type="button"
-          onClick={() => { store.reset(); attach.clear(); clearEntries(); setAclMode("public"); enc.reset(); props.onCancel?.(); }}
-          class="px-3 py-1.5 text-sm rounded-lg border border-rim text-muted
-                 hover:bg-elevated transition-colors"
+        <SecondaryButton
+          onClick={() => {
+            store.reset();
+            attach.clear();
+            acl.reset();
+            enc.reset();
+            props.onCancel?.();
+          }}
         >
           {isEditing() ? t("editor.cancel_btn") : t("editor.discard")}
-        </button>
+        </SecondaryButton>
 
         {/* ACL picker */}
         <Show when={caps.aclPicker}>
           <AclPicker
-            mode={aclMode()}
-            onModeChange={setAclMode}
-            allowEntries={allowEntries()}
-            denyEntries={denyEntries()}
-            onToggle={toggleEntry}
-            onClear={clearEntries}
+            mode={acl.mode()}
+            onModeChange={acl.setMode}
+            allowEntries={acl.allowEntries()}
+            denyEntries={acl.denyEntries()}
+            onToggle={acl.toggleEntry}
+            onClear={acl.clearEntries}
           />
         </Show>
 
@@ -398,43 +265,37 @@ export default function WebpageComposer(props: Props) {
           <Show
             when={!isEncryptedBody(store.body())}
             fallback={
-              <span class="flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm bg-yellow-500/10 text-yellow-500 border-yellow-500/30">
+              <span class="flex items-center gap-1 px-2 py-1 rounded-md text-xs border bg-yellow-500/10 text-yellow-500 border-yellow-500/30">
                 🔒 {t("editor.encrypt_badge")}
               </span>
             }
           >
-            <button
-              type="button"
+            <ToggleButton
+              active={enc.open()}
               onClick={() => enc.setOpen((o) => !o)}
-              class={
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm transition-colors " +
-                (enc.open()
-                  ? "bg-accent/10 text-accent border-accent/30"
-                  : "text-muted hover:text-txt hover:bg-elevated border-rim")
-              }
+              title={t("editor.encrypt_toggle")}
             >
-              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
               </svg>
               {t("editor.encrypt_toggle")}
-            </button>
+            </ToggleButton>
           </Show>
         </Show>
 
-        <button
-          type="button"
-          onClick={() => store.submit()}
-          disabled={store.submitting() || attach.uploading() || !store.body().trim() || !store.title().trim()}
-          class="ml-auto px-5 py-1.5 text-sm font-medium rounded-lg bg-accent text-accent-fg
-                 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
-        >
-          {store.submitting()
-            ? t("editor.saving")
-            : isEditing()
-              ? t("editor.save_changes")
-              : t("editor.publish_btn")}
-        </button>
+        <div class="ml-auto">
+          <PrimarySubmitButton
+            disabled={store.submitting() || attach.uploading() || !store.body().trim() || !store.title().trim()}
+            onClick={() => void store.submit()}
+          >
+            {store.submitting()
+              ? t("editor.saving")
+              : isEditing()
+                ? t("editor.save_changes")
+                : t("editor.publish_btn")}
+          </PrimarySubmitButton>
+        </div>
       </div>
     </div>
   );

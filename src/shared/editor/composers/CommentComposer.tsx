@@ -1,23 +1,15 @@
-import { Show, onCleanup, createEffect } from "solid-js";
+import { Show, onCleanup } from "solid-js";
 import { apiFetch } from "@/shared/lib/fetch";
 import { createComposerStore } from "../store/createComposerStore";
 import RichEditor from "../core/RichEditor";
 import { CAPABILITIES } from "../types/editor.types";
 import { useAuth, currentNick } from "@/shared/store/auth-store";
 import { useI18n } from "@/i18n";
-import {
-  useMention,
-  getWysiwygMentionQuery,
-  getTextareaMentionQuery,
-  getCaretRect,
-} from "@/shared/editor/mention/useMention";
-import MentionPopup from "@/shared/editor/mention/MentionPopup";
-import { useEmoji, getWysiwygEmojiQuery, getTextareaEmojiQuery } from "@/shared/editor/emoji/useEmoji";
-import EmojiPopup from "@/shared/editor/emoji/EmojiPopup";
+import { useMentionEmojiWiring } from "@/shared/editor/mention/useMentionEmojiWiring";
+import MentionEmojiPopups from "@/shared/editor/mention/MentionEmojiPopups";
 import AttachmentBar from "../attachments/AttachmentBar";
 import { createAttachmentStore } from "../attachments/useAttachments";
 import { bbcodeToInsert, patchInsertedAlt } from "../attachments/insertHelpers";
-import { htmlToSource } from "../core/htmlToSource";
 
 interface Props {
   /** Parent item uuid — full-URL mids break the /api/item/:id path (slashes). */
@@ -66,71 +58,14 @@ export default function CommentComposer(props: Props) {
   );
 
   // ── Mention + emoji autocomplete ─────────────────────────────────────────
-  const mention = useMention();
-  const emoji   = useEmoji();
-  let wrapperRef: HTMLDivElement | undefined;
-
-  function getEditor(): HTMLDivElement | null {
-    return wrapperRef?.querySelector("[contenteditable]") ?? null;
-  }
-
-  function getTA(): HTMLTextAreaElement | null {
-    return wrapperRef?.querySelector("textarea") ?? null;
-  }
-
-  createEffect(() => {
-    void store.body();
-    const editor = getEditor();
-    if (editor) {
-      const mq = getWysiwygMentionQuery();
-      if (mq !== null) { const r = getCaretRect(); if (r) mention.openWithQuery(mq, r); emoji.close(); return; }
-      const eq = getWysiwygEmojiQuery();
-      if (eq !== null) { const r = getCaretRect(); if (r) emoji.openWithQuery(eq, r); mention.close(); return; }
-    }
-    const ta = getTA();
-    if (ta) {
-      const mq = getTextareaMentionQuery(ta);
-      if (mq !== null) { mention.openWithQuery(mq, ta.getBoundingClientRect()); emoji.close(); return; }
-      const eq = getTextareaEmojiQuery(ta);
-      if (eq !== null) { emoji.openWithQuery(eq, ta.getBoundingClientRect()); mention.close(); return; }
-    }
-    mention.close();
-    emoji.close();
+  const wiring = useMentionEmojiWiring({
+    body: store.body,
+    setBody: store.setBody,
+    mimetype: store.mimetype,
   });
 
-  function onKeyDown(e: KeyboardEvent) {
-    if (mention.open()) {
-      const consumed = mention.onKeyDown(e);
-      if (consumed) {
-        if (e.key === "Enter" || e.key === "Tab") {
-          const entry = mention.filtered()[mention.activeIdx()];
-          if (!entry) return;
-          const editor = getEditor();
-          if (editor) { mention.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); return; }
-          const ta = getTA();
-          if (ta) mention.insertTextarea(entry, ta, store.setBody);
-        }
-      }
-      return;
-    }
-    if (emoji.open()) {
-      const consumed = emoji.onKeyDown(e);
-      if (consumed) {
-        if (e.key === "Enter" || e.key === "Tab") {
-          const entry = emoji.filtered()[emoji.activeIdx()];
-          if (!entry) return;
-          const editor = getEditor();
-          if (editor) { emoji.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); return; }
-          const ta = getTA();
-          if (ta) emoji.insertTextarea(entry, ta, store.setBody);
-        }
-      }
-      return;
-    }
-  }
-
-  window.addEventListener("keydown", onKeyDown);
-  onCleanup(() => window.removeEventListener("keydown", onKeyDown));
+  window.addEventListener("keydown", wiring.onKeyDown);
+  onCleanup(() => window.removeEventListener("keydown", wiring.onKeyDown));
 
   if (!auth()?.isLocal) return null;
 
@@ -143,7 +78,7 @@ export default function CommentComposer(props: Props) {
           </div>
         </Show>
 
-        <div ref={wrapperRef} class="flex-1 min-w-0">
+        <div ref={wiring.wrapperRef} class="flex-1 min-w-0">
           <RichEditor
             body={store.body()}
             onInput={store.setBody}
@@ -151,7 +86,7 @@ export default function CommentComposer(props: Props) {
             tab={store.tab()}
             onTabChange={store.setTab}
             onCtrlEnter={() => {
-              if (!mention.open()) store.submit();
+              if (!wiring.mention.open()) store.submit();
             }}
             onPasteFiles={(files) => attach.addUploads(files)}
             placeholder={t("editor.write_reply_ctrl")}
@@ -193,34 +128,7 @@ export default function CommentComposer(props: Props) {
         </button>
       </div>
 
-      <Show when={mention.open() && mention.rect() !== null}>
-        <MentionPopup
-          query={mention.query()!}
-          entries={mention.filtered()}
-          anchorRect={mention.rect()!}
-          activeIdx={mention.activeIdx()}
-          onSelect={(entry) => {
-            const editor = getEditor();
-            if (editor) { mention.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); return; }
-            const ta = getTA();
-            if (ta) mention.insertTextarea(entry, ta, store.setBody);
-          }}
-        />
-      </Show>
-
-      <Show when={emoji.open() && emoji.rect() !== null}>
-        <EmojiPopup
-          entries={emoji.filtered()}
-          anchorRect={emoji.rect()!}
-          activeIdx={emoji.activeIdx()}
-          onSelect={(entry) => {
-            const editor = getEditor();
-            if (editor) { emoji.insertWysiwyg(entry, () => store.setBody(htmlToSource(editor.innerHTML, store.mimetype()))); return; }
-            const ta = getTA();
-            if (ta) emoji.insertTextarea(entry, ta, store.setBody);
-          }}
-        />
-      </Show>
+      <MentionEmojiPopups wiring={wiring} />
     </div>
   );
 }

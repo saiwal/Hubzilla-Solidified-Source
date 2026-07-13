@@ -20,6 +20,7 @@ export type EditorCapabilities = {
   aclPicker: boolean;
   submitOnCtrlEnter: boolean;
   latexMode: LatexInsertMode;
+  poll: boolean;
 };
 
 export type ComposerMeta = {
@@ -42,6 +43,7 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
     aclPicker: true,
     submitOnCtrlEnter: true,
     latexMode: "image",
+    poll: true,
   },
   // Inline comment box under a PostCard — same full toolbar as the post
   // composer, only the meta fields (title/summary/ACL/…) are stripped.
@@ -55,6 +57,22 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
     aclPicker: false,
     submitOnCtrlEnter: true,
     latexMode: "image",
+    poll: false,
+  },
+  // Direct message — same full toolbar as post, but recipients are picked
+  // via a "To:" field (RecipientField) instead of the ACL picker, so
+  // aclPicker stays false here even though it does gate visibility/scope.
+  dm: {
+    toolbar: "full",
+    title: false,
+    summary: false,
+    slug: false,
+    category: false,
+    attachments: "both",
+    aclPicker: false,
+    submitOnCtrlEnter: true,
+    latexMode: "image",
+    poll: false,
   },
   // Article / long-form post — read in-app like webpages/wiki, not federated
   // as a standalone object in the same way a stream post is, so LaTeX
@@ -69,6 +87,7 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
     aclPicker: true,
     submitOnCtrlEnter: false,
     latexMode: "live",
+    poll: false,
   },
   // Hubzilla webpage (static page with slug) — read in-app, not federated as
   // a standalone object, so LaTeX renders live (KaTeX) rather than as an image.
@@ -82,6 +101,7 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
     aclPicker: true,
     submitOnCtrlEnter: false,
     latexMode: "live",
+    poll: false,
   },
   // Wiki page — plain source editing, no ACL, no attachments; live LaTeX,
   // same reasoning as webpage above.
@@ -95,6 +115,7 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
     aclPicker: false,
     submitOnCtrlEnter: false,
     latexMode: "live",
+    poll: false,
   },
   // Personal note — always private, minimal toolbar
   note: {
@@ -107,6 +128,7 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
     aclPicker: false,
     submitOnCtrlEnter: true,
     latexMode: "image",
+    poll: false,
   },
   // Chat room message input — comment toolbar, untabbed, Ctrl+Enter sends
   chat: {
@@ -119,5 +141,6 @@ export const CAPABILITIES: Record<string, EditorCapabilities> = {
     aclPicker: false,
     submitOnCtrlEnter: true,
     latexMode: "image",
+    poll: false,
   },
 };

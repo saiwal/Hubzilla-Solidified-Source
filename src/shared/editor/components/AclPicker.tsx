@@ -7,7 +7,6 @@
 import {
   createSignal,
   createEffect,
-  on,
   Show,
   For,
   type Component,
@@ -17,6 +16,7 @@ import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { Portal } from "solid-js/web";
 import { fetchConnections } from "@/modules/network/api";
 import type { AclEntry } from "@/modules/network/api";
+import { useConnectionSearch } from "./useConnectionSearch";
 import { useDropdown } from "@/shared/lib/useDropdown";
 import { motion } from "solid-motionone";
 import { useI18n } from "@/i18n";
@@ -27,12 +27,6 @@ void motion;
 
 export type AclMode = "public" | "connections" | "custom";
 export type { AclEntry };
-
-// Minimum characters before the contacts list is searched on the server —
-// privacy groups are cheap and pre-fetched in full, but the contact list
-// can be huge so it's never fetched in full.
-const ACL_MIN_CHARS = 3;
-const ACL_DEBOUNCE_MS = 250;
 
 // Key format: "{type}:{xid}" — e.g. "c:abc123..." or "g:d7ac40c2-..."
 export function entryKey(e: AclEntry): string {
@@ -62,7 +56,6 @@ export interface AclPickerProps {
 
 const AclPicker: Component<AclPickerProps> = (props) => {
   const { t } = useI18n();
-  const [query, setQuery] = createSignal("");
 
   // Privacy groups are cheap and few — pre-fetch them in full and filter
   // client-side as the user types.
@@ -72,39 +65,20 @@ const AclPicker: Component<AclPickerProps> = (props) => {
     () => fetchConnections({ type: "g", count: 100 }),
   );
 
-  // A small initial page of contacts so the picker isn't empty on open —
-  // replaced by the server search once the user types ACL_MIN_CHARS+.
-  const [initialContactsRes] = createQueryResource(
-    "acl-contacts-initial",
-    () => !props.entries,
-    () => fetchConnections({ type: "c", count: 10 }),
-  );
+  // Contacts can be huge — a small initial page so the picker isn't empty on
+  // open, replaced by a debounced server search once the query is long
+  // enough, so the full list is never polled.
+  const contacts = useConnectionSearch("c", {
+    enabled: () => !props.entries,
+    initialCount: 10,
+    searchCount: 50,
+  });
+  const query = contacts.query;
+  const setQuery = contacts.setQuery;
 
-  // Contacts can be huge — only fetched via debounced server search once
-  // the query is ACL_MIN_CHARS or longer, so the full list is never polled.
-  const [debouncedQuery, setDebouncedQuery] = createSignal("");
-  let debounceTimer: number | undefined;
-  createEffect(on(query, (q) => {
-    window.clearTimeout(debounceTimer);
-    const trimmed = q.trim();
-    if (trimmed.length < ACL_MIN_CHARS) {
-      setDebouncedQuery("");
-      return;
-    }
-    debounceTimer = window.setTimeout(() => setDebouncedQuery(trimmed), ACL_DEBOUNCE_MS);
-  }));
-
-  const [contactsRes] = createQueryResource(
-    "acl-contacts-search",
-    () => (!props.entries && debouncedQuery()) || false,
-    (q) => fetchConnections({ type: "c", search: q, count: 50 }),
-  );
-
-  const searching = () => query().trim().length >= ACL_MIN_CHARS;
+  const searching = contacts.searching;
   const loading = () =>
-    !props.entries &&
-    (groupsRes.loading ||
-      (searching() ? contactsRes.loading : initialContactsRes.loading));
+    !props.entries && (groupsRes.loading || contacts.loading());
 
   // Accumulate every entry we've ever seen — fetched, searched, or seeded
   // by the caller — so an already-selected chip keeps its name/photo even
@@ -115,8 +89,8 @@ const AclPicker: Component<AclPickerProps> = (props) => {
       ...(props.entries ?? []),
       ...(props.seedEntries ?? []),
       ...(groupsRes() ?? []),
-      ...(initialContactsRes() ?? []),
-      ...(contactsRes() ?? []),
+      ...contacts.initial(),
+      ...contacts.results(),
     ];
     if (!incoming.length) return;
     setResolvedCache((prev) => {
@@ -153,9 +127,9 @@ const AclPicker: Component<AclPickerProps> = (props) => {
       (c.nick ?? "").toLowerCase().includes(q);
     const groups = (groupsRes() ?? []).filter(matchesQuery);
     if (!searching()) {
-      return [...groups, ...(initialContactsRes() ?? []).filter(matchesQuery)];
+      return [...groups, ...contacts.initial().filter(matchesQuery)];
     }
-    return [...groups, ...(contactsRes() ?? [])];
+    return [...groups, ...contacts.results()];
   };
 
   const totalSelected = () => props.allowEntries.size + props.denyEntries.size;
