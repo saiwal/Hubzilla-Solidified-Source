@@ -28,6 +28,16 @@
   --plyr-audio-border-radius: 0.75rem;
   --plyr-font-family: inherit;
   --plyr-font-size-base: 13px;
+
+  /* Popup menu (settings/speed/quality) + tooltips — Plyr hardcodes these to
+     white regardless of theme, so they'd stay a bright white box in dark
+     themes without this override. */
+  --plyr-menu-background: var(--color-elevated);
+  --plyr-menu-color: var(--color-txt);
+  --plyr-menu-arrow-color: var(--color-muted);
+  --plyr-menu-back-border-color: var(--color-rim);
+  --plyr-tooltip-background: var(--color-elevated);
+  --plyr-tooltip-color: var(--color-txt);
 }
 .plyr {
   /* No overflow:hidden here — Plyr's settings/speed popup menu
@@ -50,6 +60,9 @@
 }
 .plyr--audio .plyr__controls {
   border-radius: 0.75rem;
+  border: 1px solid var(--color-rim);
+}
+.plyr__menu__container {
   border: 1px solid var(--color-rim);
 }
 .plyr-embed-wrap {
