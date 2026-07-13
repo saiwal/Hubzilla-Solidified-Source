@@ -183,6 +183,7 @@ export default function PostCard(props: {
 }) {
   const threadMode = useThreadMode();
   const [replyOpen, setReplyOpen] = createSignal(false);
+  const [replyQuote, setReplyQuote] = createSignal("");
   const [reshareOpen, setReshareOpen] = createSignal(false);
   const [showComments, setShowComments] = createSignal(
     !!props.initiallyExpanded ||
@@ -254,6 +255,26 @@ export default function PostCard(props: {
   let cardRef!: HTMLDivElement;
   const [bodyRef, setBodyRef] = createSignal<HTMLElement>();
   usePlyr(bodyRef, () => props.post.body);
+  // Captured on mouseup (while the selection still exists) rather than on the
+  // Reply click itself — clicking the Reply button collapses the selection
+  // before its own click handler runs.
+  let lastSelectedText = "";
+  function handleBodyMouseUp() {
+    const text = window.getSelection()?.toString().trim();
+    if (text) lastSelectedText = text;
+  }
+  function openReply() {
+    const opening = !replyOpen();
+    if (opening) {
+      setReplyQuote(
+        lastSelectedText
+          ? `[quote=${props.post.authorName}]${lastSelectedText}[/quote]\n`
+          : "",
+      );
+      lastSelectedText = "";
+    }
+    setReplyOpen(opening);
+  }
 
   // Detect event posts: prefer pre-parsed eventData from mapper, fall back to
   // parsing the body directly (handles cases where obj_type wasn't "Event").
@@ -925,6 +946,7 @@ export default function PostCard(props: {
                      prose-p:my-1 prose-p:leading-snug"
               innerHTML={props.post.body}
               onClick={handleBodyClick}
+              onMouseUp={handleBodyMouseUp}
             />
           </Show>
         </Show>
@@ -1099,7 +1121,7 @@ export default function PostCard(props: {
           <span class="ml-auto" />
           <Show when={props.post.canComment !== false}>
             <button
-              onClick={() => setReplyOpen((v) => !v)}
+              onClick={openReply}
               class="flex items-center gap-1 px-2 py-1 rounded-md text-xs
                      text-subtle hover:bg-overlay hover:text-txt transition-colors"
               title={t("post.reply")}
@@ -1252,6 +1274,7 @@ export default function PostCard(props: {
           <CommentComposer
             parentUuid={props.post.uuid}
             profileUid={props.post.profileUid!}
+            initialBody={replyQuote() || undefined}
             onSubmitted={(body) => {
               props.handlers.onComment(
                 props.post.mid,
@@ -1534,6 +1557,7 @@ export default function PostCard(props: {
                    prose-img:rounded-lg prose-img:my-2 break-words text-muted"
             innerHTML={props.post.body}
             onClick={handleBodyClick}
+            onMouseUp={handleBodyMouseUp}
           />
         </Show>
       </Show>
@@ -1700,7 +1724,7 @@ export default function PostCard(props: {
         <span class="ml-auto" />
         <Show when={props.post.canComment !== false}>
           <button
-            onClick={() => setReplyOpen((v) => !v)}
+            onClick={openReply}
             class="flex items-center px-2 py-1.5 rounded-lg text-sm font-medium
                    text-muted hover:bg-overlay hover:text-txt transition-colors"
             title={t("post.reply")}
@@ -1921,6 +1945,7 @@ export default function PostCard(props: {
         <CommentComposer
           parentUuid={props.post.uuid}
           profileUid={props.post.profileUid!}
+          initialBody={replyQuote() || undefined}
           onSubmitted={(body) => {
             props.handlers.onComment(
               props.post.mid,

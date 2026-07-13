@@ -21,6 +21,7 @@ export const webpages: RawDictionary["webpages"] = {
   untitled:         "(शीर्षक रहित)",
   back:             "← वेबपेज",
   load_failed:      "पेज लोड करने में विफल",
+  on_this_page:     "इस पेज पर",
   new_page_title:   "नया पेज",
   edit_page_title:  "पेज संपादित करें",
   title_placeholder: "पेज शीर्षक…",

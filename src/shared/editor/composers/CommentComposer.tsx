@@ -15,6 +15,7 @@ interface Props {
   /** Parent item uuid — full-URL mids break the /api/item/:id path (slashes). */
   parentUuid?: string;
   profileUid: number;
+  initialBody?: string;
   onSubmitted?: (body: string) => void;
 }
 
@@ -55,6 +56,7 @@ export default function CommentComposer(props: Props) {
       props.onSubmitted?.(body);
     },
     scope,
+    { initialBody: props.initialBody },
   );
 
   // ── Mention + emoji autocomplete ─────────────────────────────────────────

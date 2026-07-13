@@ -1,6 +1,6 @@
 // src/modules/articles/views/ArticleView.tsx
 import {
-  createSignal, createEffect, onCleanup, onMount,
+  createSignal, createEffect, onMount,
   Show, For
 } from "solid-js";
 import { createQueryResource } from "@/shared/lib/createQueryResource";
@@ -14,6 +14,8 @@ import CommentComposer from "@/shared/editor/composers/CommentComposer";
 import PostComposer from "@/shared/editor/composers/PostComposer";
 import DOMPurify from "dompurify";
 import { hydrateLatex } from "@/shared/lib/hydrateLatex";
+import { useToc } from "@/shared/lib/useToc";
+import ArticleToc from "@/shared/views/ArticleToc";
 import { usePageNick, useViewerRole } from "@/shared/store/site-config";
 import { useAuth } from "@/shared/store/auth-store";
 import { BiRegularEdit, BiRegularTrash } from "solid-icons/bi";
@@ -23,157 +25,9 @@ import {
   MdFillShare,
   MdFillChat,
   MdOutlineShare,
-  MdOutlineToc,
 } from "solid-icons/md";
 import { apiToggleLike, apiToggleDislike, apiToggleRepeat } from "@/shared/lib/item-api";
 import type { Post } from "@/shared/types/post.types";
-
-// ── types ─────────────────────────────────────────────────────────────────────
-
-interface TocEntry {
-  id: string;
-  text: string;
-  level: number;
-}
-
-// ── helpers ───────────────────────────────────────────────────────────────────
-
-function extractHeadings(container: HTMLElement): TocEntry[] {
-  const nodes = container.querySelectorAll("h1, h2, h3, h4");
-  const entries: TocEntry[] = [];
-  nodes.forEach((node, i) => {
-    const text = (node as HTMLElement).innerText?.trim();
-    if (!text) return;
-    if (!node.id) node.id = `heading-${i}`;
-    entries.push({ id: node.id, text, level: parseInt(node.tagName[1], 10) });
-  });
-  return entries;
-}
-
-// ── TOC ───────────────────────────────────────────────────────────────────────
-
-function TableOfContents(props: { entries: TocEntry[]; activeId: string }) {
-  const { t } = useI18n();
-  const [expanded, setExpanded] = createSignal(true);
-  const minLevel = () => Math.min(...props.entries.map((e) => e.level));
-  const indent = (level: number) => {
-    const d = level - minLevel();
-    return d === 0 ? "" : d === 1 ? "pl-3" : "pl-6";
-  };
-
-  return (
-    <nav
-      class="xl:fixed xl:top-24 xl:w-52 w-full bg-surface xl:bg-transparent
-             border border-rim xl:border-0 rounded-xl xl:rounded-none p-3 xl:p-0"
-      aria-label="Table of contents"
-    >
-      <button
-        type="button"
-        onClick={() => setExpanded((v) => !v)}
-        class="flex items-center justify-between w-full xl:cursor-default"
-      >
-        <span class="text-xs font-semibold uppercase tracking-wide text-muted">
-          {t("articles.on_this_page")}
-        </span>
-        <span class="xl:hidden text-muted text-xs">{expanded() ? "▲" : "▼"}</span>
-      </button>
-      <Show when={expanded()}>
-        <div class="mt-2 space-y-0.5 max-h-[50vh] xl:max-h-[70vh] overflow-y-auto">
-          <For each={props.entries}>
-            {(entry) => (
-              <a
-                href={`#${entry.id}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById(entry.id)?.scrollIntoView({ behavior: "smooth" });
-                  if (window.innerWidth < 1280) setExpanded(false);
-                }}
-                class={`block text-xs py-0.5 px-1 rounded transition-colors truncate
-                  ${indent(entry.level)}
-                  ${props.activeId === entry.id
-                    ? "text-accent font-medium"
-                    : "text-muted hover:text-txt"
-                  }`}
-              >
-                {entry.text}
-              </a>
-            )}
-          </For>
-        </div>
-      </Show>
-    </nav>
-  );
-}
-
-// ── Floating TOC (small screens) ────────────────────────────────────────────────
-
-function FloatingToc(props: { entries: TocEntry[]; activeId: string }) {
-  const { t } = useI18n();
-  const [open, setOpen] = createSignal(false);
-  const minLevel = () => Math.min(...props.entries.map((e) => e.level));
-  const indent = (level: number) => {
-    const d = level - minLevel();
-    return d === 0 ? "" : d === 1 ? "pl-3" : "pl-6";
-  };
-
-  return (
-    <div class="xl:hidden fixed top-20 right-4 z-40 flex flex-col items-end">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open()}
-        aria-label={t("articles.on_this_page")}
-        class="w-11 h-11 rounded-full flex items-center justify-center
-               bg-elevated border border-rim shadow-lg hover:shadow-xl
-               text-muted hover:text-txt transition-all"
-      >
-        <MdOutlineToc size={20} />
-      </button>
-      <Show when={open()}>
-        <div
-          class="mt-2 w-64 max-w-[calc(100vw-2rem)] max-h-[60vh] overflow-y-auto
-                 bg-surface border border-rim rounded-xl shadow-2xl p-3"
-        >
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-semibold uppercase tracking-wide text-muted">
-              {t("articles.on_this_page")}
-            </span>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              aria-label="Close table of contents"
-              class="p-1 rounded text-muted hover:bg-elevated hover:text-txt transition-colors"
-            >
-              ✕
-            </button>
-          </div>
-          <div class="space-y-0.5">
-            <For each={props.entries}>
-              {(entry) => (
-                <a
-                  href={`#${entry.id}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document.getElementById(entry.id)?.scrollIntoView({ behavior: "smooth" });
-                    setOpen(false);
-                  }}
-                  class={`block text-xs py-0.5 px-1 rounded transition-colors truncate
-                    ${indent(entry.level)}
-                    ${props.activeId === entry.id
-                      ? "text-accent font-medium"
-                      : "text-muted hover:text-txt"
-                    }`}
-                >
-                  {entry.text}
-                </a>
-              )}
-            </For>
-          </div>
-        </div>
-      </Show>
-    </div>
-  );
-}
 
 // ── edit modal ────────────────────────────────────────────────────────────────
 
@@ -362,35 +216,11 @@ export default function ArticleView() {
   }
 
   // TOC
-  const [toc, setToc] = createSignal<TocEntry[]>([]);
-  const [activeId, setActiveId] = createSignal("");
   let bodyRef: HTMLDivElement | undefined;
-
   createEffect(() => {
-    if (!rendered() || !bodyRef) return;
-    hydrateLatex(bodyRef);
-    requestAnimationFrame(() => {
-      if (!bodyRef) return;
-      const entries = extractHeadings(bodyRef);
-      setToc(entries);
-      if (entries.length) setActiveId(entries[0].id);
-
-      const observer = new IntersectionObserver(
-        (observations) => {
-          const visible = observations
-            .filter((o) => o.isIntersecting)
-            .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-          if (visible.length) setActiveId(visible[0].target.id);
-        },
-        { rootMargin: "0px 0px -60% 0px", threshold: 0 },
-      );
-      entries.forEach(({ id }) => {
-        const el = document.getElementById(id);
-        if (el) observer.observe(el);
-      });
-      onCleanup(() => observer.disconnect());
-    });
+    if (rendered() && bodyRef) hydrateLatex(bodyRef);
   });
+  const { toc, activeId } = useToc(rendered, () => bodyRef);
 
   const isOwner = () => role() === "owner";
 
@@ -647,12 +477,7 @@ export default function ArticleView() {
             </article>
 
             {/* ── TOC — fixed sidebar on xl+, floating collapsed launcher below xl ── */}
-            <Show when={toc().length > 1}>
-              <aside class="hidden xl:block shrink-0 w-52">
-                <TableOfContents entries={toc()} activeId={activeId()} />
-              </aside>
-              <FloatingToc entries={toc()} activeId={activeId()} />
-            </Show>
+            <ArticleToc entries={toc()} activeId={activeId()} label={t("articles.on_this_page")} />
           </div>
         )}
       </Show>

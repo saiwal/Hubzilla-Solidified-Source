@@ -1684,6 +1684,7 @@ export type RawDictionary = {
     untitled:         string;
     back:             string;
     load_failed:      string;
+    on_this_page:     string;
     new_page_title:   string;
     edit_page_title:  string;
     title_placeholder: string;
