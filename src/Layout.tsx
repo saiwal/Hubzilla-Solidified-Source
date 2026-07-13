@@ -1,8 +1,21 @@
-import { type ParentComponent, createSignal, Show, createMemo, createEffect, on, ErrorBoundary, Suspense } from "solid-js";
+import {
+  type ParentComponent,
+  createSignal,
+  Show,
+  createMemo,
+  createEffect,
+  on,
+  ErrorBoundary,
+  Suspense,
+} from "solid-js";
 import { For } from "solid-js";
 import { A, useLocation, useIsRouting } from "@solidjs/router";
 import NavItem, { getNavIcon } from "./shared/views/NavItem";
-import { useNav, useNavActionItems, navItemHelpTarget } from "./shared/lib/useNav";
+import {
+  useNav,
+  useNavActionItems,
+  navItemHelpTarget,
+} from "./shared/lib/useNav";
 import { helpable } from "./shared/lib/helpable";
 void helpable;
 import { moduleIdForPath, getModule } from "./shared/lib/module-registry";
@@ -22,12 +35,20 @@ import {
   MdFillCheck,
   MdOutlineEdit,
 } from "solid-icons/md";
-import { editingWidgets, setEditingWidgets } from "@/shared/store/widget-layout";
+import {
+  editingWidgets,
+  setEditingWidgets,
+} from "@/shared/store/widget-layout";
 import { useOnlineStatus } from "./shared/lib/useOnlineStatus";
 import NavUtilities from "./shared/views/NavUtilities";
 import { notifCount } from "@/shared/lib/notificationCount";
 import { createMediaQuery } from "@solid-primitives/media";
-import { useNavActions, useNavViewer, useNavData, setNavNick } from "./shared/store/nav-store";
+import {
+  useNavActions,
+  useNavViewer,
+  useNavData,
+  setNavNick,
+} from "./shared/store/nav-store";
 import { motion } from "solid-motionone";
 import ToastContainer from "@/shared/views/ToastContainer";
 import { useI18n } from "@/i18n";
@@ -57,7 +78,9 @@ function BrandBlock(props: { banner?: string }) {
           class="w-full text-center text-base font-bold tracking-tight text-txt
                  [&_img]:mx-auto [&_img]:max-h-14 [&_img]:max-w-full [&_img]:object-contain
                  [&_img]:opacity-90 [&_img]:hover:opacity-100 [&_img]:transition-opacity"
-          innerHTML={DOMPurify.sanitize(props.banner!, { FORBID_TAGS: ["style", "script"] })}
+          innerHTML={DOMPurify.sanitize(props.banner!, {
+            FORBID_TAGS: ["style", "script"],
+          })}
         />
         <span class="h-[2px] w-5 bg-accent rounded-full" />
       </div>
@@ -85,7 +108,9 @@ function MobileTab(props: {
              transition-colors min-w-0"
       activeClass="!text-txt"
     >
-      <span aria-hidden="true" class="flex items-center">{getNavIcon(props.icon, 22)}</span>
+      <span aria-hidden="true" class="flex items-center">
+        {getNavIcon(props.icon, 22)}
+      </span>
       <span class="text-[0.625rem] font-medium leading-tight truncate max-w-[52px]">
         {label()}
       </span>
@@ -115,7 +140,9 @@ const Layout: ParentComponent = (props) => {
   const navData = useNavData();
 
   const isXl = createMediaQuery("(min-width: 1280px)");
-  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
 
   let mainRef!: HTMLElement;
   let morePanelRef!: HTMLDivElement;
@@ -126,19 +153,33 @@ const Layout: ParentComponent = (props) => {
   const onMainScroll = () => setShowScrollTop(mainRef.scrollTop > 300);
 
   createEffect(() => {
-    if (moreOpen()) requestAnimationFrame(() => {
-      morePanelRef?.querySelector<HTMLElement>("a, button")?.focus();
-    });
+    if (moreOpen())
+      requestAnimationFrame(() => {
+        morePanelRef?.querySelector<HTMLElement>("a, button")?.focus();
+      });
   });
   createEffect(() => {
-    if (rightOpen() && !isXl()) requestAnimationFrame(() => rightCloseRef?.focus());
+    if (rightOpen() && !isXl())
+      requestAnimationFrame(() => rightCloseRef?.focus());
   });
-  createEffect(on(rightOpen, (isOpen, prevOpen) => {
-    if (prevOpen && !isOpen) panelButtonRef?.focus();
-  }, { defer: true }));
-  createEffect(on(moreOpen, (isOpen, prevOpen) => {
-    if (prevOpen && !isOpen) moreButtonRef?.focus();
-  }, { defer: true }));
+  createEffect(
+    on(
+      rightOpen,
+      (isOpen, prevOpen) => {
+        if (prevOpen && !isOpen) panelButtonRef?.focus();
+      },
+      { defer: true },
+    ),
+  );
+  createEffect(
+    on(
+      moreOpen,
+      (isOpen, prevOpen) => {
+        if (prevOpen && !isOpen) moreButtonRef?.focus();
+      },
+      { defer: true },
+    ),
+  );
 
   const activeModuleId = createMemo(() => moduleIdForPath(location.pathname));
 
@@ -197,44 +238,50 @@ const Layout: ParentComponent = (props) => {
       <HelpOverlay />
       <ToastContainer />
       <Show when={isRouting()}>
-        <div class="fixed top-0 inset-x-0 z-[150] h-[2px] overflow-hidden" aria-hidden="true">
-          <div class="h-full w-full bg-accent" style={{ animation: "hz-routing 1s linear infinite" }} />
+        <div
+          class="fixed top-0 inset-x-0 z-[150] h-[2px] overflow-hidden"
+          aria-hidden="true"
+        >
+          <div
+            class="h-full w-full bg-accent"
+            style={{ animation: "hz-routing 1s linear infinite" }}
+          />
         </div>
       </Show>
 
       <div class="flex h-full flex-col">
         {/* ── Site-level alerts (banner landmark) ── */}
         <header>
-        {/* ── Offline banner ── */}
-        <Show when={!online()}>
-          <div
-            role="alert"
-            class="fixed top-0 inset-x-0 z-[100] flex items-center justify-center gap-2
+          {/* ── Offline banner ── */}
+          <Show when={!online()}>
+            <div
+              role="alert"
+              class="fixed top-0 inset-x-0 z-[100] flex items-center justify-center gap-2
                    bg-amber-500 text-amber-950 text-sm font-medium py-1.5 select-none"
-          >
-            <svg
-              aria-hidden="true"
-              class="w-4 h-4 shrink-0"
-              fill="currentColor"
-              viewBox="0 0 20 20"
             >
-              <path
-                fill-rule="evenodd"
-                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58
+              <svg
+                aria-hidden="true"
+                class="w-4 h-4 shrink-0"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58
                    9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92z
                    M11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            {t("layout.offline")}
-          </div>
-        </Show>
+                  clip-rule="evenodd"
+                />
+              </svg>
+              {t("layout.offline")}
+            </div>
+          </Show>
 
-        <RemoteAuthBanner
-          role={viewerRole()}
-          subjectNick={subjectNick()}
-          homeUrl={navActions().navhome}
-        />
+          <RemoteAuthBanner
+            role={viewerRole()}
+            subjectNick={subjectNick()}
+            homeUrl={navActions().navhome}
+          />
         </header>
 
         <div class="flex flex-1 min-h-0">
@@ -252,12 +299,19 @@ const Layout: ParentComponent = (props) => {
             </div>
 
             {/* Primary nav — reorderable via drag handle while in edit-layout mode */}
-            <nav aria-label="Primary" tabindex="0" class="flex-1 min-h-0 flex flex-col gap-0.5 overflow-y-auto">
+            <nav
+              aria-label="Primary"
+              tabindex="0"
+              class="flex-1 min-h-0 flex flex-col gap-0.5 overflow-y-auto"
+            >
               <For each={desktopNavDrag.displayItems()}>
                 {(item) => (
                   <div
                     ref={desktopNavDrag.registerRef(item.path)}
-                    classList={{ "rounded-xl border border-dashed border-accent/50": editingWidgets() }}
+                    classList={{
+                      "rounded-xl border border-dashed border-accent/50":
+                        editingWidgets(),
+                    }}
                     use:helpable={navItemHelpTarget(item)}
                   >
                     <NavItem
@@ -283,7 +337,10 @@ const Layout: ParentComponent = (props) => {
                 use:motion={{
                   initial: { opacity: 0, y: 8 },
                   animate: { opacity: 1, y: 0 },
-                  transition: { duration: reducedMotion ? 0 : 0.18, easing: "ease-out" },
+                  transition: {
+                    duration: reducedMotion ? 0 : 0.18,
+                    easing: "ease-out",
+                  },
                 }}
                 class="flex flex-col gap-0.5"
               >
@@ -325,47 +382,57 @@ const Layout: ParentComponent = (props) => {
             class="flex-1 overflow-y-auto p-4 lg:p-6 pb-16 lg:pb-6 relative"
           >
             <div class="flex flex-col min-h-full">
-              <span
-                class="sr-only"
-                aria-live="polite"
-                aria-atomic="true"
-              >
-                {notifCount() > 0 ? `${notifCount()} notification${notifCount() === 1 ? "" : "s"}` : ""}
+              <span class="sr-only" aria-live="polite" aria-atomic="true">
+                {notifCount() > 0
+                  ? `${notifCount()} notification${notifCount() === 1 ? "" : "s"}`
+                  : ""}
               </span>
               <Slot name="header" moduleId={activeModuleId()} editable />
               <Slot name="mainTop" moduleId={activeModuleId()} editable />
 
               <div class="min-w-0">
-                <ErrorBoundary fallback={(_, reset) => (
-                  <div class="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-8 text-center">
-                    <span aria-hidden="true" class="text-8xl font-bold text-gray-200 dark:text-gray-700 select-none">!</span>
-                    <h1 class="text-2xl font-semibold">{t("ui.error_title")}</h1>
-                    <p class="text-muted max-w-sm">{t("ui.error_desc")}</p>
-                    <div class="flex gap-3 mt-2">
-                      <button
-                        onClick={reset}
-                        class="px-4 py-2 rounded-lg border border-rim hover:bg-elevated transition-colors text-sm"
+                <ErrorBoundary
+                  fallback={(_, reset) => (
+                    <div class="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-8 text-center">
+                      <span
+                        aria-hidden="true"
+                        class="text-8xl font-bold text-gray-200 dark:text-gray-700 select-none"
                       >
-                        {t("ui.try_again")}
-                      </button>
-                      <a
-                        href="/hq"
-                        class="px-4 py-2 rounded-lg bg-accent text-accent-fg hover:opacity-90 transition-opacity text-sm"
-                      >
-                        {t("ui.go_home")}
-                      </a>
+                        !
+                      </span>
+                      <h1 class="text-2xl font-semibold">
+                        {t("ui.error_title")}
+                      </h1>
+                      <p class="text-muted max-w-sm">{t("ui.error_desc")}</p>
+                      <div class="flex gap-3 mt-2">
+                        <button
+                          onClick={reset}
+                          class="px-4 py-2 rounded-lg border border-rim hover:bg-elevated transition-colors text-sm"
+                        >
+                          {t("ui.try_again")}
+                        </button>
+                        <a
+                          href="/hq"
+                          class="px-4 py-2 rounded-lg bg-accent text-accent-fg hover:opacity-90 transition-opacity text-sm"
+                        >
+                          {t("ui.go_home")}
+                        </a>
+                      </div>
                     </div>
-                  </div>
-                )}>
-                  <Suspense>
-                    {props.children}
-                  </Suspense>
+                  )}
+                >
+                  <Suspense>{props.children}</Suspense>
                 </ErrorBoundary>
               </div>
 
+              <div class="mt-auto">
+                <Slot name="footer" moduleId={activeModuleId()} editable />
+              </div>
               <Show when={showScrollTop()}>
                 <button
-                  onClick={() => mainRef.scrollTo({ top: 0, behavior: "smooth" })}
+                  onClick={() =>
+                    mainRef.scrollTo({ top: 0, behavior: "smooth" })
+                  }
                   class="sticky bottom-2 lg:bottom-14 xl:bottom-2 self-end z-10
                          w-10 h-10 rounded-full flex items-center justify-center
                          bg-elevated border border-rim
@@ -387,10 +454,6 @@ const Layout: ParentComponent = (props) => {
                   </svg>
                 </button>
               </Show>
-
-              <div class="mt-auto">
-                <Slot name="footer" moduleId={activeModuleId()} editable />
-              </div>
             </div>
           </main>
 
@@ -412,7 +475,9 @@ const Layout: ParentComponent = (props) => {
           >
             {/* Header: always shown on your own pages (hosts the widget-edit
                 toggle); otherwise only on the mobile drawer */}
-            <div class={`flex items-center justify-between mb-2 ${isOwner() ? "" : "xl:hidden"}`}>
+            <div
+              class={`flex items-center justify-between mb-2 ${isOwner() ? "" : "xl:hidden"}`}
+            >
               <span class="text-[10px] font-semibold uppercase tracking-widest text-muted">
                 {t("layout.panel")}
               </span>
@@ -421,15 +486,26 @@ const Layout: ParentComponent = (props) => {
                   <button
                     onClick={() => setEditingWidgets(!editingWidgets())}
                     aria-pressed={editingWidgets()}
-                    aria-label={editingWidgets() ? t("widgets.done_editing") : t("widgets.edit_layout")}
-                    title={editingWidgets() ? t("widgets.done_editing") : t("widgets.edit_layout")}
+                    aria-label={
+                      editingWidgets()
+                        ? t("widgets.done_editing")
+                        : t("widgets.edit_layout")
+                    }
+                    title={
+                      editingWidgets()
+                        ? t("widgets.done_editing")
+                        : t("widgets.edit_layout")
+                    }
                     class={`p-1 rounded-lg transition ${
                       editingWidgets()
                         ? "bg-accent text-accent-fg"
                         : "text-muted hover:text-txt hover:bg-elevated"
                     }`}
                   >
-                    <Show when={editingWidgets()} fallback={<MdOutlineEdit size={16} />}>
+                    <Show
+                      when={editingWidgets()}
+                      fallback={<MdOutlineEdit size={16} />}
+                    >
                       <MdFillCheck size={16} />
                     </Show>
                   </button>
@@ -492,10 +568,16 @@ const Layout: ParentComponent = (props) => {
                   {(item) => (
                     <div
                       ref={moreDrawerDrag.registerRef(item.path)}
-                      onPointerDown={editingWidgets() ? moreDrawerDrag.onTilePointerDown(item) : undefined}
+                      onPointerDown={
+                        editingWidgets()
+                          ? moreDrawerDrag.onTilePointerDown(item)
+                          : undefined
+                      }
                       classList={{
-                        "opacity-50": moreDrawerDrag.draggingKey() === item.path,
-                        "touch-none rounded-xl border border-dashed border-accent/50": editingWidgets(),
+                        "opacity-50":
+                          moreDrawerDrag.draggingKey() === item.path,
+                        "touch-none rounded-xl border border-dashed border-accent/50":
+                          editingWidgets(),
                       }}
                       use:helpable={navItemHelpTarget(item)}
                     >
@@ -532,7 +614,10 @@ const Layout: ParentComponent = (props) => {
                 use:motion={{
                   initial: { opacity: 0, y: 14 },
                   animate: { opacity: 1, y: 0 },
-                  transition: { duration: reducedMotion ? 0 : 0.2, easing: [0.25, 0.46, 0.45, 0.94] },
+                  transition: {
+                    duration: reducedMotion ? 0 : 0.2,
+                    easing: [0.25, 0.46, 0.45, 0.94],
+                  },
                 }}
                 class="grid grid-cols-4 md:grid-cols-10 gap-1.5 px-2.5 pb-4"
               >
@@ -587,10 +672,15 @@ const Layout: ParentComponent = (props) => {
               {(item) => (
                 <div
                   ref={bottomTabDrag.registerRef(item.path)}
-                  onPointerDown={editingWidgets() ? bottomTabDrag.onTilePointerDown(item) : undefined}
+                  onPointerDown={
+                    editingWidgets()
+                      ? bottomTabDrag.onTilePointerDown(item)
+                      : undefined
+                  }
                   classList={{
                     "opacity-50": bottomTabDrag.draggingKey() === item.path,
-                    "touch-none rounded-xl border border-dashed border-accent/50": editingWidgets(),
+                    "touch-none rounded-xl border border-dashed border-accent/50":
+                      editingWidgets(),
                   }}
                   class="flex-1 min-w-0 flex"
                   use:helpable={navItemHelpTarget(item)}
@@ -605,26 +695,26 @@ const Layout: ParentComponent = (props) => {
             </For>
 
             {/* <Show when={moreItems().length > 0}> */}
-              <button
-                ref={moreButtonRef}
-                onClick={() => {
-                  setMoreOpen((o) => !o);
-                  setRightOpen(false);
-                }}
-                aria-expanded={moreOpen()}
-                aria-controls="more-drawer"
-                use:helpable="nav.more_drawer"
-                class={`flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl
+            <button
+              ref={moreButtonRef}
+              onClick={() => {
+                setMoreOpen((o) => !o);
+                setRightOpen(false);
+              }}
+              aria-expanded={moreOpen()}
+              aria-controls="more-drawer"
+              use:helpable="nav.more_drawer"
+              class={`flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl
                         text-[0.625rem] font-medium transition-colors min-w-0
                         ${
                           moreOpen()
                             ? "text-txt bg-elevated"
                             : "text-muted hover:bg-elevated"
                         }`}
-              >
-                <MdFillMore_horiz size={22} />
-                <span>{t("layout.more")}</span>
-              </button>
+            >
+              <MdFillMore_horiz size={22} />
+              <span>{t("layout.more")}</span>
+            </button>
             {/* </Show> */}
 
             <button
