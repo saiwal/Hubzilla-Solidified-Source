@@ -487,7 +487,7 @@ const Layout: ParentComponent = (props) => {
               <p class="px-4 pb-2 text-[0.625rem] font-semibold uppercase tracking-widest text-muted">
                 {t("layout.navigation")}
               </p>
-              <div class="grid grid-cols-4 gap-1.5 px-2.5 pb-4">
+              <div class="grid grid-cols-4 md:grid-cols-10 gap-1.5 px-2.5 pb-4">
                 <For each={moreDrawerDrag.displayItems()}>
                   {(item) => (
                     <div
@@ -534,7 +534,7 @@ const Layout: ParentComponent = (props) => {
                   animate: { opacity: 1, y: 0 },
                   transition: { duration: reducedMotion ? 0 : 0.2, easing: [0.25, 0.46, 0.45, 0.94] },
                 }}
-                class="grid grid-cols-4 gap-1.5 px-2.5 pb-4"
+                class="grid grid-cols-4 md:grid-cols-10 gap-1.5 px-2.5 pb-4"
               >
                 <For each={actionItems()}>
                   {(item) => (
