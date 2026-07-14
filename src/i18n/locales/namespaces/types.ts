@@ -2020,11 +2020,14 @@ export type RawDictionary = {
     success_edit_profile:     string;
   };
   notify: {
-    title:     string;
-    empty:     string;
-    retry:     string;
-    resolving: string;
-    not_found: string;
-    back:      string;
+    title:          string;
+    empty:          string;
+    retry:          string;
+    resolving:      string;
+    not_found:      string;
+    back:           string;
+    all_title:      string;
+    mark_all_seen:  string;
+    new:            string;
   };
 };

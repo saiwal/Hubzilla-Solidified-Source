@@ -598,7 +598,7 @@ function NoticesSection(props: {
         </Show>
       </div>
       <div class="border-t border-rim py-1.5 text-center bg-surface">
-        <a href="/notify" class="text-[11px] text-accent hover:underline">
+        <a href="/notifications" class="text-[11px] text-accent hover:underline">
           {t("hq.view_all")}
         </a>
       </div>

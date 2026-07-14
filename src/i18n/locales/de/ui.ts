@@ -52,7 +52,7 @@ export const ui: RawDictionary["ui"] = {
   sign_in_notifs:         "Melde dich an, um Benachrichtigungen zu sehen",
   nothing_new:            "Nichts Neues",
   all_caught_up:          "Alles auf dem neuesten Stand",
-  no_notifications:       "Keine Benachrichtigungen",
+  no_notifications:       "Keine neuen Benachrichtigungen",
   // AuthorPopover
   view_profile:           "Profil ansehen",
   connect:                "Verbinden",

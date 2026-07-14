@@ -9,6 +9,10 @@ registerModule({
       path: "/notify/view/:id",
       component: () => import("./views/NotifyRedirectView"),
     },
+    {
+      path: "/notifications",
+      component: () => import("./views/NotificationsListView"),
+    },
   ],
   requiresAuth: true,
   permissions: [],
