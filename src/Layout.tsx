@@ -59,32 +59,30 @@ void motion;
 // ── Brand / site banner ────────────────────────────────────────────────────────
 function BrandBlock(props: { banner?: string }) {
   return (
-    <Show
-      when={props.banner}
-      fallback={
-        <div class="flex items-center gap-3 select-none">
-          <span class="text-2xl font-black leading-none tracking-tighter text-accent">
-            Hz
-          </span>
-          <span class="h-5 w-px bg-rim" />
+    <div class="flex items-center gap-3 select-none">
+      <img
+        src={import.meta.env.BASE_URL + "hubzilla.svg"}
+        alt=""
+        aria-hidden="true"
+        class="h-6 w-6 shrink-0"
+      />
+      <span class="h-5 w-px bg-rim" />
+      <Show
+        when={props.banner}
+        fallback={
           <span class="text-sm font-medium tracking-tight text-muted">
             Hubzilla
           </span>
-        </div>
-      }
-    >
-      <div class="w-full flex flex-col items-center gap-1.5 select-none">
-        <div
-          class="w-full text-center text-base font-bold tracking-tight text-txt
-                 [&_img]:mx-auto [&_img]:max-h-14 [&_img]:max-w-full [&_img]:object-contain
-                 [&_img]:opacity-90 [&_img]:hover:opacity-100 [&_img]:transition-opacity"
+        }
+      >
+        <span
+          class="text-sm font-medium tracking-tight text-muted"
           innerHTML={DOMPurify.sanitize(props.banner!, {
             FORBID_TAGS: ["style", "script"],
           })}
         />
-        <span class="h-[2px] w-5 bg-accent rounded-full" />
-      </div>
-    </Show>
+      </Show>
+    </div>
   );
 }
 
