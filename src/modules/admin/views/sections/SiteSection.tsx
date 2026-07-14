@@ -1,11 +1,13 @@
-import { Show } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { A } from "@solidjs/router";
+import { useQueryClient } from "@tanstack/solid-query";
 import { createQueryResource } from "@/shared/lib/createQueryResource";
 import SubPageContent from "@/shared/views/SubPageContent";
-import { fetchAdminSite, saveAdminSite, fetchAdminThemes } from "../../api";
+import { fetchAdminSite, saveAdminSite, fetchAdminThemes, uploadSiteLogo, removeSiteLogo } from "../../api";
 import { useSectionForm } from "@/modules/settings/store/useSectionForm";
 import type { AdminSite } from "../../types";
 import { useI18n } from "@/i18n";
+import { toast } from "@/shared/store/toast";
 
 const REGISTER_POLICIES = [
   { value: 0, label: "Closed – no new registrations" },
@@ -82,6 +84,12 @@ export default function SiteSection() {
             </Field>
             <Field label="Banner / logo" hint="Unfiltered HTML/CSS/JS is allowed">
               <input name="banner" value={d().banner ?? ''} class={inputCls} />
+            </Field>
+            <Field
+              label="Site logo"
+              hint="Used as the browser favicon and PWA icon. A square image with some padding works best."
+            >
+              <SiteLogoField site={d()} />
             </Field>
             <Field label="Admin info" hint="Shown on siteinfo page. BBCode accepted.">
               <textarea name="admininfo" rows={3} class={inputCls}>{d().admininfo ?? ''}</textarea>
@@ -318,6 +326,89 @@ function Toggle(props: { name: string; label: string; checked: boolean }) {
       <div class="relative w-9 h-5 bg-rim-strong rounded-full peer-checked:bg-accent transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-4 after:h-4 after:rounded-full after:bg-elevated after:transition-transform peer-checked:after:translate-x-4" />
       <span class="text-sm text-txt">{props.label}</span>
     </label>
+  );
+}
+
+function SiteLogoField(props: { site: AdminSite }) {
+  const queryClient = useQueryClient();
+  const [uploading, setUploading] = createSignal(false);
+  const [progress, setProgress] = createSignal(0);
+  let fileInput: HTMLInputElement | undefined;
+
+  async function handleFile(e: Event) {
+    const input = e.currentTarget as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setProgress(0);
+    try {
+      await uploadSiteLogo(file, setProgress);
+      toast.success("Site logo updated");
+      await queryClient.invalidateQueries({ queryKey: ["settings", "admin-site"] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
+      input.value = "";
+    }
+  }
+
+  async function handleRemove() {
+    setUploading(true);
+    try {
+      await removeSiteLogo();
+      toast.success("Site logo removed");
+      await queryClient.invalidateQueries({ queryKey: ["settings", "admin-site"] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Remove failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div class="flex items-center gap-4">
+      <div class="w-16 h-16 rounded-lg border border-rim bg-surface flex items-center justify-center overflow-hidden shrink-0">
+        <Show
+          when={props.site.sitelogo_192}
+          fallback={<span class="text-xs text-muted">None</span>}
+        >
+          <img src={props.site.sitelogo_192} alt="Site logo" class="w-full h-full object-contain" />
+        </Show>
+      </div>
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={uploading()}
+            onClick={() => fileInput?.click()}
+            class="px-3 py-2 text-sm rounded-lg border border-rim text-txt hover:bg-elevated
+                   disabled:opacity-40 transition-colors"
+          >
+            {uploading() ? `Uploading… ${progress()}%` : "Upload"}
+          </button>
+          <Show when={props.site.sitelogo_192}>
+            <button
+              type="button"
+              disabled={uploading()}
+              onClick={handleRemove}
+              class="px-3 py-2 text-sm rounded-lg border border-rim text-muted hover:text-txt hover:bg-elevated
+                     disabled:opacity-40 transition-colors"
+            >
+              Remove
+            </button>
+          </Show>
+        </div>
+        <input
+          ref={fileInput}
+          type="file"
+          accept="image/*"
+          class="hidden"
+          onChange={handleFile}
+        />
+      </div>
+    </div>
   );
 }
 

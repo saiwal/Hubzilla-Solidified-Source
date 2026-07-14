@@ -76,6 +76,8 @@ export interface NavApiResponse {
   actions: NavActions;
   /** Site banner / name */
   banner: string;
+  /** Admin-uploaded site logo (192x192 PNG URL) — empty when unset */
+  sitelogo: string;
   /** Current channel reddress or @hostname — empty for the owner */
   sitelocation: string;
   /** All channels on this account — empty for visitors / delegate sessions */
@@ -199,6 +201,7 @@ export async function fetchNavApi(channelNick?: string): Promise<NavApiResponse>
     viewer:           raw.viewer,
     actions:          raw.actions ?? {},
     banner:           raw.banner ?? "",
+    sitelogo:         raw.sitelogo ?? "",
     sitelocation:     raw.sitelocation ?? "",
     channels:         raw.channels ?? [],
     pinned,

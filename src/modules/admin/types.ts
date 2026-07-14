@@ -20,6 +20,9 @@ export interface AdminSite {
   // Basic identity
   sitename: string;
   banner: string;
+  sitelogo_512: string;
+  sitelogo_192: string;
+  sitelogo_favicon: string;
   admininfo: string;
   siteinfo: string;
   site_location: string;

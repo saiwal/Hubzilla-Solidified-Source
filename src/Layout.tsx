@@ -57,14 +57,14 @@ import DOMPurify from "dompurify";
 void motion;
 
 // ── Brand / site banner ────────────────────────────────────────────────────────
-function BrandBlock(props: { banner?: string }) {
+function BrandBlock(props: { banner?: string; logoUrl?: string }) {
   return (
     <div class="flex items-center gap-3 select-none">
       <img
-        src={import.meta.env.BASE_URL + "hubzilla.svg"}
+        src={props.logoUrl || import.meta.env.BASE_URL + "hubzilla.svg"}
         alt=""
         aria-hidden="true"
-        class="h-6 w-6 shrink-0"
+        class="h-6 w-6 shrink-0 rounded object-contain"
       />
       <span class="h-5 w-px bg-rim" />
       <Show
@@ -293,7 +293,7 @@ const Layout: ParentComponent = (props) => {
           >
             {/* Brand */}
             <div class="flex items-center justify-center px-2 pb-4 pt-2 mb-2 border-b border-rim">
-              <BrandBlock banner={navData()?.banner} />
+              <BrandBlock banner={navData()?.banner} logoUrl={navData()?.sitelogo} />
             </div>
 
             {/* Primary nav — reorderable via drag handle while in edit-layout mode */}
@@ -553,7 +553,7 @@ const Layout: ParentComponent = (props) => {
 
             {/* Brand */}
             <div class="flex items-center justify-center px-4 pb-3 mb-1 border-b border-rim">
-              <BrandBlock banner={navData()?.banner} />
+              <BrandBlock banner={navData()?.banner} logoUrl={navData()?.sitelogo} />
             </div>
 
             {/* ── Nav tiles — reorderable via drag ── */}

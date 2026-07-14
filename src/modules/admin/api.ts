@@ -1,4 +1,5 @@
 import { apiFetch } from "@/shared/lib/fetch";
+import { getCsrfToken } from "@/shared/lib/csrf";
 import type {
   AdminSummary, AdminSite, AdminAccount, AdminPendingAccount,
   AdminChannel, AdminSecurity, AdminFeatures, AdminAddon, AdminTheme,
@@ -41,6 +42,62 @@ export const fetchAdminSummary = () => get<AdminSummary>("summary");
 export const fetchAdminSite = () => get<AdminSite>("site");
 
 export const saveAdminSite = async (data: Partial<AdminSite>): Promise<void> => { await post("site", data); };
+
+export interface SiteLogoUploadResult {
+  sitelogo_512: string;
+  sitelogo_192: string;
+  sitelogo_favicon: string;
+}
+
+export function uploadSiteLogo(file: Blob, onProgress?: (pct: number) => void): Promise<SiteLogoUploadResult> {
+  return new Promise(async (resolve, reject) => {
+    const token = await getCsrfToken().catch(() => "");
+    const fd = new FormData();
+    fd.append("file", file, "sitelogo.png");
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/site-logo");
+    xhr.withCredentials = true;
+    xhr.setRequestHeader("X-CSRF-Token", token);
+
+    if (onProgress) {
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+      };
+    }
+
+    xhr.onload = () => {
+      if (xhr.status < 300) {
+        try {
+          const json = JSON.parse(xhr.responseText);
+          resolve((json.data ?? {}) as SiteLogoUploadResult);
+        } catch {
+          reject(new Error("Invalid upload response"));
+        }
+      } else {
+        reject(new Error(`Upload failed: ${xhr.status}`));
+      }
+    };
+    xhr.onerror = () => reject(new Error("Upload failed"));
+    xhr.send(fd);
+  });
+}
+
+export async function removeSiteLogo(): Promise<void> {
+  const token = await getCsrfToken().catch(() => "");
+  const fd = new FormData();
+  fd.append("remove", "1");
+  const res = await fetch("/api/site-logo", {
+    method: "POST",
+    credentials: "include",
+    headers: { "X-CSRF-Token": token },
+    body: fd,
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw new Error(json?.error?.message ?? "Remove failed");
+  }
+}
 
 // ── Accounts ──────────────────────────────────────────────────────────────────
 
