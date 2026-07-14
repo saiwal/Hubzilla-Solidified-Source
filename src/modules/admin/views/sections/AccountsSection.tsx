@@ -68,6 +68,7 @@ export default function AccountsSection() {
                     <tbody>
                       <For each={r().pending}>
                         {(reg) => (
+                          <>
                           <tr class="border-b border-rim last:border-0 hover:bg-elevated/50 transition-colors">
                             <td class="px-3 py-2 text-txt truncate">{reg.reg_email}</td>
                             <td class="px-3 py-2 text-muted hidden sm:table-cell">{fmtDate(reg.reg_created)}</td>
@@ -106,6 +107,14 @@ export default function AccountsSection() {
                               </div>
                             </td>
                           </tr>
+                          <Show when={reg.msg}>
+                            <tr class="border-b border-rim last:border-0">
+                              <td colspan="5" class="px-3 pb-2 text-xs text-muted">
+                                <span class="font-medium text-txt">Message:</span> {reg.msg}
+                              </td>
+                            </tr>
+                          </Show>
+                          </>
                         )}
                       </For>
                     </tbody>
