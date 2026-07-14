@@ -87,7 +87,7 @@ export default function SiteSection() {
             </Field>
             <Field
               label="Site logo"
-              hint="Used as the browser favicon and PWA icon. A square image with some padding works best."
+              hint="Used as the browser favicon, PWA icon, and in the app nav. Square images work best — non-square images are center-cropped, not stretched. At least 512x512 px recommended; max 4000x4000 px."
             >
               <SiteLogoField site={d()} />
             </Field>
