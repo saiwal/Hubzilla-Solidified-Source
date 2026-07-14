@@ -292,7 +292,7 @@ const Layout: ParentComponent = (props) => {
                    bg-surface border-r border-rim py-3 px-2"
           >
             {/* Brand */}
-            <div class="flex items-center justify-center px-2 pb-4 mb-2 border-b border-rim">
+            <div class="flex items-center justify-center px-2 pb-4 pt-2 mb-2 border-b border-rim">
               <BrandBlock banner={navData()?.banner} />
             </div>
 

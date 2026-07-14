@@ -27,11 +27,13 @@ import {
   MdFillWifi,
   MdFillWifi_off,
   MdFillCircle,
+  MdOutlineCampaign,
 } from "solid-icons/md";
 import DOMPurify from "dompurify";
 import { setNotifCount } from "@/shared/lib/notificationCount";
-import { markNotifySeen } from "@/shared/lib/markSeen";
+import { markNotifySeen, markItemSeen } from "@/shared/lib/markSeen";
 import { showDesktopNotification } from "@/shared/lib/desktopNotify";
+import { createQueryResource } from "@/shared/lib/createQueryResource";
 const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -86,7 +88,7 @@ const KNOWN_META: Record<string, BucketMeta> = {
   network: { label: "Network", Icon: MdFillWifi, href: "/network" },
   dm: { label: "Messages", Icon: MdFillMail, href: "/mail" },
   home: { label: "Channel", Icon: MdFillHome, href: "/channel" },
-  notify: { label: "Alerts", Icon: MdFillNotifications },
+  notify: { label: "Alerts", Icon: MdFillNotifications, href: "/notify" },
   intros: { label: "Intros", Icon: MdFillPeople, href: "/connections" },
   forums: { label: "Forums", Icon: MdFillForum },
   pubs: { label: "Public", Icon: MdFillPublic },
@@ -139,6 +141,34 @@ async function markSeenAndRefetch(
   } catch {
     /* silent */
   }
+}
+
+interface HqNoticeEntry {
+  b64mid: string;
+  created: string;
+  summary: string;
+  author_name: string;
+  author_img: string;
+  href: string;
+}
+
+async function fetchNotices(): Promise<HqNoticeEntry[]> {
+  const res = await fetch("/hq", {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Accept: "application/json",
+    },
+    body: new URLSearchParams({
+      offset: "0",
+      type: "notification",
+      file: "",
+    }).toString(),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data: { offset: number; entries: HqNoticeEntry[] } = await res.json();
+  return data.entries;
 }
 
 // ── Normalise ─────────────────────────────────────────────────────────────────
@@ -218,6 +248,12 @@ function stripHtml(html?: string): string {
   const div = document.createElement("div");
   div.innerHTML = DOMPurify.sanitize(html);
   return div.textContent?.trim() ?? "";
+}
+
+function decodeHtmlEntities(str: string): string {
+  const ta = document.createElement("textarea");
+  ta.innerHTML = str;
+  return ta.value;
 }
 
 function prependDeduped(
@@ -465,6 +501,105 @@ function StreamSection(props: {
   );
 }
 
+// ── NoticeRow ─────────────────────────────────────────────────────────────────
+
+function NoticeRow(props: {
+  entry: HqNoticeEntry;
+  onOpen: (uuid: string) => void;
+}) {
+  const handleClick = (e: MouseEvent) => {
+    e.preventDefault();
+    markItemSeen(props.entry.b64mid);
+    props.onOpen(props.entry.b64mid);
+  };
+
+  return (
+    <a
+      href={toRelativePath(props.entry.href)}
+      onClick={handleClick}
+      class="flex gap-2 items-start px-2 py-1.5 rounded-lg transition-colors
+             hover:bg-elevated"
+    >
+      <Show when={props.entry.author_img}>
+        <img
+          src={props.entry.author_img}
+          alt={props.entry.author_name}
+          class="w-7 h-7 rounded-full shrink-0 mt-0.5 object-cover"
+        />
+      </Show>
+      <div class="min-w-0 flex-1">
+        <p class="text-xs text-txt leading-snug">
+          <span class="font-semibold">{props.entry.author_name} </span>
+          <span>{decodeHtmlEntities(props.entry.summary)}</span>
+        </p>
+        <p class="text-[10px] text-muted mt-0.5">
+          {relativeTime(props.entry.created)}
+        </p>
+      </div>
+    </a>
+  );
+}
+
+// ── NoticesSection ────────────────────────────────────────────────────────────
+
+function NoticesSection(props: {
+  open: boolean;
+  onOpenModal: (uuid: string) => void;
+}) {
+  const { t } = useI18n();
+  const [entries, { refetch }] = createQueryResource(
+    "hq-notices",
+    () => (props.open ? true : null),
+    fetchNotices,
+  );
+
+  return (
+    <div class="border border-rim rounded-xl overflow-hidden">
+      <div class="px-1 py-1 space-y-0.5 bg-elevated">
+        <Show when={entries.loading}>
+          <div class="space-y-1 px-2 py-1">
+            <For each={[1, 2, 3]}>
+              {() => <div class="h-8 rounded bg-surface animate-pulse" />}
+            </For>
+          </div>
+        </Show>
+        <Show when={!entries.loading && entries.error}>
+          <div class="flex flex-col items-center gap-1 py-3 text-[11px] text-muted">
+            <span>{entries.error?.message}</span>
+            <button
+              onClick={() => refetch()}
+              class="text-accent hover:underline"
+            >
+              {t("hq.retry")}
+            </button>
+          </div>
+        </Show>
+        <Show when={!entries.loading && !entries.error}>
+          <Show
+            when={(entries() ?? []).length > 0}
+            fallback={
+              <p class="text-[11px] text-muted text-center py-3">
+                {t("hq.no_messages")}
+              </p>
+            }
+          >
+            <For each={entries()}>
+              {(entry) => (
+                <NoticeRow entry={entry} onOpen={props.onOpenModal} />
+              )}
+            </For>
+          </Show>
+        </Show>
+      </div>
+      <div class="border-t border-rim py-1.5 text-center bg-surface">
+        <a href="/notify" class="text-[11px] text-accent hover:underline">
+          {t("hq.view_all")}
+        </a>
+      </div>
+    </div>
+  );
+}
+
 // ── Connection dot ────────────────────────────────────────────────────────────
 
 type ConnStatus = "connecting" | "live" | "polling" | "error";
@@ -506,6 +641,7 @@ export default function NotificationsAside() {
   const [booted, setBooted] = createSignal(false);
   const [refreshing, setRefreshing] = createSignal(false);
   const [modalUuid, setModalUuid] = createSignal<string | null>(null);
+  const [showNotices, setShowNotices] = createSignal(false);
 
   const applyRaw = (raw: SseResponse, fromSsePush = false) => {
     const { buckets: incoming, forumKeys: fk } = normalise(raw);
@@ -800,6 +936,19 @@ export default function NotificationsAside() {
             {t("ui.notifications_title")}
           </h3>
           <div class="flex items-center gap-1.5">
+            <Show when={booted() && auth()?.isLoggedIn}>
+              <button
+                onClick={() => setShowNotices((v) => !v)}
+                title={t("hq.msg_tab_notices")}
+                class="p-1 rounded transition-colors"
+                classList={{
+                  "text-accent bg-accent-muted": showNotices(),
+                  "text-subtle hover:text-txt hover:bg-elevated": !showNotices(),
+                }}
+              >
+                <MdOutlineCampaign class="w-4 h-4" />
+              </button>
+            </Show>
             <Show when={booted() && hasAnyCount()}>
               <button
                 onClick={markAllRead}
@@ -822,6 +971,10 @@ export default function NotificationsAside() {
             </button>
           </div>
         </div>
+
+        <Show when={showNotices()}>
+          <NoticesSection open={showNotices()} onOpenModal={setModalUuid} />
+        </Show>
 
         <Show when={!auth.loading && !auth()?.isLoggedIn}>
           <p class="text-xs text-muted text-center py-4">

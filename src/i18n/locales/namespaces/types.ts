@@ -2019,4 +2019,12 @@ export type RawDictionary = {
     success_go_hq:            string;
     success_edit_profile:     string;
   };
+  notify: {
+    title:     string;
+    empty:     string;
+    retry:     string;
+    resolving: string;
+    not_found: string;
+    back:      string;
+  };
 };
