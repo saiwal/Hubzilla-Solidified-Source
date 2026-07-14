@@ -29,9 +29,9 @@ export default function QuickComposeWidget() {
   const [showDM, setShowDM] = createSignal(false);
   const [showArticle, setShowArticle] = createSignal(false);
 
-  // Post/Mail have no routed SPA module to key off of (they're plain
-  // Hubzilla apps), so those two check the raw installed-app name directly;
-  // the rest gate through isModuleActive() against their module id.
+  // Post has no routed SPA module to key off of (it's a plain Hubzilla
+  // app), so it checks the raw installed-app name directly; DM is always
+  // available; the rest gate through isModuleActive() against their module id.
   const actions = () => {
     const apps = installedApps();
     const list: { key: string; label: string; icon: IconType; onClick: () => void }[] = [];
@@ -44,14 +44,12 @@ export default function QuickComposeWidget() {
         onClick: () => setShowPost(true),
       });
     }
-    if (apps.has("Mail")) {
-      list.push({
-        key: "dm",
-        label: t("hq.new_dm"),
-        icon: MdOutlineMail,
-        onClick: () => setShowDM(true),
-      });
-    }
+    list.push({
+      key: "dm",
+      label: t("hq.new_dm"),
+      icon: MdOutlineMail,
+      onClick: () => setShowDM(true),
+    });
     if (isModuleActive("webpages", apps)) {
       list.push({
         key: "webpage",
