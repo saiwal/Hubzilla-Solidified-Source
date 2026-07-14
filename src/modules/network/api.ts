@@ -137,7 +137,9 @@ export async function fetchConnections(params: AclSearchParams = {}): Promise<Ac
   if (params.search) qs.set('search', params.search);
   if (params.type)   qs.set('type', params.type);
   qs.set('count', String(params.count ?? 100));
-  const res = await fetch(`/acl?${qs.toString()}`);
+  // Session/permission-dependent results (e.g. type "m" is filtered per-viewer
+  // by post_mail grants) — never let the browser HTTP cache serve a stale copy.
+  const res = await fetch(`/acl?${qs.toString()}`, { credentials: 'include', cache: 'no-store' });
   if (!res.ok) return [];
   const data = await res.json();
   const items: AclConnection[] = data.items ?? [];

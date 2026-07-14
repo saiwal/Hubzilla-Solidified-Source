@@ -10,7 +10,7 @@
  * adding group_allow would break that auto-classification.
  */
 
-import { createSignal, createEffect, onCleanup, Show, For, type Component } from "solid-js";
+import { createSignal, createEffect, on, onCleanup, Show, For, type Component } from "solid-js";
 import { Portal } from "solid-js/web";
 import { createComposerStore } from "../store/createComposerStore";
 import RichEditor from "../core/RichEditor";
@@ -62,9 +62,16 @@ const DMComposer: Component<DMComposerProps> = (props) => {
   // directly via `initialRecipients` (Send DM from a profile/connection)
   // bypass that filter, so we check them here too.
   const [permittedXids, setPermittedXids] = createSignal<Set<string> | null>(null);
-  void fetchConnections({ type: "m", count: 500 })
-    .then((list) => setPermittedXids(new Set(list.map((c) => c.xid))))
-    .catch(() => {});
+  function refreshPermittedXids() {
+    void fetchConnections({ type: "m", count: 500 })
+      .then((list) => setPermittedXids(new Set(list.map((c) => c.xid))))
+      .catch(() => {});
+  }
+  refreshPermittedXids();
+  // Re-check on every add/remove — a recipient seeded via `initialRecipients`
+  // (Send DM from a profile/connection) can otherwise be judged against a
+  // permission snapshot taken before that fetch has resolved.
+  createEffect(on(recipients, () => refreshPermittedXids(), { defer: true }));
 
   const unpermittedRecipients = () => {
     const permitted = permittedXids();
