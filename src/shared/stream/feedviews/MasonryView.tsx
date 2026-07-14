@@ -19,6 +19,7 @@ import EventCard from "@/shared/stream/components/EventCard";
 import { parseEventData } from "@/shared/lib/activity.mapper";
 import { markItemSeen } from "@/shared/lib/markSeen";
 import { MdOutlineSchedule, MdOutlineTimer } from "solid-icons/md";
+import { BiRegularEnvelope } from "solid-icons/bi";
 function useColumnCount(): () => number {
   const getCount = () => {
     const w = window.innerWidth;
@@ -106,6 +107,7 @@ function MasonryCard(props: {
   const isScheduled = () => props.post.flags.includes("scheduled");
   const scheduledTitle = () =>
     `${t("post.scheduled_title")}: ${new Date(props.post.created + "Z").toLocaleString(locale())}`;
+  const isDirectMessage = () => props.post.flags.includes("direct_message");
 
   return (
     <>
@@ -200,6 +202,15 @@ function MasonryCard(props: {
                   {t("post.scheduled_badge")} ·{" "}
                   {formatPostDate(props.post.created, locale())}
                 </span>
+              </span>
+            </Show>
+            <Show when={isDirectMessage()}>
+              <span
+                class="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-violet-500/15 text-violet-600 dark:text-violet-400 leading-none"
+                title={t("post.dm_title")}
+              >
+                <BiRegularEnvelope size={11} />
+                <span>{t("post.dm_badge")}</span>
               </span>
             </Show>
           </div>

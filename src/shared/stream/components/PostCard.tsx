@@ -52,7 +52,7 @@ import {
   MdOutlineSchedule,
 } from "solid-icons/md";
 import { useI18n } from "@/i18n";
-import { BiRegularLinkExternal, BiSolidShareAlt } from "solid-icons/bi";
+import { BiRegularLinkExternal, BiSolidShareAlt, BiRegularEnvelope } from "solid-icons/bi";
 const CommentComposer = lazy(
   () => import("@/shared/editor/composers/CommentComposer"),
 );
@@ -291,6 +291,9 @@ export default function PostCard(props: {
   const isScheduled = () => props.post.flags.includes("scheduled");
   const scheduledTitle = () =>
     `${t("post.scheduled_title")}: ${new Date(props.post.created + "Z").toLocaleString(locale())}`;
+  // item_private === 2 — a direct message between individuals (classic Hubzilla's
+  // bi-envelope lock icon), distinct from a merely-private post (item_private === 1).
+  const isDirectMessage = () => props.post.flags.includes("direct_message");
   const locationHref = () =>
     props.post.coord
       ? `https://www.openstreetmap.org/search?query=${encodeURIComponent(props.post.coord)}`
@@ -895,6 +898,15 @@ export default function PostCard(props: {
               {t("post.scheduled_badge")} · {formatPostDate(props.post.created, locale())}
             </span>
           </Show>
+          <Show when={isDirectMessage()}>
+            <span
+              class="flex items-center gap-0.5 shrink-0 px-1 py-px rounded text-[10px] font-medium leading-none bg-violet-500/15 text-violet-600 dark:text-violet-400"
+              title={t("post.dm_title")}
+            >
+              <BiRegularEnvelope size={10} />
+              {t("post.dm_badge")}
+            </span>
+          </Show>
           <Show when={props.post.location}>
             <span
               class="flex items-center gap-0.5 min-w-0 text-[10px] text-muted"
@@ -1497,6 +1509,15 @@ export default function PostCard(props: {
             >
               <MdOutlineSchedule size={11} />
               <span>{t("post.scheduled_badge")} · {formatPostDate(props.post.created, locale())}</span>
+            </span>
+          </Show>
+          <Show when={isDirectMessage()}>
+            <span
+              class="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-violet-500/15 text-violet-600 dark:text-violet-400 leading-none"
+              title={t("post.dm_title")}
+            >
+              <BiRegularEnvelope size={11} />
+              <span>{t("post.dm_badge")}</span>
             </span>
           </Show>
           <Show when={isUnseen()}>

@@ -577,6 +577,7 @@ export type RawDictionary = {
     edit: string;
     expires: string; expired_badge: string; expired_title: string;
     scheduled_badge: string; scheduled_title: string;
+    dm_badge: string; dm_title: string;
   };
   editor: {
     // PostComposer
@@ -776,6 +777,7 @@ export type RawDictionary = {
     send_btn:               string;
     sending_dm:              string;
     dm_recipient_required:  string;
+    dm_recipient_not_permitted: string;
   };
   profiles: {
     title:             string;

@@ -10,12 +10,12 @@
  * adding group_allow would break that auto-classification.
  */
 
-import { createSignal, createEffect, onCleanup, Show, type Component } from "solid-js";
+import { createSignal, createEffect, onCleanup, Show, For, type Component } from "solid-js";
 import { Portal } from "solid-js/web";
 import { createComposerStore } from "../store/createComposerStore";
 import RichEditor from "../core/RichEditor";
 import { CAPABILITIES } from "../types/editor.types";
-import type { AclEntry } from "@/modules/network/api";
+import { fetchConnections, type AclEntry } from "@/modules/network/api";
 import { entryKey } from "../components/AclPicker";
 import RecipientField from "../components/RecipientField";
 import { useMentionEmojiWiring } from "../mention/useMentionEmojiWiring";
@@ -55,6 +55,23 @@ const DMComposer: Component<DMComposerProps> = (props) => {
 
   const [recipients, setRecipients] = createSignal<AclEntry[]>(props.initialRecipients ?? []);
 
+  // Contacts who've granted the local channel the `post_mail` permission —
+  // messages to anyone outside this set are silently dropped by the
+  // recipient's hub before any delivery is even attempted. RecipientField's
+  // search already filters to this set (ACL type "m"), but recipients seeded
+  // directly via `initialRecipients` (Send DM from a profile/connection)
+  // bypass that filter, so we check them here too.
+  const [permittedXids, setPermittedXids] = createSignal<Set<string> | null>(null);
+  void fetchConnections({ type: "m", count: 500 })
+    .then((list) => setPermittedXids(new Set(list.map((c) => c.xid))))
+    .catch(() => {});
+
+  const unpermittedRecipients = () => {
+    const permitted = permittedXids();
+    if (!permitted) return [];
+    return recipients().filter((r) => !permitted.has(r.xid));
+  };
+
   function addRecipient(entry: AclEntry) {
     const key = entryKey(entry);
     if (recipients().some((r) => entryKey(r) === key)) return;
@@ -69,6 +86,12 @@ const DMComposer: Component<DMComposerProps> = (props) => {
   const store = createComposerStore(async (body, meta) => {
     if (recipients().length === 0) {
       throw new Error(t("editor.dm_recipient_required"));
+    }
+    const blocked = unpermittedRecipients();
+    if (blocked.length > 0) {
+      throw new Error(
+        t("editor.dm_recipient_not_permitted", { name: blocked.map((r) => r.name).join(", ") }),
+      );
     }
 
     const fileTags = attach.attachments()
@@ -174,6 +197,17 @@ const DMComposer: Component<DMComposerProps> = (props) => {
                 onAdd={addRecipient}
                 onRemove={removeRecipient}
               />
+              <Show when={unpermittedRecipients().length > 0}>
+                <ul class="mt-1.5 space-y-0.5">
+                  <For each={unpermittedRecipients()}>
+                    {(r) => (
+                      <li class="text-xs text-red-500">
+                        {t("editor.dm_recipient_not_permitted", { name: r.name })}
+                      </li>
+                    )}
+                  </For>
+                </ul>
+              </Show>
             </div>
 
             {/* ── Editor area (flex-1) ── */}
@@ -240,6 +274,7 @@ const DMComposer: Component<DMComposerProps> = (props) => {
                     store.submitting() ||
                     attach.uploading() ||
                     recipients().length === 0 ||
+                    unpermittedRecipients().length > 0 ||
                     !store.body().trim()
                   }
                   onClick={() => void store.submit()}

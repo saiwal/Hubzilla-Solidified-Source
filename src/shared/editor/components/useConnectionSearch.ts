@@ -40,13 +40,14 @@ const MIN_CHARS_DEFAULT = 3;
 const DEBOUNCE_MS_DEFAULT = 250;
 
 export function useConnectionSearch(
-  type: "c" | "g",
+  type: "c" | "g" | "m",
   opts: ConnectionSearchOptions = {},
 ): ConnectionSearch {
   const enabled = opts.enabled ?? (() => true);
   const minChars = opts.minChars ?? MIN_CHARS_DEFAULT;
   const debounceMs = opts.debounceMs ?? DEBOUNCE_MS_DEFAULT;
-  const prefix = opts.cacheKeyPrefix ?? (type === "c" ? "acl-contacts" : "acl-groups");
+  const defaultPrefix = type === "c" ? "acl-contacts" : type === "m" ? "acl-mail-contacts" : "acl-groups";
+  const prefix = opts.cacheKeyPrefix ?? defaultPrefix;
 
   const [query, setQuery] = createSignal("");
 

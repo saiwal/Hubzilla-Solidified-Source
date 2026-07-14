@@ -69,4 +69,7 @@ export const post: RawDictionary["post"] = {
   // scheduled (delayed publish)
   scheduled_badge:       "निर्धारित",
   scheduled_title:       "प्रकाशित होगा",
+  // direct message (item_private === 2)
+  dm_badge:              "DM",
+  dm_title:              "सीधा संदेश",
 };

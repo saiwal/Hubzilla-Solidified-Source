@@ -209,4 +209,5 @@ export const editor: RawDictionary["editor"] = {
   send_btn:               "भेजें",
   sending_dm:              "भेजा जा रहा है…",
   dm_recipient_required:  "कम से कम एक प्राप्तकर्ता चुनें।",
+  dm_recipient_not_permitted: "{{name}} ने आपको सीधा संदेश भेजने की अनुमति नहीं दी है।",
 };

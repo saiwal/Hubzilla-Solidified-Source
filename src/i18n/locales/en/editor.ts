@@ -218,4 +218,5 @@ export const editor = {
   send_btn:               "Send",
   sending_dm:              "Sending…",
   dm_recipient_required:  "Select at least one recipient.",
+  dm_recipient_not_permitted: "{{name}} hasn't granted you permission to send direct messages.",
 } as const;

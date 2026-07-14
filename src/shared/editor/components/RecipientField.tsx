@@ -25,7 +25,11 @@ const RecipientField: Component<RecipientFieldProps> = (props) => {
   const { t } = useI18n();
   const [focused, setFocused] = createSignal(false);
 
-  const search = useConnectionSearch("c", { initialCount: 8, searchCount: 20 });
+  // "m" = Hubzilla's post_mail-filtered ACL list — only contacts who've
+  // granted the local channel permission to send them a direct message.
+  // "c" (used by AclPicker) would list *every* connection, including ones
+  // whose DMs are guaranteed to be silently dropped by the recipient's hub.
+  const search = useConnectionSearch("m", { initialCount: 8, searchCount: 20 });
 
   const results = () => {
     const selected = new Set(props.entries().map(entryKey));

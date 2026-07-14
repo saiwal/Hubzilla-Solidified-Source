@@ -128,7 +128,7 @@ export type AclEntry = {
 
 export type AclSearchParams = {
   search?: string;
-  type?: '' | 'c' | 'g';
+  type?: '' | 'c' | 'g' | 'm';
   count?: number;
 };
 
