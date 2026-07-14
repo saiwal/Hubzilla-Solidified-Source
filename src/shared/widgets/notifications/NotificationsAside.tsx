@@ -362,13 +362,15 @@ function StreamSection(props: {
   id: string;
   bucket: StreamBucket;
   forumKeys?: string[];
+  open: boolean;
+  onToggle: () => void;
   onDismiss: (b64mid: string) => void;
   onNotifySeen: (nid: number) => void;
   onClearAll: (key: string) => void;
   onOpenModal: (uuid: string) => void;
 }) {
   const { t } = useI18n();
-  const [open, setOpen] = createSignal(false);
+  const open = () => props.open;
   const meta = KNOWN_META[props.id] ?? {
     label: props.id,
     Icon: MdFillNotifications,
@@ -386,7 +388,7 @@ function StreamSection(props: {
         : fetchBucketRows(props.id),
   );
 
-  const toggle = () => setOpen((o) => !o);
+  const toggle = () => props.onToggle();
 
   let prevCount = props.bucket.count;
   createEffect(() => {
@@ -483,16 +485,18 @@ function StreamSection(props: {
                 </p>
               }
             >
-              <For each={notifications()}>
-                {(n) => (
-                  <NotifRow
-                    n={n}
-                    onDismiss={props.onDismiss}
-                    onNotifySeen={props.onNotifySeen}
-                    onOpenModal={props.onOpenModal}
-                  />
-                )}
-              </For>
+              <div class="max-h-80 overflow-y-auto">
+                <For each={notifications()}>
+                  {(n) => (
+                    <NotifRow
+                      n={n}
+                      onDismiss={props.onDismiss}
+                      onNotifySeen={props.onNotifySeen}
+                      onOpenModal={props.onOpenModal}
+                    />
+                  )}
+                </For>
+              </div>
             </Show>
           </Show>
         </div>
@@ -583,11 +587,13 @@ function NoticesSection(props: {
               </p>
             }
           >
-            <For each={entries()}>
-              {(entry) => (
-                <NoticeRow entry={entry} onOpen={props.onOpenModal} />
-              )}
-            </For>
+            <div class="max-h-80 overflow-y-auto">
+              <For each={entries()}>
+                {(entry) => (
+                  <NoticeRow entry={entry} onOpen={props.onOpenModal} />
+                )}
+              </For>
+            </div>
           </Show>
         </Show>
       </div>
@@ -642,6 +648,7 @@ export default function NotificationsAside() {
   const [refreshing, setRefreshing] = createSignal(false);
   const [modalUuid, setModalUuid] = createSignal<string | null>(null);
   const [showNotices, setShowNotices] = createSignal(false);
+  const [openSection, setOpenSection] = createSignal<string | null>(null);
 
   const applyRaw = (raw: SseResponse, fromSsePush = false) => {
     const { buckets: incoming, forumKeys: fk } = normalise(raw);
@@ -1010,6 +1017,10 @@ export default function NotificationsAside() {
                   id={key}
                   bucket={buckets()[key]}
                   forumKeys={key === "forums" ? forumKeys() : undefined}
+                  open={openSection() === key}
+                  onToggle={() =>
+                    setOpenSection((cur) => (cur === key ? null : key))
+                  }
                   onDismiss={(mid) => markSeen([mid])}
                   onNotifySeen={async (nid) => {
                     await markNotifySeen(nid);
