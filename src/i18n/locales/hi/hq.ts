@@ -44,4 +44,11 @@ export const hq: RawDictionary["hq"] = {
   delete_draft:         "मसौदा हटाएँ",
   new_event:            "नया",
   all_day:              "पूरा दिन",
+  // QuickComposeWidget
+  quick_compose:        "क्विक कंपोज़",
+  new_post:              "नई पोस्ट",
+  new_dm:                "नया संदेश",
+  new_webpage:           "नया वेबपेज",
+  new_wiki_page:         "नया विकी पेज",
+  new_article:           "नया लेख",
 };

@@ -17,6 +17,18 @@ registerModule({
     // Both are global: mounted on every page, not just /hq
     notificationsWidget,
     pinnedChatWidget,
+    // Row of quick-launch buttons for the other composers (post, DM,
+    // webpage, wiki, article) — each button only appears when its
+    // corresponding Hubzilla app is installed.
+    {
+      id: "hq.quick_compose",
+      label: () => useI18n().t("hq.quick_compose"),
+      loader: () => import("./widgets/QuickComposeWidget"),
+      slot: "mainTop",
+      defaultModules: ["hq"],
+      contexts: ["hq"],
+      helpTarget: "hq.quick_compose_widget",
+    },
     // The dashboard itself, in the mainTop banner slot Layout.tsx already
     // renders above the routed view — same slot the "sleek" blocks.* / _top
     // widgets use, so users can rearrange, remove, or add to these too.

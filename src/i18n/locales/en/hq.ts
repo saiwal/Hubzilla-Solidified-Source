@@ -52,4 +52,11 @@ export const hq: RawDictionary["hq"] = {
   // UpcomingEventsWidget
   new_event:            "New",
   all_day:              "All day",
+  // QuickComposeWidget
+  quick_compose:        "Quick Compose",
+  new_post:              "New Post",
+  new_dm:                "New Message",
+  new_webpage:           "New Webpage",
+  new_wiki_page:         "New Wiki Page",
+  new_article:           "New Article",
 };

@@ -1294,6 +1294,13 @@ export type RawDictionary = {
     delete_draft:         string;
     new_event:            string;
     all_day:              string;
+    // QuickComposeWidget
+    quick_compose:        string;
+    new_post:              string;
+    new_dm:                string;
+    new_webpage:           string;
+    new_wiki_page:         string;
+    new_article:           string;
   };
   channel: {
     no_posts:           string;
