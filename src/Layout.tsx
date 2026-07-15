@@ -59,7 +59,7 @@ void motion;
 // ── Brand / site banner ────────────────────────────────────────────────────────
 function BrandBlock(props: { banner?: string; logoUrl?: string }) {
   return (
-    <div class="flex items-center gap-3 select-none">
+    <A href="/" class="flex items-center gap-3 select-none">
       <img
         src={props.logoUrl || import.meta.env.BASE_URL + "hubzilla.svg"}
         alt=""
@@ -82,7 +82,7 @@ function BrandBlock(props: { banner?: string; logoUrl?: string }) {
           })}
         />
       </Show>
-    </div>
+    </A>
   );
 }
 
