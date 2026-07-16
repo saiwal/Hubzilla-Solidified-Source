@@ -29,6 +29,10 @@ export const connection: RawDictionary["connection"] = {
   perms_my:       "मेरी",
   perms_loading:  "अनुमतियाँ लोड हो रही हैं…",
   perms_error:    "अनुमतियाँ लोड नहीं हो सकीं।",
+  refresh_perms:      "रीफ़्रेश करें",
+  refreshing:         "रीफ़्रेश हो रहा है…",
+  refresh_perms_hint: "इस संपर्क से अद्यतन अनुमतियाँ प्राप्त करें",
+  refresh_error:      "रीफ़्रेश विफल — संपर्क फ़िलहाल उपलब्ध नहीं है।",
   // Affinity slider labels
   aff_me:             "मैं",
   aff_family:         "परिवार",

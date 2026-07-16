@@ -1,6 +1,6 @@
 // src/modules/articles/views/ArticleView.tsx
 import {
-  createSignal, createEffect, onMount,
+  createSignal, createEffect, createMemo, onMount,
   Show, For
 } from "solid-js";
 import { createQueryResource } from "@/shared/lib/createQueryResource";
@@ -18,15 +18,22 @@ import { useToc } from "@/shared/lib/useToc";
 import ArticleToc from "@/shared/views/ArticleToc";
 import { usePageNick, useViewerRole } from "@/shared/store/site-config";
 import { useAuth } from "@/shared/store/auth-store";
+import { useNavViewer } from "@/shared/store/nav-store";
 import { BiRegularEdit, BiRegularTrash } from "solid-icons/bi";
 import {
   MdOutlineThumb_up,
   MdOutlineThumb_down,
-  MdFillShare,
   MdFillChat,
   MdOutlineShare,
 } from "solid-icons/md";
-import { apiToggleLike, apiToggleDislike, apiToggleRepeat } from "@/shared/lib/item-api";
+import { apiToggleLike, apiToggleDislike, apiDeleteItem, apiEditItem } from "@/shared/lib/item-api";
+import { bbcodeToHtml } from "@/shared/lib/bbcode";
+import { oembedResolver } from "@/shared/lib/oembedResolver";
+import { sanitizeHtml } from "@/shared/lib/sanitize";
+import { buildThreadTree, countAllComments, REACTION_VERBS } from "@/shared/lib/thread";
+import type { ThreadNode } from "@/shared/lib/thread";
+import type { StreamHandlers } from "@/shared/stream/types";
+import CommentThread from "@/shared/views/CommentThread";
 import type { Post } from "@/shared/types/post.types";
 
 // ── edit modal ────────────────────────────────────────────────────────────────
@@ -136,6 +143,7 @@ export default function ArticleView() {
   const nick = () => params.nick || pageNick();
   const role = useViewerRole();
   const auth = useAuth();
+  const navViewer = useNavViewer();
   const { t } = useI18n();
   const navigate = useNavigate();
 
@@ -154,8 +162,8 @@ export default function ArticleView() {
 
   // Reaction state — optimistic local copy initialised from fetched article
   const [reactions, setReactions] = createSignal({
-    likeCount: 0, dislikeCount: 0, repeatCount: 0,
-    viewerLiked: false, viewerDisliked: false, viewerRepeated: false,
+    likeCount: 0, dislikeCount: 0,
+    viewerLiked: false, viewerDisliked: false,
   });
   createEffect(() => {
     const art = data()?.article;
@@ -163,10 +171,8 @@ export default function ArticleView() {
     setReactions({
       likeCount: art.likeCount,
       dislikeCount: art.dislikeCount,
-      repeatCount: art.repeatCount,
       viewerLiked: art.viewerLiked,
       viewerDisliked: art.viewerDisliked,
-      viewerRepeated: art.viewerRepeated,
     });
   });
 
@@ -206,14 +212,127 @@ export default function ArticleView() {
     });
   }
 
-  function handleRepeat() {
+  // ── Comment thread ─────────────────────────────────────────────────────────
+  // Article + comments -> nested tree, same architecture PostView.tsx uses for
+  // single-post pages. Reaction-verb rows (Like/Dislike/Announce) ride along
+  // in the comments payload — drop them before building the tree.
+
+  type CommentReactionOverride = {
+    viewerLiked?: boolean;
+    viewerDisliked?: boolean;
+    likeCount?: number;
+    dislikeCount?: number;
+  };
+  const [commentReactions, setCommentReactions] =
+    createSignal<Record<string, CommentReactionOverride>>({});
+
+  function findInTree(nodes: ThreadNode[], mid: string): ThreadNode | undefined {
+    for (const n of nodes) {
+      if (n.mid === mid) return n;
+      const found = findInTree(n.children, mid);
+      if (found) return found;
+    }
+    return undefined;
+  }
+
+  function applyCommentOverrides(n: ThreadNode): ThreadNode {
+    const o = commentReactions()[n.mid];
+    return {
+      ...(o ? { ...n, ...o } : n),
+      children: n.children.map(applyCommentOverrides),
+    };
+  }
+
+  const rawCommentTree = createMemo((): ThreadNode[] => {
     const art = data()?.article;
-    if (!art?.uuid || reactions().viewerRepeated) return;
-    setReactions(r => ({ ...r, viewerRepeated: true, repeatCount: r.repeatCount + 1 }));
-    apiToggleRepeat(art.uuid).catch(() => {
-      setReactions(r => ({ ...r, viewerRepeated: false, repeatCount: r.repeatCount - 1 }));
+    if (!art) return [];
+    const realComments = localComments().filter(c => !REACTION_VERBS.has(c.verb ?? ""));
+    const tree = buildThreadTree([art, ...realComments]);
+    return tree[0]?.children ?? [];
+  });
+
+  const commentTree = createMemo(() => rawCommentTree().map(applyCommentOverrides));
+
+  function addLocalComment(parentMid: string, body: string) {
+    const art = data()?.article;
+    if (!art) return;
+    const a = auth();
+    const viewer = navViewer();
+    let renderedBody = "";
+    try {
+      const converted = bbcodeToHtml(body, { oembedResolver });
+      renderedBody = sanitizeHtml(typeof converted === "string" ? converted : "");
+    } catch {
+      renderedBody = "";
+    }
+    const tempId = crypto.randomUUID();
+    setLocalComments(prev => [...prev, {
+      uuid: tempId, id: tempId, mid: tempId,
+      parent_mid: art.mid, thr_parent: parentMid,
+      top_mid: art.mid, parent: art.uuid,
+      body: renderedBody, rawBody: body, title: "",
+      authorName: viewer?.name || a?.nick || "You",
+      authorAvatar: viewer?.avatar ?? "",
+      authorUrl: viewer?.url ?? "",
+      authorAddress: viewer?.addr || (a?.nick ? `${a.nick}@${window.location.hostname}` : ""),
+      created: new Date().toISOString().replace("T", " ").slice(0, 19),
+      verb: "Create", obj_type: "Note", flags: [], permalink: "",
+      likeCount: 0, dislikeCount: 0, repeatCount: 0,
+      viewerLiked: false, viewerDisliked: false, viewerRepeated: false,
+      item_thread_top: 0, children: [],
+    } satisfies Post]);
+  }
+
+  function toggleCommentReaction(
+    mid: string,
+    field: "viewerLiked" | "viewerDisliked",
+    countField: "likeCount" | "dislikeCount",
+    call: (uuid: string) => Promise<{ like_count?: number; dislike_count?: number; state: string }>,
+  ) {
+    const node = findInTree(rawCommentTree(), mid);
+    if (!node?.uuid) return;
+    const o = commentReactions()[mid] ?? {};
+    const current = o[field] ?? node[field];
+    const count = o[countField] ?? node[countField];
+    setCommentReactions(prev => ({
+      ...prev,
+      [mid]: { ...prev[mid], [field]: !current, [countField]: current ? count - 1 : count + 1 },
+    }));
+    call(node.uuid).catch(() => {
+      setCommentReactions(prev => ({ ...prev, [mid]: { ...prev[mid], [field]: current, [countField]: count } }));
     });
   }
+
+  const commentHandlers: StreamHandlers = {
+    onLike: (mid) => toggleCommentReaction(mid, "viewerLiked", "likeCount",
+      (uuid) => apiToggleLike(uuid).then(r => ({ like_count: r.like_count, state: r.state }))),
+    onDislike: (mid) => toggleCommentReaction(mid, "viewerDisliked", "dislikeCount",
+      (uuid) => apiToggleDislike(uuid).then(r => ({ dislike_count: r.dislike_count, state: r.state }))),
+    onRepeat: () => {},
+    onComment: (parentMid, body) => addLocalComment(parentMid, body),
+    onLoadComments: async () => {},
+    async onDelete(mid) {
+      const node = findInTree(rawCommentTree(), mid);
+      if (!node?.uuid) return;
+      await apiDeleteItem(node.uuid);
+      setLocalComments(prev => prev.filter(c => c.mid !== mid));
+    },
+    async onEdit(mid, body, title) {
+      const node = findInTree(rawCommentTree(), mid);
+      if (!node?.uuid) return;
+      await apiEditItem(node.uuid, body, title ?? "");
+      let renderedBody = "";
+      try {
+        const converted = bbcodeToHtml(body, { oembedResolver });
+        renderedBody = sanitizeHtml(typeof converted === "string" ? converted : "");
+      } catch {
+        renderedBody = "";
+      }
+      setLocalComments(prev => prev.map(c =>
+        c.mid === mid ? { ...c, body: renderedBody, rawBody: body, title: title ?? "" } : c
+      ));
+    },
+  };
 
   // TOC
   let bodyRef: HTMLDivElement | undefined;
@@ -326,19 +445,6 @@ export default function ArticleView() {
                     </Show>
                   </button>
 
-                  <button
-                    onClick={handleRepeat}
-                    title="Repeat"
-                    class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
-                           transition-colors select-none hover:bg-overlay
-                           ${reactions().viewerRepeated ? "text-accent" : "text-muted"}`}
-                  >
-                    <MdFillShare size={17} />
-                    <Show when={reactions().repeatCount > 0}>
-                      <span>{reactions().repeatCount}</span>
-                    </Show>
-                  </button>
-
                   <Show when={auth()}>
                     <button
                       onClick={() => setShareOpen(v => !v)}
@@ -408,21 +514,7 @@ export default function ArticleView() {
                     parentUuid={d().article.uuid}
                     profileUid={d().article.profileUid!}
                     onSubmitted={(body) => {
-                      const a = auth();
-                      setLocalComments(prev => [...prev, {
-                        uuid: crypto.randomUUID(), id: "", mid: crypto.randomUUID(),
-                        parent_mid: d().article.mid, thr_parent: d().article.mid,
-                        top_mid: d().article.mid, parent: d().article.mid,
-                        body, title: "",
-                        authorName: a?.nick ?? "You",
-                        authorAvatar: "",
-                        authorUrl: "",
-                        created: new Date().toISOString().replace("T", " ").slice(0, 19),
-                        verb: "Create", obj_type: "Note", flags: [], permalink: "",
-                        likeCount: 0, dislikeCount: 0, repeatCount: 0,
-                        viewerLiked: false, viewerDisliked: false, viewerRepeated: false,
-                        item_thread_top: 0, children: [],
-                      } satisfies Post]);
+                      addLocalComment(d().article.mid, body);
                       setReplyOpen(false);
                     }}
                   />
@@ -431,46 +523,18 @@ export default function ArticleView() {
                 {/* Comments */}
                 <section class="space-y-4">
                   <h2 class="text-base font-semibold text-txt">
-                    {t("articles.comments")} ({localComments().length})
+                    {t("articles.comments")} ({countAllComments(commentTree())})
                   </h2>
                   <Show
-                    when={localComments().length > 0}
+                    when={commentTree().length > 0}
                     fallback={<p class="text-sm text-muted">{t("articles.no_comments")}</p>}
                   >
-                    <For each={localComments()}>
-                      {(c) => (
-                        <div class="flex gap-3">
-                          <Show
-                            when={c.authorAvatar}
-                            fallback={
-                              <div class="w-8 h-8 rounded-full bg-accent-muted text-accent flex items-center justify-center text-xs font-semibold shrink-0">
-                                {c.authorName?.[0]?.toUpperCase() ?? "?"}
-                              </div>
-                            }
-                          >
-                            <img
-                              src={c.authorAvatar}
-                              alt={c.authorName}
-                              class="w-8 h-8 rounded-full shrink-0 object-cover"
-                            />
-                          </Show>
-                          <div class="flex-1 bg-surface border border-rim rounded-lg p-3 space-y-1">
-                            <div class="flex items-center gap-2 text-xs text-muted">
-                              <span class="font-medium text-txt">{c.authorName}</span>
-                              <span>
-                                {new Date(
-                                  c.created.replace(" ", "T") + "Z",
-                                ).toLocaleDateString()}
-                              </span>
-                            </div>
-                            <div
-                              class="text-sm prose dark:prose-invert max-w-none"
-                              innerHTML={DOMPurify.sanitize(c.body ?? "")}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </For>
+                    <CommentThread
+                      comments={commentTree()}
+                      show={true}
+                      handlers={commentHandlers}
+                      postAuthorAddress={d().article.authorAddress}
+                    />
                   </Show>
                 </section>
               </Show>

@@ -4,6 +4,7 @@ import { Portal } from "solid-js/web";
 import { useParams, useNavigate, useLocation } from "@solidjs/router";
 import { useI18n } from "@/i18n";
 import { useAuth } from "@/shared/store/auth-store";
+import { useNavViewer } from "@/shared/store/nav-store";
 import {
   photos, albums, albumName, detail, loading, albumsLoading, albumsError,
   loadSummary, loadAlbum, loadImage, loadAlbums,
@@ -779,10 +780,10 @@ function commentToNode(c: PhotoComment, photoMid: string, profileUid: number): T
   return {
     id: String(c.iid || c.mid),
     iid: c.iid || undefined,
-    uuid: c.mid,
+    uuid: c.uuid || c.mid,
     profileUid,
     mid: c.mid,
-    parent_mid: c.thr_parent || photoMid,
+    parent_mid: c.parent_mid || photoMid,
     thr_parent: c.thr_parent || photoMid,
     top_mid: photoMid,
     parent: '',
@@ -793,7 +794,7 @@ function commentToNode(c: PhotoComment, photoMid: string, profileUid: number): T
     authorUrl: c.author.url,
     created: c.created,
     verb: 'Create',
-    item_thread_top: 0,
+    item_thread_top: c.item_thread_top ?? 0,
     flags: [],
     permalink: c.author.url || '',
     children: [],
@@ -820,6 +821,7 @@ function ImageView() {
   const navigate  = useNavigate();
   const params    = useParams<{ nick?: string }>();
   const auth      = useAuth();
+  const navViewer = useNavViewer();
   const { t }     = useI18n();
   const d         = detail;
 
@@ -1161,13 +1163,20 @@ function ImageView() {
     onDislike: (mid) => handleCommentReaction(mid, 'dislike'),
     onRepeat:  () => {},
     onComment: (parentMid, body) => {
+      const tempId = crypto.randomUUID();
+      const viewer = navViewer();
       addComment({
         iid: 0,
-        mid: crypto.randomUUID(),
+        mid: tempId,
+        uuid: tempId,
         body,
         thr_parent: parentMid,
         created: new Date().toISOString().replace('T', ' ').slice(0, 19),
-        author: { name: auth()?.nick ?? '', url: '', photo: '' },
+        author: {
+          name: viewer?.name || auth()?.nick || '',
+          url: viewer?.url ?? '',
+          photo: viewer?.avatar ?? '',
+        },
       });
     },
     onLoadComments: async () => {},
@@ -1574,13 +1583,20 @@ function ImageView() {
               parentUuid={d()?.item_uuid ?? undefined}
               profileUid={profileUid()}
               onSubmitted={(body) => {
+                const tempId = crypto.randomUUID();
+                const viewer = navViewer();
                 addComment({
                   iid: 0,
-                  mid: crypto.randomUUID(),
+                  mid: tempId,
+                  uuid: tempId,
                   body,
                   thr_parent: photoMid(),
                   created: new Date().toISOString().replace('T', ' ').slice(0, 19),
-                  author: { name: auth()?.nick ?? '', url: '', photo: '' },
+                  author: {
+                    name: viewer?.name || auth()?.nick || '',
+                    url: viewer?.url ?? '',
+                    photo: viewer?.avatar ?? '',
+                  },
                 });
                 setReplyOpen(false);
                 setShowComments(true);

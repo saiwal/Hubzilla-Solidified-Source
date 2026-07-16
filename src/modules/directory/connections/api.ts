@@ -90,6 +90,14 @@ export async function approveConnection(abookId: number): Promise<void> {
   if (!res.ok) throw new Error(`approve HTTP ${res.status}`);
 }
 
+export async function refreshConnection(abookId: number): Promise<void> {
+  const res = await apiFetch(`/api/connections/${abookId}/refresh`, {
+    method: "POST",
+    body: "{}",
+  });
+  if (!res.ok) throw new Error(`refresh HTTP ${res.status}`);
+}
+
 export async function deleteConnection(abookId: number): Promise<void> {
   const res = await apiFetch(`/api/connections/${abookId}`, { method: "DELETE" });
   if (!res.ok) throw new Error(`delete HTTP ${res.status}`);

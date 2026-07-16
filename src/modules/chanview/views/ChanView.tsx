@@ -294,6 +294,7 @@ export default function ChanView() {
                     <Show when={xdata().local_nick}>
                       <a
                         href={`/channel/${xdata().local_nick}`}
+                        rel="external"
                         class="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium
                                border border-rim text-muted hover:border-accent hover:text-accent transition-colors"
                       >

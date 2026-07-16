@@ -29,6 +29,10 @@ export const connection: RawDictionary["connection"] = {
   perms_my:       "Mine",
   perms_loading:  "Loading permissions…",
   perms_error:    "Could not load permissions.",
+  refresh_perms:      "Refresh",
+  refreshing:         "Refreshing…",
+  refresh_perms_hint: "Fetch updated permissions from this contact",
+  refresh_error:      "Refresh failed — contact is currently unavailable.",
   // Affinity slider labels
   aff_me:             "Me",
   aff_family:         "Family",

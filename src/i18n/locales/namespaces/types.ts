@@ -217,6 +217,10 @@ export type RawDictionary = {
     perms_my:       string;
     perms_loading:  string;
     perms_error:    string;
+    refresh_perms:      string;
+    refreshing:         string;
+    refresh_perms_hint: string;
+    refresh_error:      string;
     // Affinity slider labels
     aff_me:             string;
     aff_family:         string;

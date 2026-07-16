@@ -80,7 +80,7 @@ export async function loadArticles(nickname: string, params?: ArticleParams) {
 
 // ── actions ───────────────────────────────────────────────────────────────────
 export const {
-  handleLike, handleDislike, handleRepeat,
+  handleLike, handleDislike,
   handleStar, handleDelete,
   handleComment, loadComments, handleRefresh,
 } = createActionHandlers(store);

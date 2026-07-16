@@ -29,6 +29,10 @@ export const connection: RawDictionary["connection"] = {
   perms_my:       "Meine",
   perms_loading:  "Berechtigungen werden geladen…",
   perms_error:    "Berechtigungen konnten nicht geladen werden.",
+  refresh_perms:      "Aktualisieren",
+  refreshing:         "Wird aktualisiert…",
+  refresh_perms_hint: "Aktuelle Berechtigungen von diesem Kontakt abrufen",
+  refresh_error:      "Aktualisierung fehlgeschlagen — Kontakt ist derzeit nicht erreichbar.",
   // Affinity slider labels
   aff_me:             "Ich",
   aff_family:         "Familie",

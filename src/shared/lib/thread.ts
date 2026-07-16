@@ -81,7 +81,7 @@ export function flattenThread(node: ThreadNode): Post[] {
   return [node, ...node.children.flatMap(flattenThread)];
 }
 
-const REACTION_VERBS = new Set(['Like', 'Dislike', 'Announce', 'Accept', 'Reject', 'TentativeAccept', 'Add', 'Remove']);
+export const REACTION_VERBS = new Set(['Like', 'Dislike', 'Announce', 'Accept', 'Reject', 'TentativeAccept', 'Add', 'Remove', 'Follow', 'Ignore']);
 
 export function isDeletedStub(node: Pick<Post, 'flags'>): boolean {
   return node.flags.includes('deleted') || node.flags.includes('deleted_placeholder');

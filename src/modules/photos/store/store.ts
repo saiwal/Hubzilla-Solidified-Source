@@ -125,9 +125,11 @@ export async function handleComment(body: string, profileUid: number) {
   const d = detail();
   if (!d?.item_id || !d.item_mid) return;
 
+  const tempId = crypto.randomUUID();
   const temp: PhotoComment = {
     iid:     0,
-    mid:     crypto.randomUUID(),
+    mid:     tempId,
+    uuid:    tempId,
     body,
     created: new Date().toISOString().replace('T', ' ').slice(0, 19),
     author:  { name: '', url: '', photo: '' },

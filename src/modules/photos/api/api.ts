@@ -70,9 +70,12 @@ export async function fetchPhotoAlbum(
 export interface PhotoComment {
   iid:              number;
   mid:              string;
+  uuid:             string;
   body:             string;
   created:          string;
   thr_parent?:      string;
+  parent_mid?:      string;
+  item_thread_top?: number;
   like_count?:      number;
   dislike_count?:   number;
   viewer_liked?:    boolean;

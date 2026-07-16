@@ -1,5 +1,9 @@
 import { useI18n } from "@/i18n";
-import { createSignal, type Component } from "solid-js";
+import { createSignal, Show, type Component } from "solid-js";
+import { MdOutlineEdit, MdOutlineMail } from "solid-icons/md";
+import { useAuth } from "@/shared/store/auth-store";
+import PostComposer from "@/shared/editor/composers/PostComposer";
+import DMComposer from "@/shared/editor/composers/DMComposer";
 import { FEED_META, MessageList, type MessageType } from "./MessageList";
 
 // Card chrome (title + author-filter search) around the shared MessageList.
@@ -8,7 +12,9 @@ import { FEED_META, MessageList, type MessageType } from "./MessageList";
 // HqStarredMessagesWidget.tsx and HqNoticesWidget.tsx.
 export const MessageFeed: Component<{ type: MessageType }> = (props) => {
   const { t } = useI18n();
+  const auth = useAuth();
   const [authorFilter, setAuthorFilter] = createSignal("");
+  const [showCompose, setShowCompose] = createSignal(false);
 
   let filterTimer: ReturnType<typeof setTimeout>;
   function onFilterInput(val: string) {
@@ -16,9 +22,13 @@ export const MessageFeed: Component<{ type: MessageType }> = (props) => {
     filterTimer = setTimeout(() => setAuthorFilter(val), 300);
   }
 
+  // Compose FAB only makes sense on the "all" and "direct" feeds — starred
+  // and notification entries aren't things a user composes.
+  const canCompose = () => props.type === "" || props.type === "direct";
+
   return (
     <div
-      class="bg-surface rounded-2xl border border-rim flex flex-col overflow-hidden shadow-sm"
+      class="bg-surface rounded-2xl border border-rim flex flex-col overflow-hidden shadow-sm relative"
       style={{ height: "480px" }}
     >
       {/* ── Header ── */}
@@ -55,6 +65,39 @@ export const MessageFeed: Component<{ type: MessageType }> = (props) => {
       </div>
 
       <MessageList type={props.type} authorFilter={authorFilter()} />
+
+      <Show when={canCompose() && !auth.loading && auth()?.uid}>
+        <button
+          type="button"
+          title={props.type === "direct" ? t("hq.new_dm") : t("hq.new_post")}
+          onClick={() => setShowCompose(true)}
+          class="absolute bottom-3 right-3 z-10 w-10 h-10 rounded-full shadow-lg
+                 bg-accent text-accent-fg flex items-center justify-center
+                 hover:opacity-90 transition-opacity"
+        >
+          <Show when={props.type === "direct"} fallback={<MdOutlineEdit size={18} />}>
+            <MdOutlineMail size={18} />
+          </Show>
+        </button>
+      </Show>
+
+      <Show when={showCompose() && props.type === "" && !auth.loading && auth()?.uid}>
+        <PostComposer
+          profileUid={auth()!.uid}
+          open={true}
+          onPosted={() => setShowCompose(false)}
+          onClose={() => setShowCompose(false)}
+        />
+      </Show>
+
+      <Show when={showCompose() && props.type === "direct" && !auth.loading && auth()?.uid}>
+        <DMComposer
+          profileUid={auth()!.uid}
+          open={true}
+          onSent={() => setShowCompose(false)}
+          onClose={() => setShowCompose(false)}
+        />
+      </Show>
     </div>
   );
 };

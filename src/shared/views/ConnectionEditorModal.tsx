@@ -3,7 +3,7 @@ import { Portal } from "solid-js/web";
 import { createQueryResource } from "@/shared/lib/createQueryResource";
 import type { Connection } from "@/modules/directory/connections/api";
 import {
-  updateConnection, deleteConnection,
+  updateConnection, deleteConnection, refreshConnection,
   fetchPermcats, fetchConnectionPerms, fetchConnectionGroups,
 } from "@/modules/directory/connections/api";
 import { fetchGroups } from "@/modules/directory/groups/api";
@@ -109,7 +109,7 @@ export default function ConnectionEditorModal(props: Props) {
   });
 
   const [permcats] = createQueryResource("permcats", () => fetchPermcats().catch(() => []));
-  const [permsData] = createResource(
+  const [permsData, { refetch: refetchPerms }] = createResource(
     () => props.connection.id,
     (id) => fetchConnectionPerms(id).then((d) => {
       setIncl(d.incl ?? "");
@@ -117,6 +117,9 @@ export default function ConnectionEditorModal(props: Props) {
       return d;
     }).catch(() => null),
   );
+
+  const [refreshing, setRefreshing] = createSignal(false);
+  const [refreshFailed, setRefreshFailed] = createSignal(false);
 
   const connectedOn = () => formatDate(props.connection.connected);
   const tabCls = (t: Tab) =>
@@ -155,6 +158,19 @@ export default function ConnectionEditorModal(props: Props) {
       props.onClose();
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    setRefreshFailed(false);
+    try {
+      await refreshConnection(props.connection.id);
+      await refetchPerms();
+    } catch {
+      setRefreshFailed(true);
+    } finally {
+      setRefreshing(false);
     }
   }
 
@@ -490,6 +506,30 @@ export default function ConnectionEditorModal(props: Props) {
               </Show>
               {confirmDelete() ? t("connection.confirm_remove") : t("connection.remove")}
             </button>
+
+            <Show when={tab() === "settings"}>
+              <button
+                type="button"
+                onClick={handleRefresh}
+                disabled={refreshing()}
+                title={t("connection.refresh_perms_hint")}
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border
+                       border-rim text-muted hover:border-accent hover:text-accent transition-colors
+                       disabled:opacity-50 disabled:cursor-default"
+              >
+                <svg
+                  class={`w-3.5 h-3.5 ${refreshing() ? "animate-spin" : ""}`}
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {refreshing() ? t("connection.refreshing") : t("connection.refresh_perms")}
+              </button>
+              <Show when={refreshFailed()}>
+                <span class="text-[11px] text-red-500">{t("connection.refresh_error")}</span>
+              </Show>
+            </Show>
 
             <div class="flex-1" />
 
