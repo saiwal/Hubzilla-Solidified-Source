@@ -18,6 +18,7 @@ import type { StreamHandlers } from "../types";
 import CommentThread from "@/shared/views/CommentThread";
 import formatPostDate from "@/shared/lib/date";
 import { markItemSeen } from "@/shared/lib/markSeen";
+import { scrollHighlightIntoView } from "@/shared/lib/scrollHighlightIntoView";
 import {
   MdFillBar_chart,
   MdFillChat,
@@ -510,9 +511,7 @@ export default function PostCard(props: {
 
   onMount(() => {
     if (props.highlighted && props.compact) {
-      requestAnimationFrame(() => {
-        cardRef?.scrollIntoView({ behavior: "smooth", block: "center" });
-      });
+      onCleanup(scrollHighlightIntoView(cardRef));
     }
 
     const uuid = props.post.uuid;
