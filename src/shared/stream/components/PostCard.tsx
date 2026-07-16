@@ -356,16 +356,40 @@ export default function PostCard(props: {
     );
   };
 
-  // Delete: viewer must be a local user and the post's author address must
-  // match their own channel address (nick@hostname)
-  const canDelete = () => {
+  // True authorship: viewer's own channel address matches the post's author.
+  const isTrueAuthor = () => {
     const a = auth();
-    if (!props.handlers.onDelete || !a?.isLocal || !a.nick) return false;
+    if (!a?.isLocal || !a.nick) return false;
     const viewerAddr = `${a.nick}@${window.location.hostname}`;
     return (
       !!props.post.authorAddress && props.post.authorAddress === viewerAddr
     );
   };
+
+  // Own stream copy: this row lives under the viewer's own uid (their own
+  // Network stream or wall), even if they didn't author it. The backend
+  // removes it locally only in this case, never federating the delete.
+  const ownsStreamCopy = () => {
+    const a = auth();
+    return !!a && a.uid > 0 && props.post.profileUid === a.uid;
+  };
+
+  // Delete: viewer must be a local user, and either the true author/owner or
+  // merely own this stream copy (see isLocalOnlyDelete for the label split).
+  const canDelete = () => {
+    if (!props.handlers.onDelete) return false;
+    return isTrueAuthor() || ownsStreamCopy();
+  };
+
+  const isLocalOnlyDelete = () => ownsStreamCopy() && !isTrueAuthor();
+
+  const deleteLabel = () =>
+    isLocalOnlyDelete() ? t("post.remove_from_feed") : t("post.delete");
+
+  const deleteConfirmLabel = () =>
+    isLocalOnlyDelete()
+      ? t("post.confirm_remove_from_feed")
+      : t("post.confirm_delete");
 
   // Edit: same author-address gate as delete
   const canEdit = () => {
@@ -1279,9 +1303,7 @@ export default function PostCard(props: {
                   >
                     <MdOutlineDelete size={13} />
                     <span>
-                      {deleteConfirming()
-                        ? t("post.confirm_delete")
-                        : t("post.delete")}
+                      {deleteConfirming() ? deleteConfirmLabel() : deleteLabel()}
                     </span>
                   </button>
                 </Show>
@@ -1927,9 +1949,7 @@ export default function PostCard(props: {
               >
                 <MdOutlineDelete size={15} />
                 <span>
-                  {deleteConfirming()
-                    ? t("post.confirm_delete")
-                    : t("post.delete")}
+                  {deleteConfirming() ? deleteConfirmLabel() : deleteLabel()}
                 </span>
               </button>
             </Show>

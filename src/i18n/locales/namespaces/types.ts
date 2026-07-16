@@ -566,7 +566,8 @@ export type RawDictionary = {
     view_source: string; import_post: string; import: string; original: string; toggle_comments: string;
     toggle_flat: string; toggle_threaded: string; flat: string; threaded: string;
     flat_view: string; threaded_view: string; refresh: string; more_actions: string;
-    reply: string; delete_post: string; delete: string; confirm: string; confirm_delete: string;
+    reply: string; delete_post: string; delete: string; remove_from_feed: string;
+    confirm: string; confirm_delete: string; confirm_remove_from_feed: string;
     op: string; op_title: string; new_badge: string;
     comments_singular: string; comments_plural: string;
     loading_comments: string; loading: string; loading_source: string;

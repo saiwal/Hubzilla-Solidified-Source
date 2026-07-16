@@ -41,8 +41,10 @@ const ZWSP = "\u200B";
 const shareEmbed = (attrs: string, innerHtml: string) =>
   `${ZWSP}<div class="bb-share-embed" ${attrs} contenteditable="false">${innerHtml}</div>${ZWSP}`;
 
-const renderShareHtml = (block: string) =>
-  DOMPurify.sanitize(bbcodeToHtml(block));
+const renderShareHtml = (block: string) => {
+  const html = DOMPurify.sanitize(bbcodeToHtml(block));
+  return useEmojiAsImages()() ? emojify(html, getEmojiMap()) : html;
+};
 
 // Expanded blocks for compact [share=<id>] tokens, fetched once per id —
 // re-seeds (tab switches, external body updates) then render synchronously.

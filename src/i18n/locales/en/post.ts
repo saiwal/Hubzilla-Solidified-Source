@@ -32,8 +32,10 @@ export const post: RawDictionary["post"] = {
   reply:                "Reply",
   delete_post:          "Delete post",
   delete:               "Delete",
+  remove_from_feed:         "Remove from your feed",
   confirm:              "Confirm?",
   confirm_delete:       "Confirm delete?",
+  confirm_remove_from_feed: "Confirm remove from feed?",
   // badges
   op:                   "OP",
   op_title:             "Original poster",
