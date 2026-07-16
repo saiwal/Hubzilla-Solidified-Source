@@ -24,16 +24,15 @@ registerModule({
       id: "cloud.storage_usage",
       label: () => useI18n().t("widgets.storage_usage"),
       loader: () => import("./widgets/StorageUsageWidget"),
-      slot: "right",
-      defaultModules: [],
-      contexts: "any",
+      slot: ["mainTop"],
+      defaultModules: ["hq"],
+      contexts: ["hq"],
     },
-    {
-      // Same widget again under slot "mainTop", for HQ's top banner slot
-      id: "cloud.storage_usage_top",
+		{
+      id: "cloud.storage_usage_right",
       label: () => useI18n().t("widgets.storage_usage"),
       loader: () => import("./widgets/StorageUsageWidget"),
-      slot: "mainTop",
+      slot: ["right"],
       defaultModules: [],
       contexts: ["hq"],
     },

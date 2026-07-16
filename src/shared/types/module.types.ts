@@ -50,7 +50,8 @@ export interface WidgetDef {
   /** Human-readable name for the widget picker UI. */
   label: string | (() => string);
   loader: ComponentLoader<WidgetProps>;
-  slot: WidgetSlotName;
+  /** Single slot, or a list to mount the same widget in several slots at once. */
+  slot: WidgetSlotName | WidgetSlotName[];
   /** Module ids where the widget appears out of the box. Defaults to the registering module. */
   defaultModules?: string[];
   /** Module ids where the widget can be placed by the user, or "any". Defaults to defaultModules. */

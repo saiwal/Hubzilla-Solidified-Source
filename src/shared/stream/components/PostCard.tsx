@@ -50,6 +50,8 @@ import {
   MdOutlineLocation_on,
   MdOutlineTimer,
   MdOutlineSchedule,
+  MdOutlineContent_copy,
+  MdOutlineCheck,
 } from "solid-icons/md";
 import { useI18n } from "@/i18n";
 import { BiRegularLinkExternal, BiSolidShareAlt, BiRegularEnvelope } from "solid-icons/bi";
@@ -185,6 +187,13 @@ export default function PostCard(props: {
   const [replyOpen, setReplyOpen] = createSignal(false);
   const [replyQuote, setReplyQuote] = createSignal("");
   const [reshareOpen, setReshareOpen] = createSignal(false);
+  const [shareEmbedCopied, setShareEmbedCopied] = createSignal(false);
+  function copyShareEmbed() {
+    navigator.clipboard.writeText(`[share=${props.post.iid}][/share]`).then(() => {
+      setShareEmbedCopied(true);
+      setTimeout(() => setShareEmbedCopied(false), 1500);
+    });
+  }
   const [showComments, setShowComments] = createSignal(
     !!props.initiallyExpanded ||
       openedByMid.has(props.post.mid) ||
@@ -1309,16 +1318,31 @@ export default function PostCard(props: {
                 left: `${dropdownAnchor()!.left}px`,
               }}
             >
-              <button
-                onClick={() => {
-                  setRepeatDropdownOpen(false);
-                  setReshareOpen(true);
-                }}
-                class="w-full flex items-center gap-2 px-3 py-2 text-xs text-txt hover:bg-overlay transition-colors text-left"
-              >
-                <BiSolidShareAlt size={13} />
-                <span>{t("post.reshare_with_comment")} #{props.post.iid}</span>
-              </button>
+              <div class="w-full flex items-center gap-2 px-3 py-2 text-xs text-txt hover:bg-overlay transition-colors">
+                <button
+                  onClick={() => {
+                    setRepeatDropdownOpen(false);
+                    setReshareOpen(true);
+                  }}
+                  class="flex items-center gap-2 flex-1 text-left"
+                >
+                  <BiSolidShareAlt size={13} />
+                  <span>{t("post.reshare_with_comment")} #{props.post.iid}</span>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    copyShareEmbed();
+                  }}
+                  title={t("post.copy_embed_code")}
+                  aria-label={t("post.copy_embed_code")}
+                  class="p-0.5 rounded hover:bg-surface transition-colors text-muted hover:text-txt shrink-0"
+                >
+                  <Show when={shareEmbedCopied()} fallback={<MdOutlineContent_copy size={13} />}>
+                    <MdOutlineCheck size={13} class="text-accent" />
+                  </Show>
+                </button>
+              </div>
             </div>
           </Show>
         </Portal>
@@ -1923,16 +1947,31 @@ export default function PostCard(props: {
               left: `${dropdownAnchor()!.left}px`,
             }}
           >
-            <button
-              onClick={() => {
-                setRepeatDropdownOpen(false);
-                setReshareOpen(true);
-              }}
-              class="w-full flex items-center gap-2 px-3 py-2 text-sm text-txt hover:bg-overlay transition-colors text-left"
-            >
-              <BiSolidShareAlt size={15} />
-              <span>{t("post.reshare_with_comment")} #{props.post.iid}</span>
-            </button>
+            <div class="w-full flex items-center gap-2 px-3 py-2 text-sm text-txt hover:bg-overlay transition-colors">
+              <button
+                onClick={() => {
+                  setRepeatDropdownOpen(false);
+                  setReshareOpen(true);
+                }}
+                class="flex items-center gap-2 flex-1 text-left"
+              >
+                <BiSolidShareAlt size={15} />
+                <span>{t("post.reshare_with_comment")} #{props.post.iid}</span>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  copyShareEmbed();
+                }}
+                title={t("post.copy_embed_code")}
+                aria-label={t("post.copy_embed_code")}
+                class="p-0.5 rounded hover:bg-surface transition-colors text-muted hover:text-txt shrink-0"
+              >
+                <Show when={shareEmbedCopied()} fallback={<MdOutlineContent_copy size={15} />}>
+                  <MdOutlineCheck size={15} class="text-accent" />
+                </Show>
+              </button>
+            </div>
           </div>
         </Show>
       </Portal>

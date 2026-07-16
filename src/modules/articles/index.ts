@@ -37,6 +37,8 @@ registerModule({
       label: () => useI18n().t("widgets.popular_articles"),
       loader: () => import("./widgets/ArticlePopularWidget"),
       slot: "right",
+      defaultModules: [],
+      contexts: ["channel", "profile", "articles"],
       helpTarget: "articles.popular_articles_widget",
     },
     {

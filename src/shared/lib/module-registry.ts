@@ -83,15 +83,20 @@ export function getAllWidgets(): RegisteredWidget[] {
   return [...widgets.values()];
 }
 
+// Normalises a widget's single-or-list `slot` field for membership checks.
+export function widgetSlots(w: Pick<WidgetDef, "slot">): WidgetSlotName[] {
+  return Array.isArray(w.slot) ? w.slot : [w.slot];
+}
+
 // Global widgets — always mounted, never torn down
 export function resolveGlobalSlots(slot: WidgetSlotName): RegisteredWidget[] {
-  return [...widgets.values()].filter((w) => w.global && w.slot === slot);
+  return [...widgets.values()].filter((w) => w.global && widgetSlots(w).includes(slot));
 }
 
 // Module-local widgets — swapped on navigation, globals excluded
 export function resolveModuleSlot(slot: WidgetSlotName, moduleId: string): RegisteredWidget[] {
   return [...widgets.values()].filter(
-    (w) => !w.global && w.slot === slot && w.defaultModules.includes(moduleId),
+    (w) => !w.global && widgetSlots(w).includes(slot) && w.defaultModules.includes(moduleId),
   );
 }
 

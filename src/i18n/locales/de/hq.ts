@@ -35,6 +35,8 @@ export const hq: RawDictionary["hq"] = {
   msg_tab_folders:      "Ordner",
   no_folders:           "Keine gespeicherten Ordner",
   filter_placeholder:   "Filter…",
+  folder_view_list:     "Listenansicht",
+  folder_view_grid:     "Rasteransicht",
   // DraftsWidget
   draft_post:           "Beitrag",
   draft_reply:          "Antwort",

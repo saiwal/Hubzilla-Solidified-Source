@@ -1,5 +1,6 @@
 // src/modules/notify/index.ts
 import { registerModule } from "@/shared/lib/module-registry";
+import { useI18n } from "@/i18n";
 
 registerModule({
   id: "notify",
@@ -15,5 +16,19 @@ registerModule({
     },
   ],
   requiresAuth: true,
+  widgets: [
+    {
+      // Global — always mounted, every page. Id predates this module (was
+      // "shared.notifications" from src/shared/slots.ts) — kept as-is,
+      // widget ids are persisted in user layouts.
+      id: "shared.notifications",
+      label: () => useI18n().t("widgets.notifications"),
+      loader: () => import("./widgets/NotificationsAside"),
+      slot: "right",
+      contexts: "any",
+      global: true,
+      helpTarget: "notifications",
+    },
+  ],
   permissions: [],
 });

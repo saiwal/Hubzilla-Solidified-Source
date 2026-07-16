@@ -23,7 +23,7 @@ registerModule({
       id: "help.chooser",
       label: () => useI18n().t("widgets.help_chooser"),
       loader: () => import("./widgets/HelpChooserWidget"),
-      slot: "mainTop",
+      slot: ["header"],
       defaultModules: ["help"],
     },
     {

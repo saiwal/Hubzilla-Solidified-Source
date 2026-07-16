@@ -80,7 +80,30 @@ export default function EditorToolbar(props: Props) {
   const bold      = () => isSource() ? wrapSource("[b]", "[/b]")   : exec("bold");
   const italic    = () => isSource() ? wrapSource("[i]", "[/i]")   : exec("italic");
   const underline = () => isSource() ? wrapSource("[u]", "[/u]")   : exec("underline");
-  const highlight = () => isSource() ? wrapSource("[hl]", "[/hl]") : exec("hiliteColor", "yellow");
+  const highlight = () => {
+    if (isSource()) { wrapSource("[hl]", "[/hl]"); return; }
+    // hiliteColor doesn't toggle off like bold/italic/underline do natively
+    // (it just re-applies the background color); unwrap manually when the
+    // selection is already inside a highlighted span — same gap strike()
+    // works around below.
+    const el = props.editorRef();
+    if (!el) return;
+    el.focus();
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const node    = sel.getRangeAt(0).commonAncestorContainer;
+    const parentEl = node.nodeType === Node.TEXT_NODE ? node.parentElement : node as Element;
+    const hlEl    = parentEl?.closest?.("mark, span[style*='background-color']");
+    if (hlEl && el.contains(hlEl)) {
+      const r = document.createRange();
+      r.selectNode(hlEl);
+      sel.removeAllRanges();
+      sel.addRange(r);
+      document.execCommand("insertHTML", false, (hlEl as HTMLElement).innerHTML);
+    } else {
+      exec("hiliteColor", "yellow");
+    }
+  };
 
   const strike = () => {
     if (isSource()) { wrapSource("[s]", "[/s]"); return; }
@@ -142,7 +165,19 @@ export default function EditorToolbar(props: Props) {
     }
   };
 
-  const code = () => isSource() ? wrapSource("[code]", "[/code]") : exec("formatBlock", "pre");
+  const code = () => {
+    if (isSource()) { wrapSource("[code]", "[/code]"); return; }
+    // formatBlock always converts the whole current block, not just the
+    // selection — fine for starting a fresh code block, but wraps the
+    // entire line when the user only meant to mark a few selected words.
+    // Wrap just the selection inline in that case instead.
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
+      wrapHtml("<code>", "</code>");
+    } else {
+      exec("formatBlock", "pre");
+    }
+  };
 
   const hr = () => isSource() ? insertSource("[hr]\n") : exec("insertHorizontalRule");
 

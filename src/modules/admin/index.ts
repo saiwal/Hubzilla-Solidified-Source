@@ -48,8 +48,9 @@ registerModule({
       label: () => useI18n().t("widgets.site_announcements"),
       loader: () => import("./widgets/SiteAnnouncementsWidget"),
       slot: "right",
-      defaultModules: [],
+      defaultModules: ["admin"],
       contexts: "any",
+      visitorVisible: false,
     },
     {
       // Same widget again under slot "mainTop", for HQ's top banner slot
@@ -59,6 +60,7 @@ registerModule({
       slot: "mainTop",
       defaultModules: [],
       contexts: ["hq"],
+      visitorVisible: false,
     },
   ],
 });

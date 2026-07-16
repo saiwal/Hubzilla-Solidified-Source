@@ -27,7 +27,7 @@ registerModule({
     {
       id: "channel.connections",
       label: () => useI18n().t("widgets.connections"),
-      loader: () => import("@/shared/widgets/channelconnections"),
+      loader: () => import("./widgets/ChannelConnectionsWidget"),
       ...channelWidgetPlacement,
       helpTarget: "channel.connections_widget",
     },

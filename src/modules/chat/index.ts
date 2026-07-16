@@ -28,6 +28,16 @@ registerModule({
   },
   widgets: [
     {
+      // Global — always mounted, every page (not just chat's own routes).
+      id: "chat.pinnedRooms",
+      label: () => useI18n().t("widgets.pinned_chat"),
+      loader: () => import("./widgets/PinnedChatWidget"),
+      slot: "right",
+      contexts: "any",
+      global: true,
+      helpTarget: "chat.pinned_rooms_widget",
+    },
+    {
       id: "chat.bookmarkedRooms",
       label: () => useI18n().t("widgets.bookmarked_rooms"),
       loader: () => import("./widgets/BookmarkedRoomsWidget"),

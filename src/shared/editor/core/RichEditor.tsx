@@ -95,12 +95,25 @@ export default function RichEditor(props: Props) {
     props.onInput((e.target as HTMLTextAreaElement).value);
   };
 
-  // Renders any $…$ / $$…$$ math typed since the last hydration once focus
+  // Renders bbcode typed (or pasted without triggering the paste-time
+  // expansion above) directly into the editor — [share], [img], [url],
+  // formatting tags, auto-linked URLs, $…$/$$…$$ math, etc. — once focus
   // leaves the editor. Not done on every keystroke — replacing DOM nodes
-  // while the caret is mid-expression would fight cursor position (the same
-  // reason the body-sync effect above only re-renders on external changes).
+  // while the caret is mid-edit would fight cursor position (same reason the
+  // body-sync effect above only re-renders on external changes). Toolbar
+  // buttons are unaffected: they preventDefault on mousedown, so clicking
+  // one never blurs the editor. Scoped to bbcode mode — markdown/html source
+  // (wiki, webpage editors) already renders correctly without this pass, and
+  // round-tripping through marked/Turndown here would risk lossy rewrites.
   const onEditorBlur = () => {
-    if (props.capabilities.latexMode === "live" && editorRef) hydrateLatexEmbeds(editorRef);
+    if (!editorRef) return;
+    if (mime() === "text/bbcode") {
+      const next = htmlToSource(editorRef.innerHTML, mime());
+      editorRef.innerHTML = sourceToHtml(next, mime());
+      domSig = `${mime()} ${next}`;
+      hydrateShareEmbeds(editorRef);
+    }
+    if (props.capabilities.latexMode === "live") hydrateLatexEmbeds(editorRef);
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
@@ -179,20 +192,44 @@ export default function RichEditor(props: Props) {
   };
 
   const handlePaste = (e: ClipboardEvent) => {
-    if (!props.onPasteFiles) return;
     const dt = e.clipboardData;
     if (!dt) return;
-    // dt.files misses some sources (e.g. certain Linux clipboard managers),
-    // so fall back to scanning items for file entries.
-    const files = dt.files.length
-      ? Array.from(dt.files)
-      : Array.from(dt.items)
-          .filter((i) => i.kind === "file")
-          .map((i) => i.getAsFile())
-          .filter((f): f is File => f !== null);
-    if (files.length === 0) return;
-    e.preventDefault();
-    props.onPasteFiles(files);
+    if (props.onPasteFiles) {
+      // dt.files misses some sources (e.g. certain Linux clipboard managers),
+      // so fall back to scanning items for file entries.
+      const files = dt.files.length
+        ? Array.from(dt.files)
+        : Array.from(dt.items)
+            .filter((i) => i.kind === "file")
+            .map((i) => i.getAsFile())
+            .filter((f): f is File => f !== null);
+      if (files.length > 0) {
+        e.preventDefault();
+        props.onPasteFiles(files);
+        return;
+      }
+    }
+
+    // A pasted [share=<id>][/share] token needs the same expand-to-embed
+    // pass seedEditor runs on mount — plain text insertion leaves the
+    // literal bbcode sitting in the DOM until something else forces a full
+    // re-render (e.g. switching to the source tab and back).
+    const text = dt.getData("text/plain");
+    if (props.tab === "wysiwyg" && editorRef && text && /\[share[=\s][\s\S]*?\[\/share\]/i.test(text)) {
+      e.preventDefault();
+      document.execCommand("insertText", false, text);
+      const next = htmlToSource(editorRef.innerHTML, mime());
+      editorRef.innerHTML = sourceToHtml(next, mime());
+      domSig = `${mime()} ${next}`;
+      hydrateShareEmbeds(editorRef);
+      const range = document.createRange();
+      const sel = window.getSelection();
+      range.selectNodeContents(editorRef);
+      range.collapse(false);
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+      props.onInput(next);
+    }
   };
 
   // Every composer gets the tab bar (write/source) except chat's plain input.

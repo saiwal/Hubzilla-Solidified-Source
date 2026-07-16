@@ -556,6 +556,7 @@ export type RawDictionary = {
   };
   post: {
     like: string; dislike: string; repeat: string; reshare_with_comment: string;
+    copy_embed_code: string;
     more_sharing: string; star: string; unstar: string; follow: string; unfollow: string;
     follow_for_notifs: string; unfollow_post: string; statistics: string; post_statistics: string;
     view_source: string; import_post: string; import: string; original: string; toggle_comments: string;
@@ -1279,6 +1280,8 @@ export type RawDictionary = {
     msg_tab_folders:      string;
     no_folders:           string;
     filter_placeholder:   string;
+    folder_view_list:     string;
+    folder_view_grid:     string;
     draft_post:           string;
     draft_reply:          string;
     draft_comment:        string;

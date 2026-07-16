@@ -29,6 +29,8 @@ export const hq: RawDictionary["hq"] = {
   msg_tab_folders:      "फ़ोल्डर",
   no_folders:           "कोई सहेजा गया फ़ोल्डर नहीं",
   filter_placeholder:   "फ़िल्टर…",
+  folder_view_list:     "सूची दृश्य",
+  folder_view_grid:     "ग्रिड दृश्य",
   draft_post:           "पोस्ट",
   draft_reply:          "उत्तर",
   draft_comment:        "टिप्पणी",

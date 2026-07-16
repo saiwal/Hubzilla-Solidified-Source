@@ -10,6 +10,7 @@ import {
   isModuleActive,
   moduleIdForPath,
   widgetAllowedIn,
+  widgetSlots,
   type RegisteredWidget,
 } from "@/shared/lib/module-registry";
 import { useInstalledApps } from "@/shared/store/nav-store";
@@ -207,7 +208,7 @@ const Slot: Component<SlotProps> = (props) => {
     return getAllWidgets().filter(
       (w) =>
         !w.global &&
-        w.slot === props.name &&
+        widgetSlots(w).includes(props.name) &&
         (w.multiInstance === true || !present.has(w.id)) &&
         widgetAllowedIn(w, moduleId) &&
         isModuleActive(w.moduleId, apps),

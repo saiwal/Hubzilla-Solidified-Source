@@ -1,6 +1,5 @@
 import { registerModule } from "@/shared/lib/module-registry";
 import { useI18n } from "@/i18n";
-import { notificationsWidget, pinnedChatWidget } from "@/shared/slots";
 
 registerModule({
   id: "hq",
@@ -14,9 +13,6 @@ registerModule({
     context: "owner",
   },
   widgets: [
-    // Both are global: mounted on every page, not just /hq
-    notificationsWidget,
-    pinnedChatWidget,
     // Row of quick-launch buttons for the other composers (post, DM,
     // webpage, wiki, article) — each button only appears when its
     // corresponding Hubzilla app is installed.
@@ -26,7 +22,16 @@ registerModule({
       loader: () => import("./widgets/QuickComposeWidget"),
       slot: "mainTop",
       defaultModules: ["hq"],
-      contexts: ["hq"],
+      contexts: ["any"],
+      helpTarget: "hq.quick_compose_widget",
+    },
+		{
+      id: "hq.quick_compose_right",
+      label: () => useI18n().t("hq.quick_compose"),
+      loader: () => import("./widgets/QuickComposeWidget"),
+      slot: "right",
+      defaultModules: [],
+      contexts: "any",
       helpTarget: "hq.quick_compose_widget",
     },
     // The dashboard itself, in the mainTop banner slot Layout.tsx already
@@ -38,7 +43,7 @@ registerModule({
       loader: () => import("./widgets/HqComposer"),
       slot: "mainTop",
       defaultModules: ["hq"],
-      contexts: ["hq"],
+      contexts: ["any"],
       helpTarget: "hq.post_composer",
     },
     {

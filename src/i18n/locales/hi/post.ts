@@ -5,6 +5,7 @@ export const post: RawDictionary["post"] = {
   dislike:              "नापसंद",
   repeat:               "दोहराएँ",
   reshare_with_comment: "टिप्पणी के साथ साझा करें",
+  copy_embed_code:      "एम्बेड कोड कॉपी करें",
   more_sharing:         "और साझाकरण विकल्प",
   star:                 "स्टार करें",
   unstar:               "स्टार हटाएँ",
