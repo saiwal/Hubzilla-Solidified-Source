@@ -1070,6 +1070,23 @@ export type RawDictionary = {
     danger_remove_btn:       string;
     danger_password_label:   string;
     danger_password_placeholder: string;
+    // Portability (export)
+    title_portability:          string;
+    desc_portability:            string;
+    portability_not_installed:   string;
+    portability_export_title:    string;
+    portability_export_desc:     string;
+    portability_sections:        string;
+    portability_section_channel:     string;
+    portability_section_connections: string;
+    portability_section_config:      string;
+    portability_section_apps:        string;
+    portability_section_chatrooms:   string;
+    portability_section_events:      string;
+    portability_section_webpages:    string;
+    portability_section_wikis:       string;
+    portability_download_btn:    string;
+    portability_no_sections:     string;
   };
   network: {
     latest:               string;

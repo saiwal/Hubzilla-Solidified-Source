@@ -20,6 +20,8 @@ export const settings: RawDictionary["settings"] = {
   desc_blocked:        "Kanäle, deren Inhalte in deinen Streams, Kommentaren und Suchergebnissen ausgeblendet sind.",
   title_danger:        "Gefahrenzone",
   desc_danger:         "Unumkehrbare Aktionen. Mit Vorsicht fortfahren.",
+  title_portability:   "Daten exportieren",
+  desc_portability:    "Lade eine Kopie deiner Kanalidentität, Verbindungen und Inhalte herunter.",
   // Features section
   feat_toggle_on:      "An",
   feat_toggle_off:     "Aus",
@@ -193,4 +195,19 @@ export const settings: RawDictionary["settings"] = {
   danger_remove_btn:       "Kanal dauerhaft entfernen",
   danger_password_label:   "Gib dein Konto-Passwort ein, um zu bestätigen",
   danger_password_placeholder: "Passwort",
+  // Portability (export)
+  portability_not_installed:   "Die App „Kanal-Export“ ist nicht installiert. Installiere sie unter Einstellungen → Integrationen, um deine Daten exportieren zu können.",
+  portability_export_title:    "Kanal exportieren",
+  portability_export_desc:     "Lade deine Identität und dein soziales Netzwerk als Datei herunter. Damit kannst du deinen Kanal zu einem anderen Hub umziehen.",
+  portability_sections:        "Zu exportierende Abschnitte",
+  portability_section_channel:     "Kanalidentität",
+  portability_section_connections: "Verbindungen",
+  portability_section_config:      "Einstellungen & Konfiguration",
+  portability_section_apps:        "Installierte Apps",
+  portability_section_chatrooms:   "Chaträume",
+  portability_section_events:      "Kalenderereignisse",
+  portability_section_webpages:    "Webseiten",
+  portability_section_wikis:       "Wikis",
+  portability_download_btn:    "Export herunterladen",
+  portability_no_sections:     "Wähle mindestens einen Abschnitt zum Exportieren aus.",
 };

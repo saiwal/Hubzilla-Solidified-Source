@@ -13,6 +13,7 @@ export const SETTINGS_ITEMS: SubPageItem[] = [
   { path: "integrations",  label: () => useI18n().t("settings.title_integrations") },
   { path: "features",      label: () => useI18n().t("settings.title_features") },
   { path: "blocked",       label: () => useI18n().t("settings.title_blocked") },
+  { path: "portability",   label: () => useI18n().t("settings.title_portability") },
   { path: "danger",        label: () => useI18n().t("settings.title_danger") },
 ];
 

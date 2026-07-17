@@ -20,6 +20,8 @@ export const settings: RawDictionary["settings"] = {
   desc_blocked:        "Channels whose content is hidden from your streams, comments and search results.",
   title_danger:        "Danger zone",
   desc_danger:         "Irreversible actions. Proceed with care.",
+  title_portability:   "Export data",
+  desc_portability:    "Download a copy of your channel identity, connections, and content.",
   // Features section
   feat_toggle_on:      "On",
   feat_toggle_off:     "Off",
@@ -193,4 +195,19 @@ export const settings: RawDictionary["settings"] = {
   danger_remove_btn:       "Remove channel permanently",
   danger_password_label:   "Enter your account password to confirm",
   danger_password_placeholder: "Password",
+  // Portability (export)
+  portability_not_installed:   "The Channel Export app is not installed. Install it from Settings → Integrations to enable exporting your data.",
+  portability_export_title:    "Export channel",
+  portability_export_desc:     "Download your identity and social graph as a file. This can be used to move your channel to another hub.",
+  portability_sections:        "Sections to include",
+  portability_section_channel:     "Channel identity",
+  portability_section_connections: "Connections",
+  portability_section_config:      "Settings & config",
+  portability_section_apps:        "Installed apps",
+  portability_section_chatrooms:   "Chatrooms",
+  portability_section_events:      "Calendar events",
+  portability_section_webpages:    "Webpages",
+  portability_section_wikis:       "Wikis",
+  portability_download_btn:    "Download export",
+  portability_no_sections:     "Select at least one section to export.",
 };

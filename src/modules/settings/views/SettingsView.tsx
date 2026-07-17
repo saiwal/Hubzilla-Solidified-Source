@@ -15,6 +15,7 @@ const SECTIONS: Record<string, ReturnType<typeof lazy>> = {
   integrations:  lazy(() => import("./sections/IntegrationsSection")),
   features:      lazy(() => import("./sections/FeaturesSection")),
   blocked:       lazy(() => import("./sections/BlockedChannelsSection")),
+  portability:   lazy(() => import("./sections/PortabilitySection")),
   danger:        lazy(() => import("./sections/DangerSection")),
 };
 
