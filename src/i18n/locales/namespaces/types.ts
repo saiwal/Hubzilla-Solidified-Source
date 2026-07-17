@@ -1087,6 +1087,17 @@ export type RawDictionary = {
     portability_section_wikis:       string;
     portability_download_btn:    string;
     portability_no_sections:     string;
+    portability_import_title:        string;
+    portability_import_desc:         string;
+    portability_import_file_label:   string;
+    portability_newname_label:       string;
+    portability_newname_placeholder: string;
+    portability_make_primary:        string;
+    portability_import_password_label: string;
+    portability_import_btn:          string;
+    portability_importing:           string;
+    portability_import_success:      string;
+    portability_import_failed:       string;
   };
   network: {
     latest:               string;

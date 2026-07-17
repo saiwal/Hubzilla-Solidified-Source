@@ -1,4 +1,5 @@
 import { Show, For, createSignal, createEffect } from "solid-js";
+import { A } from "@solidjs/router";
 import { useQuery } from "@tanstack/solid-query";
 import { toast } from "@/shared/store/toast";
 import SubPageContent from "@/shared/views/SubPageContent";
@@ -110,6 +111,18 @@ export default function PortabilitySection() {
           </Show>
         )}
       </Show>
+
+      <div class="rounded-xl border border-rim bg-surface p-5 space-y-2">
+        <h3 class="text-sm font-semibold text-txt">{t("settings.portability_import_title")}</h3>
+        <p class="text-xs text-muted">{t("settings.portability_import_desc")}</p>
+        <A
+          href="/import"
+          class="inline-block px-4 py-2 text-sm font-medium rounded-lg border border-rim text-txt
+                 hover:bg-elevated transition-colors"
+        >
+          {t("settings.portability_import_btn")}
+        </A>
+      </div>
     </SubPageContent>
   );
 }

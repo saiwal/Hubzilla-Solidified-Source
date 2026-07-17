@@ -1,4 +1,5 @@
 import { createSignal, createEffect, on, onCleanup, createMemo, For, Show, Switch, Match } from "solid-js";
+import { A } from "@solidjs/router";
 import { createQueryResource } from "@/shared/lib/createQueryResource";
 import {
   fetchNewChannelMeta,
@@ -182,6 +183,11 @@ export default function NewChannelView() {
           <div class="mb-6 text-center">
             <h1 class="text-xl font-bold text-txt">{t("channel_create.title")}</h1>
             <p class="text-sm text-muted mt-1">{t("channel_create.subtitle")}</p>
+            <p class="text-xs text-muted mt-3">
+              <A href="/import" class="text-accent hover:underline">
+                {t("settings.portability_import_btn")}
+              </A>
+            </p>
           </div>
         </Show>
 
