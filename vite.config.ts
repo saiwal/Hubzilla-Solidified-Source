@@ -120,7 +120,7 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/api": {
+      "/spa": {
         target: "https://hz-ddev.ddev.site",
         changeOrigin: true,
         secure: false,
