@@ -51,7 +51,7 @@ const { count, size } = await generateSW({
       },
     },
     {
-      urlPattern: /^https?:\/\/[^/]+\/api\//,
+      urlPattern: /^https?:\/\/[^/]+\/spa\//,
       handler: 'NetworkFirst',
       options: {
         cacheName: 'theme-api',
