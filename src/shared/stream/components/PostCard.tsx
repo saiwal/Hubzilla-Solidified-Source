@@ -1633,7 +1633,7 @@ export default function PostCard(props: {
       </Show>
 
       {/* Action bar */}
-      <div class="mt-4 pt-3 border-t border-rim flex items-center gap-1">
+      <div class="mt-4 pt-3 border-t border-rim flex flex-wrap items-center gap-1">
         {/* ── Like / Dislike / Star / Repeat ── */}
         <ActionBtn
           icon={
