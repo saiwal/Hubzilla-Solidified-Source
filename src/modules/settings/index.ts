@@ -8,6 +8,7 @@ export const SETTINGS_ITEMS: SubPageItem[] = [
   { path: "profile",       label: () => useI18n().t("settings.title_profile") },
   { path: "account",       label: () => useI18n().t("settings.title_account") },
   { path: "privacy",       label: () => useI18n().t("settings.title_privacy") },
+  { path: "locations",     label: () => useI18n().t("settings.title_locations") },
   { path: "notifications", label: () => useI18n().t("settings.title_notifications") },
   { path: "display",       label: () => useI18n().t("settings.title_display") },
   { path: "integrations",  label: () => useI18n().t("settings.title_integrations") },

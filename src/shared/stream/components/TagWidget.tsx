@@ -1,6 +1,6 @@
 // src/shared/stream/components/TagWidget.tsx
 //
-// API: GET /api/stream-widgets/tags?channel_nick=<nick>&type=<articles|posts>
+// API: GET /spa/stream-widgets/tags?channel_nick=<nick>&type=<articles|posts>
 // Response: { data: { tags: { name: string; count: number }[] } }
 
 import {
@@ -32,7 +32,7 @@ export async function fetchTags(params: {
   channelNick?: string;
   type?: "articles" | "posts";
 }): Promise<TagItem[]> {
-  const url = new URL("/api/stream-widgets/tags", window.location.origin);
+  const url = new URL("/spa/stream-widgets/tags", window.location.origin);
   if (params.channelNick) url.searchParams.set("channel_nick", params.channelNick);
   if (params.type) url.searchParams.set("type", params.type);
   const res = await fetch(url.toString());

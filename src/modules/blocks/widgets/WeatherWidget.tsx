@@ -1,5 +1,5 @@
 // Current-conditions card (config: { location, unit }). Data comes from
-// GET /api/weather, a server-side proxy to Open-Meteo — see Handlers/Weather.php.
+// GET /spa/weather, a server-side proxy to Open-Meteo — see Handlers/Weather.php.
 
 import { Show, type Component } from "solid-js";
 import {
@@ -36,7 +36,7 @@ class WeatherFetchError extends Error {
 }
 
 async function fetchWeather(params: { location: string; unit: string }): Promise<WeatherData> {
-  const u = new URL("/api/weather", window.location.origin);
+  const u = new URL("/spa/weather", window.location.origin);
   u.searchParams.set("place", params.location);
   u.searchParams.set("unit", params.unit);
   const res = await apiFetch(u.pathname + u.search);

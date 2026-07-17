@@ -16,7 +16,7 @@ function base64UrlToUint8Array(base64Url: string): Uint8Array {
 }
 
 async function fetchVapidPublicKey(): Promise<string> {
-  const res = await apiFetch("/api/push-subscription");
+  const res = await apiFetch("/spa/push-subscription");
   if (!res.ok) throw new Error("Failed to fetch VAPID public key");
   const { data } = await res.json();
   return data.publicKey as string;
@@ -40,7 +40,7 @@ export async function subscribeToPush(): Promise<boolean> {
         applicationServerKey: base64UrlToUint8Array(publicKey) as BufferSource,
       });
     }
-    const res = await apiFetch("/api/push-subscription", {
+    const res = await apiFetch("/spa/push-subscription", {
       method: "POST",
       body: JSON.stringify({ subscription: sub.toJSON() }),
     });
@@ -58,7 +58,7 @@ export async function unsubscribeFromPush(): Promise<void> {
     if (!sub) return;
     const endpoint = sub.endpoint;
     await sub.unsubscribe();
-    await apiFetch("/api/push-subscription", {
+    await apiFetch("/spa/push-subscription", {
       method: "DELETE",
       body: JSON.stringify({ endpoint }),
     });

@@ -69,21 +69,21 @@ export async function fetchConnections(params: {
   if (params.start)  q.set("start",  String(params.start));
   if (params.limit)  q.set("limit",  String(params.limit));
 
-  const res = await apiFetch(`/api/connections?${q}`);
+  const res = await apiFetch(`/spa/connections?${q}`);
   if (!res.ok) throw new Error(`connections HTTP ${res.status}`);
   const body = await res.json();
   return { connections: body.data, meta: body.meta };
 }
 
 export async function fetchConnectionByAddress(address: string): Promise<Connection | null> {
-  const res = await apiFetch(`/api/connections?address=${encodeURIComponent(address)}`);
+  const res = await apiFetch(`/spa/connections?address=${encodeURIComponent(address)}`);
   if (!res.ok) return null;
   const body = await res.json();
   return body.data as Connection | null;
 }
 
 export async function approveConnection(abookId: number): Promise<void> {
-  const res = await apiFetch(`/api/connections/${abookId}/approve`, {
+  const res = await apiFetch(`/spa/connections/${abookId}/approve`, {
     method: "POST",
     body: "{}",
   });
@@ -91,7 +91,7 @@ export async function approveConnection(abookId: number): Promise<void> {
 }
 
 export async function refreshConnection(abookId: number): Promise<void> {
-  const res = await apiFetch(`/api/connections/${abookId}/refresh`, {
+  const res = await apiFetch(`/spa/connections/${abookId}/refresh`, {
     method: "POST",
     body: "{}",
   });
@@ -99,7 +99,7 @@ export async function refreshConnection(abookId: number): Promise<void> {
 }
 
 export async function deleteConnection(abookId: number): Promise<void> {
-  const res = await apiFetch(`/api/connections/${abookId}`, { method: "DELETE" });
+  const res = await apiFetch(`/spa/connections/${abookId}`, { method: "DELETE" });
   if (!res.ok) throw new Error(`delete HTTP ${res.status}`);
 }
 
@@ -134,14 +134,14 @@ export interface ConnectionPerms {
 }
 
 export async function fetchPermcats(): Promise<Permcat[]> {
-  const res = await apiFetch("/api/connections/permcats");
+  const res = await apiFetch("/spa/connections/permcats");
   if (!res.ok) throw new Error(`permcats HTTP ${res.status}`);
   const body = await res.json();
   return body.data as Permcat[];
 }
 
 export async function createPermcat(name: string): Promise<Permcat> {
-  const res = await apiFetch("/api/connections/permcats", {
+  const res = await apiFetch("/spa/connections/permcats", {
     method: "POST",
     body: JSON.stringify({ name }),
   });
@@ -155,14 +155,14 @@ export async function createPermcat(name: string): Promise<Permcat> {
 
 export async function fetchPermcatDetail(name: string): Promise<PermcatDetail> {
   const q = new URLSearchParams({ name });
-  const res = await apiFetch(`/api/connections/permcats?${q}`);
+  const res = await apiFetch(`/spa/connections/permcats?${q}`);
   if (!res.ok) throw new Error(`permcat detail HTTP ${res.status}`);
   const body = await res.json();
   return body.data as PermcatDetail;
 }
 
 export async function updatePermcatPerms(name: string, perms: string[]): Promise<Permcat> {
-  const res = await apiFetch("/api/connections/permcats", {
+  const res = await apiFetch("/spa/connections/permcats", {
     method: "POST",
     body: JSON.stringify({ name, perms }),
   });
@@ -176,21 +176,21 @@ export async function updatePermcatPerms(name: string, perms: string[]): Promise
 
 export async function deletePermcat(name: string): Promise<void> {
   const q = new URLSearchParams({ name });
-  const res = await apiFetch(`/api/connections/permcats?${q}`, {
+  const res = await apiFetch(`/spa/connections/permcats?${q}`, {
     method: "DELETE",
   });
   if (!res.ok) throw new Error(`delete permcat HTTP ${res.status}`);
 }
 
 export async function fetchConnectionPerms(abookId: number): Promise<ConnectionPerms> {
-  const res = await apiFetch(`/api/connections/${abookId}/perms`);
+  const res = await apiFetch(`/spa/connections/${abookId}/perms`);
   if (!res.ok) throw new Error(`perms HTTP ${res.status}`);
   const body = await res.json();
   return body.data as ConnectionPerms;
 }
 
 export async function fetchConnectionGroups(abookId: number): Promise<number[]> {
-  const res = await apiFetch(`/api/connections/${abookId}/groups`);
+  const res = await apiFetch(`/spa/connections/${abookId}/groups`);
   if (!res.ok) throw new Error(`groups HTTP ${res.status}`);
   const body = await res.json();
   return body.data as number[];
@@ -210,7 +210,7 @@ export async function updateConnection(
     profile_id?: number | null;
   },
 ): Promise<void> {
-  const res = await apiFetch(`/api/connections/${abookId}`, {
+  const res = await apiFetch(`/spa/connections/${abookId}`, {
     method: "POST",
     body: JSON.stringify(fields),
   });

@@ -1,4 +1,4 @@
-// Site-wide announcements list, backed by GET/POST /api/announcements
+// Site-wide announcements list, backed by GET/POST /spa/announcements
 // (Handlers/Announcements.php). Public read; admins get an inline add/delete
 // form right in the widget instead of a separate admin page.
 
@@ -16,7 +16,7 @@ interface Announcement {
 }
 
 async function fetchAnnouncements(): Promise<Announcement[]> {
-  const res = await apiFetch("/api/announcements");
+  const res = await apiFetch("/spa/announcements");
   if (!res.ok) return [];
   const json = await res.json();
   return (json.data ?? []) as Announcement[];
@@ -35,7 +35,7 @@ export default function SiteAnnouncementsWidget() {
     if (!title().trim() && !body().trim()) return;
     setPosting(true);
     try {
-      const res = await apiFetch("/api/announcements", {
+      const res = await apiFetch("/spa/announcements", {
         method: "POST",
         body: JSON.stringify({ action: "create", title: title().trim(), body: body().trim() }),
       });
@@ -51,7 +51,7 @@ export default function SiteAnnouncementsWidget() {
   };
 
   const remove = async (id: string) => {
-    const res = await apiFetch("/api/announcements", {
+    const res = await apiFetch("/spa/announcements", {
       method: "POST",
       body: JSON.stringify({ action: "delete", id }),
     });

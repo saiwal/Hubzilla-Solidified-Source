@@ -7,7 +7,7 @@ export default function LogoutView() {
   onMount(async () => {
     try {
       const csrf = await getCsrfToken();
-      await fetch("/api/logout", {
+      await fetch("/spa/logout", {
         method: "POST",
         credentials: "include",
         headers: {

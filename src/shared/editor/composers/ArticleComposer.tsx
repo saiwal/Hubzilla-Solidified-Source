@@ -108,7 +108,7 @@ export default function ArticleComposer(props: Props) {
       }
 
       const res = await apiFetch(
-        `/api/item/${props.initial!.uuid}/edit`,
+        `/spa/item/${props.initial!.uuid}/edit`,
         {
           method: "POST",
           body: JSON.stringify({

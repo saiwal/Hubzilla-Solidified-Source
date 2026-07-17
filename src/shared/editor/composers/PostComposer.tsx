@@ -8,7 +8,7 @@
  * - Expiry picker
  * - Draft auto-save to IndexedDB (via createComposerStore)
  * - Ctrl+Enter to post, Escape to close
- * - Submits to POST /api/item (SPA Item handler) with JSON body + CSRF token
+ * - Submits to POST /spa/item (SPA Item handler) with JSON body + CSRF token
  */
 
 import {
@@ -226,7 +226,7 @@ const PostComposer: Component<ComposerProps> = (props) => {
         payload.poll_expire_unit = pollPayload.expireUnit;
       }
 
-      const res = await fetch("/api/item", {
+      const res = await fetch("/spa/item", {
         method: "POST",
         credentials: "include",
         headers: {

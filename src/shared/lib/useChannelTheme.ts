@@ -19,7 +19,7 @@ const VALID_FAMILIES = new Set<string>([
 
 async function fetchChannelSpa(nick: string): Promise<Record<string, string> | null> {
   if (!nick) return null;
-  const res = await fetch(`/api/pconfig?channel=${encodeURIComponent(nick)}`, {
+  const res = await fetch(`/spa/pconfig?channel=${encodeURIComponent(nick)}`, {
     credentials: "include",
   });
   if (!res.ok) return null;

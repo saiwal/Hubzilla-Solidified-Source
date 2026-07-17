@@ -47,7 +47,7 @@ type ChannelProfile = {
 
 async function fetchProfile(nick: string): Promise<ChannelProfile | null> {
   if (!nick) return null;
-  const res = await apiFetch(`/api/profile/${nick}`);
+  const res = await apiFetch(`/spa/profile/${nick}`);
   if (!res.ok) return null;
   const { data } = await res.json();
   if (!data) return null;

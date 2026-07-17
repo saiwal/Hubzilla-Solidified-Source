@@ -45,7 +45,7 @@ export interface ProfilesListResult {
 }
 
 export async function fetchProfiles(): Promise<ProfilesListResult> {
-  const res = await apiFetch("/api/profiles");
+  const res = await apiFetch("/spa/profiles");
   if (!res.ok) throw new Error(`Failed to load profiles: ${res.status}`);
   const json = await res.json();
   const meta = json.meta ?? {};
@@ -57,14 +57,14 @@ export async function fetchProfiles(): Promise<ProfilesListResult> {
 }
 
 export async function fetchProfile(id: string | number): Promise<ProfileData> {
-  const res = await apiFetch(`/api/profiles/${id}`);
+  const res = await apiFetch(`/spa/profiles/${id}`);
   if (!res.ok) throw new Error(`Failed to load profile: ${res.status}`);
   const { data } = await res.json();
   return data as ProfileData;
 }
 
 export async function createProfile(profile_name: string): Promise<number> {
-  const res = await apiFetch("/api/profiles/new", {
+  const res = await apiFetch("/spa/profiles/new", {
     method: "POST",
     body: JSON.stringify({ profile_name }),
   });
@@ -77,7 +77,7 @@ export async function saveProfile(
   id: string | number,
   payload: Partial<ProfileData>,
 ): Promise<void> {
-  const res = await apiFetch(`/api/profiles/${id}`, {
+  const res = await apiFetch(`/spa/profiles/${id}`, {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -88,7 +88,7 @@ export async function saveProfile(
 }
 
 export async function deleteProfile(id: string | number): Promise<void> {
-  const res = await apiFetch(`/api/profiles/${id}/delete`, {
+  const res = await apiFetch(`/spa/profiles/${id}/delete`, {
     method: "POST",
     body: JSON.stringify({}),
   });
@@ -116,7 +116,7 @@ export function uploadPhoto(
     fd.append("file", blob, type === "avatar" ? "avatar.jpg" : "cover.jpg");
 
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", `/api/avatar?type=${type}`);
+    xhr.open("POST", `/spa/avatar?type=${type}`);
     xhr.withCredentials = true;
     xhr.setRequestHeader("X-CSRF-Token", token);
 

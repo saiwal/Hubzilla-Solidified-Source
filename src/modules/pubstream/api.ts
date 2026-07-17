@@ -30,7 +30,7 @@ export async function fetchPubstream(
   if (params.tag)   qs.set("tag",   params.tag);
   if (params.net)   qs.set("net",   params.net);
 
-  const res = await fetch(`/api/pubstream?${qs}`);
+  const res = await fetch(`/spa/pubstream?${qs}`);
 
   // 403 = disabled / not allowed — return null so UI can show "disabled" state
   if (res.status === 403 || res.status === 401) return null;

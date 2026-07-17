@@ -21,7 +21,7 @@ export async function loadChatBookmarks(): Promise<void> {
   if (loaded() || loading() || !isLocalUser()) return;
   setLoading(true);
   try {
-    const res = await apiFetch("/api/bookmarks/chat");
+    const res = await apiFetch("/spa/bookmarks/chat");
     if (res.ok) {
       const json = await res.json();
       batch(() => {
@@ -46,7 +46,7 @@ export function bookmarkIdForRoom(nick: string, roomId: number): number | undefi
 
 export async function addChatBookmark(nick: string, roomId: number, title: string): Promise<void> {
   const url = `${window.location.origin}/chat/${nick}/${roomId}`;
-  const res = await apiFetch("/api/bookmarks", {
+  const res = await apiFetch("/spa/bookmarks", {
     method: "POST",
     body: JSON.stringify({ url, title, ischat: true }),
   });
@@ -58,7 +58,7 @@ export async function addChatBookmark(nick: string, roomId: number, title: strin
 }
 
 export async function removeChatBookmark(id: number): Promise<void> {
-  const res = await apiFetch(`/api/bookmarks/${id}`, { method: "DELETE" });
+  const res = await apiFetch(`/spa/bookmarks/${id}`, { method: "DELETE" });
   if (res.ok) setBookmarks((prev) => prev.filter((b) => b.id !== id));
 }
 

@@ -44,7 +44,7 @@ export type RegateResult =
   | { next: "pending_approval" };
 
 export async function fetchRegateState(token: string): Promise<RegateState> {
-  const res = await fetch(`/api/regate/${encodeURIComponent(token)}`, {
+  const res = await fetch(`/spa/regate/${encodeURIComponent(token)}`, {
     credentials: "include",
   });
   const json = await res.json();
@@ -53,7 +53,7 @@ export async function fetchRegateState(token: string): Promise<RegateState> {
 }
 
 export async function submitRegate(token: string, pin: string): Promise<RegateResult> {
-  const res = await fetch(`/api/regate/${encodeURIComponent(token)}`, {
+  const res = await fetch(`/spa/regate/${encodeURIComponent(token)}`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
@@ -65,14 +65,14 @@ export async function submitRegate(token: string, pin: string): Promise<RegateRe
 }
 
 export async function fetchRegisterConfig(): Promise<RegisterConfig> {
-  const res = await fetch("/api/register", { credentials: "include" });
+  const res = await fetch("/spa/register", { credentials: "include" });
   if (!res.ok) throw new Error("Failed to load registration form");
   const json = await res.json();
   return json.data as RegisterConfig;
 }
 
 export async function submitRegister(payload: RegisterPayload): Promise<RegisterResult> {
-  const res = await fetch("/api/register", {
+  const res = await fetch("/spa/register", {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },

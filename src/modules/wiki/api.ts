@@ -53,7 +53,7 @@ export interface PageHistoryResponse {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function wikiUrl(nick: string, ...segments: string[]): string {
-  const parts = ["/api/wiki", nick, ...segments].filter(Boolean);
+  const parts = ["/spa/wiki", nick, ...segments].filter(Boolean);
   return parts.join("/");
 }
 

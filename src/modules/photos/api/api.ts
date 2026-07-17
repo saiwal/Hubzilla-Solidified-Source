@@ -21,7 +21,7 @@ export interface Photo {
 
 // fetchPhotoSummary — recent photos
 export async function fetchPhotoSummary(nick: string, start = 0): Promise<Photo[]> {
-  const res = await apiFetch(`/api/photos/${nick}?start=${start}`);
+  const res = await apiFetch(`/spa/photos/${nick}?start=${start}`);
   if (!res.ok) throw await res.json();
   const { data } = await res.json();
   return data as Photo[];
@@ -29,17 +29,17 @@ export async function fetchPhotoSummary(nick: string, start = 0): Promise<Photo[
 
 // fetchAlbums — album list with thumbs
 export async function fetchAlbums(nick: string): Promise<Album[]> {
-  const res = await apiFetch(`/api/photos/${nick}/albums`);
+  const res = await apiFetch(`/spa/photos/${nick}/albums`);
   if (!res.ok) throw await res.json();
   const { data } = await res.json();
   return data as Album[];
 }
 
-// createAlbum — POST /api/photos/:nick/albums
+// createAlbum — POST /spa/photos/:nick/albums
 export async function createAlbum(nick: string, name: string): Promise<Album> {
   const { getCsrfToken } = await import('@/shared/lib/csrf');
   const token = await getCsrfToken().catch(() => '');
-  const res = await fetch(`/api/photos/${nick}/albums`, {
+  const res = await fetch(`/spa/photos/${nick}/albums`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
@@ -60,7 +60,7 @@ export async function fetchPhotoAlbum(
   albumHash: string,
   start = 0,
 ): Promise<{ photos: Photo[]; album_name: string }> {
-  const res = await apiFetch(`/api/photos/${nick}/album/${albumHash}?start=${start}`);
+  const res = await apiFetch(`/spa/photos/${nick}/album/${albumHash}?start=${start}`);
   if (!res.ok) throw await res.json();
   const { data, meta } = await res.json();
   return { photos: data as Photo[], album_name: meta?.album_name ?? '' };
@@ -119,7 +119,7 @@ export interface PhotoDetail {
 
 
 export async function fetchPhotoImage(nick: string, resourceId: string): Promise<PhotoDetail> {
-  const res = await apiFetch(`/api/photos/${nick}/image/${resourceId}`);
+  const res = await apiFetch(`/spa/photos/${nick}/image/${resourceId}`);
   if (!res.ok) throw await res.json();
   const { data } = await res.json();
   return data as PhotoDetail;
@@ -144,7 +144,7 @@ export async function uploadNewPhoto(
   fd.append("file", blob, filename);
   if (album) fd.append("album", album);
   if (folder) fd.append("folder", folder);
-  const res = await fetch(`/api/photos/${nick}/image/upload`, {
+  const res = await fetch(`/spa/photos/${nick}/image/upload`, {
     method: "POST",
     credentials: "include",
     headers: { "X-CSRF-Token": token },
@@ -162,7 +162,7 @@ export async function uploadNewPhoto(
 export async function deletePhoto(nick: string, resourceId: string): Promise<void> {
   const { getCsrfToken } = await import('@/shared/lib/csrf');
   const token = await getCsrfToken().catch(() => '');
-  const res = await fetch(`/api/photos/${nick}/image/${resourceId}`, {
+  const res = await fetch(`/spa/photos/${nick}/image/${resourceId}`, {
     method: 'DELETE',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
@@ -177,7 +177,7 @@ export async function deletePhoto(nick: string, resourceId: string): Promise<voi
 export async function batchDeletePhotos(nick: string, resourceIds: string[]): Promise<void> {
   const { getCsrfToken } = await import('@/shared/lib/csrf');
   const token = await getCsrfToken().catch(() => '');
-  const res = await fetch(`/api/photos/${nick}/images`, {
+  const res = await fetch(`/spa/photos/${nick}/images`, {
     method: 'DELETE',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
@@ -192,7 +192,7 @@ export async function batchDeletePhotos(nick: string, resourceIds: string[]): Pr
 export async function deleteAlbum(nick: string, folderHash: string): Promise<void> {
   const { getCsrfToken } = await import('@/shared/lib/csrf');
   const token = await getCsrfToken().catch(() => '');
-  const res = await fetch(`/api/photos/${nick}/album/${folderHash}`, {
+  const res = await fetch(`/spa/photos/${nick}/album/${folderHash}`, {
     method: 'DELETE',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
@@ -216,7 +216,7 @@ export function uploadPhotoEdit(
     const fd = new FormData();
     fd.append("file", blob, "edited.jpg");
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", `/api/photos/${nick}/image/${resourceId}/edit`);
+    xhr.open("POST", `/spa/photos/${nick}/image/${resourceId}/edit`);
     xhr.withCredentials = true;
     xhr.setRequestHeader("X-CSRF-Token", token);
     if (onProgress) {
@@ -249,7 +249,7 @@ export interface AclData {
 }
 
 export async function fetchAcl(nick: string, type: 'image' | 'album', datum: string): Promise<AclData> {
-  const res = await apiFetch(`/api/photos/${nick}/${type}/${datum}/acl`);
+  const res = await apiFetch(`/spa/photos/${nick}/${type}/${datum}/acl`);
   if (!res.ok) throw await res.json();
   const { data } = await res.json();
   return data as AclData;
@@ -263,7 +263,7 @@ export async function saveAcl(
 ): Promise<void> {
   const { getCsrfToken } = await import('@/shared/lib/csrf');
   const token = await getCsrfToken().catch(() => '');
-  const res = await fetch(`/api/photos/${nick}/${type}/${datum}/acl`, {
+  const res = await fetch(`/spa/photos/${nick}/${type}/${datum}/acl`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
@@ -278,7 +278,7 @@ export async function saveAcl(
 export async function updatePhotoTitle(nick: string, resourceId: string, title: string): Promise<void> {
   const { getCsrfToken } = await import('@/shared/lib/csrf');
   const token = await getCsrfToken().catch(() => '');
-  const res = await fetch(`/api/photos/${nick}/image/${resourceId}/title`, {
+  const res = await fetch(`/spa/photos/${nick}/image/${resourceId}/title`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
@@ -293,7 +293,7 @@ export async function updatePhotoTitle(nick: string, resourceId: string, title: 
 export async function updatePhotoDescription(nick: string, resourceId: string, description: string): Promise<void> {
   const { getCsrfToken } = await import('@/shared/lib/csrf');
   const token = await getCsrfToken().catch(() => '');
-  const res = await fetch(`/api/photos/${nick}/image/${resourceId}/description`, {
+  const res = await fetch(`/spa/photos/${nick}/image/${resourceId}/description`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
@@ -308,7 +308,7 @@ export async function updatePhotoDescription(nick: string, resourceId: string, d
 export async function togglePhotoNsfw(nick: string, resourceId: string, is_nsfw: boolean): Promise<void> {
   const { getCsrfToken } = await import('@/shared/lib/csrf');
   const token = await getCsrfToken().catch(() => '');
-  const res = await fetch(`/api/photos/${nick}/image/${resourceId}/nsfw`, {
+  const res = await fetch(`/spa/photos/${nick}/image/${resourceId}/nsfw`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
@@ -323,7 +323,7 @@ export async function togglePhotoNsfw(nick: string, resourceId: string, is_nsfw:
 export async function renamePhoto(nick: string, resourceId: string, filename: string): Promise<void> {
   const { getCsrfToken } = await import('@/shared/lib/csrf');
   const token = await getCsrfToken().catch(() => '');
-  const res = await fetch(`/api/photos/${nick}/image/${resourceId}/rename`, {
+  const res = await fetch(`/spa/photos/${nick}/image/${resourceId}/rename`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },

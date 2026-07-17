@@ -29,8 +29,8 @@ export interface FileMeta {
 /** List the contents of a folder by its hash ('' = root). */
 export async function listFolder(nick: string, folderHash: string): Promise<FileMeta[]> {
   const url = folderHash
-    ? `/api/files/${nick}/folder/${encodeURIComponent(folderHash)}`
-    : `/api/files/${nick}`;
+    ? `/spa/files/${nick}/folder/${encodeURIComponent(folderHash)}`
+    : `/spa/files/${nick}`;
   const res = await apiFetch(url);
   if (!res.ok) throw new Error(`listFolder ${res.status}`);
   const json = await res.json();
@@ -44,7 +44,7 @@ export async function updatePermissions(
   acl: Partial<FileAcl>,
   recurse = false
 ): Promise<FileMeta> {
-  const res = await apiFetch(`/api/files/${nick}/permissions`, {
+  const res = await apiFetch(`/spa/files/${nick}/permissions`, {
     method: "POST",
     body: JSON.stringify({
       hash,

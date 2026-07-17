@@ -1,4 +1,4 @@
-// modules/directory/api/api.ts
+// modules/directory/people/api.ts
 
 export interface DirectoryEntry {
   hash: string;
@@ -65,7 +65,7 @@ export async function fetchDirectory(
   if (params.suggest !== undefined) q.set("suggest",  String(params.suggest));
   if (params.start)                q.set("start",     String(params.start));
 
-  const res = await fetch(`/api/directory?${q}`, { credentials: "include" });
+  const res = await fetch(`/spa/directory?${q}`, { credentials: "include" });
   if (!res.ok) throw new Error(`Directory fetch failed: ${res.status}`);
   const body = await res.json();
   if (body.error) throw new Error(body.error.message ?? body.error);

@@ -15,13 +15,13 @@ export interface BookmarkMenu {
 }
 
 export async function fetchAllBookmarks(): Promise<BookmarkMenu[]> {
-  const res = await apiFetch("/api/bookmarks");
+  const res = await apiFetch("/spa/bookmarks");
   if (!res.ok) throw new Error("Failed to fetch bookmarks");
   const json = await res.json();
   return (json.data?.menus ?? []) as BookmarkMenu[];
 }
 
 export async function deleteBookmark(mitemId: number): Promise<void> {
-  const res = await apiFetch(`/api/bookmarks/${mitemId}`, { method: "DELETE" });
+  const res = await apiFetch(`/spa/bookmarks/${mitemId}`, { method: "DELETE" });
   if (!res.ok) throw new Error("Failed to delete bookmark");
 }

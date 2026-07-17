@@ -16,7 +16,7 @@ spl_autoload_register(function (string $class) {
 
 use Theme\Solidified\Api\Router;
 
-class Api extends \Zotlabs\Web\Controller {
+class Spa extends \Zotlabs\Web\Controller {
 
     function init() {
         header('Content-Type: application/json');

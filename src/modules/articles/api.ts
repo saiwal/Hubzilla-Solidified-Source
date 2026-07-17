@@ -22,7 +22,7 @@ export async function fetchArticles(
   if (params.tag) q.set("tag", params.tag);
   if (params.cat) q.set("cat", params.cat);
   const qs = q.toString();
-  const res = await fetch(`/api/articles/${nick}${qs ? `?${qs}` : ""}`);
+  const res = await fetch(`/spa/articles/${nick}${qs ? `?${qs}` : ""}`);
   if (!res.ok) throw new Error("Failed to fetch articles");
   const json = await res.json();
   return {
@@ -36,7 +36,7 @@ export async function fetchArticle(
   uuid: string,
 ): Promise<ArticleSingleResponse> {
   const res = await fetch(
-    `/api/articles/${nick}?uuid=${encodeURIComponent(uuid)}`,
+    `/spa/articles/${nick}?uuid=${encodeURIComponent(uuid)}`,
   );
   if (!res.ok) throw new Error("Failed to fetch article");
   const json = await res.json();
@@ -50,7 +50,7 @@ export async function updateArticle(
   uuid: string,
   fields: { body: string; title: string; summary: string },
 ): Promise<void> {
-  const res = await apiFetch(`/api/item/${uuid}/edit`, {
+  const res = await apiFetch(`/spa/item/${uuid}/edit`, {
     method: "POST",
     body: JSON.stringify(fields),
   });
@@ -61,7 +61,7 @@ export async function updateArticle(
 }
  
 export async function deleteArticle(uuid: string): Promise<void> {
-  const res = await apiFetch(`/api/item/${uuid}/delete`, {
+  const res = await apiFetch(`/spa/item/${uuid}/delete`, {
     method: "POST",
     body: JSON.stringify({}),
   });

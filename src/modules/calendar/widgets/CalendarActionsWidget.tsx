@@ -20,7 +20,7 @@ export default function CalendarActionsWidget() {
     const nick = getNick();
     if (!nick) return;
     const a = document.createElement("a");
-    a.href = `/api/cal/${encodeURIComponent(nick)}?export=ical`;
+    a.href = `/spa/cal/${encodeURIComponent(nick)}?export=ical`;
     a.download = `${nick}-calendar.ics`;
     a.click();
   }

@@ -11,7 +11,7 @@ interface FolderInfo {
 }
 
 async function fetchFolderCounts(): Promise<FolderInfo[]> {
-  const res = await fetch("/api/folders?counts=1");
+  const res = await fetch("/spa/folders?counts=1");
   if (!res.ok) return [];
   const { data } = await res.json();
   return Array.isArray(data) ? data : [];

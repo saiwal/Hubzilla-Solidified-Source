@@ -185,7 +185,7 @@ export async function fetchNavApi(channelNick?: string): Promise<NavApiResponse>
   const params = new URLSearchParams();
   if (channelNick) params.set("channel_nick", channelNick);
 
-  const url = channelNick ? `/api/nav?${params}` : "/api/nav";
+  const url = channelNick ? `/spa/nav?${params}` : "/spa/nav";
   const res = await fetch(url);
   if (!res.ok) throw new Error(`navapi HTTP ${res.status}`);
 

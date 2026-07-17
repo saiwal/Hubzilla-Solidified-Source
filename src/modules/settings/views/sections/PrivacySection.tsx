@@ -26,13 +26,13 @@ interface PrivacyData {
 }
 
 async function fetchPrivacy(): Promise<PrivacyData> {
-  const res = await apiFetch("/api/settings/privacy");
+  const res = await apiFetch("/spa/settings/privacy");
   const { data } = await res.json();
   return data;
 }
 
 async function savePrivacy(payload: Partial<PrivacyData>): Promise<void> {
-  const res = await apiFetch("/api/settings/privacy", {
+  const res = await apiFetch("/spa/settings/privacy", {
     method: "POST",
     body: JSON.stringify(payload),
   });

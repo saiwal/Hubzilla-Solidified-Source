@@ -1,6 +1,6 @@
 // src/shared/stream/components/PopularPostsWidget.tsx
 //
-// API: GET /api/stream-widgets/popular?channel_nick=<nick>&type=<articles|posts>&limit=5
+// API: GET /spa/stream-widgets/popular?channel_nick=<nick>&type=<articles|posts>&limit=5
 // Response:
 // {
 //   data: {
@@ -52,7 +52,7 @@ async function fetchPopular(params: {
   type?: "articles" | "posts";
   limit: number;
 }): Promise<PopularPost[]> {
-  const url = new URL("/api/stream-widgets/popular", window.location.origin);
+  const url = new URL("/spa/stream-widgets/popular", window.location.origin);
   if (params.channelNick) url.searchParams.set("channel_nick", params.channelNick);
   if (params.type) url.searchParams.set("type", params.type);
   url.searchParams.set("limit", String(params.limit));

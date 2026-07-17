@@ -12,7 +12,7 @@ import { createAttachmentStore } from "../attachments/useAttachments";
 import { bbcodeToInsert, patchInsertedAlt } from "../attachments/insertHelpers";
 
 interface Props {
-  /** Parent item uuid — full-URL mids break the /api/item/:id path (slashes). */
+  /** Parent item uuid — full-URL mids break the /spa/item/:id path (slashes). */
   parentUuid?: string;
   profileUid: number;
   initialBody?: string;
@@ -38,7 +38,7 @@ export default function CommentComposer(props: Props) {
       const augmentedBody = fileTags ? `${body}\n${fileTags}` : body;
 
       const res = await apiFetch(
-        `/api/item/${encodeURIComponent(props.parentUuid)}/comment`,
+        `/spa/item/${encodeURIComponent(props.parentUuid)}/comment`,
         {
           method: "POST",
           body: JSON.stringify({ body: augmentedBody, mimetype: "text/bbcode" }),

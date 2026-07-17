@@ -1,5 +1,5 @@
 // Compact vCard-style summary of the current page's channel, reusing the
-// existing GET /api/profile/:nick endpoint (same data ChannelView's profile
+// existing GET /spa/profile/:nick endpoint (same data ChannelView's profile
 // header uses) — no widget-specific backend needed.
 
 import { Show, For } from "solid-js";
@@ -22,7 +22,7 @@ interface ProfileData {
 
 async function fetchProfile(nick: string): Promise<ProfileData | null> {
   if (!nick) return null;
-  const res = await apiFetch(`/api/profile/${nick}`);
+  const res = await apiFetch(`/spa/profile/${nick}`);
   if (!res.ok) return null;
   const json = await res.json();
   return json.data as ProfileData;

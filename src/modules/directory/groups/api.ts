@@ -1,7 +1,7 @@
 // modules/directory/groups/api.ts
 import { apiFetch } from "@/shared/lib/fetch";
 
-const BASE = "/api/privacy-groups";
+const BASE = "/spa/privacy-groups";
 
 export interface PrivacyGroup {
   id: number;

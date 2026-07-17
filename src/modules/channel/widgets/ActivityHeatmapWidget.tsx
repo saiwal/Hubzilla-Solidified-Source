@@ -1,5 +1,5 @@
 // GitHub-style posting-activity graph for the current page's channel.
-// Backed by GET /api/profile/:nick/activity (per-day wall-post counts,
+// Backed by GET /spa/profile/:nick/activity (per-day wall-post counts,
 // already filtered through item_permissions_sql server-side).
 
 import { For, Show, createMemo, createEffect } from "solid-js";
@@ -16,7 +16,7 @@ interface ActivityData {
 
 async function fetchActivity(nick: string): Promise<ActivityData | null> {
   if (!nick) return null;
-  const res = await apiFetch(`/api/profile/${nick}/activity`);
+  const res = await apiFetch(`/spa/profile/${nick}/activity`);
   if (!res.ok) return null;
   const json = await res.json();
   return json.data as ActivityData;

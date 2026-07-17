@@ -1,6 +1,6 @@
 // src/shared/stream/components/ArchiveWidget.tsx
 //
-// API: GET /api/stream-widgets/archive?channel_nick=<nick>&type=<posts|articles>
+// API: GET /spa/stream-widgets/archive?channel_nick=<nick>&type=<posts|articles>
 // Response: { data: { archive: { year: number; count: number; months: { month: number; count: number }[] }[] } }
 
 import {
@@ -37,7 +37,7 @@ export async function fetchArchive(params: {
   channelNick?: string;
   type?: "articles" | "posts";
 }): Promise<ArchiveYear[]> {
-  const url = new URL("/api/stream-widgets/archive", window.location.origin);
+  const url = new URL("/spa/stream-widgets/archive", window.location.origin);
   if (params.channelNick) url.searchParams.set("channel_nick", params.channelNick);
   if (params.type) url.searchParams.set("type", params.type);
   const res = await fetch(url.toString());

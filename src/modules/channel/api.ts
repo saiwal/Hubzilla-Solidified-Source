@@ -1,4 +1,4 @@
-// src/modules/channel/api/api.ts
+// src/modules/channel/api.ts
 import { apiFetch } from "@/shared/lib/fetch";
 import { mapActivityToPost } from "@/shared/lib/activity.mapper";
 // import type { Post } from "@/shared/types/post.types";
@@ -27,7 +27,7 @@ export async function fetchChannelPosts(
     if (v !== undefined && v !== "") qs.set(k, String(v));
   });
 
-  const path = nickname ? `/api/channel/${nickname}` : "/api/channel";
+  const path = nickname ? `/spa/channel/${nickname}` : "/spa/channel";
   const res = await apiFetch(`${path}?${qs.toString()}`);
   if (!res.ok) throw await res.json();
 

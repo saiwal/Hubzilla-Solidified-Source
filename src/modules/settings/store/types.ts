@@ -41,6 +41,15 @@ export interface AccountSettings {
   $email: string;
 }
 
+// ── Locations ────────────────────────────────────────────────────────────────
+export interface LocationEntry {
+  id: number;
+  addr: string;
+  url: string;
+  primary: boolean;
+  isLocal: boolean;
+}
+
 // ── Notifications ─────────────────────────────────────────────────────────────
 export interface NotificationSettings {
   evdays: number;

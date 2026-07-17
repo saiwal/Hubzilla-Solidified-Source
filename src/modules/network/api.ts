@@ -152,7 +152,7 @@ export async function fetchConnections(params: AclSearchParams = {}): Promise<Ac
 }
 
 export async function fetchFolders(): Promise<string[]> {
-  const res = await fetch('/api/folders');
+  const res = await fetch('/spa/folders');
   if (!res.ok) return [];
   const { data } = await res.json();
   return Array.isArray(data) ? data : [];
@@ -178,7 +178,7 @@ export async function fetchNetworkStream(params: NetworkParams = {}): Promise<Ne
     if (v !== undefined && v !== '') qs.set(k, String(v));
   });
 
-  const res = await fetch(`/api/network?${qs.toString()}`);
+  const res = await fetch(`/spa/network?${qs.toString()}`);
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`${res.status} ${res.statusText}: ${text.slice(0, 200)}`);

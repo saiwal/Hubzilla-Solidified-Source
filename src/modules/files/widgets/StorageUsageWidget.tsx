@@ -1,5 +1,5 @@
 // Cloud storage quota bar for the current page's channel, backed by
-// GET /api/files/:nick/quota (view_storage-gated server-side, same as the
+// GET /spa/files/:nick/quota (view_storage-gated server-side, same as the
 // Files app itself — a 403 here just means the widget renders nothing).
 
 import { Show } from "solid-js";
@@ -15,7 +15,7 @@ interface Quota {
 
 async function fetchQuota(nick: string): Promise<Quota | null> {
   if (!nick) return null;
-  const res = await apiFetch(`/api/files/${nick}/quota`);
+  const res = await apiFetch(`/spa/files/${nick}/quota`);
   if (!res.ok) return null;
   const json = await res.json();
   return json.data as Quota;

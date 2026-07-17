@@ -67,7 +67,7 @@ export function hydrateShareEmbeds(root: HTMLElement): void {
     try {
       let block = shareBlockCache.get(id);
       if (!block) {
-        const res = await apiFetch(`/api/item/${id}/sharepreview`);
+        const res = await apiFetch(`/spa/item/${id}/sharepreview`);
         const json = (await res.json()) as { success?: boolean; bbcode?: string };
         if (!json?.success || !json.bbcode) return;
         block = json.bbcode;

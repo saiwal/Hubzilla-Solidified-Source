@@ -45,7 +45,7 @@ export async function fetchEvents(
     q.set("end", range.end);
   }
   const qs = q.toString();
-  const res = await fetch(`/api/cal/${nick}${qs ? `?${qs}` : ""}`, {
+  const res = await fetch(`/spa/cal/${nick}${qs ? `?${qs}` : ""}`, {
     credentials: "same-origin",
   });
   if (!res.ok) throw new Error(`Calendar fetch failed: ${res.status}`);
@@ -70,7 +70,7 @@ export async function createEvent(
   input: CreateEventInput,
 ): Promise<{ id: number; uri: string }> {
   const token = await getCsrfToken();
-  const res = await fetch("/api/cal", {
+  const res = await fetch("/spa/cal", {
     method: "POST",
     credentials: "include",
     headers: {
@@ -105,7 +105,7 @@ export async function editEvent(
   input: EditEventInput,
 ): Promise<void> {
   const token = await getCsrfToken();
-  const res = await fetch(`/api/cal/${eventId}/edit`, {
+  const res = await fetch(`/spa/cal/${eventId}/edit`, {
     method: "POST",
     credentials: "include",
     headers: {
@@ -125,7 +125,7 @@ export async function deleteEvent(
   opts?: { calendarId?: number; uri?: string },
 ): Promise<void> {
   const token = await getCsrfToken();
-  const res = await fetch(`/api/cal/${eventId}/delete`, {
+  const res = await fetch(`/spa/cal/${eventId}/delete`, {
     method: "POST",
     credentials: "include",
     headers: {
@@ -147,7 +147,7 @@ export interface ImportResult {
 
 export async function importCalendar(icalContent: string): Promise<ImportResult> {
   const token = await getCsrfToken();
-  const res = await fetch("/api/cal/import", {
+  const res = await fetch("/spa/cal/import", {
     method: "POST",
     credentials: "include",
     headers: {
@@ -172,7 +172,7 @@ export async function fetchEvent(
   nick: string,
   eventId: number,
 ): Promise<CalEvent | null> {
-  const res = await fetch(`/api/cal/${nick}?id=${eventId}`, {
+  const res = await fetch(`/spa/cal/${nick}?id=${eventId}`, {
     credentials: "same-origin",
   });
   if (!res.ok) return null;

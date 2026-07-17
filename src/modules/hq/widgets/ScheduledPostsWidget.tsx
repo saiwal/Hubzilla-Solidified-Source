@@ -42,7 +42,7 @@ export default function ScheduledPostsWidget() {
 
   async function load() {
     try {
-      const res = await apiFetch("/api/scheduled");
+      const res = await apiFetch("/spa/scheduled");
       if (!res.ok) return;
       const json = (await res.json()) as { data?: ScheduledPost[] };
       setPosts(json.data ?? []);
@@ -56,7 +56,7 @@ export default function ScheduledPostsWidget() {
   async function act(uuid: string, action: "publish" | "delete") {
     setBusy(uuid);
     try {
-      const res = await apiFetch(`/api/scheduled/${action}`, {
+      const res = await apiFetch(`/spa/scheduled/${action}`, {
         method: "POST",
         body: JSON.stringify({ uuid }),
       });

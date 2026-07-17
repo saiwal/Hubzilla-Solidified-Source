@@ -167,7 +167,7 @@ function HqComposer() {
 
     try {
       const csrf = await getCsrfToken();
-      const res = await fetch("/api/item", {
+      const res = await fetch("/spa/item", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf },

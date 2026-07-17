@@ -15,7 +15,7 @@ export { savedSearches };
 export async function loadSavedSearches(): Promise<void> {
   if (_loaded()) return;
   try {
-    const res = await apiFetch("/api/saved-searches");
+    const res = await apiFetch("/spa/saved-searches");
     if (res.ok) {
       const { data } = await res.json();
       _set(Array.isArray(data) ? data : []);
@@ -25,7 +25,7 @@ export async function loadSavedSearches(): Promise<void> {
 }
 
 export async function addSavedSearch(label: string, params: Record<string, string>): Promise<void> {
-  const res = await apiFetch("/api/saved-searches", {
+  const res = await apiFetch("/spa/saved-searches", {
     method: "POST",
     body: JSON.stringify({ label, params }),
   });
@@ -37,5 +37,5 @@ export async function addSavedSearch(label: string, params: Record<string, strin
 
 export async function removeSavedSearch(id: number): Promise<void> {
   _set(savedSearches().filter((s) => s.id !== id));
-  await apiFetch(`/api/saved-searches/${id}`, { method: "DELETE" });
+  await apiFetch(`/spa/saved-searches/${id}`, { method: "DELETE" });
 }

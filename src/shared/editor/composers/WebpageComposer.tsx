@@ -104,7 +104,7 @@ export default function WebpageComposer(props: Props) {
   const store = createComposerStore(async (body, meta) => {
     if (isEditing()) {
       const csrf = await getCsrfToken();
-      const res = await fetch("/api/webpages", {
+      const res = await fetch("/spa/webpages", {
         method:      "POST",
         headers:     { "X-CSRF-Token": csrf, "Content-Type": "application/json" },
         credentials: "include",
@@ -125,7 +125,7 @@ export default function WebpageComposer(props: Props) {
       }
     } else {
       const csrf = await getCsrfToken();
-      const res = await fetch("/api/webpages", {
+      const res = await fetch("/spa/webpages", {
         method: "POST",
         headers: { "X-CSRF-Token": csrf, "Content-Type": "application/json" },
         credentials: "include",

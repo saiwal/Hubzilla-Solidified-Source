@@ -3,7 +3,7 @@
  * Modal direct-message composer — a slimmed-down PostComposer that swaps
  * the ACL picker for an always-visible "To:" recipient field (RecipientField).
  *
- * DMs are implicit on the backend: POST /api/item with scope:"custom",
+ * DMs are implicit on the backend: POST /spa/item with scope:"custom",
  * contact_allow:[...], and no group_allow is auto-classified item_private=2
  * by Item.php — this already supports multiple recipients, so no backend
  * changes were needed. Groups are intentionally not selectable here, since
@@ -119,7 +119,7 @@ const DMComposer: Component<DMComposerProps> = (props) => {
       group_deny: [] as string[],
     };
 
-    const res = await fetch("/api/item", {
+    const res = await fetch("/spa/item", {
       method: "POST",
       credentials: "include",
       headers: {

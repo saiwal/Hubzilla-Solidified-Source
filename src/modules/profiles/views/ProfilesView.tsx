@@ -46,7 +46,7 @@ export default function ProfilesView() {
   async function toggleMultiProfiles(currentlyEnabled: boolean) {
     setTogglingFeature(true);
     try {
-      const res = await apiFetch("/api/settings/features", {
+      const res = await apiFetch("/spa/settings/features", {
         method: "POST",
         body: JSON.stringify({ feature: "multi_profiles", enabled: currentlyEnabled ? 0 : 1 }),
       });

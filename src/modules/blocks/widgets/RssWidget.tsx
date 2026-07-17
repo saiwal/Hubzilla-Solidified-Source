@@ -1,5 +1,5 @@
 // RSS/Atom feed widget (config: { url, count }). Feeds are fetched and parsed
-// server-side via GET /api/rss-feed — browsers can't fetch cross-origin feeds.
+// server-side via GET /spa/rss-feed — browsers can't fetch cross-origin feeds.
 
 import { For, Show } from "solid-js";
 import { createQueryResource } from "@/shared/lib/createQueryResource";
@@ -20,7 +20,7 @@ interface Feed {
 }
 
 async function fetchFeed(params: { url: string; count: number }): Promise<Feed> {
-  const u = new URL("/api/rss-feed", window.location.origin);
+  const u = new URL("/spa/rss-feed", window.location.origin);
   u.searchParams.set("url", params.url);
   u.searchParams.set("limit", String(params.count));
   const res = await fetch(u.toString());

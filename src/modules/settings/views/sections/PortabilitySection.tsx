@@ -29,7 +29,7 @@ export default function PortabilitySection() {
   const query = useQuery(() => ({
     queryKey: ["settings", "portability"] as const,
     queryFn: async (): Promise<PortabilityMeta> => {
-      const res = await apiFetch("/api/portability");
+      const res = await apiFetch("/spa/portability");
       const { data } = await res.json();
       return data;
     },
@@ -60,7 +60,7 @@ export default function PortabilitySection() {
     }
     const params = new URLSearchParams({ sections: Array.from(selected()).join(",") });
     const a = document.createElement("a");
-    a.href = `/api/portability/export?${params.toString()}`;
+    a.href = `/spa/portability/export?${params.toString()}`;
     a.click();
   }
 

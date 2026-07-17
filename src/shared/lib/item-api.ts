@@ -1,7 +1,7 @@
 // src/shared/lib/item-api.ts
 import { apiFetch } from './fetch';
 
-const BASE = '/api/item';
+const BASE = '/spa/item';
 
 function encodeId(uuid: string): string {
   return encodeURIComponent(uuid);

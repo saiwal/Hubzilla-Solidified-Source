@@ -119,7 +119,7 @@ export function useTheme() {
       applyTheme(id);
     }
     localStorage.setItem(STORAGE_KEY, id);
-    apiFetch("/api/settings/display", {
+    apiFetch("/spa/settings/display", {
       method: "POST",
       body: JSON.stringify({ color_scheme: id }),
     }).catch(() => {});
@@ -132,7 +132,7 @@ export function useTheme() {
     if (theme() === "custom") {
       applyCustomThemeColors(colors);
     }
-    apiFetch("/api/settings/display", {
+    apiFetch("/spa/settings/display", {
       method: "POST",
       body: JSON.stringify({ color_scheme: "custom", custom_theme_colors: json }),
     }).catch(() => {});

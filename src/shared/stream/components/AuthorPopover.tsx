@@ -106,7 +106,7 @@ export default function AuthorPopover(props: Props) {
     setProfileFetch("loading");
     if (needsConnState) setConnState({ tag: "loading" });
 
-    fetch(`/api/xchan?hash=${encodeURIComponent(props.url)}`, { credentials: "include" })
+    fetch(`/spa/xchan?hash=${encodeURIComponent(props.url)}`, { credentials: "include" })
       .then(r => (r.ok ? r.json() : null))
       .then((body: { data?: { is_connected?: boolean; xchan_hash?: string; pdesc?: string } } | null) => {
         setProfileFetch("done");

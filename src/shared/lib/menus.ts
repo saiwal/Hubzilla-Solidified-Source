@@ -1,4 +1,4 @@
-// Client for /api/menus — Hubzilla menus (menu / menu_item tables, the same
+// Client for /spa/menus — Hubzilla menus (menu / menu_item tables, the same
 // data the stock Menus app and Comanche webpage menus use). Consumed by the
 // blocks menu widgets and the webpages menu manager.
 //
@@ -68,19 +68,19 @@ async function post<T>(endpoint: string, body: unknown): Promise<T> {
 
 /** Page owner's menu, resolved into a nested tree for the current observer. */
 export async function fetchMenuTree(nick: string, name: string): Promise<MenuTree> {
-  const res = await apiFetch(`/api/menus/${nick}/${encodeURIComponent(name)}`);
+  const res = await apiFetch(`/spa/menus/${nick}/${encodeURIComponent(name)}`);
   return jsonData<MenuTree>(res, "Failed to fetch menu");
 }
 
 /** Own menus (owner only) — for the widget config panel and the CRUD view. */
 export async function fetchMyMenus(): Promise<MenuSummary[]> {
-  const res = await apiFetch("/api/menus");
+  const res = await apiFetch("/spa/menus");
   return (await jsonData<{ menus: MenuSummary[] }>(res, "Failed to fetch menus")).menus;
 }
 
 /** One own menu with raw flat items (owner only) — for the CRUD editor. */
 export async function fetchRawMenu(id: number): Promise<RawMenu> {
-  const res = await apiFetch(`/api/menus/${id}`);
+  const res = await apiFetch(`/spa/menus/${id}`);
   return jsonData<RawMenu>(res, "Failed to fetch menu");
 }
 
@@ -94,18 +94,18 @@ function invalidateMenus(): void {
 }
 
 export async function createMenu(name: string, desc: string): Promise<number> {
-  const r = await post<{ id: number }>("/api/menus/create", { name, desc });
+  const r = await post<{ id: number }>("/spa/menus/create", { name, desc });
   invalidateMenus();
   return r.id;
 }
 
 export async function editMenu(id: number, name: string, desc: string): Promise<void> {
-  await post(`/api/menus/${id}/edit`, { name, desc });
+  await post(`/spa/menus/${id}/edit`, { name, desc });
   invalidateMenus();
 }
 
 export async function deleteMenu(id: number): Promise<void> {
-  await post(`/api/menus/${id}/delete`, {});
+  await post(`/spa/menus/${id}/delete`, {});
   invalidateMenus();
 }
 
@@ -124,16 +124,16 @@ export interface MenuItemInput {
 }
 
 export async function createMenuItem(menuId: number, item: MenuItemInput): Promise<void> {
-  await post(`/api/menus/${menuId}/items/create`, item);
+  await post(`/spa/menus/${menuId}/items/create`, item);
   invalidateMenus();
 }
 
 export async function editMenuItem(menuId: number, itemId: number, item: MenuItemInput): Promise<void> {
-  await post(`/api/menus/${menuId}/items/${itemId}/edit`, item);
+  await post(`/spa/menus/${menuId}/items/${itemId}/edit`, item);
   invalidateMenus();
 }
 
 export async function deleteMenuItem(menuId: number, itemId: number): Promise<void> {
-  await post(`/api/menus/${menuId}/items/${itemId}/delete`, {});
+  await post(`/spa/menus/${menuId}/items/${itemId}/delete`, {});
   invalidateMenus();
 }

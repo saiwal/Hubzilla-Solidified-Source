@@ -106,7 +106,7 @@ export interface PaymentSettings {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 async function cartGet<T>(path: string): Promise<T> {
-  const res = await apiFetch(`/api/cart/${path}`);
+  const res = await apiFetch(`/spa/cart/${path}`);
   if (!res.ok) {
     const err = await res.json().catch(() => ({})) as { error?: { message?: string } };
     throw new Error(err?.error?.message ?? `Cart error ${res.status}`);
@@ -115,7 +115,7 @@ async function cartGet<T>(path: string): Promise<T> {
 }
 
 async function cartPost<T>(path: string, body: Record<string, unknown> = {}): Promise<T> {
-  const res = await apiFetch(`/api/cart/${path}`, {
+  const res = await apiFetch(`/spa/cart/${path}`, {
     method: 'POST',
     body: JSON.stringify(body),
   });

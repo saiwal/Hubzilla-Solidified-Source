@@ -42,7 +42,7 @@ export interface CdavCalendarsData {
 }
 
 export async function fetchCdavCalendars(): Promise<CdavCalendarsData> {
-  const res = await fetch("/api/cal/calendars", { credentials: "include" });
+  const res = await fetch("/spa/cal/calendars", { credentials: "include" });
   if (!res.ok) throw new Error(`Failed to load calendars: ${res.status}`);
   const json = await res.json();
   return json.data as CdavCalendarsData;
@@ -64,26 +64,26 @@ async function cdavPost(path: string, body: object): Promise<unknown> {
 }
 
 export async function createCdavCalendar(name: string, color: string) {
-  return cdavPost("/api/cal/calendar/create", { name, color });
+  return cdavPost("/spa/cal/calendar/create", { name, color });
 }
 
 export async function toggleCdavCalendar(id: number | "channel_calendar", enabled: boolean) {
   const numericId = id === "channel_calendar" ? 0 : id;
-  return cdavPost(`/api/cal/calendar/${numericId}/toggle`, { enabled });
+  return cdavPost(`/spa/cal/calendar/${numericId}/toggle`, { enabled });
 }
 
 export async function editCdavCalendar(id: number, instanceId: number, name: string, color: string) {
-  return cdavPost(`/api/cal/calendar/${id}/edit`, { instanceId, name, color });
+  return cdavPost(`/spa/cal/calendar/${id}/edit`, { instanceId, name, color });
 }
 
 export async function deleteCdavCalendar(id: number, instanceId: number) {
-  return cdavPost(`/api/cal/calendar/${id}/delete`, { instanceId });
+  return cdavPost(`/spa/cal/calendar/${id}/delete`, { instanceId });
 }
 
 export async function shareCdavCalendar(id: number, instanceId: number, shareeHash: string, access: 2 | 3) {
-  return cdavPost(`/api/cal/calendar/${id}/share`, { instanceId, shareeHash, access });
+  return cdavPost(`/spa/cal/calendar/${id}/share`, { instanceId, shareeHash, access });
 }
 
 export async function unshareCdavCalendar(id: number, instanceId: number, shareeHash: string) {
-  return cdavPost(`/api/cal/calendar/${id}/unshare`, { instanceId, shareeHash });
+  return cdavPost(`/spa/cal/calendar/${id}/unshare`, { instanceId, shareeHash });
 }

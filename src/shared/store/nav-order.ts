@@ -54,7 +54,7 @@ export function initNavOrder(raw: string | undefined): void {
 function persist(order: string[]): void {
   setNavOrderSignal(order);
   writeCache(order);
-  apiFetch("/api/settings/integrations", {
+  apiFetch("/spa/settings/integrations", {
     method: "POST",
     body: JSON.stringify({ action: "reorder", order }),
   }).catch(() => {});

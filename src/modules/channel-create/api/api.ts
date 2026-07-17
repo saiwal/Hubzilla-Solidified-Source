@@ -58,24 +58,24 @@ async function unwrap<T>(res: Response): Promise<T> {
 }
 
 export async function fetchNewChannelMeta(): Promise<NewChannelMeta> {
-  return unwrap(await apiFetch("/api/new-channel"));
+  return unwrap(await apiFetch("/spa/new-channel"));
 }
 
 export async function fetchNameSuggestion(name: string): Promise<string> {
   const { suggestion } = await unwrap<{ suggestion: string }>(
-    await apiFetch(`/api/new-channel/autofill?name=${encodeURIComponent(name)}`)
+    await apiFetch(`/spa/new-channel/autofill?name=${encodeURIComponent(name)}`)
   );
   return suggestion;
 }
 
 export async function checkNickname(nickname: string, name: string): Promise<CheckAddrResult> {
   const params = new URLSearchParams({ nickname, name });
-  return unwrap(await apiFetch(`/api/new-channel/checkaddr?${params.toString()}`));
+  return unwrap(await apiFetch(`/spa/new-channel/checkaddr?${params.toString()}`));
 }
 
 export async function createChannel(payload: CreateChannelPayload): Promise<CreateChannelResult> {
   return unwrap(
-    await apiFetch("/api/new-channel", {
+    await apiFetch("/spa/new-channel", {
       method: "POST",
       body: JSON.stringify(payload),
     })

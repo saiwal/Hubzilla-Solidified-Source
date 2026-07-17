@@ -40,14 +40,14 @@ export interface SetDefaultResult {
 import { apiFetch } from '@/shared/lib/fetch';
 
 export async function fetchManageApi(): Promise<ManageApiResponse> {
-  const res = await apiFetch('/api/manage');
+  const res = await apiFetch('/spa/manage');
   if (!res.ok) throw await res.json();
   const { data } = await res.json();
   return data as ManageApiResponse;
 }
 
 export async function switchChannel(channelId: number): Promise<SwitchResult> {
-  const res = await apiFetch('/api/manage', {
+  const res = await apiFetch('/spa/manage', {
     method: 'POST',
     body: JSON.stringify({ switch_to: channelId }),
   });
@@ -57,7 +57,7 @@ export async function switchChannel(channelId: number): Promise<SwitchResult> {
 }
 
 export async function setDefaultChannel(channelId: number): Promise<SetDefaultResult> {
-  const res = await apiFetch('/api/manage', {
+  const res = await apiFetch('/spa/manage', {
     method: 'POST',
     body: JSON.stringify({ set_default: channelId }),
   });

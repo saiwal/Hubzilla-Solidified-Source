@@ -30,14 +30,14 @@ export interface TopicResponse {
 // ── fetchers ──────────────────────────────────────────────────────────────────
 
 export async function fetchNav(section: string, lang: string): Promise<NavResponse> {
-  const res  = await apiFetch(`/api/help/nav?section=${section}&lang=${encodeURIComponent(lang)}`);
+  const res  = await apiFetch(`/spa/help/nav?section=${section}&lang=${encodeURIComponent(lang)}`);
   const json = await res.json();
   return (json.data ?? json) as NavResponse;
 }
 
 export async function fetchTopic(section: string, lang: string, topic: string): Promise<TopicResponse> {
   const res  = await apiFetch(
-    `/api/help/topic?section=${section}&lang=${encodeURIComponent(lang)}&topic=${encodeURIComponent(topic)}`
+    `/spa/help/topic?section=${section}&lang=${encodeURIComponent(lang)}&topic=${encodeURIComponent(topic)}`
   );
   const json = await res.json();
   return (json.data ?? json) as TopicResponse;

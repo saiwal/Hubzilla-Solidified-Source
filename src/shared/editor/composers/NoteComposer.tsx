@@ -28,7 +28,7 @@ export default function NoteComposer(props: Props) {
   const store = createComposerStore(async (body, meta) => {
     if (isEditing()) {
       // Edit via existing item-edit endpoint
-      const res = await apiFetch(`/api/item/${props.initial!.mid}/edit`, {
+      const res = await apiFetch(`/spa/item/${props.initial!.mid}/edit`, {
         method: "POST",
         body: JSON.stringify({
           body,
@@ -42,7 +42,7 @@ export default function NoteComposer(props: Props) {
         throw new Error(err?.error ?? "Save failed");
       }
     } else {
-      const res = await apiFetch("/api/notes", {
+      const res = await apiFetch("/spa/notes", {
         method: "POST",
         body: JSON.stringify({
           body,

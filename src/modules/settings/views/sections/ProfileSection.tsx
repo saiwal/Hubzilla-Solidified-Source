@@ -19,13 +19,13 @@ interface ProfileData {
 }
 
 async function fetchProfile(): Promise<ProfileData> {
-  const res = await apiFetch("/api/settings/profile");
+  const res = await apiFetch("/spa/settings/profile");
   const { data } = await res.json();
   return data;
 }
 
 async function saveProfile(payload: Partial<ProfileData>): Promise<void> {
-  const res = await apiFetch("/api/settings/profile", {
+  const res = await apiFetch("/spa/settings/profile", {
     method: "POST",
     body: JSON.stringify(payload),
   });

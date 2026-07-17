@@ -1,6 +1,6 @@
 // src/shared/stream/components/CategoryWidget.tsx
 //
-// API: GET /api/stream-widgets/categories?channel_nick=<nick>&type=<articles|posts>
+// API: GET /spa/stream-widgets/categories?channel_nick=<nick>&type=<articles|posts>
 // Response: { data: { categories: { name: string; slug: string; count: number }[] } }
 
 import { type Component, createEffect, on, For, Show } from "solid-js";
@@ -26,7 +26,7 @@ export async function fetchCategories(params: {
   channelNick?: string;
   type?: "articles" | "posts";
 }): Promise<CategoryItem[]> {
-  const url = new URL("/api/stream-widgets/categories", window.location.origin);
+  const url = new URL("/spa/stream-widgets/categories", window.location.origin);
   if (params.channelNick) url.searchParams.set("channel_nick", params.channelNick);
   if (params.type) url.searchParams.set("type", params.type);
   const res = await fetch(url.toString());

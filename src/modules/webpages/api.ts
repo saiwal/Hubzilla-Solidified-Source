@@ -32,7 +32,7 @@ export type WebPageDetail = {
 };
 
 export async function fetchWebpages(nick: string): Promise<WebPage[]> {
-  const res = await apiFetch(`/api/webpages/${nick}`);
+  const res = await apiFetch(`/spa/webpages/${nick}`);
   if (!res.ok) {
     const err = await res.json().catch(() => null);
     throw new Error(err?.error?.message ?? 'Failed to fetch webpages');
@@ -47,7 +47,7 @@ export async function fetchWebPageByPagelink(
   pagelink: string,
 ): Promise<WebPageDetail> {
   const res = await apiFetch(
-    `/api/webpages/${nick}?pagelink=${encodeURIComponent(pagelink)}`,
+    `/spa/webpages/${nick}?pagelink=${encodeURIComponent(pagelink)}`,
   );
   if (!res.ok) {
     const err = await res.json().catch(() => null);
@@ -63,7 +63,7 @@ export async function fetchWebPageByMid(
   mid: string,
 ): Promise<WebPageDetail> {
   const res = await apiFetch(
-    `/api/webpages/${nick}?mid=${encodeURIComponent(mid)}`,
+    `/spa/webpages/${nick}?mid=${encodeURIComponent(mid)}`,
   );
   if (!res.ok) {
     const err = await res.json().catch(() => null);
@@ -74,7 +74,7 @@ export async function fetchWebPageByMid(
 }
 
 export async function deleteWebPage(iid: number): Promise<void> {
-  const res = await apiFetch('/api/webpages', {
+  const res = await apiFetch('/spa/webpages', {
     method: 'POST',
     body: JSON.stringify({ action: 'delete', iid }),
   });
@@ -90,7 +90,7 @@ export async function fetchWebPageByIid(
   iid: number,
 ): Promise<WebPageDetail> {
   const res = await apiFetch(
-    `/api/webpages/${nick}?iid=${iid}`,
+    `/spa/webpages/${nick}?iid=${iid}`,
   );
   if (!res.ok) {
     const err = await res.json().catch(() => null);

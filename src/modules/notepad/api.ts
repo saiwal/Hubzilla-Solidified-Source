@@ -21,7 +21,7 @@ export type NotesResponse = {
 };
 
 export async function fetchNotes(start = 0, limit = 20): Promise<NotesResponse> {
-  const res = await apiFetch(`/api/notes?start=${start}&limit=${limit}`);
+  const res = await apiFetch(`/spa/notes?start=${start}&limit=${limit}`);
   if (!res.ok) {
     const err = await res.json().catch(() => null);
     throw new Error(err?.error?.message ?? "Failed to fetch notes");
@@ -30,7 +30,7 @@ export async function fetchNotes(start = 0, limit = 20): Promise<NotesResponse> 
 }
 
 export async function deleteNote(uuid: string): Promise<void> {
-  const res = await apiFetch(`/api/item/${uuid}/delete`, {
+  const res = await apiFetch(`/spa/item/${uuid}/delete`, {
     method: "POST",
     body: JSON.stringify({}),
   });

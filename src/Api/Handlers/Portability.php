@@ -45,6 +45,9 @@ class Portability
             case 'import':
                 $this->importChannel();
                 break;
+            case 'migrate':
+                $this->migrateChannel();
+                break;
             default:
                 Response::error(404, 'Unknown endpoint');
         }
@@ -137,7 +140,7 @@ class Portability
         $newname = trim((string) ($_POST['newname'] ?? ''));
 
         if ($makePrimary) {
-            $this->requireAccountPasswordForSeize($account);
+            $this->requireAccountPasswordForSeize($account, (string) ($_POST['password'] ?? ''));
         }
 
         $json = @file_get_contents($_FILES['file']['tmp_name']);
@@ -159,7 +162,7 @@ class Portability
     // quasi-destructive re-import/restore — require the account password as
     // confirmation, mirroring Settings::postDangerSettings()'s remove_channel
     // check (including the 48-hour post-password-change cooldown).
-    private function requireAccountPasswordForSeize(array $account): void
+    private function requireAccountPasswordForSeize(array $account, string $password): void
     {
         $existing = q(
             "SELECT channel_id FROM channel WHERE channel_account_id = %d AND channel_removed = 0 LIMIT 1",
@@ -169,7 +172,6 @@ class Portability
             return;
         }
 
-        $password = (string) ($_POST['password'] ?? '');
         if ($password === '') {
             Response::error(400, 'Password confirmation is required to set this as your primary location');
         }
@@ -185,6 +187,111 @@ class Portability
                 Response::error(403, 'Imports that change your primary location are not allowed within 48 hours of changing the account password.');
             }
         }
+    }
+
+    // ── Remote-credential migration ─────────────────────────────────────────
+    //
+    // Ports the "import channel from another server" branch of
+    // Zotlabs\Module\Import::import_account() — probes the old hub's API path,
+    // fetches its channel/export/basic payload via HTTP Basic Auth using the
+    // *old hub's* login credentials, then feeds the result through the same
+    // runImport() used by the file-upload path. HTTPS-only and rate-limited:
+    // deliberately stricter than core, which also tries plain http and has no
+    // throttle — this endpoint accepts a password and makes an outbound
+    // request to an attacker-influenceable hostname.
+
+    private const MIGRATE_RATE_LIMIT_WINDOW = 3600; // seconds
+    private const MIGRATE_RATE_LIMIT_MAX = 5;
+    private const MIGRATE_FETCH_TIMEOUT = 15; // seconds
+    private const MIGRATE_CONNECT_TIMEOUT = 5; // seconds
+
+    private function migrateChannel(): void
+    {
+        $account = Auth::requireAccountJson();
+        $data = Auth::$parsedBody;
+
+        $oldAddress = trim((string) ($data['old_address'] ?? ''));
+        $email = (string) ($data['email'] ?? '');
+        $password = (string) ($data['password'] ?? '');
+        // WARNING: this is a utf-8 variant, not an ASCII '@' — matches core's
+        // convenience handling for addresses copied from a profile page.
+        $oldAddress = str_replace('＠', '@', $oldAddress);
+
+        if ($oldAddress === '' || strpos($oldAddress, '@') === false || $email === '' || $password === '') {
+            Response::error(400, 'Old identity address, login email, and password are all required');
+        }
+
+        $makePrimary = !empty($data['make_primary']) ? 1 : 0;
+        $newname = trim((string) ($data['newname'] ?? ''));
+
+        if ($makePrimary) {
+            $this->requireAccountPasswordForSeize($account, (string) ($data['local_password'] ?? ''));
+        }
+
+        $this->enforceMigrateRateLimit(intval($account['account_id']));
+
+        $channelname = substr($oldAddress, 0, strpos($oldAddress, '@'));
+        $servername = substr($oldAddress, strpos($oldAddress, '@') + 1);
+
+        $apiPath = $this->probeApiPathHttpsOnly($servername);
+        if (!$apiPath) {
+            Response::error(502, 'Unable to connect to old server');
+        }
+
+        $fetchUrl = $apiPath . 'channel/export/basic?f=&channel=' . urlencode($channelname);
+        $ret = z_fetch_url($fetchUrl, false, 0, [
+            'http_auth' => $email . ':' . $password,
+            'timeout' => self::MIGRATE_FETCH_TIMEOUT,
+            'connecttimeout' => self::MIGRATE_CONNECT_TIMEOUT,
+        ]);
+
+        // Deliberately generic — don't reveal whether this was a bad password
+        // or an unreachable/misbehaving server, to avoid a credential-testing
+        // oracle against arbitrary hosts.
+        if (!$ret['success'] || !$ret['body']) {
+            Response::error(502, 'Unable to download data from old server');
+        }
+
+        $result = $this->runImport($account, $ret['body'], [
+            'make_primary' => $makePrimary,
+            'newname' => $newname,
+        ]);
+
+        Response::send(array_merge(['status' => 'ok'], $result));
+    }
+
+    private function enforceMigrateRateLimit(int $account_id): void
+    {
+        $now = time();
+        $raw = get_pconfig($account_id, 'portability_migrate', 'attempts');
+        $attempts = is_array($raw) ? $raw : [];
+        $attempts = array_values(array_filter($attempts, fn($t) => $t > $now - self::MIGRATE_RATE_LIMIT_WINDOW));
+
+        if (count($attempts) >= self::MIGRATE_RATE_LIMIT_MAX) {
+            Response::error(429, 'Too many migration attempts. Please try again later.');
+        }
+
+        $attempts[] = $now;
+        set_pconfig($account_id, 'portability_migrate', 'attempts', $attempts);
+    }
+
+    // HTTPS-only variant of core's probe_api_path() (include/network.php) —
+    // that function also falls back to plain http, which would leak the old
+    // hub's login credentials (sent via HTTP Basic Auth) in plaintext.
+    private function probeApiPathHttpsOnly(string $host): string
+    {
+        $paths = ['/api/z/1.0/version', '/api/red/version'];
+        foreach ($paths as $path) {
+            $url = 'https://' . $host . $path;
+            $x = z_fetch_url($url, false, 0, [
+                'timeout' => self::MIGRATE_FETCH_TIMEOUT,
+                'connecttimeout' => self::MIGRATE_CONNECT_TIMEOUT,
+            ]);
+            if ($x['success'] && !strpos($x['body'], 'not implemented')) {
+                return str_replace('version', '', $url);
+            }
+        }
+        return '';
     }
 
     private function runImport(array $account, string $jsonPayload, array $opts): array

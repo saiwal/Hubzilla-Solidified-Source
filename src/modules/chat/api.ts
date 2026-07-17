@@ -64,7 +64,7 @@ export interface ChatMessagesResponse {
 // ── Room list ─────────────────────────────────────────────────────────────────
 
 export async function fetchRooms(nick: string): Promise<ChatRoomListResponse> {
-  const res = await apiFetch(`/api/chat/${nick}`);
+  const res = await apiFetch(`/spa/chat/${nick}`);
   if (!res.ok) throw new Error(`Failed to fetch rooms: ${res.status}`);
   const json = await res.json();
   return json.data as ChatRoomListResponse;
@@ -74,7 +74,7 @@ export async function fetchRoomDetail(
   nick: string,
   roomId: number,
 ): Promise<ChatRoomDetail> {
-  const res = await apiFetch(`/api/chat/${nick}/${roomId}`);
+  const res = await apiFetch(`/spa/chat/${nick}/${roomId}`);
   if (!res.ok) throw new Error(`Failed to fetch room: ${res.status}`);
   const json = await res.json();
   return json.data as ChatRoomDetail;
@@ -88,7 +88,7 @@ export async function fetchMessages(
   since?: string,
   limit = 50,
 ): Promise<ChatMessagesResponse> {
-  const res = await apiFetch(`/api/chat/${nick}/${roomId}/messages`, {
+  const res = await apiFetch(`/spa/chat/${nick}/${roomId}/messages`, {
     method: "POST",
     body: JSON.stringify({ since, limit }),
   });
@@ -102,7 +102,7 @@ export async function sendMessage(
   roomId: number,
   body: string,
 ): Promise<void> {
-  const res = await apiFetch(`/api/chat/${nick}/${roomId}/send`, {
+  const res = await apiFetch(`/spa/chat/${nick}/${roomId}/send`, {
     method: "POST",
     body: JSON.stringify({ body }),
   });
@@ -115,14 +115,14 @@ export async function sendMessage(
 // ── Presence ──────────────────────────────────────────────────────────────────
 
 export async function joinRoom(nick: string, roomId: number): Promise<void> {
-  await apiFetch(`/api/chat/${nick}/${roomId}/join`, {
+  await apiFetch(`/spa/chat/${nick}/${roomId}/join`, {
     method: "POST",
     body: JSON.stringify({}),
   });
 }
 
 export async function leaveRoom(nick: string, roomId: number): Promise<void> {
-  await apiFetch(`/api/chat/${nick}/${roomId}/leave`, {
+  await apiFetch(`/spa/chat/${nick}/${roomId}/leave`, {
     method: "POST",
     body: JSON.stringify({}),
   });
@@ -142,7 +142,7 @@ export async function createRoom(
     deny_gid?: string[];
   },
 ): Promise<{ id: number; name: string; visibility: string }> {
-  const res = await apiFetch(`/api/chat/${nick}/new`, {
+  const res = await apiFetch(`/spa/chat/${nick}/new`, {
     method: "POST",
     body: JSON.stringify(opts),
   });
@@ -159,7 +159,7 @@ export async function updateRoom(
   roomId: number,
   opts: { expire?: number; name?: string },
 ): Promise<{ id: number; name: string; expire: number }> {
-  const res = await apiFetch(`/api/chat/${nick}/${roomId}/update`, {
+  const res = await apiFetch(`/spa/chat/${nick}/${roomId}/update`, {
     method: "POST",
     body: JSON.stringify(opts),
   });
@@ -172,7 +172,7 @@ export async function updateRoom(
 }
 
 export async function dropRoom(nick: string, roomId: number): Promise<void> {
-  const res = await apiFetch(`/api/chat/${nick}/${roomId}/drop`, {
+  const res = await apiFetch(`/spa/chat/${nick}/${roomId}/drop`, {
     method: "POST",
     body: JSON.stringify({}),
   });
@@ -204,7 +204,7 @@ export interface AclOptions {
 export type RoomVisibility = 'public' | 'connections' | 'custom';
 
 export async function fetchAclOptions(nick: string): Promise<AclOptions> {
-  const res = await apiFetch(`/api/chat/${nick}/acl-options`);
+  const res = await apiFetch(`/spa/chat/${nick}/acl-options`);
   if (!res.ok) throw new Error(`Failed to fetch ACL options: ${res.status}`);
   const json = await res.json();
   return json.data as AclOptions;

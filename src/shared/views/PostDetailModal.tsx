@@ -13,7 +13,7 @@ import { apiDeleteItem, apiEditItem, apiToggleStar } from "@/shared/lib/item-api
 import { toggleVerb, repeatItem } from "@/shared/stream/store/actions-store";
 
 async function fetchDisplay(uuid: string): Promise<ThreadNode> {
-  const res = await fetch(`/api/display/${uuid}`);
+  const res = await fetch(`/spa/display/${uuid}`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json = await res.json();
   const data = json.data ?? json;

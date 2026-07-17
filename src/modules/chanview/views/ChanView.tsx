@@ -74,7 +74,7 @@ function networkBadge(network?: string): NetworkBadge | null {
 
 async function fetchXchan(hash: string): Promise<XchanData | null> {
   if (!hash) return null;
-  const res = await apiFetch(`/api/xchan?hash=${encodeURIComponent(hash)}`);
+  const res = await apiFetch(`/spa/xchan?hash=${encodeURIComponent(hash)}`);
   if (!res.ok) return null;
   const { data } = await res.json();
   return data as XchanData;

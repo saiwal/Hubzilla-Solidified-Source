@@ -8,7 +8,7 @@ import type {
   ThemeOptions,
 } from "./types";
 
-const BASE = "/api/admin";
+const BASE = "/spa/admin";
 
 async function get<T>(section: string, params?: Record<string, string>): Promise<T> {
   const url = params
@@ -56,7 +56,7 @@ export function uploadSiteLogo(file: Blob, onProgress?: (pct: number) => void): 
     fd.append("file", file, "sitelogo.png");
 
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/site-logo");
+    xhr.open("POST", "/spa/site-logo");
     xhr.withCredentials = true;
     xhr.setRequestHeader("X-CSRF-Token", token);
 
@@ -87,7 +87,7 @@ export async function removeSiteLogo(): Promise<void> {
   const token = await getCsrfToken().catch(() => "");
   const fd = new FormData();
   fd.append("remove", "1");
-  const res = await fetch("/api/site-logo", {
+  const res = await fetch("/spa/site-logo", {
     method: "POST",
     credentials: "include",
     headers: { "X-CSRF-Token": token },

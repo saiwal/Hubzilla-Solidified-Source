@@ -897,6 +897,19 @@ export type RawDictionary = {
     desc_blocked:        string;
     title_danger:        string;
     desc_danger:         string;
+    // Locations section
+    title_locations:          string;
+    desc_locations:           string;
+    locations_address:        string;
+    locations_location:       string;
+    locations_primary:        string;
+    locations_set_primary:    string;
+    locations_drop:            string;
+    locations_drop_confirm:   string;
+    locations_drop_cancel:    string;
+    locations_sync_now:       string;
+    locations_syncing:        string;
+    locations_empty:          string;
     // Features section
     feat_toggle_on:      string;
     feat_toggle_off:     string;
@@ -1098,6 +1111,15 @@ export type RawDictionary = {
     portability_importing:           string;
     portability_import_success:      string;
     portability_import_failed:       string;
+    portability_mode_file:           string;
+    portability_mode_migrate:        string;
+    portability_migrate_warning:     string;
+    portability_old_address_label:       string;
+    portability_old_address_placeholder: string;
+    portability_old_email_label:     string;
+    portability_old_password_label:  string;
+    portability_migrate_btn:         string;
+    portability_migrating:           string;
   };
   network: {
     latest:               string;

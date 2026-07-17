@@ -18,7 +18,7 @@ interface FeaturesData {
 }
 
 async function fetchFeatures(): Promise<FeaturesData> {
-  const res = await apiFetch("/api/settings/features");
+  const res = await apiFetch("/spa/settings/features");
   if (!res.ok) throw new Error(`Failed to load: ${res.status}`);
   const { data } = await res.json();
   return data as FeaturesData;
@@ -45,7 +45,7 @@ export default function FeaturesSection() {
 
   const toggleMutation = useMutation(() => ({
     mutationFn: async ({ name, enabled }: { name: string; enabled: boolean }) => {
-      const res = await apiFetch("/api/settings/features", {
+      const res = await apiFetch("/spa/settings/features", {
         method: "POST",
         body: JSON.stringify({ feature: name, enabled: enabled ? 0 : 1 }),
       });

@@ -27,14 +27,14 @@ type AppAction = "install" | "uninstall" | "pin" | "feature";
 type FilterTab = "all" | "installed" | "available";
 
 async function fetchIntegrations(): Promise<AppEntry[]> {
-  const res = await apiFetch("/api/settings/integrations");
+  const res = await apiFetch("/spa/settings/integrations");
   if (!res.ok) throw new Error(`Failed to load apps: ${res.status}`);
   const { data } = await res.json();
   return data.apps as AppEntry[];
 }
 
 async function appAction(name: string, action: AppAction): Promise<void> {
-  const res = await apiFetch("/api/settings/integrations", {
+  const res = await apiFetch("/spa/settings/integrations", {
     method: "POST",
     body: JSON.stringify({ name, action }),
   });

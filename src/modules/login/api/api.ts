@@ -1,5 +1,5 @@
 export async function fetchLoginToken(): Promise<string> {
-  const res = await fetch("/api/login", { credentials: "include" });
+  const res = await fetch("/spa/login", { credentials: "include" });
   if (!res.ok) throw new Error("Failed to load login token");
   const json = await res.json();
   return json.data?.token ?? "";
@@ -10,7 +10,7 @@ export async function submitLogin(
   password: string,
   token: string,
 ): Promise<{ nick: string }> {
-  const res = await fetch("/api/login", {
+  const res = await fetch("/spa/login", {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
@@ -32,7 +32,7 @@ export async function submitRmagic(
   address: string,
   dest: string,
 ): Promise<string> {
-  const res = await fetch("/api/rmagic", {
+  const res = await fetch("/spa/rmagic", {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },

@@ -13,7 +13,7 @@ export type SiteInfo = {
 };
 
 export async function fetchSiteInfo(): Promise<SiteInfo> {
-  const res = await fetch('/api/siteinfo');
+  const res = await fetch('/spa/siteinfo');
   if (!res.ok) throw new Error(`siteinfo: ${res.status}`);
   const json = await res.json();
   const d = json.data ?? json; // unwrap data envelope

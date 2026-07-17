@@ -613,7 +613,7 @@ export default function PostCard(props: {
     setRssImporting(true);
     try {
       const res = await apiFetch(
-        `/api/search/import?url=${encodeURIComponent(props.post.permalink)}`,
+        `/spa/search/import?url=${encodeURIComponent(props.post.permalink)}`,
       );
       const body = await res.json();
       if (res.ok && body?.data?.uuid) {
@@ -713,7 +713,7 @@ export default function PostCard(props: {
     setStatsLoading(true);
     try {
       const uuid = encodeURIComponent(props.post.uuid);
-      const base = `/api/item/${uuid}`;
+      const base = `/spa/item/${uuid}`;
       const [likesRes, dislikesRes, repeatsRes] = await Promise.all([
         fetch(`${base}/likes`, { credentials: "include" }),
         fetch(`${base}/dislikes`, { credentials: "include" }),
@@ -751,7 +751,7 @@ export default function PostCard(props: {
     if (sourceData()) return;
     setSourceLoading(true);
     try {
-      const res = await fetch(`/api/item-source/${props.post.iid}`, {
+      const res = await fetch(`/spa/item-source/${props.post.iid}`, {
         credentials: "include",
       });
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
@@ -773,7 +773,7 @@ export default function PostCard(props: {
     setDeliveryReportLoading(true);
     try {
       const res = await fetch(
-        `/api/item/${encodeURIComponent(props.post.uuid)}/delivery`,
+        `/spa/item/${encodeURIComponent(props.post.uuid)}/delivery`,
         { credentials: "include" },
       );
       if (!res.ok) throw new Error(`${res.status}`);

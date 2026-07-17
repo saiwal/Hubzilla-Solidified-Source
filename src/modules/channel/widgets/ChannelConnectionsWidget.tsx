@@ -20,7 +20,7 @@ interface ConnectionsData {
 
 async function fetchConnections(nick: string): Promise<ConnectionsData | null> {
   if (!nick) return null;
-  const res = await apiFetch(`/api/profile/${nick}/connections?limit=24`);
+  const res = await apiFetch(`/spa/profile/${nick}/connections?limit=24`);
   if (!res.ok) return null;
   const json = await res.json();
   return json.data as ConnectionsData;

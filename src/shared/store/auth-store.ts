@@ -38,7 +38,7 @@ function channelNickFromUrl(): string {
 
 async function fetchAuthState(): Promise<AuthState> {
   const urlNick = channelNickFromUrl();
-  const url = urlNick ? `/api/pconfig?channel=${encodeURIComponent(urlNick)}` : "/api/pconfig";
+  const url = urlNick ? `/spa/pconfig?channel=${encodeURIComponent(urlNick)}` : "/spa/pconfig";
   const res = await fetch(url, { credentials: "include" });
   if (!res.ok) return ANONYMOUS;
   const json = await res.json();

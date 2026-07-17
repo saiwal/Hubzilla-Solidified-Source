@@ -12,7 +12,7 @@ export default function DangerSection() {
   const query = useQuery(() => ({
     queryKey: ["settings", "danger"] as const,
     queryFn: async (): Promise<DangerData> => {
-      const res = await apiFetch("/api/settings/danger");
+      const res = await apiFetch("/spa/settings/danger");
       const { data } = await res.json();
       return data;
     },
@@ -27,7 +27,7 @@ export default function DangerSection() {
     if (confirm() !== data()?.nick || !password()) return;
     setBusy(true);
     try {
-      const res = await apiFetch("/api/settings/danger", {
+      const res = await apiFetch("/spa/settings/danger", {
         method: "POST",
         body: JSON.stringify({ action: "remove_channel", password: password() }),
       });

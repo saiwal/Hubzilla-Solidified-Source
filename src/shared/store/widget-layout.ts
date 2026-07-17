@@ -168,7 +168,7 @@ export async function saveWidgetLayout(next: WidgetLayout | null): Promise<boole
   setLayout(next);
   writeCache(next);
   try {
-    const res = await apiFetch("/api/widget-layout", {
+    const res = await apiFetch("/spa/widget-layout", {
       method: "POST",
       body: JSON.stringify({ layout: next }),
     });

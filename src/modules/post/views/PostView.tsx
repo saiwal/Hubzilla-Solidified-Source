@@ -18,7 +18,7 @@ import { toggleVerb, repeatItem } from "@/shared/stream/store/actions-store";
 import { unblockChannel } from "@/shared/lib/blocklist-api";
 
 async function fetchPost(uuid: string): Promise<ThreadNode> {
-  const res = await fetch(`/api/display/${uuid}`);
+  const res = await fetch(`/spa/display/${uuid}`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json = await res.json();
   const data = json.data ?? json;
