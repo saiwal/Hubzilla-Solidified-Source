@@ -11,6 +11,7 @@ import { BiRegularX } from "solid-icons/bi";
 import { useI18n } from "@/i18n";
 import { apiDeleteItem, apiEditItem, apiToggleStar } from "@/shared/lib/item-api";
 import { toggleVerb, repeatItem } from "@/shared/stream/store/actions-store";
+import { markItemSeen } from "@/shared/lib/markSeen";
 
 async function fetchDisplay(uuid: string): Promise<ThreadNode> {
   const res = await fetch(`/spa/display/${uuid}`);
@@ -18,7 +19,16 @@ async function fetchDisplay(uuid: string): Promise<ThreadNode> {
   const json = await res.json();
   const data = json.data ?? json;
   if (data.error) throw new Error(data.error);
-  const all: Post[] = [data.post, ...data.comments].map(mapActivityToPost);
+  const rawItems: any[] = [data.post, ...data.comments];
+  // Viewing the thread is what "reads" it — the root's own unseen flag was
+  // already cleared by the caller (e.g. MessageItem.handleClick), but
+  // replies/comments never go through that path, so their unseen flags
+  // would otherwise never clear (see HQ message-badge bug: badge kept
+  // reappearing for threads with unseen replies).
+  for (const raw of rawItems) {
+    if (raw?.item_unseen && raw?.uuid) markItemSeen(raw.uuid);
+  }
+  const all: Post[] = rawItems.map(mapActivityToPost);
   const tree = buildThreadTree(all);
   return tree[0];
 }

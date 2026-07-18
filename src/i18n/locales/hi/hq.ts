@@ -21,6 +21,7 @@ export const hq: RawDictionary["hq"] = {
   view_all:             "सभी देखें",
   create_one:           "एक बनाएँ",
   retry:                "पुनः प्रयास करें",
+  refresh:              "ताज़ा करें",
   server_performance:   "सर्वर प्रदर्शन",
   msg_tab_all:          "सभी",
   msg_tab_direct:       "सीधे",

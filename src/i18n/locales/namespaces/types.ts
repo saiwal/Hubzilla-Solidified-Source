@@ -1327,6 +1327,7 @@ export type RawDictionary = {
     view_all:             string;
     create_one:           string;
     retry:                string;
+    refresh:              string;
     server_performance:   string;
     msg_tab_all:          string;
     msg_tab_direct:       string;

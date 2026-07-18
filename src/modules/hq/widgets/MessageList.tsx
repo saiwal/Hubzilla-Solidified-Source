@@ -24,7 +24,11 @@ interface MessageEntry {
   author_addr: string;
   href: string;
   icon: string;
-  unseen_count: number;
+  // The backend sends a real count when there are unseen replies, but falls
+  // back to a non-numeric placeholder ("&#8192;") when the top-level item
+  // itself is unseen and has no replies yet (see Messages.php::get_messages_page) —
+  // so this isn't always a number.
+  unseen_count: number | string;
   unseen_class: string;
   author_img: string;
 }
@@ -36,6 +40,9 @@ interface HqResponse {
 
 export type MessageType = "" | "direct" | "starred" | "notification";
 export type FeedType = MessageType | "folder";
+
+// Background auto-refresh so new messages show up without a manual click.
+const POLL_INTERVAL = 30_000;
 
 // ── Time grouping ──────────────────────────────────────────────────────────
 
@@ -196,8 +203,14 @@ const MessageItem: Component<{ entry: MessageEntry; feedType: FeedType }> = (pro
   const [showModal, setShowModal] = createSignal(false);
   const [locallyRead, setLocallyRead] = createSignal(false);
 
+  // unseen_count is a real number when there are unseen replies, but a
+  // non-numeric placeholder otherwise — normalize before comparing.
+  const unseenReplyCount = () => {
+    const n = Number(e.unseen_count);
+    return Number.isFinite(n) ? n : 0;
+  };
   const isNewPost = () => !locallyRead() && e.unseen_class === "primary";
-  const hasUnseenReplies = () => !locallyRead() && e.unseen_count > 0;
+  const hasUnseenReplies = () => !locallyRead() && unseenReplyCount() > 0;
   const isAnyUnseen = () => isNewPost() || hasUnseenReplies();
 
   const entryType = () => inferEntryType(e, props.feedType);
@@ -206,7 +219,7 @@ const MessageItem: Component<{ entry: MessageEntry; feedType: FeedType }> = (pro
 
   function handleClick() {
     setShowModal(true);
-    if (!locallyRead() && (e.unseen_class === "primary" || e.unseen_count > 0)) {
+    if (!locallyRead() && isAnyUnseen()) {
       setLocallyRead(true);
       markItemSeen(e.b64mid);
     }
@@ -287,13 +300,16 @@ const MessageItem: Component<{ entry: MessageEntry; feedType: FeedType }> = (pro
           </Show>
         </div>
 
-        <Show when={hasUnseenReplies()}>
+        {/* Reply count when there are unseen replies; otherwise a bare "1"
+            for a top-level item that's itself unseen (e.g. a fresh DM with
+            no replies yet — the backend has no reply count to give us). */}
+        <Show when={isAnyUnseen()}>
           <span
             class="absolute bottom-1.5 right-2.5 min-w-[1.1rem] h-4 rounded-full text-[9px] font-bold
               flex items-center justify-center px-1 tabular-nums
               bg-accent text-surface"
           >
-            {e.unseen_count}
+            {hasUnseenReplies() ? unseenReplyCount() : 1}
           </span>
         </Show>
       </button>
@@ -341,6 +357,10 @@ export const MessageList: Component<{
   type: FeedType;
   file?: string;
   authorFilter?: string;
+  // Bumped by the parent's refresh button to force a reload without
+  // changing type/file (which already trigger a reset on their own).
+  reloadKey?: number;
+  onRefreshingChange?: (refreshing: boolean) => void;
 }> = (props) => {
   const { t } = useI18n();
   const [entries, setEntries] = createSignal<MessageEntry[]>([]);
@@ -398,6 +418,7 @@ export const MessageList: Component<{
 
     const currentOffset = reset ? 0 : offset();
     setLoading(true);
+    if (reset) props.onRefreshingChange?.(true);
 
     try {
       const feedType = props.type;
@@ -424,15 +445,18 @@ export const MessageList: Component<{
       if (!signal?.aborted) {
         setLoading(false);
         if (!reset) loadMoreActive = false;
+        if (reset) props.onRefreshingChange?.(false);
       }
     }
   }
 
   createEffect(() => {
-    // Track both so switching folders (same "folder" type, different file)
-    // triggers a reset the same way switching feed type does.
+    // Track type/file (switching folders — same "folder" type, different
+    // file — triggers a reset the same way switching feed type does) and
+    // reloadKey (bumped by the parent's refresh button).
     props.type;
     props.file;
+    props.reloadKey;
     setOffset(0);
     loadPage(true);
   });
@@ -445,7 +469,9 @@ export const MessageList: Component<{
     }
   }
 
+  const pollTimer = setInterval(() => loadPage(true), POLL_INTERVAL);
   onCleanup(() => {
+    clearInterval(pollTimer);
     resetController?.abort();
   });
 

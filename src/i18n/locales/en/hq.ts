@@ -25,6 +25,7 @@ export const hq: RawDictionary["hq"] = {
   view_all:             "View all",
   create_one:           "Create one",
   retry:                "Retry",
+  refresh:              "Refresh",
   // Server performance labels
   server_performance:   "Server performance",
   // HqMessagesWidget tab labels

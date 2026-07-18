@@ -1,20 +1,23 @@
 import { useI18n } from "@/i18n";
 import { createSignal, Show, type Component } from "solid-js";
-import { MdOutlineEdit, MdOutlineMail } from "solid-icons/md";
+import { MdOutlineEdit, MdOutlineMail, MdOutlineRefresh } from "solid-icons/md";
 import { useAuth } from "@/shared/store/auth-store";
 import PostComposer from "@/shared/editor/composers/PostComposer";
 import DMComposer from "@/shared/editor/composers/DMComposer";
 import { FEED_META, MessageList, type MessageType } from "./MessageList";
 
-// Card chrome (title + author-filter search) around the shared MessageList.
-// Each concrete hq.messages.* widget is a thin wrapper that fixes `type`;
-// see HqMessagesWidget.tsx, HqDirectMessagesWidget.tsx,
-// HqStarredMessagesWidget.tsx and HqNoticesWidget.tsx.
+// Card chrome (title + refresh/compose actions + author-filter search)
+// around the shared MessageList. Each concrete hq.messages.* widget is a
+// thin wrapper that fixes `type`; see HqMessagesWidget.tsx,
+// HqDirectMessagesWidget.tsx, HqStarredMessagesWidget.tsx and
+// HqNoticesWidget.tsx.
 export const MessageFeed: Component<{ type: MessageType }> = (props) => {
   const { t } = useI18n();
   const auth = useAuth();
   const [authorFilter, setAuthorFilter] = createSignal("");
   const [showCompose, setShowCompose] = createSignal(false);
+  const [reloadKey, setReloadKey] = createSignal(0);
+  const [refreshing, setRefreshing] = createSignal(false);
 
   let filterTimer: ReturnType<typeof setTimeout>;
   function onFilterInput(val: string) {
@@ -28,7 +31,7 @@ export const MessageFeed: Component<{ type: MessageType }> = (props) => {
 
   return (
     <div
-      class="bg-surface rounded-2xl border border-rim flex flex-col overflow-hidden shadow-sm relative"
+      class="bg-surface rounded-2xl border border-rim flex flex-col overflow-hidden shadow-sm"
       style={{ height: "480px" }}
     >
       {/* ── Header ── */}
@@ -37,49 +40,66 @@ export const MessageFeed: Component<{ type: MessageType }> = (props) => {
           <span class="text-xs font-medium uppercase tracking-wider text-muted">
             {t(FEED_META[props.type].titleKey as "hq.msg_tab_all")}
           </span>
-          <div class="relative">
-            <svg
-              class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          <div class="flex items-center gap-1">
+            <Show when={canCompose() && !auth.loading && auth()?.uid}>
+              <button
+                type="button"
+                title={props.type === "direct" ? t("hq.new_dm") : t("hq.new_post")}
+                onClick={() => setShowCompose(true)}
+                class="w-6 h-6 flex items-center justify-center rounded-md text-muted
+                       hover:bg-overlay hover:text-txt transition-colors"
+              >
+                <Show when={props.type === "direct"} fallback={<MdOutlineEdit size={14} />}>
+                  <MdOutlineMail size={14} />
+                </Show>
+              </button>
+            </Show>
+
+            <button
+              type="button"
+              title={t("hq.refresh")}
+              onClick={() => setReloadKey((k) => k + 1)}
+              disabled={refreshing()}
+              class="w-6 h-6 flex items-center justify-center rounded-md text-muted
+                     hover:bg-overlay hover:text-txt transition-colors disabled:opacity-50"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              <MdOutlineRefresh size={14} class={refreshing() ? "animate-spin" : ""} />
+            </button>
+
+            <div class="relative">
+              <svg
+                class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+              <input
+                type="text"
+                placeholder={t("hq.filter_placeholder")}
+                class="w-32 text-xs bg-overlay border-0 rounded-lg
+                       pl-7 pr-3 py-1 text-txt placeholder-muted
+                       focus:outline-none focus:ring-2 focus:ring-accent/40
+                       transition-all duration-200 focus:w-40"
+                onInput={(e) => onFilterInput(e.currentTarget.value)}
               />
-            </svg>
-            <input
-              type="text"
-              placeholder={t("hq.filter_placeholder")}
-              class="w-32 text-xs bg-overlay border-0 rounded-lg
-                     pl-7 pr-3 py-1 text-txt placeholder-muted
-                     focus:outline-none focus:ring-2 focus:ring-accent/40
-                     transition-all duration-200 focus:w-40"
-              onInput={(e) => onFilterInput(e.currentTarget.value)}
-            />
+            </div>
           </div>
         </div>
       </div>
 
-      <MessageList type={props.type} authorFilter={authorFilter()} />
-
-      <Show when={canCompose() && !auth.loading && auth()?.uid}>
-        <button
-          type="button"
-          title={props.type === "direct" ? t("hq.new_dm") : t("hq.new_post")}
-          onClick={() => setShowCompose(true)}
-          class="absolute bottom-3 right-3 z-10 w-10 h-10 rounded-full shadow-lg
-                 bg-accent text-accent-fg flex items-center justify-center
-                 hover:opacity-90 transition-opacity"
-        >
-          <Show when={props.type === "direct"} fallback={<MdOutlineEdit size={18} />}>
-            <MdOutlineMail size={18} />
-          </Show>
-        </button>
-      </Show>
+      <MessageList
+        type={props.type}
+        authorFilter={authorFilter()}
+        reloadKey={reloadKey()}
+        onRefreshingChange={setRefreshing}
+      />
 
       <Show when={showCompose() && props.type === "" && !auth.loading && auth()?.uid}>
         <PostComposer
