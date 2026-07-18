@@ -1,4 +1,5 @@
 import { For, Show, createMemo } from "solid-js";
+import { Portal } from "solid-js/web";
 import { useTheme } from "../lib/useTheme";
 import { THEMES } from "../types/theme.types";
 import { BiRegularPalette } from "solid-icons/bi";
@@ -35,6 +36,7 @@ const ThemeToggle = () => {
 
       <Presence>
         <Show when={open()}>
+          <Portal>
           <Motion.div
             ref={(el: HTMLDivElement) => setPanelRef(el)}
             {...scalePreset}
@@ -109,6 +111,7 @@ const ThemeToggle = () => {
               </button>
             </div>
           </Motion.div>
+          </Portal>
         </Show>
       </Presence>
     </>

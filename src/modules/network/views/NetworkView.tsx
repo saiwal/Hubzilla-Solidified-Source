@@ -59,6 +59,7 @@ export default function NetworkView() {
 
   return (
     <div class="relative">
+      <h1 class="sr-only">{t("nav.network")}</h1>
       <StreamFilters />
 
       <Show when={newPosts().length > 0}>

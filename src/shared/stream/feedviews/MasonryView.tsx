@@ -306,6 +306,8 @@ function MasonryCard(props: {
         >
           <button
             onClick={() => props.handlers.onLike(p.mid)}
+            aria-label={t("post.like")}
+            aria-pressed={p.viewerLiked}
             class="flex items-center gap-1 text-xs transition-colors"
             classList={{
               "text-accent": p.viewerLiked,
@@ -331,6 +333,8 @@ function MasonryCard(props: {
           <Show when={!p.flags?.includes("private")}>
             <button
               onClick={() => props.handlers.onRepeat(p.mid)}
+              aria-label={t("post.repeat")}
+              aria-pressed={p.viewerRepeated}
               class="flex items-center gap-1 text-xs transition-colors"
               classList={{
                 "text-accent": p.viewerRepeated,

@@ -3,7 +3,7 @@
 /**
  * * Name: default
  *   * Description: Solidified default
- *   * Version: 0.0-alpha
+ *   * Version: 0.1-beta
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
  *   * ContentRegion: aside, right_aside_wrapper
@@ -18,7 +18,7 @@ $solidified_touch_icon = get_config('system', 'sitelogo_192') ?: '/view/theme/so
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 	<title><?php if (x($page, 'title')) echo $page['title'] ?></title>
 	<script>

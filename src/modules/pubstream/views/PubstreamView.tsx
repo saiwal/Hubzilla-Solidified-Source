@@ -117,6 +117,7 @@ export default function PubstreamView() {
       }
     >
       <div>
+        <h1 class="sr-only">{t("pubstream.title")}</h1>
         {/* Single toolbar row */}
         <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-1 pb-2">
 
