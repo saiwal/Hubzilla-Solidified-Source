@@ -14,7 +14,7 @@ export function sanitizeHtml(html: string): string {
       'pre', 'code', 'img', 'details', 'summary',
       'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
       'video', 'audio', 'source',
-      'button',
+      'button', 'svg', 'path',
     ],
     ALLOWED_ATTR: [
       'href', 'src', 'alt', 'title', 'rel',
@@ -23,6 +23,9 @@ export function sanitizeHtml(html: string): string {
       'data-plyr-provider', 'data-plyr-embed-id',
       'loading',
       'data-crypt-payload',
+      'hidden', 'data-nsfw-toggle', 'data-nsfw-src',
+      'viewBox', 'fill', 'stroke', 'stroke-width',
+      'stroke-linecap', 'stroke-linejoin', 'd', 'aria-hidden',
     ],
     ALLOW_DATA_ATTR: false,
   });

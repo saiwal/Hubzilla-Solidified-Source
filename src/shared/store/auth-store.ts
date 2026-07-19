@@ -5,6 +5,7 @@ import { initTheme } from "../lib/useTheme";
 import { applyCornerRadius, type CornerRadius } from "../lib/corner-radius";
 import { initWidgetLayout } from "./widget-layout";
 import { initNavOrder } from "./nav-order";
+import { initNsfwWords } from "./nsfw-settings";
 import { THEMES, type ThemeId } from "../types/theme.types";
 
 export type AuthState = {
@@ -100,6 +101,7 @@ async function fetchAuthState(): Promise<AuthState> {
   // clear any stale cache so defaults apply.
   initWidgetLayout(isLocal ? data.spa?.widget_layout : undefined);
   initNavOrder(isLocal ? data.spa?.nav_order : undefined);
+  initNsfwWords(isLocal ? data.nsfw?.words : undefined);
 
   return {
     isLocal,

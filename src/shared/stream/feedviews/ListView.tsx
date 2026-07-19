@@ -8,6 +8,7 @@ import type { StreamHandlers } from "../types";
 import formatPostDate from "@/shared/lib/date";
 import { useI18n } from "@/i18n";
 import DOMPurify from "dompurify";
+import { handleNsfwToggleClick } from "@/shared/lib/nsfw";
 import { markItemSeen } from "@/shared/lib/markSeen";
 import CommentComposer from "@/shared/editor/composers/CommentComposer";
 import { useAuth } from "@/shared/store/auth-store";
@@ -242,7 +243,8 @@ function ListRow(props: {
   onOpenModal: () => void;
 }) {
   const p = props.post;
-  const preview = () => stripHtml(p.body).slice(0, 160);
+  const preview = () =>
+    p.bodyNsfw ? "Hidden content — open to view" : stripHtml(p.body).slice(0, 160);
   const replyCount = () =>
     p.children.length > 0
       ? countAllComments(p.children)
@@ -307,6 +309,7 @@ function ListRow(props: {
               <p
                 class="text-sm font-semibold text-txt leading-snug line-clamp-1 min-w-0"
                 innerHTML={DOMPurify.sanitize(p.title!)}
+                onClick={handleNsfwToggleClick}
               />
             </Show>
             <div class="ml-auto flex items-center gap-2 shrink-0">
@@ -446,6 +449,7 @@ function MessageRow(props: {
         <div
           class="text-sm text-txt/80 leading-relaxed [&>p]:my-0.5 [&_img]:max-w-xs [&_img]:rounded"
           innerHTML={props.msg.body}
+          onClick={handleNsfwToggleClick}
         />
         <button
           onClick={() => props.handlers.onLike(props.msg.mid)}
@@ -629,7 +633,8 @@ function InboxRow(props: {
     }
   }
 
-  const preview = () => stripHtml(p.body).slice(0, 160);
+  const preview = () =>
+    p.bodyNsfw ? "Hidden content — open to view" : stripHtml(p.body).slice(0, 160);
   const isUnread = () => !p.viewerLiked && replyCount() === 0;
   const isUnseen = () => p.flags.includes("unseen");
 
@@ -669,6 +674,7 @@ function InboxRow(props: {
                   "text-accent": isUnread(),
                   "text-txt": !isUnread(),
                 }}
+                onClick={handleNsfwToggleClick}
                 innerHTML={DOMPurify.sanitize(p.title!)}
               />
             </Show>

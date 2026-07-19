@@ -38,7 +38,9 @@ export interface Post {
   parent: string;
   body: string;
   rawBody?: string; // unconverted bbcode source, needed to seed the edit form
+  bodyNsfw?: boolean; // body matched an nsfw keyword — body is wrapped in a reveal panel
   title: string;
+  titleNsfw?: boolean; // title matched an nsfw keyword — title is wrapped in a reveal panel
   summary?: string;
   authorName: string;
   authorAvatar: string;

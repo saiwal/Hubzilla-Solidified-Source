@@ -2,6 +2,8 @@
 import { sanitizeHtml } from "@/shared/lib/sanitize";
 import { bbcodeToHtml } from "@/shared/lib/bbcode";
 import { oembedResolver } from "@/shared/lib/oembedResolver";
+import { matchNsfwWord, wrapNsfwHtml } from "@/shared/lib/nsfw";
+import { nsfwWordsList } from "@/shared/store/nsfw-settings";
 import type { Post, EventData, PollData } from "@/shared/types/post.types";
 
 export function parseEventData(raw: string): EventData | undefined {
@@ -31,9 +33,12 @@ export function mapActivityToPost(activity: any): Post {
   const rawBody: string = activity.body ?? "";
 
   let body = "";
+  const nsfwMatch = matchNsfwWord(rawBody, nsfwWordsList());
   try {
     const converted = bbcodeToHtml(rawBody, { oembedResolver });
-    body = sanitizeHtml(typeof converted === "string" ? converted : "");
+    let html = typeof converted === "string" ? converted : "";
+    if (nsfwMatch) html = wrapNsfwHtml(html, nsfwMatch);
+    body = sanitizeHtml(html);
   } catch (err) {
     console.error("Body parse failed", rawBody, err);
     body = "";
@@ -57,6 +62,10 @@ export function mapActivityToPost(activity: any): Post {
     activity.summary ?? activity.item_summary ?? activity.obj_summary ?? "";
   const summary = rawSummary.trim() || undefined;
 
+  const rawTitle: string = activity.title ?? "";
+  const nsfwTitleMatch = matchNsfwWord(rawTitle, nsfwWordsList());
+  const title = nsfwTitleMatch ? wrapNsfwHtml(rawTitle, nsfwTitleMatch) : rawTitle;
+
   return {
     id: activity.iid,
     iid: activity.iid ? Number(activity.iid) : undefined,
@@ -69,8 +78,10 @@ export function mapActivityToPost(activity: any): Post {
     parent: activity.uuid,
     body,
     rawBody,
+    bodyNsfw: !!nsfwMatch,
     summary,
-    title: activity.title ?? "",
+    title,
+    titleNsfw: !!nsfwTitleMatch,
     authorName: activity.author?.name ?? "",
     authorAvatar: activity.author?.photo?.src ?? "",
     authorUrl: activity.author?.url ?? "",

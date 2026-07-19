@@ -9,9 +9,11 @@ import {
   MdOutlinePush_pin,
   MdFillStar,
   MdOutlineStar,
+  MdOutlineSettings,
 } from "solid-icons/md";
 import { refetchNavData } from "@/shared/store/nav-store";
 import { useI18n } from "@/i18n";
+import NsfwConfigModal from "./NsfwConfigModal";
 
 interface AppEntry {
   name: string;
@@ -80,6 +82,7 @@ export default function IntegrationsSection() {
   }));
   const [search, setSearch] = createSignal("");
   const [filter, setFilter] = createSignal<FilterTab>("all");
+  const [showNsfwConfig, setShowNsfwConfig] = createSignal(false);
 
   const apps = () => query.data ?? [];
 
@@ -217,6 +220,18 @@ export default function IntegrationsSection() {
                           <MdFillStar size={16} />
                         </Show>
                       </button>
+
+                      <Show when={app.name.toLowerCase() === "nsfw"}>
+                        <button
+                          type="button"
+                          title={t("settings.integ_configure")}
+                          onClick={() => setShowNsfwConfig(true)}
+                          class="w-7 h-7 flex items-center justify-center rounded-lg transition-colors
+                                 text-muted hover:bg-elevated hover:text-txt"
+                        >
+                          <MdOutlineSettings size={16} />
+                        </button>
+                      </Show>
                     </div>
                   </Show>
 
@@ -242,6 +257,10 @@ export default function IntegrationsSection() {
             </For>
           </div>
         </Show>
+      </Show>
+
+      <Show when={showNsfwConfig()}>
+        <NsfwConfigModal onClose={() => setShowNsfwConfig(false)} />
       </Show>
     </SubPageContent>
   );

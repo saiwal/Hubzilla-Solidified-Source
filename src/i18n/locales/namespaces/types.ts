@@ -1017,6 +1017,11 @@ export type RawDictionary = {
     privacy_group_actor:          string;
     privacy_ocap:                 string;
     privacy_ocap_hint:            string;
+    privacy_nsfw:                 string;
+    privacy_nsfw_desc:            string;
+    privacy_nsfw_words:           string;
+    privacy_nsfw_words_hint:      string;
+    privacy_nsfw_app_hint:        string;
     // Channel section
     channel_role_title:      string;
     channel_role_desc:       string;
@@ -1106,6 +1111,7 @@ export type RawDictionary = {
     integ_unpin:              string;
     integ_feature:            string;
     integ_unfeature:          string;
+    integ_configure:          string;
     integ_install:            string;
     integ_remove:             string;
     integ_busy:               string;

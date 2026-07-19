@@ -68,6 +68,7 @@ const PostComposer = lazy(
 import DOMPurify from "dompurify";
 import { decryptPayload, getPayloadHint } from "@/shared/lib/postCrypto";
 import { bbcodeToHtml } from "@/shared/lib/bbcode";
+import { handleNsfwToggleClick } from "@/shared/lib/nsfw";
 import { useAuth } from "@/shared/store/auth-store";
 import {
   apiFollowPost,
@@ -463,6 +464,8 @@ export default function PostCard(props: {
   }
 
   async function handleBodyClick(e: MouseEvent) {
+    if (handleNsfwToggleClick(e)) return;
+
     const btn = (e.target as HTMLElement).closest<HTMLElement>(
       "[data-crypt-payload]",
     );
@@ -1598,6 +1601,7 @@ export default function PostCard(props: {
             class="mt-6 prose prose-sm dark:prose-invert max-w-none
                    [&>*]:font-bold [&>*]:tracking-tight [&>*]:text-lg [&>*]:text-txt"
             innerHTML={DOMPurify.sanitize(props.post.title!)}
+            onClick={handleBodyClick}
           />
         </Show>
 
