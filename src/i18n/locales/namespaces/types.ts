@@ -81,6 +81,8 @@ export type RawDictionary = {
     bookmarks:     string;
     profiles:      string;
     drag_reorder:  string;
+    new_channel:     string;
+    manage_channels: string;
   };
   layout: {
     title:              string;

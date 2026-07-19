@@ -35,4 +35,6 @@ export const nav: RawDictionary["nav"] = {
   bookmarks:     "बुकमार्क",
   profiles:      "प्रोफ़ाइलें",
   drag_reorder:  "क्रम बदलने के लिए खींचें",
+  new_channel:     "नया चैनल",
+  manage_channels: "चैनल प्रबंधित करें",
 };

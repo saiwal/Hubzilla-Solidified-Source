@@ -11,7 +11,7 @@
 import { createSignal } from "solid-js";
 import { useQuery, keepPreviousData } from "@tanstack/solid-query";
 import { fetchNavApi, type NavApiResponse } from "../lib/nav-api";
-import type { NavApp } from "../lib/nav-api";
+import type { NavApp, NavChannel } from "../lib/nav-api";
 import { queryClient } from "../lib/query-client";
 
 // ── Channel nick signal ───────────────────────────────────────────────────────
@@ -112,4 +112,16 @@ export function useNavActions() {
 export function useInstalledApps(): () => Set<string> {
   const navData = useNavData();
   return () => new Set(navData()?.installed_apps ?? []);
+}
+
+// ── Derived: multi-channel switcher ──────────────────────────────────────────
+
+export function useNavChannels(): () => NavChannel[] {
+  const navData = useNavData();
+  return () => navData()?.channels ?? [];
+}
+
+export function useNavChannelSelectEnabled(): () => boolean {
+  const navData = useNavData();
+  return () => navData()?.nav_channel_select ?? false;
 }

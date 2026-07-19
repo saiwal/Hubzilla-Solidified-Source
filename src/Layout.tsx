@@ -41,12 +41,15 @@ import {
 } from "@/shared/store/widget-layout";
 import { useOnlineStatus } from "./shared/lib/useOnlineStatus";
 import NavUtilities from "./shared/views/NavUtilities";
+import ChannelSwitcher, { ChannelSwitcherTiles } from "./shared/views/ChannelSwitcher";
 import { notifCount } from "@/shared/lib/notificationCount";
 import { createMediaQuery } from "@solid-primitives/media";
 import {
   useNavActions,
   useNavViewer,
   useNavData,
+  useNavChannels,
+  useNavChannelSelectEnabled,
   setNavNick,
 } from "./shared/store/nav-store";
 import { motion } from "solid-motionone";
@@ -123,6 +126,7 @@ const Layout: ParentComponent = (props) => {
   const [rightOpen, setRightOpen] = createSignal(false);
   const [moreOpen, setMoreOpen] = createSignal(false);
   const [actionsOpen, setActionsOpen] = createSignal(false);
+  const [channelMenuOpen, setChannelMenuOpen] = createSignal(false);
 
   const subjectNick = useSubjectNick();
   createEffect(() => setNavNick(subjectNick()));
@@ -136,6 +140,8 @@ const Layout: ParentComponent = (props) => {
   const navViewer = useNavViewer();
   const navActions = useNavActions();
   const navData = useNavData();
+  const navChannels = useNavChannels();
+  const navChannelSelectEnabled = useNavChannelSelectEnabled();
 
   const isXl = createMediaQuery("(min-width: 1280px)");
   const reducedMotion = window.matchMedia(
@@ -192,11 +198,16 @@ const Layout: ParentComponent = (props) => {
     setRightOpen(false);
     setMoreOpen(false);
     setActionsOpen(false);
+    setChannelMenuOpen(false);
   };
 
   const isOwner = () => viewerRole() === "owner";
   const isLocalUser = () =>
     viewerRole() === "owner" || viewerRole() === "local";
+
+  // "Navigation Channel Select" feature: expands the "channels" nav entry
+  // into an inline multi-channel switcher instead of linking to /manage.
+  const channelSwitcherActive = () => isOwner() && navChannelSelectEnabled();
 
   // Widget editing targets your own layout — leave edit mode when the page
   // stops being yours (e.g. navigating to someone else's channel).
@@ -345,11 +356,25 @@ const Layout: ParentComponent = (props) => {
                 <For each={actionItems()}>
                   {(item) => (
                     <div use:helpable={navItemHelpTarget(item)}>
-                      <NavItem
-                        href={item.href}
-                        label={item.label}
-                        icon={item.icon}
-                      />
+                      <Show
+                        when={channelSwitcherActive() && item.path === "/manage"}
+                        fallback={
+                          <NavItem
+                            href={item.href}
+                            label={item.label}
+                            icon={item.icon}
+                          />
+                        }
+                      >
+                        <ChannelSwitcher
+                          channels={navChannels()}
+                          currentNick={navViewer()?.nick}
+                          open={channelMenuOpen()}
+                          onToggle={() => setChannelMenuOpen((o) => !o)}
+                          label={typeof item.label === "function" ? item.label() : item.label}
+                          onNavigate={closeAll}
+                        />
+                      </Show>
                     </div>
                   )}
                 </For>
@@ -608,6 +633,33 @@ const Layout: ParentComponent = (props) => {
 
             {/* Action items — toggled by avatar click for authenticated users */}
             <Show when={actionsOpen() && actionItems().length > 0}>
+              {/* Channel-switcher subsection — its own labeled group, kept
+                  visually distinct from the actions grid below it. */}
+              <Show when={channelSwitcherActive() && channelMenuOpen()}>
+                <p class="px-4 pb-2 text-[0.625rem] font-semibold uppercase tracking-widest text-muted">
+                  {t("nav.channels")}
+                </p>
+                <div
+                  use:motion={{
+                    initial: { opacity: 0, y: 8 },
+                    animate: { opacity: 1, y: 0 },
+                    transition: {
+                      duration: reducedMotion ? 0 : 0.2,
+                      easing: [0.25, 0.46, 0.45, 0.94],
+                    },
+                  }}
+                  class="grid grid-cols-4 md:grid-cols-10 gap-1.5 px-2.5 pb-4"
+                >
+                  <ChannelSwitcherTiles
+                    channels={navChannels()}
+                    currentNick={navViewer()?.nick}
+                    onNavigate={closeAll}
+                  />
+                </div>
+              </Show>
+              <p class="px-4 pb-2 text-[0.625rem] font-semibold uppercase tracking-widest text-muted">
+                {t("layout.more")}
+              </p>
               <div
                 use:motion={{
                   initial: { opacity: 0, y: 14 },
@@ -622,27 +674,55 @@ const Layout: ParentComponent = (props) => {
                 <For each={actionItems()}>
                   {(item) => (
                     <div use:helpable={navItemHelpTarget(item)}>
-                      <A
-                        href={
-                          typeof item.href === "function"
-                            ? item.href()
-                            : item.href
+                      <Show
+                        when={channelSwitcherActive() && item.path === "/manage"}
+                        fallback={
+                          <A
+                            href={
+                              typeof item.href === "function"
+                                ? item.href()
+                                : item.href
+                            }
+                            onClick={closeAll}
+                            class="flex flex-col items-center gap-1.5 py-2.5 px-1
+                                   rounded-xl bg-elevated border border-rim
+                                   text-txt text-xs font-medium leading-tight text-center
+                                   hover:brightness-95 transition-all"
+                          >
+                            <span aria-hidden="true" class="text-muted">
+                              {getNavIcon(item.icon, 20)}
+                            </span>
+                            <span class="truncate w-full text-center">
+                              {typeof item.label === "function"
+                                ? item.label()
+                                : item.label}
+                            </span>
+                          </A>
                         }
-                        onClick={closeAll}
-                        class="flex flex-col items-center gap-1.5 py-2.5 px-1
-                               rounded-xl bg-elevated border border-rim
-                               text-txt text-xs font-medium leading-tight text-center
-                               hover:brightness-95 transition-all"
                       >
-                        <span aria-hidden="true" class="text-muted">
-                          {getNavIcon(item.icon, 20)}
-                        </span>
-                        <span class="truncate w-full text-center">
-                          {typeof item.label === "function"
-                            ? item.label()
-                            : item.label}
-                        </span>
-                      </A>
+                        <button
+                          type="button"
+                          onClick={() => setChannelMenuOpen((o) => !o)}
+                          aria-expanded={channelMenuOpen()}
+                          class={`flex flex-col items-center gap-1.5 py-2.5 px-1 w-full
+                                 rounded-xl border text-xs font-medium leading-tight text-center
+                                 transition-all cursor-pointer
+                                 ${
+                                   channelMenuOpen()
+                                     ? "border-accent bg-accent/10 text-accent"
+                                     : "bg-elevated border-rim text-txt hover:brightness-95"
+                                 }`}
+                        >
+                          <span aria-hidden="true" class={channelMenuOpen() ? "" : "text-muted"}>
+                            {getNavIcon(item.icon, 20)}
+                          </span>
+                          <span class="truncate w-full text-center">
+                            {typeof item.label === "function"
+                              ? item.label()
+                              : item.label}
+                          </span>
+                        </button>
+                      </Show>
                     </div>
                   )}
                 </For>

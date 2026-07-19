@@ -35,4 +35,6 @@ export const nav: RawDictionary["nav"] = {
   bookmarks:     "Lesezeichen",
   profiles:      "Profile",
   drag_reorder:  "Ziehen zum Neuanordnen",
+  new_channel:     "Neuer Kanal",
+  manage_channels: "Kanäle verwalten",
 };

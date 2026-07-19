@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/solid-query";
 import SubPageContent from "@/shared/views/SubPageContent";
 import { apiFetch } from "@/shared/lib/fetch";
 import { toast } from "@/shared/store/toast";
+import { refetchNavData } from "@/shared/store/nav-store";
 import { useI18n } from "@/i18n";
 
 interface FeatureEntry {
@@ -16,6 +17,9 @@ interface FeatureEntry {
 interface FeaturesData {
   features: FeatureEntry[];
 }
+
+// Feature keys whose toggled state is also surfaced in /spa/nav.
+const NAV_AFFECTING_FEATURES = new Set(["nav_channel_select"]);
 
 async function fetchFeatures(): Promise<FeaturesData> {
   const res = await apiFetch("/spa/settings/features");
@@ -62,6 +66,10 @@ export default function FeaturesSection() {
             }
           : prev,
       );
+      // Some feature toggles are also reflected in /spa/nav (e.g. the nav
+      // "channels" entry gates on nav_channel_select) — refetch it so the
+      // change shows up immediately instead of waiting on the next reload.
+      if (NAV_AFFECTING_FEATURES.has(name)) refetchNavData();
     },
     onError: () => {
       toast.error("Failed to toggle feature");

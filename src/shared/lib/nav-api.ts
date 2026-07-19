@@ -82,6 +82,8 @@ export interface NavApiResponse {
   sitelocation: string;
   /** All channels on this account — empty for visitors / delegate sessions */
   channels: NavChannel[];
+  /** "Navigation Channel Select" feature toggle — see settings.title_features */
+  nav_channel_select: boolean;
   /** User-ordered pinned apps (nav_pinned_app) — primary sidebar nav */
   pinned: NavApp[];
   /** User's featured app selection (nav_featured_app) — empty for non-local users */
@@ -204,6 +206,7 @@ export async function fetchNavApi(channelNick?: string): Promise<NavApiResponse>
     sitelogo:         raw.sitelogo ?? "",
     sitelocation:     raw.sitelocation ?? "",
     channels:         raw.channels ?? [],
+    nav_channel_select: raw.nav_channel_select ?? false,
     pinned,
     featured,
     system_apps,
