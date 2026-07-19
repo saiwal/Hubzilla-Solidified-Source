@@ -21,8 +21,8 @@ registerModule({
       label: () => useI18n().t("hq.quick_compose"),
       loader: () => import("./widgets/QuickComposeWidget"),
       slot: "mainTop",
-      defaultModules: ["hq"],
-      contexts: ["any"],
+      defaultModules: [],
+      contexts: "any",
       helpTarget: "hq.quick_compose_widget",
     },
 		{
@@ -42,8 +42,8 @@ registerModule({
       label: () => useI18n().t("hq.post_composer"),
       loader: () => import("./widgets/HqComposer"),
       slot: "mainTop",
-      defaultModules: ["hq"],
-      contexts: ["any"],
+      defaultModules: [],
+      contexts: "any",
       helpTarget: "hq.post_composer",
     },
     {

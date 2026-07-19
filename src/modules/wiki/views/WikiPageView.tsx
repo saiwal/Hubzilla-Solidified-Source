@@ -407,7 +407,7 @@ export default function WikiPageView() {
             <p class="text-muted text-xs mb-2">{t("wiki.page_new_hint")}</p>
             <WikiComposer
               initialBody=""
-              mimeType={currentWiki()?.mime_type ?? "text/markdown"}
+              mimeType={currentWiki()?.mime_type ?? "text/bbcode"}
               saving={saving()}
               onSave={handleSave}
               onCancel={() => navigate(`/wiki/${params.nick}/${params.wikiName}/Home`, { replace: true })}
@@ -568,7 +568,7 @@ export default function WikiPageView() {
           <Show when={editMode()}>
             <WikiComposer
               initialBody={draftContent()}
-              mimeType={pageData()?.page.mime_type ?? "text/markdown"}
+              mimeType={pageData()?.page.mime_type ?? "text/bbcode"}
               saving={saving()}
               onSave={handleSave}
               onCancel={toggleEditMode}

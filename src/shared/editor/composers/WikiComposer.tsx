@@ -20,7 +20,7 @@ export default function WikiComposer(props: Props) {
   const [tab, setTab] = createSignal<EditorTab>("source");
   const [commitMsg, setCommitMsg] = createSignal("");
 
-  const mime = () => (props.mimeType as MimeType) ?? "text/markdown";
+  const mime = () => (props.mimeType as MimeType) ?? "text/bbcode";
 
   return (
     <div class="space-y-3">
