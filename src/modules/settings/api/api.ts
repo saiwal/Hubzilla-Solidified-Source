@@ -1,5 +1,5 @@
 import { apiFetch } from "@/shared/lib/fetch";
-import type { AccountSettings, DisplaySettings, LocationEntry, NotificationSettings } from "../store/types";
+import type { AccountSettings, ChannelSettings, DisplaySettings, LocationEntry, NotificationSettings } from "../store/types";
 
 // ── Display ──────────────────────────────────────────────────────────────────
 export type { DisplaySettings };
@@ -12,6 +12,25 @@ export async function fetchDisplaySettings(): Promise<DisplaySettings> {
 
 export async function saveDisplaySettings(data: Partial<DisplaySettings>): Promise<void> {
   const res = await apiFetch("/spa/settings/display", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw new Error(json?.error?.message ?? "Save failed");
+  }
+}
+
+// ── Channel ──────────────────────────────────────────────────────────────────
+
+export async function fetchChannelSettings(): Promise<ChannelSettings> {
+  const res = await apiFetch("/spa/settings/channel");
+  const { data } = await res.json();
+  return data;
+}
+
+export async function saveChannelSettings(data: Partial<ChannelSettings>): Promise<void> {
+  const res = await apiFetch("/spa/settings/channel", {
     method: "POST",
     body: JSON.stringify(data),
   });

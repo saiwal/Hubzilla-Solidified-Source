@@ -885,6 +885,8 @@ export type RawDictionary = {
     desc_display:        string;
     title_privacy:       string;
     desc_privacy:        string;
+    title_channel:       string;
+    desc_channel:        string;
     title_profile:       string;
     desc_profile:        string;
     title_notifications: string;
@@ -1013,6 +1015,36 @@ export type RawDictionary = {
     privacy_group_actor:          string;
     privacy_ocap:                 string;
     privacy_ocap_hint:            string;
+    // Channel section
+    channel_role_title:      string;
+    channel_role_desc:       string;
+    channel_role:            string;
+    channel_role_hint:       string;
+    channel_role_select:     string;
+    channel_basic_title:     string;
+    channel_basic_desc:      string;
+    channel_timezone:        string;
+    channel_defloc:          string;
+    channel_defloc_hint:     string;
+    channel_allow_location:  string;
+    channel_adult:           string;
+    channel_adult_hint:      string;
+    channel_maxreq:          string;
+    channel_maxreq_hint:     string;
+    channel_content_title:   string;
+    channel_content_desc:    string;
+    channel_photo_path:      string;
+    channel_attach_path:     string;
+    channel_path_hint:       string;
+    channel_expire:          string;
+    channel_expire_hint:     string;
+    channel_expire_site:     string;
+    channel_filter_incl:     string;
+    channel_filter_excl:     string;
+    channel_filter_hint:     string;
+    channel_perm_limits_open: string;
+    channel_perm_limits_note: string;
+    channel_perm_limits_done: string;
     // Notifications
     notif_autopost_title:    string;
     notif_autopost_desc:     string;

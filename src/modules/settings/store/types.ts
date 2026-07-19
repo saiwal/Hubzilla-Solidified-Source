@@ -17,23 +17,33 @@ export interface DisplaySettings {
 }
 
 // ── Privacy ──────────────────────────────────────────────────────────────────
-export interface PrivacyPermission {
-  key: string;
-  label: string;
-  value: number;
-  help: string;
-  options: Record<number, string>;
-}
-
 export interface PrivacySettings {
-  permission_limits: boolean;
-  permiss_arr: [string, string, number, string, Record<number, string>][];
   autoperms: number;
   index_opt_out: number;
-  group_actor: number;
   permit_all_mentions: number;
   moderate_unsolicited_comments: number;
   ocap_enabled: number;
+}
+
+// ── Channel ──────────────────────────────────────────────────────────────────
+export interface ChannelSettings {
+  permissions_role: string;                          // '' = none set, force selection
+  role_options: Record<string, string>;              // role key → translated label
+  timezone: string;
+  timezones: Record<string, Record<string, string>>; // continent → { zoneId: city }
+  defloc: string;
+  allow_location: number; // 0 | 1
+  adult: number;          // 0 | 1
+  maxreq: number;
+  photo_path: string;
+  attach_path: string;
+  expire: number;
+  expire_sys: number;     // site-wide expire limit, 0 = none (hint only)
+  message_filter_incl: string;
+  message_filter_excl: string;
+  // Custom-role permission limits: [key, label, value, help, options]
+  permiss_arr: [string, string, number, string, Record<number, string>][];
+  group_actor: number;    // 0 | 1
 }
 
 // ── Account ──────────────────────────────────────────────────────────────────
@@ -66,7 +76,4 @@ export interface NotificationSettings {
   post_joingroup: number;
   post_profilechange: number;
   mailhost: string;
-  photo_path: string;
-  attach_path: string;
-  expire: number;
 }

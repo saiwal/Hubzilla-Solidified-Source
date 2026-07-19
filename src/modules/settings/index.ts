@@ -7,6 +7,7 @@ export const SETTINGS_ITEMS: SubPageItem[] = [
   // It is listed here for sidebar display only — excluded from settingsRoutes below.
   { path: "profile",       label: () => useI18n().t("settings.title_profile") },
   { path: "account",       label: () => useI18n().t("settings.title_account") },
+  { path: "channel",       label: () => useI18n().t("settings.title_channel") },
   { path: "privacy",       label: () => useI18n().t("settings.title_privacy") },
   { path: "locations",     label: () => useI18n().t("settings.title_locations") },
   { path: "notifications", label: () => useI18n().t("settings.title_notifications") },
