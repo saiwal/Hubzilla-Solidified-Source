@@ -1,6 +1,6 @@
 import { Show, For } from "solid-js";
 import { createQueryResource } from "@/shared/lib/createQueryResource";
-import { usePageNick } from "@/shared/store/site-config";
+import { usePageNick, useViewerRole } from "@/shared/store/site-config";
 import { apiFetch } from "@/shared/lib/fetch";
 import { useI18n } from "@/i18n";
 
@@ -28,6 +28,7 @@ async function fetchConnections(nick: string): Promise<ConnectionsData | null> {
 
 export default function ChannelConnectionsWidget() {
   const nick = usePageNick();
+  const viewerRole = useViewerRole();
   const { t } = useI18n();
 
   const [data] = createQueryResource("channel-connections", () => nick(), fetchConnections);
@@ -69,7 +70,7 @@ export default function ChannelConnectionsWidget() {
           </For>
         </div>
 
-        <Show when={total() > conns().length}>
+        <Show when={viewerRole() === "owner" && total() > conns().length}>
           <div class="mt-2.5 text-center">
             <a
               href="/directory/connections"

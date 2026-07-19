@@ -198,9 +198,15 @@ const Avatar: Component<{ src?: string; name: string; size?: string }> = (props)
 
 // ── Message item ──────────────────────────────────────────────────────────
 
-const MessageItem: Component<{ entry: MessageEntry; feedType: FeedType }> = (props) => {
+const MessageItem: Component<{
+  entry: MessageEntry;
+  feedType: FeedType;
+  // Modal state lives in MessageList — the background poll replaces entry
+  // objects wholesale, which disposes/recreates every MessageItem, so any
+  // local "modal open" signal here would reset and close an open modal.
+  onOpen: () => void;
+}> = (props) => {
   const e = props.entry;
-  const [showModal, setShowModal] = createSignal(false);
   const [locallyRead, setLocallyRead] = createSignal(false);
 
   // unseen_count is a real number when there are unseen replies, but a
@@ -218,7 +224,7 @@ const MessageItem: Component<{ entry: MessageEntry; feedType: FeedType }> = (pro
   const iconPath = () => TYPE_ICON_PATH[entryType()];
 
   function handleClick() {
-    setShowModal(true);
+    props.onOpen();
     if (!locallyRead() && isAnyUnseen()) {
       setLocallyRead(true);
       markItemSeen(e.b64mid);
@@ -315,10 +321,6 @@ const MessageItem: Component<{ entry: MessageEntry; feedType: FeedType }> = (pro
       </button>
 
       <div class="mx-3.5 h-px bg-rim" />
-
-      <Show when={showModal()}>
-        <PostDetailModal uuid={e.b64mid} onClose={() => setShowModal(false)} />
-      </Show>
     </>
   );
 };
@@ -364,6 +366,10 @@ export const MessageList: Component<{
 }> = (props) => {
   const { t } = useI18n();
   const [entries, setEntries] = createSignal<MessageEntry[]>([]);
+  // b64mid of the entry whose detail modal is open. Kept here (not in
+  // MessageItem) so the modal survives the background poll replacing the
+  // entry objects and recreating the row components.
+  const [openMid, setOpenMid] = createSignal<string | null>(null);
   const [offset, setOffset] = createSignal(0);
   const [loading, setLoading] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
@@ -528,7 +534,13 @@ export const MessageList: Component<{
           <>
             <GroupHeader label={group.label} count={group.items.length} />
             <For each={group.items}>
-              {(entry) => <MessageItem entry={entry} feedType={props.type} />}
+              {(entry) => (
+                <MessageItem
+                  entry={entry}
+                  feedType={props.type}
+                  onOpen={() => setOpenMid(entry.b64mid)}
+                />
+              )}
             </For>
           </>
         )}
@@ -542,6 +554,10 @@ export const MessageList: Component<{
           </svg>
           {t("hq.loading")}
         </div>
+      </Show>
+
+      <Show when={openMid()}>
+        <PostDetailModal uuid={openMid()!} onClose={() => setOpenMid(null)} />
       </Show>
     </div>
   );
