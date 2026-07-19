@@ -1,4 +1,5 @@
 import { markItemSeen } from '@/shared/lib/markSeen';
+import { apiFetch } from '@/shared/lib/fetch';
 import { useI18n } from "@/i18n";
 import { MdOutlineWarning } from "solid-icons/md";
 import {
@@ -78,7 +79,7 @@ const TYPE_RAIL: Record<MessageType, string> = {
   "notification": "#8b5cf6",           // violet-500
 };
 
-const TYPE_ICON_PATH: Record<MessageType, string> = {
+export const TYPE_ICON_PATH: Record<MessageType, string> = {
   "":
     "M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z",
   "direct":
@@ -148,25 +149,19 @@ async function fetchMessages(params: {
   offset: number;
   type: MessageType | "filed";
   file: string;
+  search: string;
   signal?: AbortSignal;
 }): Promise<HqResponse> {
-  const body = new URLSearchParams({
+  const qs = new URLSearchParams({
     offset: String(params.offset),
     type: params.type,
     file: params.file,
+    search: params.search,
   });
-  const res = await fetch("/hq", {
-    method: "POST",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Accept: "application/json",
-    },
-    body: body.toString(),
-    signal: params.signal,
-  });
+  const res = await apiFetch(`/spa/hq-messages?${qs.toString()}`, { signal: params.signal });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+  const { data, meta } = await res.json();
+  return { entries: data, offset: meta?.offset ?? -1 };
 }
 
 // ── Avatar ────────────────────────────────────────────────────────────────
@@ -379,23 +374,10 @@ export const MessageList: Component<{
   let resetController: AbortController | null = null;
   let loadMoreActive = false;
 
-  // The server's `author` param is an exact xchan-hash match, not a text
-  // search (see Zotlabs/Widget/Messages.php::get_messages_page) — so
-  // filtering is done client-side over whatever's currently loaded.
-  const filteredEntries = createMemo(() => {
-    const q = (props.authorFilter ?? "").trim().toLowerCase();
-    if (!q) return entries();
-    return entries().filter(
-      (e) =>
-        e.author_name.toLowerCase().includes(q) ||
-        e.author_addr.toLowerCase().includes(q),
-    );
-  });
-
   // Group entries by time band in stable order
   const groupedEntries = createMemo(() => {
     const buckets: Partial<Record<TimeGroup, MessageEntry[]>> = {};
-    for (const entry of filteredEntries()) {
+    for (const entry of entries()) {
       const g = getTimeGroup(entry.created);
       (buckets[g] ??= []).push(entry);
     }
@@ -432,6 +414,7 @@ export const MessageList: Component<{
         offset: currentOffset,
         type: feedType === "folder" ? "filed" : feedType,
         file: feedType === "folder" ? (props.file ?? "") : "",
+        search: (props.authorFilter ?? "").trim(),
         signal,
       });
 
@@ -458,11 +441,13 @@ export const MessageList: Component<{
 
   createEffect(() => {
     // Track type/file (switching folders — same "folder" type, different
-    // file — triggers a reset the same way switching feed type does) and
-    // reloadKey (bumped by the parent's refresh button).
+    // file — triggers a reset the same way switching feed type does),
+    // reloadKey (bumped by the parent's refresh button), and authorFilter
+    // (the search box — filtering is done server-side, see fetchMessages).
     props.type;
     props.file;
     props.reloadKey;
+    props.authorFilter;
     setOffset(0);
     loadPage(true);
   });
@@ -496,7 +481,7 @@ export const MessageList: Component<{
         </div>
       </Show>
 
-      <Show when={empty() && !loading()}>
+      <Show when={empty() && !loading() && !(props.authorFilter ?? "").trim()}>
         <div class="flex flex-col items-center justify-center h-full gap-2 text-sm text-muted py-16">
           <svg class="w-8 h-8 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -510,7 +495,7 @@ export const MessageList: Component<{
         </div>
       </Show>
 
-      <Show when={!empty() && !loading() && entries().length > 0 && filteredEntries().length === 0}>
+      <Show when={empty() && !loading() && (props.authorFilter ?? "").trim()}>
         <div class="flex flex-col items-center justify-center h-full gap-2 text-sm text-muted py-16">
           <svg class="w-8 h-8 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path

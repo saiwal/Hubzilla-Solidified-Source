@@ -8,10 +8,11 @@ import { FEED_META, MessageList, type MessageType } from "./MessageList";
 
 // Card chrome (title + refresh/compose actions + author-filter search)
 // around the shared MessageList. Each concrete hq.messages.* widget is a
-// thin wrapper that fixes `type`; see HqMessagesWidget.tsx,
-// HqDirectMessagesWidget.tsx, HqStarredMessagesWidget.tsx and
-// HqNoticesWidget.tsx.
-export const MessageFeed: Component<{ type: MessageType }> = (props) => {
+// thin wrapper that fixes `type`; see HqDirectMessagesWidget.tsx and
+// HqNoticesWidget.tsx. `bare` drops the outer card + title so this can be
+// embedded as the "All" tab inside HqMessagesWidget, which owns its own
+// card chrome and tab bar instead.
+export const MessageFeed: Component<{ type: MessageType; bare?: boolean }> = (props) => {
   const { t } = useI18n();
   const auth = useAuth();
   const [authorFilter, setAuthorFilter] = createSignal("");
@@ -29,17 +30,16 @@ export const MessageFeed: Component<{ type: MessageType }> = (props) => {
   // and notification entries aren't things a user composes.
   const canCompose = () => props.type === "" || props.type === "direct";
 
-  return (
-    <div
-      class="bg-surface rounded-2xl border border-rim flex flex-col overflow-hidden shadow-sm"
-      style={{ height: "480px" }}
-    >
+  const body = (
+    <>
       {/* ── Header ── */}
       <div class="px-3.5 pt-3.5 pb-2 shrink-0">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-medium uppercase tracking-wider text-muted">
-            {t(FEED_META[props.type].titleKey as "hq.msg_tab_all")}
-          </span>
+          <Show when={!props.bare} fallback={<span />}>
+            <span class="text-xs font-medium uppercase tracking-wider text-muted">
+              {t(FEED_META[props.type].titleKey as "hq.msg_tab_all")}
+            </span>
+          </Show>
           <div class="flex items-center gap-1">
             <Show when={canCompose() && !auth.loading && auth()?.uid}>
               <button
@@ -118,6 +118,20 @@ export const MessageFeed: Component<{ type: MessageType }> = (props) => {
           onClose={() => setShowCompose(false)}
         />
       </Show>
-    </div>
+    </>
+  );
+
+  return (
+    <Show
+      when={!props.bare}
+      fallback={<div class="flex-1 flex flex-col overflow-hidden">{body}</div>}
+    >
+      <div
+        class="bg-surface rounded-2xl border border-rim flex flex-col overflow-hidden shadow-sm"
+        style={{ height: "480px" }}
+      >
+        {body}
+      </div>
+    </Show>
   );
 };
