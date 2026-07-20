@@ -18,8 +18,9 @@ import DOMPurify from "dompurify";
 import EventCard from "@/shared/stream/components/EventCard";
 import { parseEventData } from "@/shared/lib/activity.mapper";
 import { markItemSeen } from "@/shared/lib/markSeen";
-import { MdOutlineSchedule, MdOutlineTimer } from "solid-icons/md";
+import { MdOutlineSchedule, MdOutlineTimer, MdFillPush_pin } from "solid-icons/md";
 import { BiRegularEnvelope } from "solid-icons/bi";
+import { useAuth } from "@/shared/store/auth-store";
 function useColumnCount(): () => number {
   const getCount = () => {
     const w = window.innerWidth;
@@ -50,6 +51,8 @@ function MasonryCard(props: {
   onOpenModal: () => void;
 }) {
   const p = props.post;
+  const auth = useAuth();
+  const canInteract = () => auth()?.isLoggedIn === true;
   const replyCount = () =>
     p.children.length > 0
       ? countAllComments(p.children)
@@ -108,6 +111,7 @@ function MasonryCard(props: {
   const scheduledTitle = () =>
     `${t("post.scheduled_title")}: ${new Date(props.post.created + "Z").toLocaleString(locale())}`;
   const isDirectMessage = () => props.post.flags.includes("direct_message");
+  const isPinned = () => props.post.pinned ?? false;
 
   return (
     <>
@@ -116,11 +120,21 @@ function MasonryCard(props: {
         onClick={() => props.onOpenModal()}
         class="relative mb-3 bg-surface border border-rim rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
       >
-        <Show when={p.flags.includes("unseen")}>
-          <span class="absolute top-2.5 right-2.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-accent text-accent-fg leading-none z-10">
-            New
-          </span>
-        </Show>{" "}
+        <div class="absolute top-2.5 right-2.5 z-10 flex items-center gap-1">
+          <Show when={isPinned()}>
+            <span
+              class="flex items-center justify-center w-5 h-5 rounded-full bg-accent text-accent-fg leading-none"
+              title={t("post.pinned_indicator")}
+            >
+              <MdFillPush_pin size={11} />
+            </span>
+          </Show>
+          <Show when={p.flags.includes("unseen")}>
+            <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-accent text-accent-fg leading-none">
+              New
+            </span>
+          </Show>
+        </div>{" "}
         {/* Author */}
         <div class="flex items-center gap-2 mb-3">
           <Show
@@ -304,33 +318,35 @@ function MasonryCard(props: {
           class="flex items-center gap-3 mt-3 pt-3 border-t border-rim"
           onClick={(e) => e.stopPropagation()}
         >
-          <button
-            onClick={() => props.handlers.onLike(p.mid)}
-            aria-label={t("post.like")}
-            aria-pressed={p.viewerLiked}
-            class="flex items-center gap-1 text-xs transition-colors"
-            classList={{
-              "text-accent": p.viewerLiked,
-              "text-muted hover:text-accent": !p.viewerLiked,
-            }}
-          >
-            <svg
-              class="w-3.5 h-3.5"
-              fill={p.viewerLiked ? "currentColor" : "none"}
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          <Show when={canInteract()}>
+            <button
+              onClick={() => props.handlers.onLike(p.mid)}
+              aria-label={t("post.like")}
+              aria-pressed={p.viewerLiked}
+              class="flex items-center gap-1 text-xs transition-colors"
+              classList={{
+                "text-accent": p.viewerLiked,
+                "text-muted hover:text-accent": !p.viewerLiked,
+              }}
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-              />
-            </svg>
-            {p.likeCount || ""}
-          </button>
+              <svg
+                class="w-3.5 h-3.5"
+                fill={p.viewerLiked ? "currentColor" : "none"}
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                />
+              </svg>
+              {p.likeCount || ""}
+            </button>
+          </Show>
 
-          <Show when={!p.flags?.includes("private")}>
+          <Show when={!p.flags?.includes("private") && canInteract()}>
             <button
               onClick={() => props.handlers.onRepeat(p.mid)}
               aria-label={t("post.repeat")}

@@ -69,7 +69,7 @@ export default function CommentComposer(props: Props) {
   window.addEventListener("keydown", wiring.onKeyDown);
   onCleanup(() => window.removeEventListener("keydown", wiring.onKeyDown));
 
-  if (!auth()?.isLocal) return null;
+  if (!auth()?.isLoggedIn) return null;
 
   return (
     <div class="mt-3 space-y-2">
@@ -90,21 +90,25 @@ export default function CommentComposer(props: Props) {
             onCtrlEnter={() => {
               if (!wiring.mention.open()) store.submit();
             }}
-            onPasteFiles={(files) => attach.addUploads(files)}
+            onPasteFiles={auth()?.isLocal ? (files) => attach.addUploads(files) : undefined}
             placeholder={t("editor.write_reply_ctrl")}
             minHeight="60px"
           />
-          <AttachmentBar
-            store={attach}
-            nick={currentNick()}
-            accept="both"
-            onInsert={(bbcode) => {
-              store.setBody(store.body() + "\n" + bbcodeToInsert(bbcode, "text/bbcode"));
-            }}
-            onAltChange={(att) => {
-              store.setBody(patchInsertedAlt(store.body(), att, "text/bbcode"));
-            }}
-          />
+          {/* Attachment uploads go through wall_attach/:nick — remote/OWA
+              commenters have no local nick on this server to upload against. */}
+          <Show when={auth()?.isLocal}>
+            <AttachmentBar
+              store={attach}
+              nick={currentNick()}
+              accept="both"
+              onInsert={(bbcode) => {
+                store.setBody(store.body() + "\n" + bbcodeToInsert(bbcode, "text/bbcode"));
+              }}
+              onAltChange={(att) => {
+                store.setBody(patchInsertedAlt(store.body(), att, "text/bbcode"));
+              }}
+            />
+          </Show>
         </div>
       </div>
 

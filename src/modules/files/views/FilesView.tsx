@@ -668,29 +668,31 @@ export default function FilesView() {
             </div>
           </Show>
 
-          <button
-            onClick={() => setShowNewFolder((v) => !v)}
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rim
-                   text-sm text-muted hover:bg-elevated transition-colors"
-          >
-            <MdFillFolder size={14} />
-            {t("files_mod.new_folder")}
-          </button>
+          <Show when={isOwner()}>
+            <button
+              onClick={() => setShowNewFolder((v) => !v)}
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rim
+                     text-sm text-muted hover:bg-elevated transition-colors"
+            >
+              <MdFillFolder size={14} />
+              {t("files_mod.new_folder")}
+            </button>
 
-          <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent
-                        text-accent-fg text-sm cursor-pointer hover:opacity-90 transition-opacity">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-            </svg>
-            {t("files_mod.upload")}
-            <input type="file" multiple class="sr-only" onChange={handleUpload} />
-          </label>
+            <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent
+                          text-accent-fg text-sm cursor-pointer hover:opacity-90 transition-opacity">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              {t("files_mod.upload")}
+              <input type="file" multiple class="sr-only" onChange={handleUpload} />
+            </label>
+          </Show>
         </div>
       </div>
 
       {/* ── Upload progress ── */}
-      <Show when={uploadPct() !== null}>
+      <Show when={isOwner() && uploadPct() !== null}>
         <div class="space-y-1">
           <p class="text-xs text-muted">{t("files_mod.uploading")} {uploadPct()}%</p>
           <div class="h-1 w-full bg-overlay rounded-full overflow-hidden">
@@ -698,12 +700,12 @@ export default function FilesView() {
           </div>
         </div>
       </Show>
-      <Show when={uploadErr()}>
+      <Show when={isOwner() && uploadErr()}>
         <p class="text-sm text-red-500">{uploadErr()}</p>
       </Show>
 
       {/* ── New folder form ── */}
-      <Show when={showNewFolder()}>
+      <Show when={isOwner() && showNewFolder()}>
         <form onSubmit={handleCreateFolder} class="flex gap-2">
           <input
             type="text"

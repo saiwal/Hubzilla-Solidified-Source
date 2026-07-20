@@ -70,6 +70,7 @@ export interface Post {
   viewerDisliked: boolean;
   viewerRepeated: boolean;
   viewerStarred?: boolean;
+  pinned?: boolean; // channel-wide pin state (not viewer-relative), from flags[]
   viewerFollowing?: boolean;
   viewerAttending?: boolean;
   viewerDeclining?: boolean;

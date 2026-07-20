@@ -70,6 +70,9 @@ export const apiToggleDislike = (uuid: string) =>
 export const apiToggleRepeat  = (uuid: string) =>
   post<ReactionResult>(`${BASE}/${encodeId(uuid)}/repeat`);
 
+export const apiTogglePin = (uuid: string) =>
+  post<{ success: boolean; pinned: boolean }>(`${BASE}/${encodeId(uuid)}/pin`);
+
 export const apiToggleStar = (iid: number): Promise<void> =>
   fetch(`/starred/${iid}`, {
     credentials: 'include',

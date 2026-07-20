@@ -9,6 +9,7 @@ import {
 } from "solid-icons/md";
 import DOMPurify from "dompurify";
 import { useI18n } from "@/i18n";
+import { useAuth } from "@/shared/store/auth-store";
 import { toast } from "@/shared/store/toast";
 import type { CalEvent } from "../api";
 import { deleteEvent } from "../api";
@@ -42,6 +43,10 @@ interface Props {
 
 export default function DayDetailModal(props: Props) {
   const { t } = useI18n();
+  const auth = useAuth();
+  // New events always go to the viewer's own calendar — creation requires a
+  // local channel on this server, same as CalView's header button.
+  const canCreate = () => auth()?.isLocal === true;
   const [activeEventId, setActiveEventId] = createSignal<number | null>(null);
   const [showCreator, setShowCreator] = createSignal(false);
   const [editingEvent, setEditingEvent] = createSignal<CalEvent | null>(null);
@@ -83,15 +88,17 @@ export default function DayDetailModal(props: Props) {
               </p>
             </div>
             <div class="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => setShowCreator(true)}
-                class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium
-                       bg-accent text-accent-fg hover:opacity-90 transition-opacity"
-              >
-                <MdFillAdd size={14} />
-                {t("calendar.new_event")}
-              </button>
+              <Show when={canCreate()}>
+                <button
+                  type="button"
+                  onClick={() => setShowCreator(true)}
+                  class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium
+                         bg-accent text-accent-fg hover:opacity-90 transition-opacity"
+                >
+                  <MdFillAdd size={14} />
+                  {t("calendar.new_event")}
+                </button>
+              </Show>
               <button
                 type="button"
                 onClick={props.onClose}
@@ -110,13 +117,15 @@ export default function DayDetailModal(props: Props) {
               fallback={
                 <div class="flex flex-col items-center py-10 gap-2 text-center">
                   <p class="text-sm text-muted">{t("calendar.no_events")}</p>
-                  <button
-                    type="button"
-                    onClick={() => setShowCreator(true)}
-                    class="text-xs text-accent hover:underline mt-1"
-                  >
-                    {t("calendar.add_event_here")}
-                  </button>
+                  <Show when={canCreate()}>
+                    <button
+                      type="button"
+                      onClick={() => setShowCreator(true)}
+                      class="text-xs text-accent hover:underline mt-1"
+                    >
+                      {t("calendar.add_event_here")}
+                    </button>
+                  </Show>
                 </div>
               }
             >

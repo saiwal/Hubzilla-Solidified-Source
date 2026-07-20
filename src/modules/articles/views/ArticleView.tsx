@@ -470,37 +470,39 @@ export default function ArticleView() {
 
                 {/* Reactions / action bar */}
                 <div class="flex items-center gap-1 pt-4 border-t border-rim flex-wrap">
-                  <button
-                    onClick={handleLike}
-                    title="Like"
-                    class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
-                           transition-colors select-none hover:bg-overlay
-                           ${reactions().viewerLiked ? "text-accent" : "text-muted"}`}
-                  >
-                    <MdOutlineThumb_up size={17} />
-                    <Show when={reactions().likeCount > 0}>
-                      <span>{reactions().likeCount}</span>
-                    </Show>
-                  </button>
+                  <Show when={auth()?.isLoggedIn}>
+                    <button
+                      onClick={handleLike}
+                      title="Like"
+                      class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                             transition-colors select-none hover:bg-overlay
+                             ${reactions().viewerLiked ? "text-accent" : "text-muted"}`}
+                    >
+                      <MdOutlineThumb_up size={17} />
+                      <Show when={reactions().likeCount > 0}>
+                        <span>{reactions().likeCount}</span>
+                      </Show>
+                    </button>
 
-                  <button
-                    onClick={handleDislike}
-                    title="Dislike"
-                    class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
-                           transition-colors select-none hover:bg-overlay
-                           ${reactions().viewerDisliked ? "text-accent" : "text-muted"}`}
-                  >
-                    <MdOutlineThumb_down size={17} />
-                    <Show when={reactions().dislikeCount > 0}>
-                      <span>{reactions().dislikeCount}</span>
-                    </Show>
-                  </button>
+                    <button
+                      onClick={handleDislike}
+                      title="Dislike"
+                      class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                             transition-colors select-none hover:bg-overlay
+                             ${reactions().viewerDisliked ? "text-accent" : "text-muted"}`}
+                    >
+                      <MdOutlineThumb_down size={17} />
+                      <Show when={reactions().dislikeCount > 0}>
+                        <span>{reactions().dislikeCount}</span>
+                      </Show>
+                    </button>
+                  </Show>
 
                   <button
                     type="button"
                     onClick={copyArticleLink}
                     title={t("articles.copy_link")}
-                    class={`${auth() ? "" : "ml-auto "}flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                    class={`${auth()?.isLocal ? "" : "ml-auto "}flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
                            transition-colors hover:bg-overlay text-muted hover:text-txt`}
                   >
                     <Show when={linkCopied()} fallback={<MdOutlineContent_copy size={17} />}>
@@ -508,7 +510,8 @@ export default function ArticleView() {
                     </Show>
                   </button>
 
-                  <Show when={auth()}>
+                  {/* Quote-share posts to the viewer's own wall — needs a local channel on this server */}
+                  <Show when={auth()?.isLocal}>
                     <button
                       type="button"
                       onClick={() => setShareOpen(v => !v)}
@@ -521,7 +524,7 @@ export default function ArticleView() {
                     </button>
                   </Show>
 
-                  <Show when={auth()?.isLocal}>
+                  <Show when={auth()?.isLoggedIn}>
                     <button
                       onClick={() => setReplyOpen(v => !v)}
                       class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium

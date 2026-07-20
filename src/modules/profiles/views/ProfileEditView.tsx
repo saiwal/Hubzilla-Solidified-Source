@@ -15,6 +15,23 @@ import type { EditorTab } from "@/shared/editor/types/editor.types";
 // Lazy-loaded so Filerobot + React don't inflate the profile chunk
 const ImageEditor = lazy(() => import("@/shared/views/ImageEditor"));
 
+// <input type="date"> can't represent year "0000" (Hubzilla's "year not
+// disclosed" convention), so a placeholder year keeps the picker populated;
+// the real "0000" is swapped back in on submit when dob_hide_year is checked.
+const DOB_PLACEHOLDER_YEAR = "2000";
+
+function dobDateValue(dob: string | undefined): string {
+  const m = (dob ?? "").match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return "";
+  const [, year, month, day] = m;
+  if (month === "00" || day === "00") return "";
+  return `${year === "0000" ? DOB_PLACEHOLDER_YEAR : year}-${month}-${day}`;
+}
+
+function dobYearHidden(dob: string | undefined): boolean {
+  return /^0000-\d{2}-\d{2}/.test(dob ?? "");
+}
+
 export default function ProfileEditView() {
   const { t } = useI18n();
   const params = useParams<{ id: string }>();
@@ -53,6 +70,19 @@ export default function ProfileEditView() {
     raw.about = aboutBody();
     raw.hide_friends = "hide_friends" in raw ? 1 : 0;
     raw.publish = "publish" in raw ? 1 : 0;
+
+    // dob_date carries a real (placeholder, if year is hidden) year so
+    // <input type="date"> — which can't represent year 0000 — stays populated;
+    // swap in "0000" here so month/day-only birthdays save correctly.
+    const dobDate = raw.dob_date as string | undefined;
+    if (dobDate) {
+      const [, month, day] = dobDate.split("-");
+      raw.dob = `${"dob_hide_year" in raw ? "0000" : dobDate.slice(0, 4)}-${month}-${day}`;
+    } else {
+      raw.dob = "0000-00-00";
+    }
+    delete raw.dob_date;
+    delete raw.dob_hide_year;
 
     setSaving(true);
     try {
@@ -350,7 +380,17 @@ export default function ProfileEditView() {
                   <input type="text" name="gender" value={p().gender ?? ""} class={inputClass} />
                 </Field>
                 <Field label={t("profiles.dob")} hint={t("profiles.dob_hint")}>
-                  <input type="text" name="dob" value={p().dob === "0000-00-00" ? "" : (p().dob ?? "")} class={inputClass} />
+                  <input type="date" name="dob_date" value={dobDateValue(p().dob)} class={inputClass} />
+                  <label class="flex items-center gap-2 mt-1.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      name="dob_hide_year"
+                      value="1"
+                      checked={dobYearHidden(p().dob)}
+                      class="h-4 w-4 rounded border-rim accent-accent cursor-pointer"
+                    />
+                    <span class="text-xs text-muted">{t("profiles.dob_hide_year")}</span>
+                  </label>
                 </Field>
                 <Field label={t("profiles.hometown")}>
                   <input type="text" name="hometown" value={p().hometown ?? ""} class={inputClass} />

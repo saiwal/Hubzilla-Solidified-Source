@@ -3,6 +3,7 @@ import {
 } from "solid-js";
 import { useParams } from "@solidjs/router";
 import { usePageNick } from "@/shared/store/site-config";
+import { useAuth } from "@/shared/store/auth-store";
 import { useI18n } from "@/i18n";
 import { MdFillChevron_left, MdFillChevron_right } from "solid-icons/md";
 import {
@@ -34,6 +35,10 @@ export default function CalView() {
   const params = useParams<{ nick?: string }>();
   const pageNick = usePageNick();
   const { t } = useI18n();
+  const auth = useAuth();
+  // New events always go to the viewer's own calendar, regardless of whose
+  // /cal/:nick page is open — creation requires a local channel on this server.
+  const canCreate = () => auth()?.isLocal === true;
 
   const resolvedNick = () => params.nick || pageNick();
 
@@ -130,17 +135,19 @@ export default function CalView() {
         </div>
 
         {/* New event */}
-        <button
-          type="button"
-          onClick={() => setShowCreator(true)}
-          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                 bg-accent text-accent-fg hover:opacity-90 transition-opacity"
-        >
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
-          </svg>
-          {t("calendar.new_event")}
-        </button>
+        <Show when={canCreate()}>
+          <button
+            type="button"
+            onClick={() => setShowCreator(true)}
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                   bg-accent text-accent-fg hover:opacity-90 transition-opacity"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+            </svg>
+            {t("calendar.new_event")}
+          </button>
+        </Show>
 
         {/* Navigation */}
         <div class="flex items-center gap-1">

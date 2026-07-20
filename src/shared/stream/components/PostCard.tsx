@@ -53,6 +53,8 @@ import {
   MdOutlineSchedule,
   MdOutlineContent_copy,
   MdOutlineCheck,
+  MdFillPush_pin,
+  MdOutlinePush_pin,
 } from "solid-icons/md";
 import { useI18n } from "@/i18n";
 import { BiRegularLinkExternal, BiSolidShareAlt, BiRegularEnvelope } from "solid-icons/bi";
@@ -333,6 +335,19 @@ export default function PostCard(props: {
   // Star: only meaningful for local authenticated users
   const canStar = () => !!props.handlers.onStar && auth()?.isLocal === true;
 
+  // Pin: channel wall owner only, top-level non-private posts (backend
+  // re-validates this — these are UI-visibility gates, not the source of truth).
+  const canPin = () =>
+    !!props.handlers.onPin &&
+    ownsStreamCopy() &&
+    props.post.item_thread_top === 1 &&
+    !isPrivate();
+  const isPinned = () => props.post.pinned ?? false;
+  function onPinClick() {
+    props.handlers.onPin?.(props.post.mid);
+    setMoreDropdownOpen(false);
+  }
+
   // Follow: local users on thread-top posts only — core attaches the
   // Follow/Ignore state to the thread top (mirrors thread_action_menu()).
   const canFollow = () =>
@@ -345,6 +360,11 @@ export default function PostCard(props: {
   // announce them), so their reshare controls are hidden entirely.
   const isPrivate = () => props.post.flags?.includes("private") ?? false;
   const canReshare = () => auth()?.isLocal === true && !!props.post.iid;
+
+  // Like/dislike/plain-repeat/reply all federate against the existing item
+  // (backend accepts local_channel() or remote_channel()) — any logged-in
+  // viewer can use them, not just native local users.
+  const canInteract = () => auth()?.isLoggedIn === true;
 
   const canViewSource = () => auth()?.isLocal === true && !!props.post.iid;
 
@@ -829,9 +849,17 @@ export default function PostCard(props: {
       <div
         ref={cardRef}
         style="overflow-anchor: none"
-        class={`border-l-2 pl-2 md:pl-3 py-2 md:py-2.5 mb-1 transition-colors duration-500
+        class={`relative border-l-2 pl-2 md:pl-3 py-2 md:py-2.5 mb-1 transition-colors duration-500
                ${props.highlighted ? "border-accent bg-accent/5" : "border-rim/60"}`}
       >
+        <Show when={isPinned()}>
+          <span
+            class="absolute top-1 right-1 z-10 flex items-center justify-center w-4 h-4 rounded-full bg-accent text-accent-fg leading-none"
+            title={t("post.pinned_indicator")}
+          >
+            <MdFillPush_pin size={9} />
+          </span>
+        </Show>
         {/* Single-line author header */}
         <div class="flex items-center gap-2 min-w-0">
           <Show when={isUnseen()}>
@@ -1004,32 +1032,34 @@ export default function PostCard(props: {
 
         {/* Compact action bar */}
         <div class="mt-2 flex items-center gap-0.5 flex-wrap">
-          <CompactActionBtn
-            icon={
-              props.post.viewerLiked ? (
-                <MdFillThumb_up size={14} />
-              ) : (
-                <MdOutlineThumb_up size={14} />
-              )
-            }
-            count={props.post.likeCount}
-            label={t("post.like")}
-            onClick={onLike}
-            active={props.post.viewerLiked}
-          />
-          <CompactActionBtn
-            icon={
-              props.post.viewerDisliked ? (
-                <MdFillThumb_down size={14} />
-              ) : (
-                <MdOutlineThumb_down size={14} />
-              )
-            }
-            count={props.post.dislikeCount}
-            label={t("post.dislike")}
-            onClick={onDislike}
-            active={props.post.viewerDisliked}
-          />
+          <Show when={canInteract()}>
+            <CompactActionBtn
+              icon={
+                props.post.viewerLiked ? (
+                  <MdFillThumb_up size={14} />
+                ) : (
+                  <MdOutlineThumb_up size={14} />
+                )
+              }
+              count={props.post.likeCount}
+              label={t("post.like")}
+              onClick={onLike}
+              active={props.post.viewerLiked}
+            />
+            <CompactActionBtn
+              icon={
+                props.post.viewerDisliked ? (
+                  <MdFillThumb_down size={14} />
+                ) : (
+                  <MdOutlineThumb_down size={14} />
+                )
+              }
+              count={props.post.dislikeCount}
+              label={t("post.dislike")}
+              onClick={onDislike}
+              active={props.post.viewerDisliked}
+            />
+          </Show>
           <Show when={canStar()}>
             <button
               onClick={onStar}
@@ -1048,7 +1078,7 @@ export default function PostCard(props: {
               </Show>
             </button>
           </Show>
-          <Show when={!isPrivate()}>
+          <Show when={!isPrivate() && canInteract()}>
           <Show
             when={canReshare()}
             fallback={
@@ -1166,7 +1196,7 @@ export default function PostCard(props: {
           {/* spacer keeps the trailing controls right-aligned even when the
               reply button is hidden (comments not allowed) */}
           <span class="ml-auto" />
-          <Show when={props.post.canComment !== false}>
+          <Show when={canInteract() && props.post.canComment !== false}>
             <button
               onClick={openReply}
               class="flex items-center gap-1 px-2 py-1 rounded-md text-xs
@@ -1182,6 +1212,7 @@ export default function PostCard(props: {
               canDelete() ||
               canEdit() ||
               canFollow() ||
+              canPin() ||
               canViewSource() ||
               canDeliveryReport() ||
               props.post.likeCount > 0 ||
@@ -1287,6 +1318,17 @@ export default function PostCard(props: {
                   >
                     <MdOutlineSend size={13} />
                     <span>{t("post.delivery_report")}</span>
+                  </button>
+                </Show>
+                <Show when={canPin()}>
+                  <button
+                    onClick={onPinClick}
+                    class="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-overlay transition-colors text-left text-txt"
+                  >
+                    <Show when={isPinned()} fallback={<MdOutlinePush_pin size={13} />}>
+                      <MdFillPush_pin size={13} />
+                    </Show>
+                    <span>{isPinned() ? t("post.unpin") : t("post.pin")}</span>
                   </button>
                 </Show>
                 <Show when={canEdit()}>
@@ -1433,6 +1475,14 @@ export default function PostCard(props: {
           : "relative bg-surface border border-rim rounded-2xl p-3 md:p-5 mb-4 shadow-sm hover:shadow-md transition-shadow duration-200"
       }
     >
+      <Show when={isPinned()}>
+        <span
+          class="absolute top-3 right-3 z-10 flex items-center justify-center w-6 h-6 rounded-full bg-accent text-accent-fg leading-none"
+          title={t("post.pinned_indicator")}
+        >
+          <MdFillPush_pin size={13} />
+        </span>
+      </Show>
       {/* Header */}
       <div class="flex items-start gap-3">
         <AuthorPopover
@@ -1639,34 +1689,36 @@ export default function PostCard(props: {
       {/* Action bar */}
       <div class="mt-4 pt-3 border-t border-rim flex flex-wrap items-center gap-1">
         {/* ── Like / Dislike / Star / Repeat ── */}
-        <ActionBtn
-          icon={
-            props.post.viewerLiked ? (
-              <MdFillThumb_up size={17} />
-            ) : (
-              <MdOutlineThumb_up size={17} />
-            )
-          }
-          count={props.post.likeCount}
-          label={t("post.like")}
-          onClick={onLike}
-          active={props.post.viewerLiked}
-          activeClass="text-accent"
-        />
-        <ActionBtn
-          icon={
-            props.post.viewerDisliked ? (
-              <MdFillThumb_down size={17} />
-            ) : (
-              <MdOutlineThumb_down size={17} />
-            )
-          }
-          count={props.post.dislikeCount}
-          label={t("post.dislike")}
-          onClick={onDislike}
-          active={props.post.viewerDisliked}
-          activeClass="text-accent"
-        />
+        <Show when={canInteract()}>
+          <ActionBtn
+            icon={
+              props.post.viewerLiked ? (
+                <MdFillThumb_up size={17} />
+              ) : (
+                <MdOutlineThumb_up size={17} />
+              )
+            }
+            count={props.post.likeCount}
+            label={t("post.like")}
+            onClick={onLike}
+            active={props.post.viewerLiked}
+            activeClass="text-accent"
+          />
+          <ActionBtn
+            icon={
+              props.post.viewerDisliked ? (
+                <MdFillThumb_down size={17} />
+              ) : (
+                <MdOutlineThumb_down size={17} />
+              )
+            }
+            count={props.post.dislikeCount}
+            label={t("post.dislike")}
+            onClick={onDislike}
+            active={props.post.viewerDisliked}
+            activeClass="text-accent"
+          />
+        </Show>
         <Show when={canStar()}>
           <button
             onClick={onStar}
@@ -1683,7 +1735,7 @@ export default function PostCard(props: {
             </Show>
           </button>
         </Show>
-        <Show when={!isPrivate()}>
+        <Show when={!isPrivate() && canInteract()}>
         <Show
           when={canReshare()}
           fallback={
@@ -1792,7 +1844,7 @@ export default function PostCard(props: {
 
         {/* ── Reply (pushes to right; spacer keeps alignment when hidden) ── */}
         <span class="ml-auto" />
-        <Show when={props.post.canComment !== false}>
+        <Show when={canInteract() && props.post.canComment !== false}>
           <button
             onClick={openReply}
             class="flex items-center px-2 py-1.5 rounded-lg text-sm font-medium
@@ -1934,6 +1986,17 @@ export default function PostCard(props: {
               >
                 <MdOutlineSend size={15} />
                 <span>{t("post.delivery_report")}</span>
+              </button>
+            </Show>
+            <Show when={canPin()}>
+              <button
+                onClick={onPinClick}
+                class="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-overlay transition-colors text-left text-txt"
+              >
+                <Show when={isPinned()} fallback={<MdOutlinePush_pin size={15} />}>
+                  <MdFillPush_pin size={15} />
+                </Show>
+                <span>{isPinned() ? t("post.unpin") : t("post.pin")}</span>
               </button>
             </Show>
             <Show when={canEdit()}>

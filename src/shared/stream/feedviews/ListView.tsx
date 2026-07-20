@@ -13,7 +13,7 @@ import { markItemSeen } from "@/shared/lib/markSeen";
 import CommentComposer from "@/shared/editor/composers/CommentComposer";
 import { useAuth } from "@/shared/store/auth-store";
 import { useListBehavior } from "@/shared/store/list-behavior";
-import { MdOutlineSchedule, MdOutlineTimer } from "solid-icons/md";
+import { MdOutlineSchedule, MdOutlineTimer, MdFillPush_pin } from "solid-icons/md";
 import { BiRegularEnvelope } from "solid-icons/bi";
 
 const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
@@ -44,6 +44,8 @@ function getParticipants(thread: ThreadNode) {
 
 function VoteGutter(props: { post: ThreadNode; handlers: StreamHandlers }) {
   const p = props.post;
+  const auth = useAuth();
+  const canInteract = () => auth()?.isLoggedIn === true;
   const score = () => (p.likeCount ?? 0) - (p.dislikeCount ?? 0);
 
   return (
@@ -52,26 +54,28 @@ function VoteGutter(props: { post: ThreadNode; handlers: StreamHandlers }) {
              bg-surface/60 border-r border-rim px-1 py-2 self-stretch"
       onClick={(e) => e.stopPropagation()}
     >
-      <button
-        onClick={() => props.handlers.onLike(p.mid)}
-        class="flex items-center justify-center w-6 h-5 rounded transition-colors"
-        classList={{
-          "text-accent": p.viewerLiked,
-          "text-subtle hover:text-accent": !p.viewerLiked,
-        }}
-      >
-        <svg
-          class="w-3.5 h-3.5"
-          viewBox="0 0 24 24"
-          fill={p.viewerLiked ? "currentColor" : "none"}
-          stroke="currentColor"
-          stroke-width="2.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+      <Show when={canInteract()}>
+        <button
+          onClick={() => props.handlers.onLike(p.mid)}
+          class="flex items-center justify-center w-6 h-5 rounded transition-colors"
+          classList={{
+            "text-accent": p.viewerLiked,
+            "text-subtle hover:text-accent": !p.viewerLiked,
+          }}
         >
-          <path d="M18 15l-6-6-6 6" />
-        </svg>
-      </button>
+          <svg
+            class="w-3.5 h-3.5"
+            viewBox="0 0 24 24"
+            fill={p.viewerLiked ? "currentColor" : "none"}
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M18 15l-6-6-6 6" />
+          </svg>
+        </button>
+      </Show>
 
       <span
         class="text-[11px] font-bold tabular-nums leading-none"
@@ -84,26 +88,28 @@ function VoteGutter(props: { post: ThreadNode; handlers: StreamHandlers }) {
         {score()}
       </span>
 
-      <button
-        onClick={() => props.handlers.onDislike(p.mid)}
-        class="flex items-center justify-center w-6 h-5 rounded transition-colors"
-        classList={{
-          "text-accent": p.viewerDisliked,
-          "text-subtle hover:text-subtle/60": !p.viewerDisliked,
-        }}
-      >
-        <svg
-          class="w-3.5 h-3.5"
-          viewBox="0 0 24 24"
-          fill={p.viewerDisliked ? "currentColor" : "none"}
-          stroke="currentColor"
-          stroke-width="2.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+      <Show when={canInteract()}>
+        <button
+          onClick={() => props.handlers.onDislike(p.mid)}
+          class="flex items-center justify-center w-6 h-5 rounded transition-colors"
+          classList={{
+            "text-accent": p.viewerDisliked,
+            "text-subtle hover:text-subtle/60": !p.viewerDisliked,
+          }}
         >
-          <path d="M6 9l6 6 6-6" />
-        </svg>
-      </button>
+          <svg
+            class="w-3.5 h-3.5"
+            viewBox="0 0 24 24"
+            fill={p.viewerDisliked ? "currentColor" : "none"}
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+      </Show>
     </div>
   );
 }
@@ -120,13 +126,15 @@ function RowDetails(props: {
 }) {
   const p = props.post;
   const { t } = useI18n();
+  const auth = useAuth();
+  const canInteract = () => auth()?.isLoggedIn === true;
 
   return (
     <div
       class="flex items-center gap-0.5 px-2 pb-1.5 flex-wrap"
       onClick={(e) => e.stopPropagation()}
     >
-      <Show when={!p.flags?.includes("private")}>
+      <Show when={!p.flags?.includes("private") && canInteract()}>
         <button
           onClick={() => props.handlers.onRepeat(p.mid)}
           class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-md transition-colors"
@@ -279,6 +287,7 @@ function ListRow(props: {
   const scheduledTitle = () =>
     `${t("post.scheduled_title")}: ${new Date(props.post.created + "Z").toLocaleString(locale())}`;
   const isDirectMessage = () => props.post.flags.includes("direct_message");
+  const isPinned = () => props.post.pinned ?? false;
 
   return (
     <div
@@ -313,6 +322,14 @@ function ListRow(props: {
               />
             </Show>
             <div class="ml-auto flex items-center gap-2 shrink-0">
+              <Show when={isPinned()}>
+                <span
+                  class="flex items-center justify-center w-5 h-5 rounded-full bg-accent text-accent-fg leading-none"
+                  title={t("post.pinned_indicator")}
+                >
+                  <MdFillPush_pin size={11} />
+                </span>
+              </Show>
               <Show when={isExpired()}>
                 <span
                   class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-muted/30 text-muted leading-none"
@@ -413,6 +430,8 @@ function MessageRow(props: {
   locale: string;
 }) {
   const { t } = useI18n();
+  const auth = useAuth();
+  const canInteract = () => auth()?.isLoggedIn === true;
   return (
     <div
       class="flex gap-2.5 px-3 py-2.5"
@@ -451,30 +470,32 @@ function MessageRow(props: {
           innerHTML={props.msg.body}
           onClick={handleNsfwToggleClick}
         />
-        <button
-          onClick={() => props.handlers.onLike(props.msg.mid)}
-          class="mt-1 flex items-center gap-1 text-[10px] transition-colors"
-          classList={{
-            "text-accent": props.msg.viewerLiked,
-            "text-subtle hover:text-accent": !props.msg.viewerLiked,
-          }}
-        >
-          <svg
-            class="w-3 h-3"
-            fill={props.msg.viewerLiked ? "currentColor" : "none"}
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        <Show when={canInteract()}>
+          <button
+            onClick={() => props.handlers.onLike(props.msg.mid)}
+            class="mt-1 flex items-center gap-1 text-[10px] transition-colors"
+            classList={{
+              "text-accent": props.msg.viewerLiked,
+              "text-subtle hover:text-accent": !props.msg.viewerLiked,
+            }}
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M18 15l-6-6-6 6"
-            />
-          </svg>
-          <Show when={props.msg.likeCount > 0}>{props.msg.likeCount}</Show>
-          <span>{t("post.like")}</span>
-        </button>
+            <svg
+              class="w-3 h-3"
+              fill={props.msg.viewerLiked ? "currentColor" : "none"}
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M18 15l-6-6-6 6"
+              />
+            </svg>
+            <Show when={props.msg.likeCount > 0}>{props.msg.likeCount}</Show>
+            <span>{t("post.like")}</span>
+          </button>
+        </Show>
       </div>
     </div>
   );
@@ -518,6 +539,7 @@ function InlineThread(props: {
   const threadMode = useThreadMode();
   const flat = () => flattenThread(props.thread);
   const { locale } = useI18n();
+  const auth = useAuth();
 
   return (
     <div
@@ -555,7 +577,7 @@ function InlineThread(props: {
         </Show>
       </div>
 
-      <Show when={props.thread.iid && props.thread.canComment !== false}>
+      <Show when={auth()?.isLoggedIn && props.thread.iid && props.thread.canComment !== false}>
         <div class="px-3 py-2.5 border-t border-rim bg-surface/40">
           <CommentComposer
             parentUuid={props.thread.uuid}
@@ -637,6 +659,7 @@ function InboxRow(props: {
     p.bodyNsfw ? "Hidden content — open to view" : stripHtml(p.body).slice(0, 160);
   const isUnread = () => !p.viewerLiked && replyCount() === 0;
   const isUnseen = () => p.flags.includes("unseen");
+  const isPinned = () => p.pinned ?? false;
 
   return (
     <div
@@ -677,6 +700,14 @@ function InboxRow(props: {
                 onClick={handleNsfwToggleClick}
                 innerHTML={DOMPurify.sanitize(p.title!)}
               />
+            </Show>
+            <Show when={isPinned()}>
+              <span
+                class="ml-auto flex items-center justify-center w-5 h-5 rounded-full bg-accent text-accent-fg leading-none shrink-0"
+                title={t("post.pinned_indicator")}
+              >
+                <MdFillPush_pin size={11} />
+              </span>
             </Show>
           </div>
 

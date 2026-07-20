@@ -180,12 +180,14 @@ const DirectoryEntryModal: Component<Props> = (props) => {
                   {e()!.connect_url ? t("directory.connect") : t("directory.view_profile")}
                 </a>
               </Show>
-             <a
-                href={`/chanview?f=&hash=${encodeURIComponent(e()!.hash)}`}
-                class="px-4 py-2 rounded-lg text-sm font-medium border border-rim text-muted hover:bg-overlay transition-colors"
-              >
-                {t("directory.view_profile")}
-              </a>
+             <Show when={e()!.is_connected || e()!.connect_url}>
+                <a
+                  href={`/chanview?f=&hash=${encodeURIComponent(e()!.hash)}`}
+                  class="px-4 py-2 rounded-lg text-sm font-medium border border-rim text-muted hover:bg-overlay transition-colors"
+                >
+                  {t("directory.view_profile")}
+                </a>
+              </Show>
               <Show when={e()!.ignore_url && !e()!.is_connected}>
                <a
                   href={e()!.ignore_url!}

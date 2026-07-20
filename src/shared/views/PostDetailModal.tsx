@@ -38,6 +38,7 @@ type ReactionOverride = {
   viewerDisliked?: boolean;
   viewerRepeated?: boolean;
   viewerStarred?: boolean;
+  pinned?: boolean;
   likeCount?: number;
   dislikeCount?: number;
   repeatCount?: number;
@@ -252,6 +253,17 @@ const PostDetailModal: Component<PostDetailModalProps> = (props) => {
                 const treeNode = findInTree(nodeData(), mid);
                 const current = o.viewerStarred ?? treeNode?.viewerStarred ?? false;
                 return { ...prev, [mid]: { ...o, viewerStarred: !current } };
+              });
+            }
+          : undefined,
+        onPin: props.handlers!.onPin
+          ? (mid: string) => {
+              props.handlers!.onPin!(mid);
+              setLocalReactions(prev => {
+                const o = prev[mid] ?? {};
+                const treeNode = findInTree(nodeData(), mid);
+                const current = o.pinned ?? treeNode?.pinned ?? false;
+                return { ...prev, [mid]: { ...o, pinned: !current } };
               });
             }
           : undefined,

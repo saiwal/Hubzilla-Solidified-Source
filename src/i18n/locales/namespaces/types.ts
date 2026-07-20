@@ -348,7 +348,6 @@ export type RawDictionary = {
     clock_card:         string;
     pomodoro:           string;
     link_list:          string;
-    pinned_post:        string;
     article_teaser:     string;
     album_strip:        string;
     room_card:          string;
@@ -379,7 +378,6 @@ export type RawDictionary = {
     cfg_add_link:       string;
     cfg_link_label:     string;
     cfg_too_large:      string;
-    cfg_post:           string;
     cfg_article:        string;
     menu_bar:           string;
     menu_tree:          string;
@@ -563,7 +561,7 @@ export type RawDictionary = {
   post: {
     like: string; dislike: string; repeat: string; reshare_with_comment: string;
     copy_embed_code: string;
-    more_sharing: string; star: string; unstar: string; follow: string; unfollow: string;
+    more_sharing: string; star: string; unstar: string; pin: string; unpin: string; pinned_indicator: string; follow: string; unfollow: string;
     follow_for_notifs: string; unfollow_post: string; statistics: string; post_statistics: string;
     view_source: string; import_post: string; import: string; original: string; toggle_comments: string;
     toggle_flat: string; toggle_threaded: string; flat: string; threaded: string;
@@ -829,6 +827,7 @@ export type RawDictionary = {
     gender:            string;
     dob:               string;
     dob_hint:          string;
+    dob_hide_year:     string;
     homepage:          string;
     hometown:          string;
     about:             string;

@@ -11,6 +11,7 @@ import {
   newPosts,
   profileUid,
   canPostWall,
+  pinnedPosts,
   loadChannel,
   loadMore,
   flushNewPosts,
@@ -19,6 +20,7 @@ import {
   handleDislike,
   handleRepeat,
   handleStar,
+  handlePin,
   handleDelete,
   handleEdit,
   handleComment,
@@ -46,6 +48,7 @@ const handlers: StreamHandlers = {
   onComment:       handleComment,
   onLoadComments:  loadComments,
   onStar:          handleStar,
+  onPin:           handlePin,
   onDelete:        handleDelete,
   onEdit:          handleEdit,
   onRefresh:       handleRefresh,
@@ -88,6 +91,15 @@ export default function ChannelView() {
     const v = searchParams.mid;
     return v ? (Array.isArray(v) ? v[0] : v) : null;
   };
+
+  // Pinned posts render in their own section above the stream, and are
+  // filtered out of the main list to avoid showing twice — but only when no
+  // filter is active, so a pinned post that matches a search still shows up
+  // in the results like any other post.
+  const hasFilters = () =>
+    !!(searchParams.search || searchParams.tag || searchParams.cat || searchParams.mid);
+  const mainPosts = () => (hasFilters() ? posts() : posts().filter((p) => !p.pinned));
+  const showPinnedSection = () => !hasFilters() && pinnedPosts().length > 0;
 
   createEffect(() => {
     const uuid = mid();
@@ -245,12 +257,18 @@ export default function ChannelView() {
           </Switch>
         }
       >
-        <Show when={posts().length === 0}>
+        <Show when={mainPosts().length === 0 && !showPinnedSection()}>
           <p class="text-sm text-muted py-4 text-center">{t("channel.no_posts")}</p>
         </Show>
 
+        <Show when={showPinnedSection()}>
+          <div class="mb-4">
+            <StreamList posts={pinnedPosts()} viewMode={viewMode()} handlers={handlers} />
+          </div>
+        </Show>
+
         <StreamList
-          posts={posts()}
+          posts={mainPosts()}
           viewMode={viewMode()}
           handlers={handlers}
           appendingCount={

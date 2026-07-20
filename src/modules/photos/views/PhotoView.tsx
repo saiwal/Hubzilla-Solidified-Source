@@ -727,8 +727,8 @@ function AlbumGrid() {
                   </Show>
                 </Show>
 
-                {/* Share button (authenticated users, non-select mode) */}
-                <Show when={!!auth() && !selectMode()}>
+                {/* Share button — quote-posts to the viewer's own wall, needs a local channel */}
+                <Show when={auth()?.isLocal && !selectMode()}>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -1375,33 +1375,34 @@ function ImageView() {
 
           {/* Action bar */}
           <div class="mt-4 pt-3 border-t border-rim flex items-center gap-1">
-            {/* Like */}
-            <button
-              onClick={handleLike}
-              title={t("post.like")}
-              class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
-                     transition-colors select-none hover:bg-overlay
-                     ${d()?.viewer_liked ? 'text-accent' : 'text-muted'}`}
-            >
-              <Show when={d()?.viewer_liked} fallback={<MdOutlineThumb_up size={17} />}>
-                <MdFillThumb_up size={17} />
-              </Show>
-              <span>{d()?.like_count ?? 0}</span>
-            </button>
+            {/* Like / Dislike */}
+            <Show when={auth()?.isLoggedIn}>
+              <button
+                onClick={handleLike}
+                title={t("post.like")}
+                class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                       transition-colors select-none hover:bg-overlay
+                       ${d()?.viewer_liked ? 'text-accent' : 'text-muted'}`}
+              >
+                <Show when={d()?.viewer_liked} fallback={<MdOutlineThumb_up size={17} />}>
+                  <MdFillThumb_up size={17} />
+                </Show>
+                <span>{d()?.like_count ?? 0}</span>
+              </button>
 
-            {/* Dislike */}
-            <button
-              onClick={handleDislike}
-              title={t("post.dislike")}
-              class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
-                     transition-colors select-none hover:bg-overlay
-                     ${d()?.viewer_disliked ? 'text-accent' : 'text-muted'}`}
-            >
-              <Show when={d()?.viewer_disliked} fallback={<MdOutlineThumb_down size={17} />}>
-                <MdFillThumb_down size={17} />
-              </Show>
-              <span>{d()?.dislike_count ?? 0}</span>
-            </button>
+              <button
+                onClick={handleDislike}
+                title={t("post.dislike")}
+                class={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                       transition-colors select-none hover:bg-overlay
+                       ${d()?.viewer_disliked ? 'text-accent' : 'text-muted'}`}
+              >
+                <Show when={d()?.viewer_disliked} fallback={<MdOutlineThumb_down size={17} />}>
+                  <MdFillThumb_down size={17} />
+                </Show>
+                <span>{d()?.dislike_count ?? 0}</span>
+              </button>
+            </Show>
 
             {/* Comments toggle */}
             <Show when={commentCount() > 0}>
@@ -1433,8 +1434,8 @@ function ImageView() {
               </button>
             </Show>
 
-            {/* Share — pushed to right */}
-            <Show when={!!auth()}>
+            {/* Share — quote-posts to the viewer's own wall, needs a local channel — pushed to right */}
+            <Show when={auth()?.isLocal}>
               <button
                 onClick={() => setShareOpen(v => !v)}
                 title={t("photos.share")}
@@ -1447,7 +1448,7 @@ function ImageView() {
             </Show>
 
             {/* Reply */}
-            <Show when={d()?.item_id}>
+            <Show when={auth()?.isLoggedIn && d()?.item_id}>
               <button
                 onClick={() => setReplyOpen(v => !v)}
                 class={`flex items-center px-2 py-1.5 rounded-lg text-sm font-medium

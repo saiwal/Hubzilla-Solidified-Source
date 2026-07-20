@@ -33,9 +33,19 @@ export async function fetchChannelPosts(
 
   const { data, meta } = await res.json();
   const activities: any[] = Array.isArray(data) ? data : [];
+  const mainItems = activities.map(mapActivityToPost);
+
+  // Pinned posts are excluded from `data` by the backend whenever this meta
+  // key is present (base wall view, first page) — merge them back in as real
+  // tree nodes so they participate in the same store (comments, likes, edits,
+  // etc.) as everything else. The UI filters them back out of the main list
+  // for display; see ChannelView's mainPosts/pinnedPosts split.
+  const pinnedActivities: any[] = meta && Array.isArray(meta.pinned) ? meta.pinned : [];
+  const mainMids = new Set(mainItems.map((p) => p.mid));
+  const pinnedItems = pinnedActivities.map(mapActivityToPost).filter((p) => !mainMids.has(p.mid));
 
   return {
-    items:        activities.map(mapActivityToPost),
+    items:        [...pinnedItems, ...mainItems],
     rootCount:    meta?.root_count ?? activities.filter((a: any) => a.item_thread_top === 1).length,
     limit:        meta?.limit ?? 10,
     nouveau:      meta?.nouveau ?? false,

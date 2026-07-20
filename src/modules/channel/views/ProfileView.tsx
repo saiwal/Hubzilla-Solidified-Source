@@ -300,7 +300,7 @@ function CompactCard(props: { p: ChannelProfile; isOwner: boolean; isVisitor: bo
 
 function FullCard(props: { p: ChannelProfile; isOwner: boolean; isVisitor: boolean }) {
   const { p } = props;
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   return (
     <div class="rounded-2xl overflow-hidden bg-surface border border-rim shadow-sm">
@@ -363,7 +363,7 @@ function FullCard(props: { p: ChannelProfile; isOwner: boolean; isVisitor: boole
             <Show when={p.gender || p.marital || p.sexual || (p.dob && p.dob !== "0000-00-00") || p.hometown}>
               <FieldSection label={t("channel.group_personal")}>
                 <Field label={t("channel.field_gender")}       value={p.gender} />
-                <Field label={t("channel.field_born")}         value={p.dob && p.dob !== "0000-00-00" ? p.dob : ""} />
+                <Field label={t("channel.field_born")}         value={formatDob(p.dob, locale())} />
                 <Field label={t("channel.field_hometown")}     value={p.hometown} />
                 <Field label={t("channel.field_relationship")} value={p.marital} />
                 <Field label={t("channel.field_sexual")}       value={p.sexual} />
@@ -427,6 +427,23 @@ function FullCard(props: { p: ChannelProfile; isOwner: boolean; isVisitor: boole
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+// dob's year is "0000" when the profile owner chose not to disclose their
+// year of birth (Hubzilla's "no year" birthday convention) — show month/day only.
+function formatDob(dob: string, locale: string): string {
+  const match = dob.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return "";
+  const [, year, month, day] = match;
+  if (month === "00" || day === "00") return "";
+  const yearKnown = year !== "0000";
+  const date = new Date(Date.UTC(yearKnown ? Number(year) : 2000, Number(month) - 1, Number(day)));
+  return new Intl.DateTimeFormat(locale, {
+    month: "long",
+    day: "numeric",
+    year: yearKnown ? "numeric" : undefined,
+    timeZone: "UTC",
+  }).format(date);
+}
 
 function FieldSection(props: { label: string; children: any }) {
   return (
