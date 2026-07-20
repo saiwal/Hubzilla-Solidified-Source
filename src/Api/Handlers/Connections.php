@@ -66,12 +66,14 @@ class Connections
 
         // List with optional filter / search / order / pagination
         $filter     = $_GET['filter']  ?? 'active';
+        $type       = $_GET['type']    ?? '';
         $search     = trim($_GET['search'] ?? '');
         $order_key  = $_GET['order']   ?? 'name';
         $limit      = max(1, min(200, intval($_GET['limit']  ?? 50)));
         $offset     = max(0, intval($_GET['start'] ?? 0));
 
         $sql_filter = $this->filterClause($filter);
+        $sql_filter .= $type === 'forum' ? ' AND xchan.xchan_pubforum = 1 ' : '';
 
         $sql_search = '';
         if ($search !== '') {
@@ -133,6 +135,7 @@ class Connections
             'limit'  => $limit,
             'offset' => $offset,
             'filter' => $filter,
+            'type'   => $type,
             'order'  => $order_key,
         ]);
     }

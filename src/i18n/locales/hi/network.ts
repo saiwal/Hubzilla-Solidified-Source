@@ -49,4 +49,6 @@ export const network: RawDictionary["network"] = {
   // Privacy group filter
   privacy_groups:          "गोपनीयता समूह",
   polls:                   "Polls",
+  // Forum filter
+  forums:                  "फ़ोरम",
 };

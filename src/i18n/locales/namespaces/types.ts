@@ -1210,6 +1210,8 @@ export type RawDictionary = {
     delete_saved_search:       string;
     // Privacy group filter
     privacy_groups:            string;
+    // Forum filter
+    forums:                    string;
   };
   directory: {
     connections:          string;

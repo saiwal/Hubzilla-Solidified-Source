@@ -8,6 +8,7 @@ import {
   MdFillClose,
   MdFillFolder,
   MdFillGroup,
+  MdFillForum,
   MdFillKeyboard_arrow_down,
   MdFillKeyboard_arrow_right,
   MdFillTag,
@@ -19,7 +20,7 @@ import { createSignal, createEffect, For, Show } from "solid-js";
 import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { useI18n } from "@/i18n";
 import { loadNetwork, resetPosts } from "../store";
-import { fetchFolders, parseNetworkParams } from "../api";
+import { fetchFolders, fetchForums, parseNetworkParams } from "../api";
 import { useInstalledApps } from "@/shared/store/nav-store";
 import { fetchGroups, type PrivacyGroup } from "@/modules/directory/groups/api";
 
@@ -129,6 +130,7 @@ export default function StreamFiltersWidget() {
     () => privacyGroupsInstalled() || null,
     (): Promise<PrivacyGroup[]> => fetchGroups(),
   );
+  const [forums] = createQueryResource("network-forums", fetchForums);
 
   const tag    = () => str(searchParams.tag);
   const file   = () => str(searchParams.file);
@@ -139,12 +141,14 @@ export default function StreamFiltersWidget() {
 
   const [folderOpen,    setFolderOpen]    = createSignal(!!str(searchParams.file));
   const [groupsOpen,    setGroupsOpen]    = createSignal(!!str(searchParams.gid));
+  const [forumsOpen,    setForumsOpen]    = createSignal(!!str(searchParams.cid));
   const [tagOpen,       setTagOpen]       = createSignal(!!str(searchParams.tag));
   const [dateOpen,      setDateOpen]      = createSignal(!!(str(searchParams.dbegin) || str(searchParams.dend)));
   const [affinityOpen,  setAffinityOpen]  = createSignal(!!(str(searchParams.cmin) || str(searchParams.cmax)));
 
   createEffect(() => { if (file())                                    setFolderOpen(true); });
   createEffect(() => { if (str(searchParams.gid))                     setGroupsOpen(true); });
+  createEffect(() => { if (str(searchParams.cid))                     setForumsOpen(true); });
   createEffect(() => { if (tag())                                      setTagOpen(true); });
   createEffect(() => { if (dbegin() || dend())                         setDateOpen(true); });
   createEffect(() => { if (cmin() || cmax())                           setAffinityOpen(true); });
@@ -318,6 +322,63 @@ export default function StreamFiltersWidget() {
                       >
                         <MdFillGroup size={13} class="shrink-0" />
                         <span class="truncate">{group.name}</span>
+                      </button>
+                    );
+                  }}
+                </For>
+              </div>
+            </Show>
+          </div>
+        </Show>
+
+        <Show when={!forums.loading && (forums() ?? []).length > 0}>
+          <div>
+            <button
+              onClick={() => setForumsOpen((o) => !o)}
+              class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm
+                     transition-colors text-left text-muted hover:bg-elevated hover:text-txt"
+            >
+              <MdFillForum size={15} class="shrink-0" />
+              <span class="flex-1">{t("network.forums")}</span>
+              <Show when={!!str(searchParams.cid)}>
+                <span class="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
+              </Show>
+              <Show
+                when={forumsOpen()}
+                fallback={<MdFillKeyboard_arrow_right size={15} class="shrink-0" />}
+              >
+                <MdFillKeyboard_arrow_down size={15} class="shrink-0" />
+              </Show>
+            </button>
+            <Show when={forumsOpen()}>
+              <div class="pl-6 pt-1 pb-0.5 space-y-0.5">
+                <button
+                  onClick={() => { sp({ cid: undefined, xchan_label: undefined }); setTimeout(applyNow, 0); }}
+                  class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors text-left"
+                  classList={{
+                    "bg-accent text-accent-fg font-medium": !str(searchParams.cid),
+                    "text-muted hover:bg-elevated hover:text-txt": !!str(searchParams.cid),
+                  }}
+                >
+                  {t("network.folder_all")}
+                </button>
+                <For each={forums() ?? []}>
+                  {(forum) => {
+                    const active = () => str(searchParams.cid) === String(forum.id);
+                    return (
+                      <button
+                        onClick={() => {
+                          sp({ cid: String(forum.id), xchan_label: forum.name, gid: undefined });
+                          setTimeout(applyNow, 0);
+                        }}
+                        class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors text-left"
+                        classList={{
+                          "bg-accent-muted text-accent font-medium": active(),
+                          "text-muted hover:bg-elevated hover:text-txt": !active(),
+                        }}
+                      >
+                        <MdFillForum size={13} class="shrink-0" />
+                        <span class="truncate">{forum.name}</span>
                       </button>
                     );
                   }}

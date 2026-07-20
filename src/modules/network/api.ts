@@ -1,5 +1,6 @@
 import type { Post } from "@/shared/types/post.types.ts";
 import { mapActivityToPost } from "@/shared/lib/activity.mapper.ts";
+import { apiFetch } from "@/shared/lib/fetch";
 const HIDDEN_VERBS = new Set(['Like', 'Dislike', 'Announce', 'Accept', 'Reject', 'TentativeAccept']);
 
 function shouldDisplay(a: any): boolean {
@@ -156,6 +157,21 @@ export async function fetchFolders(): Promise<string[]> {
   if (!res.ok) return [];
   const { data } = await res.json();
   return Array.isArray(data) ? data : [];
+}
+
+export type ForumConnection = {
+  id: number;
+  name: string;
+  photo: string;
+};
+
+export async function fetchForums(): Promise<ForumConnection[]> {
+  const res = await apiFetch('/spa/connections?filter=active&type=forum&order=name&limit=200');
+  if (!res.ok) return [];
+  const { data } = await res.json();
+  return Array.isArray(data)
+    ? data.map((c: any) => ({ id: c.id, name: c.name, photo: c.photo }))
+    : [];
 }
 
 export type NetworkStreamResult = {

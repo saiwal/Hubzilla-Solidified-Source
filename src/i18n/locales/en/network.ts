@@ -59,4 +59,6 @@ export const network: RawDictionary["network"] = {
   delete_saved_search:     "Delete saved search",
   // Privacy group filter
   privacy_groups:          "Privacy Groups",
+  // Forum filter
+  forums:                  "Forums",
 };
