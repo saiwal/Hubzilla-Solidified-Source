@@ -1261,6 +1261,11 @@ export type RawDictionary = {
     field_closeness:      string;
     field_role:           string;
     field_network:        string;
+    perm_accepts:         string;
+    perm_comments:        string;
+    perm_stream_items:    string;
+    perm_wall_posts:      string;
+    perm_nothing:         string;
     field_address:        string;
     forum:                string;
     pending:              string;
@@ -1550,6 +1555,8 @@ export type RawDictionary = {
     deleting:         string;
     delete_failed:    string;
     share:            string;
+    copy_link:        string;
+    link_copied:      string;
     drafts:           string;
     no_drafts:        string;
     empty_draft:      string;

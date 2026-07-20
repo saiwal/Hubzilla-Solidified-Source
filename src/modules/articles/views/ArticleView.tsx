@@ -9,6 +9,7 @@ import { useI18n } from "@/i18n";
 import { useParams, A, useNavigate } from "@solidjs/router";
 import { Portal } from "solid-js/web";
 import { fetchArticle, deleteArticle } from "../api";
+import { articlePath, articleShareUrl, buildArticleShareBody } from "../lib/articleLinks";
 import ArticleComposer from "@/shared/editor/composers/ArticleComposer";
 import CommentComposer from "@/shared/editor/composers/CommentComposer";
 import PostComposer from "@/shared/editor/composers/PostComposer";
@@ -19,12 +20,13 @@ import ArticleToc from "@/shared/views/ArticleToc";
 import { usePageNick, useViewerRole } from "@/shared/store/site-config";
 import { useAuth } from "@/shared/store/auth-store";
 import { useNavViewer } from "@/shared/store/nav-store";
-import { BiRegularEdit, BiRegularTrash } from "solid-icons/bi";
+import { BiRegularEdit, BiRegularTrash, BiRegularCheck } from "solid-icons/bi";
 import {
   MdOutlineThumb_up,
   MdOutlineThumb_down,
   MdFillChat,
   MdOutlineShare,
+  MdOutlineContent_copy,
 } from "solid-icons/md";
 import { apiToggleLike, apiToggleDislike, apiDeleteItem, apiEditItem } from "@/shared/lib/item-api";
 import { bbcodeToHtml } from "@/shared/lib/bbcode";
@@ -39,7 +41,20 @@ import type { Post } from "@/shared/types/post.types";
 // ── edit modal ────────────────────────────────────────────────────────────────
 
 function EditModal(props: {
-  article: { uuid: string; title: string; summary?: string; slug?: string; category?: string; body: string };
+  article: {
+    uuid: string;
+    iid?: number;
+    title: string;
+    summary?: string;
+    slug?: string;
+    category?: string;
+    body: string;
+    public_policy?: string;
+    allow_cid?: string[];
+    allow_gid?: string[];
+    deny_cid?: string[];
+    deny_gid?: string[];
+  };
   nick: string;
   profileUid: number;
   onSaved: () => void;
@@ -76,12 +91,18 @@ function EditModal(props: {
           profileUid={props.profileUid}
           nick={props.nick}
           initial={{
-            uuid:     props.article.uuid,
-            title:    props.article.title,
-            summary:  props.article.summary ?? "",
-            slug:     props.article.slug    ?? "",
-            category: props.article.category ?? "",
-            body:     props.article.body,
+            uuid:          props.article.uuid,
+            iid:           props.article.iid,
+            title:         props.article.title,
+            summary:       props.article.summary ?? "",
+            slug:          props.article.slug    ?? "",
+            category:      props.article.category ?? "",
+            body:          props.article.body,
+            public_policy: props.article.public_policy,
+            allow_cid:     props.article.allow_cid,
+            allow_gid:     props.article.allow_gid,
+            deny_cid:      props.article.deny_cid,
+            deny_gid:      props.article.deny_gid,
           }}
           onSaved={() => {
             close();
@@ -156,6 +177,18 @@ export default function ArticleView() {
   const rendered = () =>
     data()?.article ? DOMPurify.sanitize(data()!.article.body ?? "") : "";
 
+  // Canonicalize the URL to the slug once the article's loaded — covers both
+  // a bookmarked uuid link on an article that's since gained a slug, and a
+  // slug change from editing.
+  createEffect(() => {
+    const art = data()?.article;
+    if (!art) return;
+    const canonical = articlePath(nick(), art);
+    if (`/articles/${nick()}/${params.uuid}` !== canonical) {
+      navigate(canonical, { replace: true });
+    }
+  });
+
   // editing / deleting state
   const [editing, setEditing] = createSignal(false);
   const [confirmDelete, setConfirmDelete] = createSignal(false);
@@ -185,6 +218,17 @@ export default function ArticleView() {
   // Comment composer visibility
   const [replyOpen, setReplyOpen] = createSignal(false);
   const [shareOpen, setShareOpen] = createSignal(false);
+  const [linkCopied, setLinkCopied] = createSignal(false);
+
+  function copyArticleLink() {
+    const art = data()?.article;
+    if (!art) return;
+    navigator.clipboard.writeText(articleShareUrl(nick(), art)).then(() => {
+      setLinkCopied(true);
+      toast.success(t("articles.link_copied"));
+      setTimeout(() => setLinkCopied(false), 1500);
+    });
+  }
 
   function handleLike() {
     const art = data()?.article;
@@ -371,10 +415,17 @@ export default function ArticleView() {
               <Show when={editing()}>
                 <EditModal
                   article={{
-                    uuid:     d().article.uuid,
-                    title:    d().article.title,
-                    summary:  d().article.summary,
-                    body:     d().article.body ?? "",
+                    uuid:          d().article.uuid,
+                    iid:           d().article.iid,
+                    title:         d().article.title,
+                    summary:       d().article.summary,
+                    slug:          d().article.slug,
+                    body:          d().article.rawBody ?? "",
+                    public_policy: d().article.publicPolicy,
+                    allow_cid:     d().article.allowCid,
+                    allow_gid:     d().article.allowGid,
+                    deny_cid:      d().article.denyCid,
+                    deny_gid:      d().article.denyGid,
                   }}
                   nick={nick()}
                   profileUid={auth()!.uid}
@@ -445,8 +496,21 @@ export default function ArticleView() {
                     </Show>
                   </button>
 
+                  <button
+                    type="button"
+                    onClick={copyArticleLink}
+                    title={t("articles.copy_link")}
+                    class={`${auth() ? "" : "ml-auto "}flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                           transition-colors hover:bg-overlay text-muted hover:text-txt`}
+                  >
+                    <Show when={linkCopied()} fallback={<MdOutlineContent_copy size={17} />}>
+                      <BiRegularCheck size={17} class="text-accent" />
+                    </Show>
+                  </button>
+
                   <Show when={auth()}>
                     <button
+                      type="button"
                       onClick={() => setShareOpen(v => !v)}
                       title={t("articles.share")}
                       class={`ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
@@ -498,13 +562,7 @@ export default function ArticleView() {
                     open={true}
                     onClose={() => setShareOpen(false)}
                     profileUid={auth()?.uid ?? 0}
-                    initialBody={(() => {
-                      const title   = d().article.title ?? "";
-                      const summary = d().article.summary ?? "";
-                      let body = `[b]${title}[/b]`;
-                      if (summary) body += `\n\n${summary}`;
-                      return body;
-                    })()}
+                    initialBody={buildArticleShareBody(nick(), d().article)}
                   />
                 </Show>
 

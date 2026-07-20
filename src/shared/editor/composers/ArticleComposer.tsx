@@ -16,6 +16,7 @@ import AttachmentBar from "../attachments/AttachmentBar";
 import { createAttachmentStore } from "../attachments/useAttachments";
 import { bbcodeToInsert } from "../attachments/insertHelpers";
 import { useAclState } from "../components/useAclState";
+import type { AclMode } from "../components/AclPicker";
 import { useCategoryTags } from "../components/useCategoryTags";
 import CategoryTagsField from "../components/CategoryTagsField";
 import SlugField from "../components/SlugField";
@@ -29,11 +30,17 @@ interface Props {
   /** Pass existing article data to edit rather than create */
   initial?: {
     uuid: string;
+    iid?: number;
     title: string;
     summary: string;
     slug: string;
     category: string;
     body: string;
+    public_policy?: string;
+    allow_cid?: string[];
+    allow_gid?: string[];
+    deny_cid?: string[];
+    deny_gid?: string[];
   };
   onSaved?: () => void;
 }
@@ -53,8 +60,35 @@ export default function ArticleComposer(props: Props) {
   // ── Attachment store ─────────────────────────────────────────────────────────
   const attach = createAttachmentStore(props.nick, scope);
 
-  // ── ACL state ────────────────────────────────────────────────────────────────
-  const acl = useAclState({ mode: "connections" });
+  // ── ACL state — initialize from the existing article's ACL when editing ─────
+  const initialAclMode = (): AclMode => {
+    const p = props.initial;
+    if (!p) return "connections";
+    if (p.public_policy === "contacts") return "connections";
+    if ((p.allow_cid?.length ?? 0) > 0 || (p.allow_gid?.length ?? 0) > 0) return "custom";
+    return "public";
+  };
+  const initialAllowEntries = (): Set<string> => {
+    const p = props.initial;
+    if (!p) return new Set();
+    return new Set([
+      ...(p.allow_cid ?? []).map((h) => `c:${h}`),
+      ...(p.allow_gid ?? []).map((g) => `g:${g}`),
+    ]);
+  };
+  const initialDenyEntries = (): Set<string> => {
+    const p = props.initial;
+    if (!p) return new Set();
+    return new Set([
+      ...(p.deny_cid ?? []).map((h) => `c:${h}`),
+      ...(p.deny_gid ?? []).map((g) => `g:${g}`),
+    ]);
+  };
+  const acl = useAclState({
+    mode: initialAclMode(),
+    allowEntries: initialAllowEntries(),
+    denyEntries: initialDenyEntries(),
+  });
 
   // ── Composer store ────────────────────────────────────────────────────────────
   // Append [attachment]hash,0[/attachment] BBCode for non-image files.
@@ -67,125 +101,52 @@ export default function ArticleComposer(props: Props) {
     return tags ? `${body}\n${tags}` : body;
   }
 
+  // Raw contact_allow/group_allow/contact_deny/group_deny arrays + public_policy,
+  // matching what Articles.php::resolveAcl() expects.
+  function aclPayload(): Record<string, unknown> {
+    const mode = acl.mode();
+    if (mode === "public") {
+      return { contact_allow: [], group_allow: [], contact_deny: [], group_deny: [], public_policy: "" };
+    }
+    if (mode === "connections") {
+      return { contact_allow: [], group_allow: [], contact_deny: [], group_deny: [], public_policy: "contacts" };
+    }
+    if (acl.allowEntries().size === 0)
+      throw new Error("Select at least one connection or group to allow.");
+    const cAllow: string[] = [];
+    const gAllow: string[] = [];
+    const cDeny: string[]  = [];
+    const gDeny: string[]  = [];
+    for (const key of acl.allowEntries()) {
+      const [type, ...rest] = key.split(":");
+      if (type === "c") cAllow.push(rest.join(":"));
+      if (type === "g") gAllow.push(rest.join(":"));
+    }
+    for (const key of acl.denyEntries()) {
+      const [type, ...rest] = key.split(":");
+      if (type === "c") cDeny.push(rest.join(":"));
+      if (type === "g") gDeny.push(rest.join(":"));
+    }
+    return { contact_allow: cAllow, group_allow: gAllow, contact_deny: cDeny, group_deny: gDeny, public_policy: "" };
+  }
+
   const store = createComposerStore(async (body, meta) => {
-    if (isEditing()) {
-      // ── Edit existing article ─────────────────────────────────────────────────
-      const mode = acl.mode();
-      const aclPayload: Record<string, unknown> = {};
-      if (mode === "public") {
-        aclPayload.contact_allow = [];
-        aclPayload.group_allow   = [];
-        aclPayload.contact_deny  = [];
-        aclPayload.group_deny    = [];
-        aclPayload.public_policy = "";
-      } else if (mode === "connections") {
-        aclPayload.contact_allow = [];
-        aclPayload.group_allow   = [];
-        aclPayload.contact_deny  = [];
-        aclPayload.group_deny    = [];
-        aclPayload.public_policy = "contacts";
-      } else {
-        if (acl.allowEntries().size === 0)
-          throw new Error("Select at least one connection or group to allow.");
-        const cAllow: string[] = [];
-        const gAllow: string[] = [];
-        const cDeny: string[]  = [];
-        const gDeny: string[]  = [];
-        for (const key of acl.allowEntries()) {
-          const [type, ...rest] = key.split(":");
-          if (type === "c") cAllow.push(rest.join(":"));
-          if (type === "g") gAllow.push(rest.join(":"));
-        }
-        for (const key of acl.denyEntries()) {
-          const [type, ...rest] = key.split(":");
-          if (type === "c") cDeny.push(rest.join(":"));
-          if (type === "g") gDeny.push(rest.join(":"));
-        }
-        aclPayload.contact_allow = cAllow;
-        aclPayload.group_allow   = gAllow;
-        aclPayload.contact_deny  = cDeny;
-        aclPayload.group_deny    = gDeny;
-      }
-
-      const res = await apiFetch(
-        `/spa/item/${props.initial!.uuid}/edit`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            body: withFileAttachments(body),
-            title:    meta.title    ?? "",
-            summary:  meta.summary  ?? "",
-            slug:     meta.slug     ?? "",
-            category: meta.category ?? "",
-            mimetype: meta.mimetype ?? "text/bbcode",
-            ...aclPayload,
-          }),
-        },
-      );
-      if (!res.ok) {
-        const err = await res.json().catch(() => null);
-        throw new Error(err?.error ?? "Save failed");
-      }
-    } else {
-      // ── Create new article ────────────────────────────────────────────────────
-      const csrf =
-        document.querySelector<HTMLMetaElement>('meta[name="form_security_token"]')
-          ?.content ?? "";
-
-      const fd = new FormData();
-      fd.append("mimetype",    meta.mimetype ?? "text/bbcode");
-      fd.append("obj_type",    "");
-      fd.append("profile_uid", String(props.profileUid));
-      fd.append("return",      `articles/${props.nick}`);
-      fd.append("webpage",     "7");   // ITEM_TYPE_ARTICLE
-      fd.append("preview",     "0");
-      fd.append("consensus",   "0");
-      fd.append("nocomment",   "0");
-      fd.append("title",       meta.title    ?? "");
-      fd.append("summary",     meta.summary  ?? "");
-      fd.append("category",    meta.category ?? "");
-      fd.append("pagetitle",   meta.slug     ?? "");
-      fd.append("body",        withFileAttachments(body));
-      if (csrf) fd.append("form_security_token", csrf);
-
-      // ACL
-      const mode = acl.mode();
-      if (mode === "public") {
-        fd.append("contact_allow", "");
-        fd.append("group_allow",   "");
-        fd.append("contact_deny",  "");
-        fd.append("group_deny",    "");
-        fd.append("public_policy", "");
-      } else if (mode === "connections") {
-        fd.append("contact_allow", "");
-        fd.append("group_allow",   "");
-        fd.append("contact_deny",  "");
-        fd.append("group_deny",    "");
-        fd.append("public_policy", "contacts");
-      } else {
-        if (acl.allowEntries().size === 0)
-          throw new Error("Select at least one connection or group to allow.");
-        for (const key of acl.allowEntries()) {
-          const [type, ...rest] = key.split(":");
-          const xid = rest.join(":");
-          if (type === "c") fd.append("contact_allow[]", xid);
-          if (type === "g") fd.append("group_allow[]", xid);
-        }
-        for (const key of acl.denyEntries()) {
-          const [type, ...rest] = key.split(":");
-          const xid = rest.join(":");
-          if (type === "c") fd.append("contact_deny[]", xid);
-          if (type === "g") fd.append("group_deny[]", xid);
-        }
-      }
-
-      const res = await fetch("/item", {
-        method: "POST",
-        credentials: "include",
-        redirect: "manual",
-        body: fd,
-      });
-      if (res.type !== "opaqueredirect" && !res.ok) throw new Error("Save failed");
+    const res = await apiFetch(`/spa/articles/${props.nick}`, {
+      method: "POST",
+      body: JSON.stringify({
+        post_id:  isEditing() ? props.initial!.iid : undefined,
+        body:     withFileAttachments(body),
+        title:    meta.title    ?? "",
+        summary:  meta.summary  ?? "",
+        slug:     meta.slug     ?? "",
+        category: meta.category ?? "",
+        mimetype: meta.mimetype ?? "text/bbcode",
+        ...aclPayload(),
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => null);
+      throw new Error(err?.error?.message ?? err?.error ?? "Save failed");
     }
 
     attach.clear();

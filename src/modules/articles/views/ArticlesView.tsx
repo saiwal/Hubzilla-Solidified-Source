@@ -1,12 +1,13 @@
 // src/modules/articles/views/ArticlesView.tsx
 import { createEffect, createSignal, onMount, onCleanup, Show, For, Index } from "solid-js";
-import { MdOutlineArticle, MdOutlineShare } from "solid-icons/md";
+import { MdOutlineArticle, MdOutlineShare, MdOutlineContent_copy } from "solid-icons/md";
 import { useParams, useNavigate, useSearchParams } from "@solidjs/router";
 import { useI18n } from "@/i18n";
 import { Portal } from "solid-js/web";
+import { toast } from "@/shared/store/toast";
 import { useAuth } from "@/shared/store/auth-store";
 import { useViewerRole } from "@/shared/store/site-config";
-import { BiRegularEdit, BiRegularX } from "solid-icons/bi";
+import { BiRegularEdit, BiRegularX, BiRegularCheck } from "solid-icons/bi";
 import ArticleComposer from "@/shared/editor/composers/ArticleComposer";
 import PostComposer from "@/shared/editor/composers/PostComposer";
 import { hydrateLatex } from "@/shared/lib/hydrateLatex";
@@ -16,6 +17,7 @@ import {
   activeCategory, activeTag, clearArticleFilter,
 } from "../store";
 import type { Post } from "@/shared/types/post.types";
+import { articlePath, articleShareUrl, buildArticleShareBody } from "../lib/articleLinks";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -52,6 +54,16 @@ function formatDate(iso: string): string {
 function ArticleCard(props: { post: Post; nick: string; onOpen: () => void; onShare?: () => void }) {
   const { t } = useI18n();
   const ex = () => excerpt(props.post);
+  const [linkCopied, setLinkCopied] = createSignal(false);
+
+  function copyLink(e: MouseEvent) {
+    e.stopPropagation();
+    navigator.clipboard.writeText(articleShareUrl(props.nick, props.post)).then(() => {
+      setLinkCopied(true);
+      toast.success(t("articles.link_copied"));
+      setTimeout(() => setLinkCopied(false), 1500);
+    });
+  }
 
   return (
     <article
@@ -103,6 +115,17 @@ function ArticleCard(props: { post: Post; nick: string; onOpen: () => void; onSh
           <span>·</span>
           <span>♥ {props.post.likeCount}</span>
         </Show>
+        <button
+          type="button"
+          onClick={copyLink}
+          title={t("articles.copy_link")}
+          class={`${props.onShare ? "" : "ml-auto "}p-1 rounded-md text-muted hover:text-accent hover:bg-accent/10
+                 transition-colors opacity-0 group-hover:opacity-100`}
+        >
+          <Show when={linkCopied()} fallback={<MdOutlineContent_copy size={15} />}>
+            <BiRegularCheck size={15} class="text-accent" />
+          </Show>
+        </button>
         <Show when={props.onShare}>
           <button
             type="button"
@@ -192,12 +215,6 @@ function ArticleModal(props: {
   );
 }
 
-function buildArticleShareBody(title: string, summary: string): string {
-  let body = `[b]${title}[/b]`;
-  if (summary) body += `\n\n${summary}`;
-  return body;
-}
-
 export default function ArticlesView() {
   const auth = useAuth();
   const role = useViewerRole();
@@ -218,8 +235,8 @@ export default function ArticlesView() {
     if (searchParams.new === "1" && role() === "owner") setOpen(true);
   });
 
-  const goToArticle = (uuid: string) => {
-    navigate(`/articles/${params.nick}/${uuid}`);
+  const goToArticle = (post: Post) => {
+    navigate(articlePath(params.nick, post));
   };
 
   return (
@@ -279,7 +296,7 @@ export default function ArticlesView() {
                 <ArticleCard
                   post={post}
                   nick={params.nick}
-                  onOpen={() => goToArticle(post.uuid)}
+                  onOpen={() => goToArticle(post)}
                   onShare={auth() ? () => setSharePost(post) : undefined}
                 />
               )}
@@ -310,7 +327,7 @@ export default function ArticlesView() {
           open={true}
           onClose={() => setSharePost(null)}
           profileUid={auth()?.uid ?? 0}
-          initialBody={buildArticleShareBody(sharePost()!.title, sharePost()!.summary ?? "")}
+          initialBody={buildArticleShareBody(params.nick, sharePost()!)}
         />
       </Show>
 

@@ -7,6 +7,7 @@ import type { ConnectionFilter, ConnectionOrder, Connection } from "../../connec
 import { deleteConnection, approveConnection, fetchConnectionByAddress } from "../../connections/api";
 import { addConnection } from "../../people/api";
 import ConnectionEditorModal from "@/shared/views/ConnectionEditorModal";
+import Tooltip from "@/shared/views/Tooltip";
 import DMComposer from "@/shared/editor/composers/DMComposer";
 import { createRoom } from "@/modules/chat/api";
 import { MdOutlineEdit, MdOutlineEmail, MdOutlineChat_bubble } from "solid-icons/md";
@@ -36,6 +37,36 @@ function formatDate(iso: string): string {
   return new Date(iso.replace(" ", "T") + "Z").toLocaleDateString(undefined, {
     year: "numeric", month: "short", day: "numeric",
   });
+}
+
+// ── PermissionDot ─────────────────────────────────────────────────────────────
+// Mirrors classic Hubzilla's connections "traffic light": red/yellow/green dot
+// based on how many of these 3 their_perms keys the contact has granted us.
+
+const PERM_ORDER: { key: string; labelKey: string }[] = [
+  { key: "post_comments", labelKey: "directory.perm_comments" },
+  { key: "send_stream",   labelKey: "directory.perm_stream_items" },
+  { key: "post_wall",     labelKey: "directory.perm_wall_posts" },
+];
+
+function PermissionDot(props: { granted: string[] }) {
+  const { t } = useI18n();
+  const grantedSet = () => new Set(props.granted);
+  const count = () => props.granted.length;
+  const color = () =>
+    count() === 3 ? "bg-green-500" : count() > 0 ? "bg-yellow-500" : "bg-red-500";
+  const tooltip = () => {
+    const labels = PERM_ORDER
+      .filter((p) => grantedSet().has(p.key))
+      .map((p) => t(p.labelKey as any));
+    return `${t("directory.perm_accepts")}: ${labels.length ? labels.join(", ") : t("directory.perm_nothing")}`;
+  };
+
+  return (
+    <Tooltip content={tooltip()}>
+      <span class={`w-2.5 h-2.5 rounded-full shrink-0 ${color()}`} />
+    </Tooltip>
+  );
 }
 
 // ── ConnectionCard ────────────────────────────────────────────────────────────
@@ -139,6 +170,7 @@ function ConnectionCard(props: { conn: Connection; onDeleted: () => void }) {
             >
               {props.conn.name}
             </a>
+            <PermissionDot granted={props.conn.granted_perms} />
             <span class="shrink-0 text-xs px-1.5 py-0.5 rounded font-medium bg-accent-muted text-accent">
               {networkLabel()}
             </span>

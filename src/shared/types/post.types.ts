@@ -84,4 +84,11 @@ export interface Post {
   dislikeCount: number;
   repeatCount: number;
   blocked?: boolean; // author or owner is on the viewer's personal block list
+  slug?: string; // human-readable identifier alias (articles/webpages), stored via iconfig
+  viewUrl?: string; // absolute app URL (slug-preferred), distinct from the immutable `permalink`
+  publicPolicy?: string; // ACL public_policy column (e.g. "contacts"), needed to reconstruct the editor's ACL mode
+  allowCid?: string[]; // ACL allow_cid, as bare xchan hashes
+  allowGid?: string[]; // ACL allow_gid, as bare privacy-group ids
+  denyCid?: string[]; // ACL deny_cid, as bare xchan hashes
+  denyGid?: string[]; // ACL deny_gid, as bare privacy-group ids
 }

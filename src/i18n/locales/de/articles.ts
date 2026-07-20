@@ -26,6 +26,8 @@ export const articles: RawDictionary["articles"] = {
   // Delete failed
   delete_failed:    "Löschen fehlgeschlagen",
   share:            "Artikel teilen",
+  copy_link:        "Link kopieren",
+  link_copied:      "Link in die Zwischenablage kopiert",
   // Drafts widget
   drafts:           "Artikelentwürfe",
   no_drafts:        "Keine Artikelentwürfe",

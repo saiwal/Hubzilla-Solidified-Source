@@ -40,6 +40,7 @@ export interface Connection {
   status: ConnectionStatus[];
   pending: boolean;
   profile_id: number | null;
+  granted_perms: string[];
 }
 
 export interface ConnectionsMeta {

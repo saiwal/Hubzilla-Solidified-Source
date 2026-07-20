@@ -122,7 +122,11 @@ class Connections
             $offset
         );
 
-        $connections = array_map([$this, 'formatRow'], $rows ?: []);
+        $theirPerms = $this->bulkTheirPerms($uid, array_column($rows ?: [], 'xchan_hash'));
+        $connections = array_map(
+            fn($row) => $this->formatRow($row, $theirPerms[$row['xchan_hash']] ?? []),
+            $rows ?: []
+        );
 
         Response::send($connections, [
             'total'  => $total,
@@ -560,7 +564,26 @@ class Connections
         };
     }
 
-    private function formatRow(array $row): array
+    // Bulk-fetches the 'their_perms' abconfig rows for a batch of xchans in a single
+    // query, avoiding a get_all_perms()-style per-row lookup on the connections list.
+    private function bulkTheirPerms(int $uid, array $hashes): array
+    {
+        if (!$hashes) return [];
+
+        $in = implode(',', array_map(fn($h) => "'" . dbesc($h) . "'", $hashes));
+        $rows = q(
+            "SELECT xchan, k, v FROM abconfig WHERE chan = %d AND cat = 'their_perms' AND xchan IN ($in)",
+            intval($uid)
+        );
+
+        $out = [];
+        foreach ($rows ?: [] as $row) {
+            $out[$row['xchan']][$row['k']] = (bool) intval($row['v']);
+        }
+        return $out;
+    }
+
+    private function formatRow(array $row, array $theirPerms = []): array
     {
         $status = array_values(array_filter([
             intval($row['abook_pending'])  ? 'pending'  : null,
@@ -571,22 +594,28 @@ class Connections
             intval($row['abook_not_here']) ? 'not_here' : null,
         ]));
 
+        // Mirrors classic Hubzilla's connections "traffic light": these 3 their_perms
+        // keys indicate what the contact has granted the local channel.
+        $permKeys = ['post_comments', 'send_stream', 'post_wall'];
+        $grantedPerms = array_values(array_filter($permKeys, fn($k) => !empty($theirPerms[$k])));
+
         $raw_profile = intval($row['abook_profile'] ?? 0);
         return [
-            'id'         => intval($row['abook_id']),
-            'xchan_hash' => $row['xchan_hash'],
-            'name'       => $row['xchan_name'],
-            'address'    => $row['xchan_addr'],
-            'url'        => $row['xchan_url'],
-            'photo'      => $row['xchan_photo_m'],
-            'network'    => $row['xchan_network'],
-            'is_forum'   => (bool) intval($row['xchan_pubforum']),
-            'connected'  => $row['abook_created'],
-            'closeness'  => intval($row['abook_closeness']),
-            'role'       => $row['abook_role'] ?? '',
-            'status'     => $status,
-            'pending'    => (bool) intval($row['abook_pending']),
-            'profile_id' => $raw_profile > 0 ? $raw_profile : null,
+            'id'             => intval($row['abook_id']),
+            'xchan_hash'     => $row['xchan_hash'],
+            'name'           => $row['xchan_name'],
+            'address'        => $row['xchan_addr'],
+            'url'            => $row['xchan_url'],
+            'photo'          => $row['xchan_photo_m'],
+            'network'        => $row['xchan_network'],
+            'is_forum'       => (bool) intval($row['xchan_pubforum']),
+            'connected'      => $row['abook_created'],
+            'closeness'      => intval($row['abook_closeness']),
+            'role'           => $row['abook_role'] ?? '',
+            'status'         => $status,
+            'pending'        => (bool) intval($row['abook_pending']),
+            'profile_id'     => $raw_profile > 0 ? $raw_profile : null,
+            'granted_perms'  => $grantedPerms,
         ];
     }
 }

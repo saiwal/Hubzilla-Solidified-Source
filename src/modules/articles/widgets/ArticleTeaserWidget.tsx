@@ -9,6 +9,7 @@ import { usePageNick } from "@/shared/store/site-config";
 import { editingWidgets } from "@/shared/store/widget-layout";
 import { useI18n } from "@/i18n";
 import { fetchArticle } from "../api";
+import { articlePath } from "../lib/articleLinks";
 
 function excerpt(bbcodeText: string, max = 200): string {
   const text = bbcodeText.replace(/\[[^\]]{0,60}\]/g, "").replace(/\s+/g, " ").trim();
@@ -58,7 +59,7 @@ export default function ArticleTeaserWidget(props: WidgetProps) {
                 <p class="text-sm text-txt mt-2">{excerpt(a().summary || a().body)}</p>
               </div>
               <A
-                href={`/articles/${nick()}/${a().uuid}`}
+                href={articlePath(nick(), a())}
                 class="block px-4 py-2 border-t border-rim text-center text-xs font-medium
                        text-accent hover:bg-elevated transition-colors"
               >

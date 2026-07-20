@@ -46,20 +46,6 @@ export async function fetchArticle(
   };
 }
 
-export async function updateArticle(
-  uuid: string,
-  fields: { body: string; title: string; summary: string },
-): Promise<void> {
-  const res = await apiFetch(`/spa/item/${uuid}/edit`, {
-    method: "POST",
-    body: JSON.stringify(fields),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => null);
-    throw new Error(err?.error ?? "Edit failed");
-  }
-}
- 
 export async function deleteArticle(uuid: string): Promise<void> {
   const res = await apiFetch(`/spa/item/${uuid}/delete`, {
     method: "POST",

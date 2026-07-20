@@ -124,6 +124,13 @@ export function mapActivityToPost(activity: any): Post {
     repeatCount: activity.announce_count ?? 0,
     commentCount: activity.comment_count ?? 0,
     blocked: activity.blocked ?? false,
+    slug: activity.slug ?? undefined,
+    viewUrl: activity.view_url ?? undefined,
+    publicPolicy: activity.public_policy ?? undefined,
+    allowCid: activity.allow_cid ?? undefined,
+    allowGid: activity.allow_gid ?? undefined,
+    denyCid: activity.deny_cid ?? undefined,
+    denyGid: activity.deny_gid ?? undefined,
     eventData,
     poll,
     attachments: Array.isArray(activity.attach)
