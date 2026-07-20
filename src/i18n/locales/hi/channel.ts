@@ -17,6 +17,7 @@ export const channel: RawDictionary["channel"] = {
   show_less:        "कम दिखाएँ",
   connect:          "जुड़ें",
   connected:        "जुड़े हुए",
+  rss_feed:         "RSS फ़ीड",
   group_personal:   "व्यक्तिगत",
   group_beliefs:    "विश्वास",
   group_interests:  "रुचियाँ",

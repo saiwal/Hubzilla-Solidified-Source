@@ -3,7 +3,7 @@ import { createSignal, Show, For } from "solid-js";
 import { useParams, A } from "@solidjs/router";
 import { createQueryResource } from "@/shared/lib/createQueryResource";
 import { useViewerRole } from "@/shared/store/site-config";
-import { MdFillLocation_on, MdFillPublic } from "solid-icons/md";
+import { MdFillLocation_on, MdFillPublic, MdFillRss_feed } from "solid-icons/md";
 import { apiFetch } from "@/shared/lib/fetch";
 import { addConnection } from "@/modules/directory/people/api";
 import { useI18n } from "@/i18n";
@@ -44,6 +44,7 @@ type ChannelProfile = {
   connections: number;
   is_connected: boolean;
   connect_url: string;
+  feed_url?: string;
   is_remote?: boolean;
   actor_fields?: { name: string; value: string }[];
 };
@@ -180,14 +181,27 @@ function ProfileHeader(props: {
             <p class="text-xs text-muted mt-0.5 italic">{p.pdesc}</p>
           </Show>
         </div>
-        <Show when={!props.isOwner}>
-          <FollowButton
-            nick={p.xchan_addr || p.channel_address}
-            connected={p.is_connected}
-            connectUrl={p.connect_url}
-            isVisitor={props.isVisitor}
-          />
-        </Show>
+        <div class="flex items-center gap-2 shrink-0">
+          <Show when={p.feed_url}>
+            <a
+              href={p.feed_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={t("channel.rss_feed")}
+              class="p-1.5 rounded-full border border-rim text-muted hover:text-accent hover:border-accent transition-colors"
+            >
+              <MdFillRss_feed size={16} />
+            </a>
+          </Show>
+          <Show when={!props.isOwner}>
+            <FollowButton
+              nick={p.xchan_addr || p.channel_address}
+              connected={p.is_connected}
+              connectUrl={p.connect_url}
+              isVisitor={props.isVisitor}
+            />
+          </Show>
+        </div>
       </div>
     </>
   );

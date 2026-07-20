@@ -17,6 +17,7 @@ export const channel: RawDictionary["channel"] = {
   show_less:        "Show less",
   connect:          "Connect",
   connected:        "Connected",
+  rss_feed:         "RSS feed",
   // Profile field groups
   group_personal:   "Personal",
   group_beliefs:    "Beliefs",

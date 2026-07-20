@@ -1421,6 +1421,7 @@ export type RawDictionary = {
     show_less:          string;
     connect:            string;
     connected:          string;
+    rss_feed:           string;
     search:             string;
     search_placeholder: string;
     compose:            string;
