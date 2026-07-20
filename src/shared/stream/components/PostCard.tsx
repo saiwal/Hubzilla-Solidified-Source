@@ -90,6 +90,8 @@ const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
 
 export type { StreamHandlers as PostActions };
 
+const BODY_COLLAPSED_MAX_PX = 310;
+
 /** Recursively flatten a thread tree into a chronological list.
  *  Each node's children are zeroed out so CommentThread won't re-nest them. */
 function flattenThread(nodes: ThreadNode[]): ThreadNode[] {
@@ -268,6 +270,17 @@ export default function PostCard(props: {
   let cardRef!: HTMLDivElement;
   const [bodyRef, setBodyRef] = createSignal<HTMLElement>();
   usePlyr(bodyRef, () => props.post.body);
+  const [bodyExpanded, setBodyExpanded] = createSignal(false);
+  const [bodyOverflows, setBodyOverflows] = createSignal(false);
+  const checkBodyOverflow = () => {
+    const el = bodyRef();
+    if (!el) return;
+    const prev = el.style.maxHeight;
+    el.style.maxHeight = "none";
+    const natural = el.scrollHeight;
+    el.style.maxHeight = prev;
+    setBodyOverflows(natural > BODY_COLLAPSED_MAX_PX);
+  };
   // Captured on mouseup (while the selection still exists) rather than on the
   // Reply click itself — clicking the Reply button collapses the selection
   // before its own click handler runs.
@@ -575,6 +588,16 @@ export default function PostCard(props: {
     );
     observer.observe(cardRef);
     onCleanup(() => observer.disconnect());
+  });
+
+  onMount(() => {
+    if (props.compact || props.seamless) return;
+    checkBodyOverflow();
+    const imgs = bodyRef()?.querySelectorAll("img");
+    imgs?.forEach((img) => {
+      if (!img.complete)
+        img.addEventListener("load", checkBodyOverflow, { once: true });
+    });
   });
 
   onCleanup(() => {
@@ -1667,18 +1690,83 @@ export default function PostCard(props: {
 
         {/* Body — hidden for pure event/poll posts (body is just BBCode tags) */}
         <Show when={!eventData() && !props.post.poll}>
-          <div
-            ref={setBodyRef}
-            class="mt-4 prose-code:break-all prose prose-sm dark:prose-invert max-w-none
-                   prose-a:text-accent prose-a:no-underline hover:prose-a:underline
-                   prose-blockquote:not-italic prose-blockquote:border-accent
-                   prose-code:bg-overlay prose-code:px-1 prose-code:rounded prose-code:text-sm prose-code:text-txt
-                   prose-code:before:content-none prose-code:after:content-none
-                   prose-img:rounded-lg prose-img:my-2 break-words text-muted"
-            innerHTML={props.post.body}
-            onClick={handleBodyClick}
-            onMouseUp={handleBodyMouseUp}
-          />
+          <div class="relative mt-4">
+            <div
+              class="overflow-hidden transition-[max-height] duration-300 ease-in-out"
+              style={{
+                "max-height":
+                  props.seamless || bodyExpanded() || !bodyOverflows()
+                    ? "none"
+                    : `${BODY_COLLAPSED_MAX_PX}px`,
+              }}
+            >
+              <div
+                ref={setBodyRef}
+                class="prose-code:break-all prose prose-sm dark:prose-invert max-w-none
+                       prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+                       prose-blockquote:not-italic prose-blockquote:border-accent
+                       prose-code:bg-overlay prose-code:px-1 prose-code:rounded prose-code:text-sm prose-code:text-txt
+                       prose-code:before:content-none prose-code:after:content-none
+                       prose-img:rounded-lg prose-img:my-2 break-words text-muted"
+                innerHTML={props.post.body}
+                onClick={handleBodyClick}
+                onMouseUp={handleBodyMouseUp}
+              />
+            </div>
+            <Show when={!props.seamless && bodyOverflows() && !bodyExpanded()}>
+              <div
+                class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-surface to-transparent flex items-end justify-center pb-1"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setBodyExpanded(true);
+                }}
+              >
+                <button
+                  class="flex items-center gap-1 text-xs text-accent hover:text-accent-txt
+                         bg-overlay/90 px-2 py-0.5 rounded-full border border-accent/50 transition-colors"
+                >
+                  <svg
+                    class="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                  {t("ui.show_more")}
+                </button>
+              </div>
+            </Show>
+          </div>
+          <Show when={!props.seamless && bodyOverflows() && bodyExpanded()}>
+            <button
+              class="flex items-center justify-center gap-1 text-xs text-accent hover:text-accent-txt mt-1 w-full transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                setBodyExpanded(false);
+              }}
+            >
+              <svg
+                class="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 15l7-7 7 7"
+                />
+              </svg>
+              {t("ui.show_less")}
+            </button>
+          </Show>
         </Show>
       </Show>
 
