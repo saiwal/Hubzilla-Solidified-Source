@@ -7,6 +7,9 @@ import { MdFillLocation_on, MdFillPublic } from "solid-icons/md";
 import { apiFetch } from "@/shared/lib/fetch";
 import { addConnection } from "@/modules/directory/people/api";
 import { useI18n } from "@/i18n";
+import { bbcodeToHtml } from "@/shared/lib/bbcode";
+import { sanitizeHtml } from "@/shared/lib/sanitize";
+import { oembedResolver } from "@/shared/lib/oembedResolver";
 
 type ChannelProfile = {
   channel_name: string;
@@ -52,6 +55,19 @@ async function fetchProfile(nick: string): Promise<ChannelProfile | null> {
   const { data } = await res.json();
   if (!data) return null;
   return data as ChannelProfile;
+}
+
+// Profile fields (about, interest, likes, dislikes, contact, channels, music,
+// book, tv, film, romance, work, education) are stored as raw BBCode source
+// on local channels, mirroring core's advanced_profile()/prepare_text() —
+// convert then sanitize before injecting as HTML.
+function renderBbcode(raw?: string): string {
+  if (!raw) return "";
+  try {
+    return sanitizeHtml(bbcodeToHtml(raw, { oembedResolver }));
+  } catch {
+    return "";
+  }
 }
 
 export default function ProfileView(props: { full?: boolean }) {
@@ -256,7 +272,10 @@ function CompactCard(props: { p: ChannelProfile; isOwner: boolean; isVisitor: bo
               </a>
             </Show>
             <Show when={p.contact}>
-              <p class="text-xs text-muted">{p.contact}</p>
+              <p
+                class="text-xs text-muted [&_a]:text-accent [&_a]:no-underline hover:[&_a]:underline"
+                innerHTML={renderBbcode(p.contact)}
+              />
             </Show>
           </div>
         </Show>
@@ -288,13 +307,20 @@ function FullCard(props: { p: ChannelProfile; isOwner: boolean; isVisitor: boole
       <ProfileHeader p={p} isOwner={props.isOwner} isVisitor={props.isVisitor} />
 
       <div class="px-5 pb-6 space-y-5 mt-4">
-        {/* About */}
+        {/* About — local channels store raw BBCode source; remote AP actor
+            summaries arrive pre-stripped of tags (see FetchesRemoteActor.php),
+            so they're rendered as plain text rather than re-parsed as BBCode. */}
         <Show when={p.about}>
-          <div
-            class="text-sm text-txt leading-relaxed prose prose-sm dark:prose-invert max-w-none
-                   prose-a:text-accent prose-a:no-underline hover:prose-a:underline"
-            innerHTML={p.about}
-          />
+          <Show
+            when={!p.is_remote}
+            fallback={<p class="text-sm text-txt leading-relaxed whitespace-pre-line">{p.about}</p>}
+          >
+            <div
+              class="text-sm text-txt leading-relaxed prose prose-sm dark:prose-invert max-w-none
+                     prose-a:text-accent prose-a:no-underline hover:prose-a:underline"
+              innerHTML={renderBbcode(p.about)}
+            />
+          </Show>
         </Show>
 
         {/* Meta bar */}
@@ -353,33 +379,33 @@ function FullCard(props: { p: ChannelProfile; isOwner: boolean; isVisitor: boole
 
             <Show when={p.interest || p.romance || p.likes || p.dislikes}>
               <FieldSection label={t("channel.group_interests")}>
-                <Field label={t("channel.field_hobbies")}   value={p.interest} />
-                <Field label={t("channel.field_romance")}   value={p.romance} />
-                <Field label={t("channel.field_likes")}     value={p.likes} />
-                <Field label={t("channel.field_dislikes")}  value={p.dislikes} />
+                <Field label={t("channel.field_hobbies")}   value={p.interest} bbcode />
+                <Field label={t("channel.field_romance")}   value={p.romance} bbcode />
+                <Field label={t("channel.field_likes")}     value={p.likes} bbcode />
+                <Field label={t("channel.field_dislikes")}  value={p.dislikes} bbcode />
               </FieldSection>
             </Show>
 
             <Show when={p.music || p.book || p.tv || p.film}>
               <FieldSection label={t("channel.group_culture")}>
-                <Field label={t("channel.field_music")}      value={p.music} />
-                <Field label={t("channel.field_books")}      value={p.book} />
-                <Field label={t("channel.field_television")} value={p.tv} />
-                <Field label={t("channel.field_film")}       value={p.film} />
+                <Field label={t("channel.field_music")}      value={p.music} bbcode />
+                <Field label={t("channel.field_books")}      value={p.book} bbcode />
+                <Field label={t("channel.field_television")} value={p.tv} bbcode />
+                <Field label={t("channel.field_film")}       value={p.film} bbcode />
               </FieldSection>
             </Show>
 
             <Show when={p.work || p.education}>
               <FieldSection label={t("channel.group_work")}>
-                <Field label={t("channel.field_work")}      value={p.work} />
-                <Field label={t("channel.field_education")} value={p.education} />
+                <Field label={t("channel.field_work")}      value={p.work} bbcode />
+                <Field label={t("channel.field_education")} value={p.education} bbcode />
               </FieldSection>
             </Show>
 
             <Show when={p.contact || p.channels}>
               <FieldSection label={t("channel.group_contact")}>
-                <Field label={t("channel.field_contact")}        value={p.contact} />
-                <Field label={t("channel.field_other_channels")} value={p.channels} />
+                <Field label={t("channel.field_contact")}        value={p.contact} bbcode />
+                <Field label={t("channel.field_other_channels")} value={p.channels} bbcode />
               </FieldSection>
             </Show>
           </div>
@@ -415,12 +441,21 @@ function FieldSection(props: { label: string; children: any }) {
   );
 }
 
-function Field(props: { label: string; value: string }) {
+function Field(props: { label: string; value: string; bbcode?: boolean }) {
   return (
     <Show when={props.value}>
       <div class="flex gap-3">
         <span class="text-xs font-medium text-muted w-28 shrink-0 pt-px">{props.label}</span>
-        <span class="text-xs text-txt leading-relaxed">{props.value}</span>
+        <Show
+          when={props.bbcode}
+          fallback={<span class="text-xs text-txt leading-relaxed">{props.value}</span>}
+        >
+          <div
+            class="text-xs text-txt leading-relaxed prose prose-sm dark:prose-invert max-w-none prose-p:my-0
+                   prose-a:text-accent prose-a:no-underline hover:prose-a:underline"
+            innerHTML={renderBbcode(props.value)}
+          />
+        </Show>
       </div>
     </Show>
   );

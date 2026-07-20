@@ -8,6 +8,9 @@ import type { Photo } from "@/modules/photos/api/api";
 import { Section, Toggle, inputClass } from "@/modules/settings/store/FormHelpers";
 import PhotosPicker from "@/shared/editor/attachments/picker/PhotosPicker";
 import { currentNick } from "@/shared/store/auth-store";
+import RichEditor from "@/shared/editor/core/RichEditor";
+import { CAPABILITIES } from "@/shared/editor/types/editor.types";
+import type { EditorTab } from "@/shared/editor/types/editor.types";
 
 // Lazy-loaded so Filerobot + React don't inflate the profile chunk
 const ImageEditor = lazy(() => import("@/shared/views/ImageEditor"));
@@ -27,11 +30,18 @@ export default function ProfileEditView() {
   const [avatarPickerOpen, setAvatarPickerOpen] = createSignal(false);
   const [coverPickerOpen, setCoverPickerOpen] = createSignal(false);
 
+  // "About" gets the full BBCode editor (source/WYSIWYG + toolbar), mirroring
+  // core's advanced_profile()/prepare_text() BBCode rendering for this field —
+  // kept out of native <form> FormData since RichEditor isn't a form control.
+  const [aboutBody, setAboutBody] = createSignal("");
+  const [aboutTab, setAboutTab] = createSignal<EditorTab>("source");
+
   const [profile] = createResource(() => params.id, async (id) => {
     const data = await fetchProfile(id);
     // Seed URL signals from initial profile data (bust cache on first load)
     if (data.avatar_l) setAvatarUrl(data.avatar_l + "?t=" + Date.now());
     if (data.cover_url) setCoverUrl(data.cover_url);
+    setAboutBody(data.about ?? "");
     return data;
   });
 
@@ -40,6 +50,7 @@ export default function ProfileEditView() {
     const form = e.target as HTMLFormElement;
     const fd = new FormData(form);
     const raw: Record<string, string | number> = Object.fromEntries(fd) as Record<string, string>;
+    raw.about = aboutBody();
     raw.hide_friends = "hide_friends" in raw ? 1 : 0;
     raw.publish = "publish" in raw ? 1 : 0;
 
@@ -304,7 +315,16 @@ export default function ProfileEditView() {
                   placeholder={t("profiles.pdesc_placeholder")} class={inputClass} />
               </Field>
               <Field label={t("profiles.about")} hint={t("profiles.about_hint")}>
-                <textarea name="about" rows="4" class={`${inputClass} resize-y`} value={p().about ?? ""} />
+                <RichEditor
+                  body={aboutBody()}
+                  onInput={setAboutBody}
+                  capabilities={CAPABILITIES.wiki}
+                  tab={aboutTab()}
+                  onTabChange={setAboutTab}
+                  mimetype="text/bbcode"
+                  placeholder={t("profiles.about_hint")}
+                  minHeight="140px"
+                />
               </Field>
               <Field label={t("profiles.keywords")} hint={t("profiles.keywords_hint")}>
                 <input type="text" name="keywords" value={p().keywords ?? ""} class={inputClass} />
