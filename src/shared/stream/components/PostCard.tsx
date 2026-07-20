@@ -13,7 +13,7 @@ import { Portal } from "solid-js/web";
 import { useThreadMode } from "@/shared/store/thread-mode";
 import AuthorPopover from "./AuthorPopover";
 import type { ThreadNode } from "@/shared/lib/thread";
-import { countAllComments } from "@/shared/lib/thread";
+import { countAllComments, isRootPost } from "@/shared/lib/thread";
 import type { StreamHandlers } from "../types";
 import CommentThread from "@/shared/views/CommentThread";
 import formatPostDate from "@/shared/lib/date";
@@ -356,6 +356,10 @@ export default function PostCard(props: {
     props.post.item_thread_top === 1 &&
     !isPrivate();
   const isPinned = () => props.post.pinned ?? false;
+  // Only meaningful for top-level array entries: buildThreadTree() already nests
+  // real comments as .children, so a non-root node only reaches here in a flat
+  // (nouveau/unthreaded) listing where it was surfaced as a standalone item.
+  const isFlatReply = () => !props.compact && !isRootPost(props.post);
   function onPinClick() {
     props.handlers.onPin?.(props.post.mid);
     setMoreDropdownOpen(false);
@@ -1493,9 +1497,10 @@ export default function PostCard(props: {
       ref={cardRef}
       style="overflow-anchor: none"
       class={
-        props.seamless
+        (props.seamless
           ? "relative bg-surface p-3 md:p-5"
-          : "relative bg-surface border border-rim rounded-2xl p-3 md:p-5 mb-4 shadow-sm hover:shadow-md transition-shadow duration-200"
+          : "relative bg-surface border border-rim rounded-2xl p-3 md:p-5 mb-4 shadow-sm hover:shadow-md transition-shadow duration-200") +
+        (isFlatReply() ? " border-l-2 border-l-accent/50 bg-accent-muted/5" : "")
       }
     >
       <Show when={isPinned()}>
@@ -1504,6 +1509,15 @@ export default function PostCard(props: {
           title={t("post.pinned_indicator")}
         >
           <MdFillPush_pin size={13} />
+        </span>
+      </Show>
+      <Show when={isFlatReply()}>
+        <span
+          class="absolute top-3 right-3 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-accent-muted/40 text-muted leading-none"
+          title={t("post.reply_indicator")}
+        >
+          <MdOutlineReply size={11} />
+          <span>{t("post.reply_badge")}</span>
         </span>
       </Show>
       {/* Header */}

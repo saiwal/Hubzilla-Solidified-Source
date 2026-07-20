@@ -9,7 +9,7 @@ import {
   lazy,
 } from "solid-js";
 import type { ThreadNode } from "@/shared/lib/thread";
-import { countAllComments } from "@/shared/lib/thread";
+import { countAllComments, isRootPost } from "@/shared/lib/thread";
 import type { StreamHandlers } from "../types";
 const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
 import formatPostDate from "@/shared/lib/date";
@@ -18,7 +18,7 @@ import DOMPurify from "dompurify";
 import EventCard from "@/shared/stream/components/EventCard";
 import { parseEventData } from "@/shared/lib/activity.mapper";
 import { markItemSeen } from "@/shared/lib/markSeen";
-import { MdOutlineSchedule, MdOutlineTimer, MdFillPush_pin } from "solid-icons/md";
+import { MdOutlineSchedule, MdOutlineTimer, MdFillPush_pin, MdOutlineReply } from "solid-icons/md";
 import { BiRegularEnvelope } from "solid-icons/bi";
 import { useAuth } from "@/shared/store/auth-store";
 function useColumnCount(): () => number {
@@ -112,13 +112,19 @@ function MasonryCard(props: {
     `${t("post.scheduled_title")}: ${new Date(props.post.created + "Z").toLocaleString(locale())}`;
   const isDirectMessage = () => props.post.flags.includes("direct_message");
   const isPinned = () => props.post.pinned ?? false;
+  // A non-root item can only reach the top-level posts array in a flat
+  // (nouveau/unthreaded) listing — real comments are nested as .children elsewhere.
+  const isFlatReply = () => !isRootPost(p);
 
   return (
     <>
       <div
         ref={cardRef}
         onClick={() => props.onOpenModal()}
-        class="relative mb-3 bg-surface border border-rim rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+        class={
+          "relative mb-3 bg-surface border border-rim rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer" +
+          (isFlatReply() ? " border-l-2 border-l-accent/50 bg-accent-muted/5" : "")
+        }
       >
         <div class="absolute top-2.5 right-2.5 z-10 flex items-center gap-1">
           <Show when={isPinned()}>
@@ -127,6 +133,15 @@ function MasonryCard(props: {
               title={t("post.pinned_indicator")}
             >
               <MdFillPush_pin size={11} />
+            </span>
+          </Show>
+          <Show when={isFlatReply()}>
+            <span
+              class="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-accent-muted/40 text-muted leading-none"
+              title={t("post.reply_indicator")}
+            >
+              <MdOutlineReply size={11} />
+              <span>{t("post.reply_badge")}</span>
             </span>
           </Show>
           <Show when={p.flags.includes("unseen")}>

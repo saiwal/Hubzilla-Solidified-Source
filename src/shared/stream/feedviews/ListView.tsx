@@ -1,7 +1,7 @@
 // src/shared/stream/feedviews/ListView.tsx
 import { For, Show, createSignal, lazy, onMount, onCleanup } from "solid-js";
 import type { ThreadNode } from "@/shared/lib/thread";
-import { countAllComments, flattenThread } from "@/shared/lib/thread";
+import { countAllComments, flattenThread, isRootPost } from "@/shared/lib/thread";
 import { useThreadMode } from "@/shared/store/thread-mode";
 import { REACTION_VERBS } from "@/shared/stream/store/actions-store";
 import type { StreamHandlers } from "../types";
@@ -13,7 +13,7 @@ import { markItemSeen } from "@/shared/lib/markSeen";
 import CommentComposer from "@/shared/editor/composers/CommentComposer";
 import { useAuth } from "@/shared/store/auth-store";
 import { useListBehavior } from "@/shared/store/list-behavior";
-import { MdOutlineSchedule, MdOutlineTimer, MdFillPush_pin } from "solid-icons/md";
+import { MdOutlineSchedule, MdOutlineTimer, MdFillPush_pin, MdOutlineReply } from "solid-icons/md";
 import { BiRegularEnvelope } from "solid-icons/bi";
 
 const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
@@ -288,11 +288,17 @@ function ListRow(props: {
     `${t("post.scheduled_title")}: ${new Date(props.post.created + "Z").toLocaleString(locale())}`;
   const isDirectMessage = () => props.post.flags.includes("direct_message");
   const isPinned = () => props.post.pinned ?? false;
+  // A non-root item can only reach the top-level posts array in a flat
+  // (nouveau/unthreaded) listing — real comments are nested as .children elsewhere.
+  const isFlatReply = () => !isRootPost(p);
 
   return (
     <div
       ref={rowRef}
-      class="group flex items-stretch border-b border-rim last:border-0 hover:bg-overlay transition-colors"
+      class={
+        "group flex items-stretch border-b border-rim last:border-0 hover:bg-overlay transition-colors" +
+        (isFlatReply() ? " border-l-2 border-l-accent/50 bg-accent-muted/5" : "")
+      }
     >
       <VoteGutter post={p} handlers={props.handlers} />
 
@@ -328,6 +334,15 @@ function ListRow(props: {
                   title={t("post.pinned_indicator")}
                 >
                   <MdFillPush_pin size={11} />
+                </span>
+              </Show>
+              <Show when={isFlatReply()}>
+                <span
+                  class="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-accent-muted/40 text-muted leading-none"
+                  title={t("post.reply_indicator")}
+                >
+                  <MdOutlineReply size={11} />
+                  <span>{t("post.reply_badge")}</span>
                 </span>
               </Show>
               <Show when={isExpired()}>
@@ -660,12 +675,18 @@ function InboxRow(props: {
   const isUnread = () => !p.viewerLiked && replyCount() === 0;
   const isUnseen = () => p.flags.includes("unseen");
   const isPinned = () => p.pinned ?? false;
+  // A non-root item can only reach the top-level posts array in a flat
+  // (nouveau/unthreaded) listing — real comments are nested as .children elsewhere.
+  const isFlatReply = () => !isRootPost(p);
 
   return (
     <div
       ref={rowRef}
       class="group border-b border-rim last:border-0 flex items-stretch hover:bg-overlay transition-colors"
-      classList={{ "bg-accent-muted/10": expanded() }}
+      classList={{
+        "bg-accent-muted/10": expanded(),
+        "border-l-2 border-l-accent/50": isFlatReply(),
+      }}
     >
       <VoteGutter post={p} handlers={props.handlers} />
 
@@ -707,6 +728,15 @@ function InboxRow(props: {
                 title={t("post.pinned_indicator")}
               >
                 <MdFillPush_pin size={11} />
+              </span>
+            </Show>
+            <Show when={isFlatReply()}>
+              <span
+                class="ml-auto flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-accent-muted/40 text-muted leading-none shrink-0"
+                title={t("post.reply_indicator")}
+              >
+                <MdOutlineReply size={11} />
+                <span>{t("post.reply_badge")}</span>
               </span>
             </Show>
           </div>

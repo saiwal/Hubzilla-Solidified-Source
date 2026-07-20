@@ -4,6 +4,12 @@ export interface ThreadNode extends Post {
   children: ThreadNode[];
 }
 
+// Authoritative root signal — item_thread_top is set by the backend; mid === top_mid
+// is the fallback for response shapes where that flag is missing.
+export function isRootPost(node: Pick<Post, "item_thread_top" | "mid" | "top_mid">): boolean {
+  return node.item_thread_top === 1 || node.mid === node.top_mid;
+}
+
 function makeDeletedPlaceholder(mid: string, attachToMid: string, created: string): ThreadNode {
   return {
     id: mid, uuid: "", mid, parent_mid: attachToMid, thr_parent: attachToMid,
@@ -28,8 +34,7 @@ export function buildThreadTree(posts: Post[]): ThreadNode[] {
   // for each missing parent so they render nested rather than as top-level roots.
   const orphanInfo = new Map<string, { attachToMid: string; created: string }>();
   map.forEach((node) => {
-    const isRoot = node.item_thread_top === 1 || node.mid === node.top_mid;
-    if (isRoot) return;
+    if (isRootPost(node)) return;
     const parentKey = node.thr_parent || node.parent_mid;
     // Only synthesize a placeholder when thr_parent points to a specific
     // intermediate comment that is absent from the map. If thr_parent equals
@@ -49,11 +54,7 @@ export function buildThreadTree(posts: Post[]): ThreadNode[] {
   });
 
   map.forEach((node) => {
-    // Use item_thread_top flag as the authoritative root signal —
-    // top_mid / message_top is unreliable depending on server response shape
-    const isRoot = node.item_thread_top === 1 || node.mid === node.top_mid;
-
-    if (isRoot) {
+    if (isRootPost(node)) {
       roots.push(node);
       return;
     }
