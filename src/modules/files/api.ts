@@ -21,6 +21,7 @@ export interface FileMeta {
   is_photo:     boolean;
   created:      string;
   edited:       string;
+  revision:     number;
   acl:          FileAcl;
 }
 
@@ -58,6 +59,63 @@ export async function updatePermissions(
   if (!res.ok) throw new Error(`updatePermissions ${res.status}`);
   const json = await res.json();
   return json.data;
+}
+
+/** URL that streams a file, or zips-and-streams a folder. Use as an <a href download>. */
+export function downloadUrl(nick: string, hash: string): string {
+  return `/spa/files/${nick}/download/${encodeURIComponent(hash)}`;
+}
+
+/** Rename a file or folder in place. */
+export async function renameItem(nick: string, hash: string, filename: string): Promise<FileMeta> {
+  const res = await apiFetch(`/spa/files/${nick}/rename`, {
+    method: "POST",
+    body: JSON.stringify({ hash, filename }),
+  });
+  if (!res.ok) throw new Error(`renameItem ${res.status}`);
+  const json = await res.json();
+  return json.data;
+}
+
+/** Move a file or folder into another folder ('' = root). */
+export async function moveItem(nick: string, hash: string, folder: string): Promise<FileMeta> {
+  const res = await apiFetch(`/spa/files/${nick}/move`, {
+    method: "POST",
+    body: JSON.stringify({ hash, folder }),
+  });
+  if (!res.ok) throw new Error(`moveItem ${res.status}`);
+  const json = await res.json();
+  return json.data;
+}
+
+/** Copy a file or folder into another folder ('' = root). Returns the new copy's metadata. */
+export async function copyItem(nick: string, hash: string, folder: string): Promise<FileMeta> {
+  const res = await apiFetch(`/spa/files/${nick}/copy`, {
+    method: "POST",
+    body: JSON.stringify({ hash, folder }),
+  });
+  if (!res.ok) throw new Error(`copyItem ${res.status}`);
+  const json = await res.json();
+  return json.data;
+}
+
+/** List category terms attached to a file or folder. */
+export async function getCategories(nick: string, hash: string): Promise<string[]> {
+  const res = await apiFetch(`/spa/files/${nick}/categories/${encodeURIComponent(hash)}`);
+  if (!res.ok) throw new Error(`getCategories ${res.status}`);
+  const json = await res.json();
+  return json.data?.categories ?? [];
+}
+
+/** Replace category terms for a file or folder. */
+export async function setCategories(nick: string, hash: string, categories: string[]): Promise<string[]> {
+  const res = await apiFetch(`/spa/files/${nick}/categories`, {
+    method: "POST",
+    body: JSON.stringify({ hash, categories }),
+  });
+  if (!res.ok) throw new Error(`setCategories ${res.status}`);
+  const json = await res.json();
+  return json.data?.categories ?? [];
 }
 
 // ── wall_upload / wall_attach (post-attachment upload) ────────────────────────

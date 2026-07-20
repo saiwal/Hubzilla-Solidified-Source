@@ -1717,6 +1717,26 @@ export type RawDictionary = {
     download:         string;
     delete:           string;
     permissions_title: string;
+    // Kebab menu + new actions
+    more_actions:     string;
+    info:             string;
+    menu_permissions: string;
+    rename:           string;
+    move_or_copy:     string;
+    categories:       string;
+    rename_label:     string;
+    move_action:      string;
+    copy_action:      string;
+    choose_destination: string;
+    root_folder:      string;
+    move_here:        string;
+    copy_here:        string;
+    categories_placeholder: string;
+    attachment_bbcode: string;
+    embed_bbcode:     string;
+    link_bbcode:      string;
+    copy_btn:         string;
+    copied:           string;
   };
   wiki: {
     wikis:            string;

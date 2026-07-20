@@ -11,7 +11,6 @@ import { useI18n } from "@/i18n";
 import { useParams } from "@solidjs/router";
 import {
   MdFillFolder,
-  MdFillDelete,
   MdFillAdd,
   MdFillLock,
   MdFillLock_open,
@@ -24,6 +23,7 @@ import {
   MdOutlineAttach_file,
 } from "solid-icons/md";
 import { useAuth } from "@/shared/store/auth-store";
+import { useViewerRole } from "@/shared/store/site-config";
 import AclPicker, { entryKey, type AclMode, type AclEntry } from "@/shared/editor/components/AclPicker";
 import {
   listFolder,
@@ -35,6 +35,13 @@ import {
   davPath,
 } from "../api";
 import type { FileMeta, FileAcl } from "../api";
+import FileActionsMenu, { type FileAction } from "./FileActionsMenu";
+import FileInfoModal from "./FileInfoModal";
+import RenameModal from "./RenameModal";
+import MoveCopyModal from "./MoveCopyModal";
+import CategoriesModal from "./CategoriesModal";
+
+type ModalKind = "info" | "rename" | "moveCopy" | "categories";
 
 type ViewMode   = "list" | "grid";
 type SortField  = "name" | "size" | "date";
@@ -219,9 +226,9 @@ const PermissionsPanel: Component<{
 const FileRow: Component<{
   item: FileMeta;
   nick: string;
+  isOwner: boolean;
   onOpen: (item: FileMeta) => void;
-  onDelete: (item: FileMeta) => void;
-  onPermissions: (item: FileMeta) => void;
+  onAction: (action: FileAction, item: FileMeta) => void;
   deleting: boolean;
   permOpen: boolean;
 }> = (props) => (
@@ -260,44 +267,13 @@ const FileRow: Component<{
     </span>
 
     <div class="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
-      {/* Permissions */}
-      <button
-        onClick={() => props.onPermissions(props.item)}
-        class={`p-1.5 rounded transition-colors ${
-          props.permOpen
-            ? "text-accent bg-accent-muted"
-            : "text-muted hover:text-txt hover:bg-overlay"
-        }`}
-        title="Permissions"
-      >
-        <MdFillLock size={14} />
-      </button>
-
-      {/* Download */}
-      <Show when={!props.item.is_dir}>
-        <a
-          href={davPath(props.nick, props.item.display_path)}
-          download={props.item.filename}
-          class="p-1.5 rounded text-muted hover:text-txt hover:bg-overlay transition-colors"
-          title="Download"
-        >
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-        </a>
-      </Show>
-
-      {/* Delete */}
-      <button
-        onClick={() => props.onDelete(props.item)}
-        disabled={props.deleting}
-        class="p-1.5 rounded text-muted hover:text-red-500 hover:bg-accent-muted
-               disabled:opacity-40 transition-colors"
-        title="Delete"
-      >
-        <MdFillDelete size={14} />
-      </button>
+      <FileActionsMenu
+        item={props.item}
+        nick={props.nick}
+        isOwner={props.isOwner}
+        onAction={props.onAction}
+        deleting={props.deleting}
+      />
     </div>
   </div>
 );
@@ -357,11 +333,11 @@ function Skeleton() {
 const ThumbnailGrid: Component<{
   files: FileMeta[];
   nick: string;
+  isOwner: boolean;
   deleting: string | null;
   permItem: FileMeta | null;
   onOpen: (item: FileMeta) => void;
-  onDelete: (item: FileMeta) => void;
-  onPermissions: (item: FileMeta) => void;
+  onAction: (action: FileAction, item: FileMeta) => void;
 }> = (props) => (
   <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
     <For each={props.files}>
@@ -411,44 +387,18 @@ const ThumbnailGrid: Component<{
             <div
               class="absolute inset-0 flex items-start justify-end p-1.5 gap-1
                      opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity pointer-events-none"
+              onClick={(e) => e.stopPropagation()}
             >
-              <button
-                onClick={(e) => { e.stopPropagation(); props.onPermissions(item); }}
-                class={`p-1 rounded-md backdrop-blur-sm text-xs transition-colors pointer-events-auto ${
-                  isActive()
-                    ? "bg-accent text-accent-fg"
-                    : "bg-surface/80 text-muted hover:text-txt"
+              <FileActionsMenu
+                item={item}
+                nick={props.nick}
+                isOwner={props.isOwner}
+                onAction={props.onAction}
+                deleting={props.deleting === item.hash}
+                triggerClass={`p-1 rounded-md backdrop-blur-sm text-xs transition-colors pointer-events-auto ${
+                  isActive() ? "bg-accent text-accent-fg" : "bg-surface/80 text-muted hover:text-txt"
                 }`}
-                title="Permissions"
-              >
-                <MdFillLock size={13} />
-              </button>
-
-              <Show when={!item.is_dir}>
-                <a
-                  href={davPath(props.nick, item.display_path)}
-                  download={item.filename}
-                  onClick={(e) => e.stopPropagation()}
-                  class="p-1 rounded-md bg-surface/80 backdrop-blur-sm text-muted
-                         hover:text-txt transition-colors pointer-events-auto"
-                  title="Download"
-                >
-                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                </a>
-              </Show>
-
-              <button
-                onClick={(e) => { e.stopPropagation(); props.onDelete(item); }}
-                disabled={props.deleting === item.hash}
-                class="p-1 rounded-md bg-surface/80 backdrop-blur-sm text-muted
-                       hover:text-red-500 disabled:opacity-40 transition-colors pointer-events-auto"
-                title="Delete"
-              >
-                <MdFillDelete size={13} />
-              </button>
+              />
             </div>
 
             {/* Private badge */}
@@ -494,6 +444,8 @@ export default function FilesView() {
   const auth   = useAuth();
   const { t }  = useI18n();
   const nick   = () => params.nick ?? auth()?.nick ?? "";
+  const viewerRole = useViewerRole();
+  const isOwner = () => viewerRole() === "owner";
 
   // Navigation stack — start at root
   const [navStack, setNavStack] = createSignal<FolderFrame[]>([
@@ -633,6 +585,35 @@ export default function FilesView() {
   function handlePermSaved(updated: FileMeta) {
     setOverrides((prev) => new Map(prev).set(updated.hash, updated));
     setPermItem(null);
+  }
+
+  // Kebab menu actions
+  const [activeModal, setActiveModal] = createSignal<{ kind: ModalKind; item: FileMeta } | null>(null);
+
+  function handleMenuAction(action: FileAction, item: FileMeta) {
+    if (action === "permissions") {
+      setPermItem((prev) => (prev?.hash === item.hash ? null : item));
+      return;
+    }
+    if (action === "delete") {
+      handleDelete(item);
+      return;
+    }
+    setActiveModal({ kind: action, item });
+  }
+
+  function handleRenamed() {
+    setActiveModal(null);
+    refetch();
+  }
+
+  function handleMoved() {
+    setActiveModal(null);
+    refetch();
+  }
+
+  function handleCategoriesSaved() {
+    setActiveModal(null);
   }
 
   return (
@@ -824,15 +805,13 @@ export default function FilesView() {
                   <ThumbnailGrid
                     files={sortedFiles()}
                     nick={nick()}
+                    isOwner={isOwner()}
                     deleting={deleting()}
                     permItem={permItem()}
                     onOpen={(it) => it.is_dir
                       ? navigateInto(it)
                       : window.open(davPath(nick(), it.display_path), "_blank")}
-                    onDelete={handleDelete}
-                    onPermissions={(it) =>
-                      setPermItem((prev) => (prev?.hash === it.hash ? null : it))
-                    }
+                    onAction={handleMenuAction}
                   />
                   {/* Permissions panel for grid mode — centered modal */}
                   <Show when={permItem()}>
@@ -860,11 +839,9 @@ export default function FilesView() {
                       <FileRow
                         item={item}
                         nick={nick()}
+                        isOwner={isOwner()}
                         onOpen={(it) => it.is_dir ? navigateInto(it) : window.open(davPath(nick(), it.display_path), "_blank")}
-                        onDelete={handleDelete}
-                        onPermissions={(it) =>
-                          setPermItem((prev) => (prev?.hash === it.hash ? null : it))
-                        }
+                        onAction={handleMenuAction}
                         deleting={deleting() === item.hash}
                         permOpen={permItem()?.hash === item.hash}
                       />
@@ -883,6 +860,39 @@ export default function FilesView() {
             </Show>
           </Show>
         </Show>
+      </Show>
+
+      {/* ── Kebab menu modals ── */}
+      <Show when={activeModal()?.kind === "info"}>
+        <FileInfoModal
+          item={activeModal()!.item}
+          nick={nick()}
+          onClose={() => setActiveModal(null)}
+        />
+      </Show>
+      <Show when={activeModal()?.kind === "rename"}>
+        <RenameModal
+          item={activeModal()!.item}
+          nick={nick()}
+          onRenamed={handleRenamed}
+          onClose={() => setActiveModal(null)}
+        />
+      </Show>
+      <Show when={activeModal()?.kind === "moveCopy"}>
+        <MoveCopyModal
+          item={activeModal()!.item}
+          nick={nick()}
+          onDone={handleMoved}
+          onClose={() => setActiveModal(null)}
+        />
+      </Show>
+      <Show when={activeModal()?.kind === "categories"}>
+        <CategoriesModal
+          item={activeModal()!.item}
+          nick={nick()}
+          onSaved={handleCategoriesSaved}
+          onClose={() => setActiveModal(null)}
+        />
       </Show>
 
     </div>
