@@ -303,6 +303,24 @@ export type RawDictionary = {
     regate_expired:           string;
     regate_invalid:           string;
     regate_pending_note:      string;
+    // Password reset
+    forgot_password_link:        string;
+    reset_request_title:         string;
+    reset_request_desc:          string;
+    reset_email_label:           string;
+    reset_request_submit:        string;
+    reset_requesting:            string;
+    reset_request_failed:        string;
+    reset_check_email_title:     string;
+    reset_check_email_desc:      string;
+    reset_new_password_title:    string;
+    reset_new_password_label:    string;
+    reset_confirm_password_label: string;
+    reset_password_mismatch:     string;
+    reset_submit:                string;
+    reset_submitting:            string;
+    reset_invalid:                string;
+    reset_expired:                string;
   };
   widgets: {
     tags:           string;

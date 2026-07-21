@@ -106,9 +106,14 @@ export default function LoginForm(props: LoginFormProps) {
         </div>
 
         <div class="space-y-1">
-          <label class="text-sm font-medium text-txt" for="login-password">
-            {t("auth.password")}
-          </label>
+          <div class="flex items-center justify-between">
+            <label class="text-sm font-medium text-txt" for="login-password">
+              {t("auth.password")}
+            </label>
+            <A href="/forgot-password" class="text-xs text-accent hover:underline">
+              {t("auth.forgot_password_link")}
+            </A>
+          </div>
           <input
             id="login-password"
             type="password"
