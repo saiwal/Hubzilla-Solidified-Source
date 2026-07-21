@@ -307,79 +307,86 @@ const Layout: ParentComponent = (props) => {
               <BrandBlock banner={navData()?.banner} logoUrl={navData()?.sitelogo} />
             </div>
 
-            {/* Primary nav — reorderable via drag handle while in edit-layout mode */}
-            <nav
-              aria-label="Primary"
-              tabindex="0"
-              class="flex-1 min-h-0 flex flex-col gap-0.5 overflow-y-auto"
-            >
-              <For each={desktopNavDrag.displayItems()}>
-                {(item) => (
-                  <div
-                    ref={desktopNavDrag.registerRef(item.path)}
-                    classList={{
-                      "rounded-xl border border-dashed border-accent/50":
-                        editingWidgets(),
-                    }}
-                    use:helpable={navItemHelpTarget(item)}
-                  >
-                    <NavItem
-                      href={item.href}
-                      label={item.label}
-                      icon={item.icon}
-                      draggable={editingWidgets()}
-                      dragging={desktopNavDrag.draggingKey() === item.path}
-                      onDragHandlePointerDown={(e) => {
-                        e.preventDefault();
-                        desktopNavDrag.beginDrag(item);
-                      }}
-                    />
-                  </div>
-                )}
-              </For>
-            </nav>
-
-            {/* Action items — toggled by avatar click for authenticated users */}
-            <Show when={actionsOpen() && actionItems().length > 0}>
-              <div class="my-2 h-px bg-rim" />
-              <div
-                use:motion={{
-                  initial: { opacity: 0, y: 8 },
-                  animate: { opacity: 1, y: 0 },
-                  transition: {
-                    duration: reducedMotion ? 0 : 0.18,
-                    easing: "ease-out",
-                  },
-                }}
-                class="flex flex-col gap-0.5"
-              >
-                <For each={actionItems()}>
+            {/* Scrollable region: primary nav + action items (incl. the channel
+                switcher) share the remaining space, so NavUtilities/leftBottom
+                below never get pushed out of view on short viewports. */}
+            <div class="flex-1 min-h-0 flex flex-col overflow-y-auto">
+              {/* Primary nav — reorderable via drag handle while in edit-layout mode */}
+              <nav aria-label="Primary" tabindex="0" class="flex flex-col gap-0.5">
+                <For each={desktopNavDrag.displayItems()}>
                   {(item) => (
-                    <div use:helpable={navItemHelpTarget(item)}>
-                      <Show
-                        when={channelSwitcherActive() && item.path === "/manage"}
-                        fallback={
-                          <NavItem
-                            href={item.href}
-                            label={item.label}
-                            icon={item.icon}
-                          />
-                        }
-                      >
-                        <ChannelSwitcher
-                          channels={navChannels()}
-                          currentNick={navViewer()?.nick}
-                          open={channelMenuOpen()}
-                          onToggle={() => setChannelMenuOpen((o) => !o)}
-                          label={typeof item.label === "function" ? item.label() : item.label}
-                          onNavigate={closeAll}
-                        />
-                      </Show>
+                    <div
+                      ref={desktopNavDrag.registerRef(item.path)}
+                      classList={{
+                        "rounded-xl border border-dashed border-accent/50":
+                          editingWidgets(),
+                      }}
+                      use:helpable={navItemHelpTarget(item)}
+                    >
+                      <NavItem
+                        href={item.href}
+                        label={item.label}
+                        icon={item.icon}
+                        draggable={editingWidgets()}
+                        dragging={desktopNavDrag.draggingKey() === item.path}
+                        onDragHandlePointerDown={(e) => {
+                          e.preventDefault();
+                          desktopNavDrag.beginDrag(item);
+                        }}
+                      />
                     </div>
                   )}
                 </For>
-              </div>
-            </Show>
+              </nav>
+
+              {/* Action items — toggled by avatar click for authenticated users.
+                  mt-auto keeps this pinned to the bottom of the scroll region
+                  when there's slack space, same as when nav itself had flex-1;
+                  it collapses to 0 (normal top-down scroll) once content
+                  overflows. */}
+              <Show when={actionsOpen() && actionItems().length > 0}>
+                <div class="mt-auto flex flex-col">
+                  <div class="my-2 h-px bg-rim" />
+                  <div
+                    use:motion={{
+                      initial: { opacity: 0, y: 8 },
+                      animate: { opacity: 1, y: 0 },
+                      transition: {
+                        duration: reducedMotion ? 0 : 0.18,
+                        easing: "ease-out",
+                      },
+                    }}
+                    class="flex flex-col gap-0.5"
+                  >
+                    <For each={actionItems()}>
+                      {(item) => (
+                        <div use:helpable={navItemHelpTarget(item)}>
+                          <Show
+                            when={channelSwitcherActive() && item.path === "/manage"}
+                            fallback={
+                              <NavItem
+                                href={item.href}
+                                label={item.label}
+                                icon={item.icon}
+                              />
+                            }
+                          >
+                            <ChannelSwitcher
+                              channels={navChannels()}
+                              currentNick={navViewer()?.nick}
+                              open={channelMenuOpen()}
+                              onToggle={() => setChannelMenuOpen((o) => !o)}
+                              label={typeof item.label === "function" ? item.label() : item.label}
+                              onNavigate={closeAll}
+                            />
+                          </Show>
+                        </div>
+                      )}
+                    </For>
+                  </div>
+                </div>
+              </Show>
+            </div>
 
             <Show when={isLocalUser()}>
               <div class="mt-1">
