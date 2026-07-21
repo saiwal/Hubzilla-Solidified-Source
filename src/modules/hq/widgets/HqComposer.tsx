@@ -290,7 +290,6 @@ function HqComposer() {
           denyEntries={denyKeys()}
           onToggle={toggleEntry}
           onClear={() => { setAllowKeys(new Set<string>()); setDenyKeys(new Set<string>()); }}
-          showDeny={false}
         />
 
         <button
