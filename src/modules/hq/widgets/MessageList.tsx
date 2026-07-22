@@ -254,20 +254,22 @@ const MessageItem: Component<{
           <div class="flex items-baseline justify-between gap-2">
             <div class="flex items-center gap-1 min-w-0">
               {/* Tiny type icon colored by rail */}
-              <svg
-                class="w-2.5 h-2.5 shrink-0 opacity-70"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                style={{ color: railColor() }}
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d={iconPath()}
-                />
-              </svg>
+              <Show when={props.feedType !== "direct"}>
+                <svg
+                  class="w-2.5 h-2.5 shrink-0 opacity-70"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  style={{ color: railColor() }}
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d={iconPath()}
+                  />
+                </svg>
+              </Show>
               <span
                 class={`text-[13px] truncate leading-snug ${
                   isAnyUnseen() ? "font-semibold text-txt" : "font-medium text-txt"
@@ -285,7 +287,7 @@ const MessageItem: Component<{
             {decodeHtmlEntities(e.summary)}
           </p>
 
-          <Show when={e.info}>
+          <Show when={e.info && props.feedType !== "direct"}>
             <div class="flex flex-wrap gap-1 mt-0.5">
               <For each={parseFolderNames(e.info)}>
                 {(name) => (

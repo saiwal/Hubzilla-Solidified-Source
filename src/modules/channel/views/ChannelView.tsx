@@ -36,7 +36,7 @@ import type { ChannelParams } from "../api";
 import ProfileView from "./ProfileView";
 import { ViewSwitcher } from "@/shared/stream/filters";
 import { viewMode, changeView } from "../store";
-import { MdFillSearch, MdFillClose, MdFillCreate } from "solid-icons/md";
+import { MdFillSearch, MdFillClose, MdFillCreate, MdFillMail } from "solid-icons/md";
 import { lazy } from "solid-js";
 import { useAuth } from "@/shared/store/auth-store";
 const PostComposer = lazy(() => import("@/shared/editor/composers/PostComposer"));
@@ -92,12 +92,15 @@ export default function ChannelView() {
     return v ? (Array.isArray(v) ? v[0] : v) : null;
   };
 
+  const dmActive = () => searchParams.dm === "1";
+  const toggleDm = () => setSearchParams({ dm: dmActive() ? undefined : "1" });
+
   // Pinned posts render in their own section above the stream, and are
   // filtered out of the main list to avoid showing twice — but only when no
   // filter is active, so a pinned post that matches a search still shows up
   // in the results like any other post.
   const hasFilters = () =>
-    !!(searchParams.search || searchParams.tag || searchParams.cat || searchParams.mid);
+    !!(searchParams.search || searchParams.tag || searchParams.cat || searchParams.mid || dmActive());
   const mainPosts = () => (hasFilters() ? posts() : posts().filter((p) => !p.pinned));
   const showPinnedSection = () => !hasFilters() && pinnedPosts().length > 0;
 
@@ -119,6 +122,7 @@ export default function ChannelView() {
       ...(str("mid") && { mid: str("mid") }),
       ...(str("dend") && { dend: str("dend") }),
       ...(str("dbegin") && { dbegin: str("dbegin") }),
+      ...(dmActive() && { dm: 1 as const }),
     };
     loadChannel(params.nick ?? "", p);
   });
@@ -161,6 +165,16 @@ export default function ChannelView() {
               <MdFillCreate size={15} />
             </button>
           </Show>
+          <button
+            title={t("channel.direct_messages")}
+            onClick={toggleDm}
+            class={`p-1.5 rounded-lg border transition-colors
+              ${dmActive()
+                ? "bg-accent text-accent-fg border-accent"
+                : "border-rim bg-surface text-muted hover:bg-elevated hover:text-txt"}`}
+          >
+            <MdFillMail size={15} />
+          </button>
           <Show
             when={searchOpen()}
             fallback={
@@ -204,7 +218,7 @@ export default function ChannelView() {
         </div>
       </div>
 
-      <Show when={searchParams.cat || searchParams.tag || searchParams.dbegin || searchParams.search}>
+      <Show when={searchParams.cat || searchParams.tag || searchParams.dbegin || searchParams.search || dmActive()}>
         <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/10 border border-accent/25 text-sm mb-3">
           <span class="text-muted">{t("channel.filtered_by")}</span>
           <Show when={searchParams.search}>
@@ -221,9 +235,12 @@ export default function ChannelView() {
               {new Date(String(searchParams.dbegin) + "T00:00:00").toLocaleDateString(undefined, { month: "long", year: "numeric" })}
             </span>
           </Show>
+          <Show when={dmActive()}>
+            <span class="font-medium text-accent">{t("channel.direct_messages")}</span>
+          </Show>
           <button
             type="button"
-            onClick={() => setSearchParams({ cat: undefined, tag: undefined, dbegin: undefined, dend: undefined, search: undefined })}
+            onClick={() => setSearchParams({ cat: undefined, tag: undefined, dbegin: undefined, dend: undefined, search: undefined, dm: undefined })}
             class="ml-auto text-xs text-muted hover:text-txt transition-colors"
           >
             {t("channel.clear")}

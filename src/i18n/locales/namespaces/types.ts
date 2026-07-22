@@ -603,7 +603,7 @@ export type RawDictionary = {
     edit: string;
     expires: string; expired_badge: string; expired_title: string;
     scheduled_badge: string; scheduled_title: string;
-    dm_badge: string; dm_title: string;
+    dm_badge: string; dm_title: string; dm_to: string;
     reply_badge: string; reply_indicator: string; view_in_context: string;
   };
   editor: {
@@ -1446,6 +1446,7 @@ export type RawDictionary = {
     search:             string;
     search_placeholder: string;
     compose:            string;
+    direct_messages:    string;
     group_personal:   string;
     group_beliefs:    string;
     group_interests:  string;

@@ -19,8 +19,8 @@ import EventCard from "@/shared/stream/components/EventCard";
 import { parseEventData } from "@/shared/lib/activity.mapper";
 import { markItemSeen } from "@/shared/lib/markSeen";
 import { MdOutlineSchedule, MdOutlineTimer, MdFillPush_pin, MdOutlineReply } from "solid-icons/md";
-import { BiRegularEnvelope } from "solid-icons/bi";
 import { useAuth } from "@/shared/store/auth-store";
+import { isDirectMessage as isDM, DmBadge, DmRecipients, DM_ACCENT_CLASS } from "@/shared/stream/components/DmMeta";
 function useColumnCount(): () => number {
   const getCount = () => {
     const w = window.innerWidth;
@@ -110,7 +110,7 @@ function MasonryCard(props: {
   const isScheduled = () => props.post.flags.includes("scheduled");
   const scheduledTitle = () =>
     `${t("post.scheduled_title")}: ${new Date(props.post.created + "Z").toLocaleString(locale())}`;
-  const isDirectMessage = () => props.post.flags.includes("direct_message");
+  const isDirectMessage = () => isDM(props.post);
   const isPinned = () => props.post.pinned ?? false;
   // A non-root item can only reach the top-level posts array in a flat
   // (nouveau/unthreaded) listing — real comments are nested as .children elsewhere.
@@ -123,7 +123,7 @@ function MasonryCard(props: {
         onClick={() => props.onOpenModal()}
         class={
           "relative mb-3 bg-surface border border-rim rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer" +
-          (isFlatReply() ? " border-l-2 border-l-accent/50 bg-accent-muted/5" : "")
+          (isDirectMessage() ? DM_ACCENT_CLASS : isFlatReply() ? " border-l-2 border-l-accent/50 bg-accent-muted/5" : "")
         }
       >
         <div class="absolute top-2.5 right-2.5 z-10 flex items-center gap-1">
@@ -202,6 +202,10 @@ function MasonryCard(props: {
             >
               {formatPostDate(p.created, locale())}
             </p>
+            <DmRecipients
+              recipients={isDirectMessage() ? p.recipients : undefined}
+              class="text-[11px] text-muted truncate"
+            />
           </div>
           <div class="ml-auto flex items-center gap-2 shrink-0">
             <Show when={isExpired()}>
@@ -234,13 +238,7 @@ function MasonryCard(props: {
               </span>
             </Show>
             <Show when={isDirectMessage()}>
-              <span
-                class="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-violet-500/15 text-violet-600 dark:text-violet-400 leading-none"
-                title={t("post.dm_title")}
-              >
-                <BiRegularEnvelope size={11} />
-                <span>{t("post.dm_badge")}</span>
-              </span>
+              <DmBadge size="md" />
             </Show>
           </div>
         </div>

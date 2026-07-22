@@ -49,6 +49,7 @@ export interface Post {
   authorAddress?: string;
   authorNetwork?: string;
   via?: { name: string; address: string; url: string; hash?: string; avatar: string };
+  recipients?: string; // comma-joined recipient names, direct messages only (item_private === 2)
   created: string;
   commented?: string;
   edited?: string;

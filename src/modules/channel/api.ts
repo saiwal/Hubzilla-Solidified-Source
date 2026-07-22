@@ -14,6 +14,7 @@ export type ChannelParams = {
   dend?:    string;
   dbegin?:  string;
   nouveau?: 1;
+  dm?:      1;
 };
 
 export type ChannelStreamResult = StreamResult & { canPostWall: boolean };

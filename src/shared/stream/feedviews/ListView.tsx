@@ -14,7 +14,7 @@ import CommentComposer from "@/shared/editor/composers/CommentComposer";
 import { useAuth } from "@/shared/store/auth-store";
 import { useListBehavior } from "@/shared/store/list-behavior";
 import { MdOutlineSchedule, MdOutlineTimer, MdFillPush_pin, MdOutlineReply } from "solid-icons/md";
-import { BiRegularEnvelope } from "solid-icons/bi";
+import { isDirectMessage as isDM, DmBadge, DmRecipients, DM_ACCENT_CLASS } from "@/shared/stream/components/DmMeta";
 
 const PostDetailModal = lazy(() => import("@/shared/views/PostDetailModal"));
 
@@ -286,7 +286,7 @@ function ListRow(props: {
   const isScheduled = () => props.post.flags.includes("scheduled");
   const scheduledTitle = () =>
     `${t("post.scheduled_title")}: ${new Date(props.post.created + "Z").toLocaleString(locale())}`;
-  const isDirectMessage = () => props.post.flags.includes("direct_message");
+  const isDirectMessage = () => isDM(props.post);
   const isPinned = () => props.post.pinned ?? false;
   // A non-root item can only reach the top-level posts array in a flat
   // (nouveau/unthreaded) listing — real comments are nested as .children elsewhere.
@@ -297,7 +297,7 @@ function ListRow(props: {
       ref={rowRef}
       class={
         "group flex items-stretch border-b border-rim last:border-0 hover:bg-overlay transition-colors" +
-        (isFlatReply() ? " border-l-2 border-l-accent/50 bg-accent-muted/5" : "")
+        (isDirectMessage() ? DM_ACCENT_CLASS : isFlatReply() ? " border-l-2 border-l-accent/50 bg-accent-muted/5" : "")
       }
     >
       <VoteGutter post={p} handlers={props.handlers} />
@@ -375,13 +375,7 @@ function ListRow(props: {
                 </span>
               </Show>
               <Show when={isDirectMessage()}>
-                <span
-                  class="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-violet-500/15 text-violet-600 dark:text-violet-400 leading-none"
-                  title={t("post.dm_title")}
-                >
-                  <BiRegularEnvelope size={11} />
-                  <span>{t("post.dm_badge")}</span>
-                </span>
+                <DmBadge size="md" />
               </Show>
             </div>
           </div>
@@ -418,6 +412,11 @@ function ListRow(props: {
               {formatPostDate(p.created, locale())}
             </span>
           </div>
+
+          <DmRecipients
+            recipients={isDirectMessage() ? p.recipients : undefined}
+            class="text-[11px] text-muted truncate"
+          />
         </div>
 
         <RowDetails
@@ -678,6 +677,7 @@ function InboxRow(props: {
   // A non-root item can only reach the top-level posts array in a flat
   // (nouveau/unthreaded) listing — real comments are nested as .children elsewhere.
   const isFlatReply = () => !isRootPost(p);
+  const isDirectMessage = () => isDM(p);
 
   return (
     <div
@@ -685,7 +685,8 @@ function InboxRow(props: {
       class="group border-b border-rim last:border-0 flex items-stretch hover:bg-overlay transition-colors"
       classList={{
         "bg-accent-muted/10": expanded(),
-        "border-l-2 border-l-accent/50": isFlatReply(),
+        "border-l-2 border-l-violet-500/60 bg-violet-500/[0.04]": isDirectMessage(),
+        "border-l-2 border-l-accent/50": !isDirectMessage() && isFlatReply(),
       }}
     >
       <VoteGutter post={p} handlers={props.handlers} />
@@ -728,6 +729,11 @@ function InboxRow(props: {
                 title={t("post.pinned_indicator")}
               >
                 <MdFillPush_pin size={11} />
+              </span>
+            </Show>
+            <Show when={isDirectMessage()}>
+              <span class="ml-auto shrink-0">
+                <DmBadge size="md" />
               </span>
             </Show>
             <Show when={isFlatReply()}>
@@ -807,6 +813,11 @@ function InboxRow(props: {
               />
             </svg>
           </div>
+
+          <DmRecipients
+            recipients={isDirectMessage() ? p.recipients : undefined}
+            class="text-[11px] text-muted truncate"
+          />
         </div>
 
         <RowDetails

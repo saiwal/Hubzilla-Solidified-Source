@@ -86,6 +86,7 @@ export const post: RawDictionary["post"] = {
   // direct message (item_private === 2)
   dm_badge:              "DM",
   dm_title:              "Direktnachricht",
+  dm_to:                 "An",
   // unthreaded/flat listing: comment surfaced as a standalone item
   reply_badge:           "Antwort",
   reply_indicator:       "Dies ist eine Antwort, einzeln angezeigt, weil der Stream ungeordnet ist",

@@ -78,6 +78,7 @@ export const post: RawDictionary["post"] = {
   // direct message (item_private === 2)
   dm_badge:              "DM",
   dm_title:              "सीधा संदेश",
+  dm_to:                 "प्रति",
   // unthreaded/flat listing: comment surfaced as a standalone item
   reply_badge:           "उत्तर",
   reply_indicator:       "यह एक उत्तर है, स्ट्रीम अनथ्रेडेड होने के कारण अलग से दिखाया गया है",

@@ -58,7 +58,8 @@ import {
   MdOutlineVisibility,
 } from "solid-icons/md";
 import { useI18n } from "@/i18n";
-import { BiRegularLinkExternal, BiSolidShareAlt, BiRegularEnvelope } from "solid-icons/bi";
+import { BiRegularLinkExternal, BiSolidShareAlt } from "solid-icons/bi";
+import { isDirectMessage as isDM, DmBadge, DmRecipients, DM_ACCENT_CLASS } from "./DmMeta";
 const CommentComposer = lazy(
   () => import("@/shared/editor/composers/CommentComposer"),
 );
@@ -321,7 +322,7 @@ export default function PostCard(props: {
     `${t("post.scheduled_title")}: ${new Date(props.post.created + "Z").toLocaleString(locale())}`;
   // item_private === 2 — a direct message between individuals (classic Hubzilla's
   // bi-envelope lock icon), distinct from a merely-private post (item_private === 1).
-  const isDirectMessage = () => props.post.flags.includes("direct_message");
+  const isDirectMessage = () => isDM(props.post);
   const locationHref = () =>
     props.post.coord
       ? `https://www.openstreetmap.org/search?query=${encodeURIComponent(props.post.coord)}`
@@ -879,7 +880,7 @@ export default function PostCard(props: {
         ref={cardRef}
         style="overflow-anchor: none"
         class={`relative border-l-2 pl-2 md:pl-3 py-2 md:py-2.5 mb-1 transition-colors duration-500
-               ${props.highlighted ? "border-accent bg-accent/5" : "border-rim/60"}`}
+               ${props.highlighted ? "border-accent bg-accent/5" : isDirectMessage() ? "border-violet-500/60 bg-violet-500/[0.04]" : "border-rim/60"}`}
       >
         <Show when={isPinned()}>
           <span
@@ -991,13 +992,7 @@ export default function PostCard(props: {
             </span>
           </Show>
           <Show when={isDirectMessage()}>
-            <span
-              class="flex items-center gap-0.5 shrink-0 px-1 py-px rounded text-[10px] font-medium leading-none bg-violet-500/15 text-violet-600 dark:text-violet-400"
-              title={t("post.dm_title")}
-            >
-              <BiRegularEnvelope size={10} />
-              {t("post.dm_badge")}
-            </span>
+            <DmBadge />
           </Show>
           <Show when={props.post.location}>
             <span
@@ -1009,6 +1004,11 @@ export default function PostCard(props: {
             </span>
           </Show>
         </div>
+
+        <DmRecipients
+          recipients={isDirectMessage() ? props.post.recipients : undefined}
+          class="text-xs text-muted pl-8 -mt-0.5 mb-1 truncate"
+        />
 
         {/* Event card (compact) */}
         <Show when={eventData()}>
@@ -1502,7 +1502,7 @@ export default function PostCard(props: {
         (props.seamless
           ? "relative bg-surface p-3 md:p-5"
           : "relative bg-surface border border-rim rounded-2xl p-3 md:p-5 mb-4 shadow-sm hover:shadow-md transition-shadow duration-200") +
-        (isFlatReply() ? " border-l-2 border-l-accent/50 bg-accent-muted/5" : "")
+        (isDirectMessage() ? DM_ACCENT_CLASS : isFlatReply() ? " border-l-2 border-l-accent/50 bg-accent-muted/5" : "")
       }
     >
       {/* Header */}
@@ -1555,6 +1555,7 @@ export default function PostCard(props: {
               </div>
             </Show>
           </div>
+          <DmRecipients recipients={isDirectMessage() ? props.post.recipients : undefined} />
           <div class="flex items-center gap-1.5">
             <Show when={editedAt()}>
               {(edited) => (
@@ -1649,13 +1650,7 @@ export default function PostCard(props: {
             </span>
           </Show>
           <Show when={isDirectMessage()}>
-            <span
-              class="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-violet-500/15 text-violet-600 dark:text-violet-400 leading-none"
-              title={t("post.dm_title")}
-            >
-              <BiRegularEnvelope size={11} />
-              <span>{t("post.dm_badge")}</span>
-            </span>
+            <DmBadge size="md" />
           </Show>
           <Show when={isUnseen()}>
             <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-accent text-accent-fg leading-none">

@@ -95,6 +95,7 @@ export function mapActivityToPost(activity: any): Post {
       hash: activity.owner.hash ?? "",
       avatar: activity.owner.photo?.src ?? "",
     } : undefined,
+    recipients: activity.recipients || undefined,
     created: activity.created,
     commented: activity.commented,
     edited: activity.edited,
