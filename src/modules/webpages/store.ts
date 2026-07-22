@@ -11,7 +11,12 @@ const [loading, setLoading] = createSignal(false);
 const [error, setError]   = createSignal<string | null>(null);
 const [currentNick, setCurrentNick] = createSignal<string>('');
 
-export { pages, loading, error, currentNick };
+// Layout template id assigned to the webpage currently displayed by PageView
+// (if any) — lets Layout.tsx resolve the right sidebar from that template
+// instead of the module default. See ModuleDef.pageTemplate.
+const [currentPageTemplateId, setCurrentPageTemplateId] = createSignal<string | null>(null);
+
+export { pages, loading, error, currentNick, currentPageTemplateId, setCurrentPageTemplateId };
 
 export async function loadWebpages(nick: string, force = false) {
   // Avoid wiping already-loaded data when navigating back to the same channel

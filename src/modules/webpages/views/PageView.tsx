@@ -1,4 +1,4 @@
-import { createEffect, Show } from "solid-js";
+import { createEffect, onCleanup, Show } from "solid-js";
 import { useParams, A } from "@solidjs/router";
 import { createQueryResource } from "@/shared/lib/createQueryResource";
 import DOMPurify from "dompurify";
@@ -7,6 +7,7 @@ import { hydrateLatex } from "@/shared/lib/hydrateLatex";
 import { useToc } from "@/shared/lib/useToc";
 import ArticleToc from "@/shared/views/ArticleToc";
 import { fetchWebPageByPagelink } from "../api";
+import { setCurrentPageTemplateId } from "../store";
 import { useI18n } from "@/i18n";
 
 // Renders a Hubzilla webpage inline in the SPA by fetching its body via the
@@ -50,6 +51,12 @@ export default function PageView() {
     if (!d) return "";
     return renderBody(d.body ?? "", d.mimetype ?? "text/bbcode");
   };
+
+  // Track the page's assigned layout template (see ModuleDef.pageTemplate in
+  // webpages/index.ts) — cleared on navigation away so the next page (or a
+  // non-webpage route) doesn't inherit stale scoping.
+  createEffect(() => setCurrentPageTemplateId(detail()?.layout_template ?? null));
+  onCleanup(() => setCurrentPageTemplateId(null));
 
   let bodyRef: HTMLDivElement | undefined;
   createEffect(() => {

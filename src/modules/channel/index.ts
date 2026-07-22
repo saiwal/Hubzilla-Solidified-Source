@@ -66,7 +66,7 @@ registerModule({
       loader: () => import("./widgets/ChannelTagListWidget"),
       slot: "right",
       defaultModules: [],
-      contexts: ["channel", "profile"],
+      contexts: ["channel", "profile", "webpages"],
       helpTarget: "channel.tag_list_widget",
     },
     {
@@ -76,7 +76,7 @@ registerModule({
       loader: () => import("./widgets/ChannelCategoryCloudWidget"),
       slot: "right",
       defaultModules: [],
-      contexts: ["channel", "profile"],
+      contexts: ["channel", "profile", "webpages"],
       helpTarget: "channel.category_cloud_widget",
     },
     {
@@ -86,7 +86,7 @@ registerModule({
       loader: () => import("./widgets/ChannelArchiveGridWidget"),
       slot: "right",
       defaultModules: [],
-      contexts: ["channel", "profile"],
+      contexts: ["channel", "profile", "webpages"],
       helpTarget: "channel.archive_grid_widget",
     },
     {
@@ -98,7 +98,7 @@ registerModule({
       loader: () => import("./widgets/ContactCardWidget"),
       slot: "right",
       defaultModules: [],
-      contexts: ["channel", "profile", "hq"],
+      contexts: ["channel", "profile", "hq", "webpages"],
     },
     {
       // Opt-in GitHub-style posting activity graph — picker only, no default

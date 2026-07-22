@@ -26,18 +26,18 @@ import {
   makeInstanceKey,
   type LayoutEntry,
 } from "@/shared/store/widget-layout";
+import {
+  templateEntriesFor,
+  pageTemplateEntriesFor,
+  saveTemplateSlots,
+  templateName,
+  templateUsageCount,
+} from "@/shared/store/widget-templates";
 import { toast } from "@/shared/store/toast";
 import { helpable } from "@/shared/lib/helpable";
 void helpable;
 import { useI18n } from "@/i18n";
-import {
-  MdFillAdd,
-  MdFillClose,
-  MdFillKeyboard_arrow_up,
-  MdFillKeyboard_arrow_down,
-  MdFillRefresh,
-  MdFillSettings,
-} from "solid-icons/md";
+import WidgetArrangementEditor, { widgetHelpTarget, type ResolvedEntry } from "./WidgetArrangementEditor";
 import type { WidgetSlotName } from "../types/module.types";
 
 interface SlotProps {
@@ -45,23 +45,15 @@ interface SlotProps {
   moduleId?: string;
   /** Allow the user to rearrange this slot while widget-edit mode is on. */
   editable?: boolean;
-}
-
-// A layout entry resolved against the registry: the widget definition plus
-// the instance key/config it is mounted with. Singleton widgets use their
-// widget id as the key.
-interface ResolvedEntry {
-  widget: RegisteredWidget;
-  key: string;
-  config?: Record<string, unknown>;
-}
-
-function widgetLabel(w: RegisteredWidget): string {
-  return typeof w.label === "function" ? w.label() : w.label;
-}
-
-function widgetHelpTarget(w: RegisteredWidget): string {
-  return w.helpTarget ?? `widgets.${w.id}`;
+  /** When set, this slot's widgets come from the named layout template
+   * instead of the module-level layout (see ModuleDef.pageTemplate) — the
+   * item currently shown has been assigned this template. Widget eligibility
+   * (isModuleActive/resolveModuleSlot/widgetAllowedIn) still uses moduleId;
+   * only the override source changes. Editing here saves to the template
+   * (saveTemplateSlots) instead of the page/module layout — since a
+   * template can be assigned to multiple items, edits apply everywhere it's
+   * used (see the "shared by N" notice in edit mode). */
+  templateId?: string;
 }
 
 const Slot: Component<SlotProps> = (props) => {
@@ -105,9 +97,9 @@ const Slot: Component<SlotProps> = (props) => {
     const apps = installedApps();
     if (!isModuleActive(moduleId, apps)) return [];
 
-    const custom = isPageOwner()
-      ? layoutFor(moduleId, props.name)
-      : pageLayoutFor(moduleId, props.name);
+    const custom = props.templateId
+      ? (isPageOwner() ? templateEntriesFor : pageTemplateEntriesFor)(props.templateId, props.name)
+      : (isPageOwner() ? layoutFor(moduleId, props.name) : pageLayoutFor(moduleId, props.name));
 
     let resolved: ResolvedEntry[];
     if (custom) {
@@ -147,11 +139,15 @@ const Slot: Component<SlotProps> = (props) => {
 
   // ── Edit mode ───────────────────────────────────────────────────────────────
 
-  // Editing only applies to your own layout, on your own pages
+  // Editing only applies to your own layout, on your own pages. When this
+  // slot is templated, editing still applies here directly (same pencil,
+  // same in-place UI as any module) — it just saves to the template.
   const editing = () => props.editable === true && editingWidgets() && isPageOwner();
 
   const persist = async (entries: LayoutEntry[] | null) => {
-    const ok = await saveSlotLayout(activeModuleId(), props.name, entries);
+    const ok = props.templateId
+      ? await saveTemplateSlots(props.templateId, props.name, entries ?? [])
+      : await saveSlotLayout(activeModuleId(), props.name, entries);
     if (!ok) toast.error(t("widgets.save_failed"));
   };
 
@@ -194,7 +190,11 @@ const Slot: Component<SlotProps> = (props) => {
     setConfigOpenKey(null);
   };
 
-  const isCustomised = () => layoutFor(activeModuleId(), props.name) !== null;
+  // No "revert to default" concept once a slot belongs to a template — a
+  // template is an explicit, non-default arrangement by design, and nothing
+  // in WidgetTemplates.php ever un-sets a slot key back to "absent" once
+  // saved (only to []). Removing widgets one at a time covers "make it empty".
+  const isCustomised = () => !props.templateId && layoutFor(activeModuleId(), props.name) !== null;
 
   // Widgets the user could add here: same slot, allowed in this module,
   // backing app installed, not global, not already present (multiInstance
@@ -218,10 +218,6 @@ const Slot: Component<SlotProps> = (props) => {
   const [pickerOpen, setPickerOpen] = createSignal(false);
   // Instance key of the entry whose config panel is open (one at a time)
   const [configOpenKey, setConfigOpenKey] = createSignal<string | null>(null);
-
-  const editButtonClass =
-    "p-1 rounded-md text-muted hover:text-txt hover:bg-elevated transition-colors " +
-    "disabled:opacity-30 disabled:pointer-events-none";
 
   // mainTop is a banner strip, not a sidebar: lay its widgets out
   // masonry-style instead of stacking them full-width. A CSS grid would pad
@@ -272,137 +268,27 @@ const Slot: Component<SlotProps> = (props) => {
           </For>
         }
       >
-        <Show when={localEntries().length === 0}>
-          <p class="text-xs text-muted px-1">{t("widgets.empty_slot")}</p>
+        <Show when={props.templateId && templateUsageCount(props.templateId) > 1}>
+          <p class="text-xs text-amber-600 bg-amber-500/10 border border-amber-500/30 rounded-lg px-2 py-1.5 mb-2">
+            {t("widgets.template_shared_notice")
+              .replace("{{name}}", templateName(props.templateId!) ?? "")
+              .replace("{{count}}", String(templateUsageCount(props.templateId!)))}
+          </p>
         </Show>
-
-        <For each={localEntries()}>
-          {(entry, index) => {
-            const Widget = getLazy(entry.widget.loader);
-            const configOpen = () => configOpenKey() === entry.key;
-            const ConfigForm = entry.widget.configComponent
-              ? getLazy(entry.widget.configComponent)
-              : null;
-            return (
-              <div
-                class={`rounded-xl border border-dashed border-accent/50 overflow-hidden ${itemClass()}`}
-                use:helpable={widgetHelpTarget(entry.widget)}
-              >
-                <div class="flex items-center justify-between gap-1 px-2 py-1 bg-elevated">
-                  <span class="text-xs font-medium truncate">{widgetLabel(entry.widget)}</span>
-                  <div class="flex items-center shrink-0">
-                    <Show when={ConfigForm}>
-                      <button
-                        onClick={() => setConfigOpenKey(configOpen() ? null : entry.key)}
-                        aria-expanded={configOpen()}
-                        aria-label={t("widgets.configure_widget")}
-                        title={t("widgets.configure_widget")}
-                        class={editButtonClass}
-                        classList={{ "text-accent": configOpen() }}
-                      >
-                        <MdFillSettings size={14} />
-                      </button>
-                    </Show>
-                    <button
-                      onClick={() => move(index(), -1)}
-                      disabled={index() === 0}
-                      aria-label={t("widgets.move_up")}
-                      title={t("widgets.move_up")}
-                      class={editButtonClass}
-                    >
-                      <MdFillKeyboard_arrow_up size={16} />
-                    </button>
-                    <button
-                      onClick={() => move(index(), 1)}
-                      disabled={index() === localEntries().length - 1}
-                      aria-label={t("widgets.move_down")}
-                      title={t("widgets.move_down")}
-                      class={editButtonClass}
-                    >
-                      <MdFillKeyboard_arrow_down size={16} />
-                    </button>
-                    <button
-                      onClick={() => removeAt(index())}
-                      aria-label={t("widgets.remove_widget")}
-                      title={t("widgets.remove_widget")}
-                      class={editButtonClass}
-                    >
-                      <MdFillClose size={14} />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Per-instance settings form */}
-                <Show when={configOpen() && ConfigForm}>
-                  {(Form) => {
-                    const F = Form();
-                    return (
-                      <div class="px-2 py-2 border-t border-rim">
-                        <F
-                          config={entry.config ?? {}}
-                          onSave={(config) => saveConfig(index(), config)}
-                        />
-                      </div>
-                    );
-                  }}
-                </Show>
-
-                {/* Inert preview — interacting with widgets is disabled while editing */}
-                <div class="pointer-events-none opacity-60 p-1" aria-hidden="true">
-                  <Widget config={entry.config} />
-                </div>
-              </div>
-            );
-          }}
-        </For>
-
-        <div class={`space-y-2 ${itemClass()}`}>
-          <button
-            onClick={() => setPickerOpen((o) => !o)}
-            aria-expanded={pickerOpen()}
-            class="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-xl
-                   border border-dashed border-rim text-xs font-medium text-muted
-                   hover:text-txt hover:bg-elevated transition-colors"
-          >
-            <MdFillAdd size={14} />
-            {t("widgets.add_widget")}
-          </button>
-
-          <Show when={pickerOpen()}>
-            <Show
-              when={availableWidgets().length > 0}
-              fallback={<p class="text-xs text-muted px-1">{t("widgets.none_to_add")}</p>}
-            >
-              <div class="flex flex-col gap-1">
-                <For each={availableWidgets()}>
-                  {(widget) => (
-                    <button
-                      onClick={() => addWidget(widget)}
-                      class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-left text-xs
-                             bg-elevated border border-rim
-                             hover:brightness-95 transition-all"
-                    >
-                      <MdFillAdd size={12} class="shrink-0 text-muted" />
-                      <span class="truncate">{widgetLabel(widget)}</span>
-                    </button>
-                  )}
-                </For>
-              </div>
-            </Show>
-          </Show>
-
-          <Show when={isCustomised()}>
-            <button
-              onClick={() => void persist(null)}
-              class="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-xl
-                     text-xs font-medium text-muted
-                     hover:text-txt hover:bg-elevated transition-colors"
-            >
-              <MdFillRefresh size={14} />
-              {t("widgets.reset_layout")}
-            </button>
-          </Show>
-        </div>
+        <WidgetArrangementEditor
+          entries={localEntries()}
+          availableWidgets={availableWidgets()}
+          pickerOpen={pickerOpen()}
+          onTogglePicker={() => setPickerOpen((o) => !o)}
+          configOpenKey={configOpenKey()}
+          onToggleConfig={(key) => setConfigOpenKey(configOpenKey() === key ? null : key)}
+          onMove={move}
+          onRemove={removeAt}
+          onAdd={addWidget}
+          onSaveConfig={saveConfig}
+          onReset={isCustomised() ? () => void persist(null) : undefined}
+          itemClass={itemClass()}
+        />
       </Show>
     </>
   );

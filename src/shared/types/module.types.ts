@@ -106,6 +106,12 @@ export interface ModuleDef {
   appName?: string;
   /** true = only rendered for authenticated users; anonymous visitors are redirected to /login. */
   requiresAuth?: boolean;
+  /** Reactive accessor for the layout-template id assigned to the item
+   * currently shown by this module's active route (e.g. a webpage's assigned
+   * template), if any. When set, `<Slot templateId>` resolves that slot's
+   * widgets from the named template instead of the module-level layout.
+   * Omit/return null|undefined to use the module-level layout as normal. */
+  pageTemplate?: () => string | null | undefined;
 }
 
 export interface RouteDef {

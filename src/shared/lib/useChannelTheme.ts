@@ -5,6 +5,7 @@ import { applyTheme, applyCustomThemeColors } from "./useTheme";
 import { applyTypographyCSS, loadTypography, type FontSize, type FontFamily } from "./typography";
 import { applyCornerRadiusCSS, loadCornerRadius, type CornerRadius } from "./corner-radius";
 import { initPageWidgetLayout } from "../store/widget-layout";
+import { initPageWidgetTemplates } from "../store/widget-templates";
 import { THEMES, type ThemeId, type CustomThemeColors } from "../types/theme.types";
 
 const VALID_FITS    = new Set<string>(["tile", "cover"]);
@@ -49,11 +50,13 @@ export function useChannelTheme(channelNick: () => string) {
       loadCornerRadius();
       applyTheme(((localStorage.getItem("hz-theme") ?? "light") as ThemeId));
       initPageWidgetLayout(null);
+      initPageWidgetTemplates(null);
       return;
     }
 
     // Track the visited channel's widget arrangement for Slot resolution
     initPageWidgetLayout(spa.widget_layout);
+    initPageWidgetTemplates(spa.widget_templates ?? null);
 
     // Apply the channel's background (CSS only — do not overwrite user's localStorage)
     const bgUrl = spa.bg_url ?? "";

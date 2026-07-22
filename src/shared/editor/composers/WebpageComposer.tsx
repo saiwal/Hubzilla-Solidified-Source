@@ -1,5 +1,11 @@
-import { Show, onCleanup } from "solid-js";
+import { Show, onCleanup, createSignal, createEffect, For } from "solid-js";
 import { useI18n } from "@/i18n";
+import { useTemplates, loadTemplates, createTemplate } from "@/shared/store/widget-templates";
+import { queryClient } from "@/shared/lib/query-client";
+import TemplateNameForm from "@/shared/views/TemplateNameForm";
+import { setCurrentPageTemplateId } from "@/modules/webpages/store";
+import { editingWidgets, setEditingWidgets } from "@/shared/store/widget-layout";
+import { MdFillAdd, MdOutlineEdit, MdFillCheck } from "solid-icons/md";
 import { createComposerStore } from "../store/createComposerStore";
 import RichEditor from "../core/RichEditor";
 import { CAPABILITIES } from "../types/editor.types";
@@ -37,6 +43,7 @@ interface Props {
     allow_gid?: string[];
     deny_cid?: string[];
     deny_gid?: string[];
+    layout_template?: string | null;
   };
   onSaved?: () => void;
   onCancel?: () => void;
@@ -83,6 +90,40 @@ export default function WebpageComposer(props: Props) {
     denyEntries: initialDenyEntries(),
   });
 
+  // ── Page layout template assignment — pick one, or create a new one inline.
+  // While this composer is mounted, it drives the app shell's own
+  // currentPageTemplateId (same signal PageView.tsx sets while viewing the
+  // live page) — so Layout.tsx's real header/mainTop/right/footer slots
+  // immediately reflect whichever template is selected, live, using the
+  // exact same rendering AND edit-mode pencil as viewing the actual page.
+  // No separate preview UI: the real regions, in their real positions, are
+  // the preview, and are directly editable at the same time as the page
+  // content — cleared on unmount so navigating away doesn't leak scoping.
+  const templates = useTemplates();
+  createEffect(() => void loadTemplates());
+  const [layoutTemplate, setLayoutTemplate] = createSignal(props.initial?.layout_template ?? "");
+  createEffect(() => setCurrentPageTemplateId(layoutTemplate() || null));
+  onCleanup(() => setCurrentPageTemplateId(null));
+  const templateList = () => Object.entries(templates()?.templates ?? {});
+  // A native <select>'s `value` only "sticks" once a matching <option> exists
+  // in the DOM, and templateList() can still be empty/stale on first paint.
+  // Declaratively binding `value={}` to a derived value doesn't reliably fix
+  // this: if the derived output happens to equal what it was last time (e.g.
+  // a createMemo whose computed string didn't change), Solid's equality
+  // check skips re-running the DOM-setting effect even though the <option>
+  // list just changed underneath it — so the select can stay stuck on the
+  // first option ("Page default") forever. Set it imperatively instead, in a
+  // plain effect (no memoization to skip a "same value" update) that fires
+  // on every relevant change and force-syncs the DOM element directly.
+  let selectRef: HTMLSelectElement | undefined;
+  createEffect(() => {
+    templateList(); // track — re-sync once the matching <option> exists
+    const val = layoutTemplate();
+    if (selectRef && selectRef.value !== val) selectRef.value = val;
+  });
+  const [creatingTemplate, setCreatingTemplate] = createSignal(false);
+  const [justCreatedTemplate, setJustCreatedTemplate] = createSignal(false);
+
   function aclJson(): Record<string, unknown> {
     const mode = acl.mode();
     if (mode === "public")      return { scope: "public" };
@@ -116,6 +157,7 @@ export default function WebpageComposer(props: Props) {
           body:      withFileAttachments(body),
           mimetype:  meta.mimetype ?? "text/bbcode",
           pagetitle: meta.slug     ?? "",
+          layout_template: layoutTemplate() || null,
           ...aclJson(),
         }),
       });
@@ -136,6 +178,7 @@ export default function WebpageComposer(props: Props) {
           body:      withFileAttachments(body),
           mimetype:  meta.mimetype ?? "text/bbcode",
           pagetitle: meta.slug     ?? "",
+          layout_template: layoutTemplate() || null,
           ...aclJson(),
         }),
       });
@@ -144,6 +187,13 @@ export default function WebpageComposer(props: Props) {
         throw new Error(err?.error?.message ?? "Save failed");
       }
     }
+
+    // PageView's createQueryResource("webpage", ...) caches by [nick, pagelink]
+    // for 60s (see query-client.ts) — without invalidating, viewing the page
+    // right after a save (e.g. after changing its layout_template) can still
+    // serve the pre-edit cached response. Partial key match invalidates every
+    // cached webpage regardless of pagelink/nick.
+    void queryClient.invalidateQueries({ queryKey: ["webpage"] });
 
     attach.clear();
     props.onSaved?.();
@@ -204,6 +254,75 @@ export default function WebpageComposer(props: Props) {
       <Show when={caps.slug}>
         <SlugField value={store.slug} onInput={store.setSlug} title={store.title} />
       </Show>
+
+      {/* Page layout template assignment — choose, or create a new one inline */}
+      <div class="space-y-2">
+        <div class="flex flex-wrap items-center gap-2 text-xs text-muted">
+          {t("webpages.layout_template_label")}
+          <select
+            ref={selectRef}
+            onChange={(e) => {
+              setLayoutTemplate(e.currentTarget.value);
+              setJustCreatedTemplate(false);
+            }}
+            class="bg-elevated border border-rim rounded-lg px-2 py-1 text-xs text-txt"
+          >
+            <option value="">{t("webpages.layout_template_default")}</option>
+            <For each={templateList()}>
+              {([id, tpl]) => <option value={id}>{tpl.name}</option>}
+            </For>
+          </select>
+
+          <button
+            type="button"
+            onClick={() => setCreatingTemplate((o) => !o)}
+            class="flex items-center gap-1 px-2 py-1 rounded-lg border border-dashed border-rim
+                   text-muted hover:text-txt hover:bg-elevated transition-colors"
+          >
+            <MdFillAdd size={12} />
+            {t("webpages.new_template")}
+          </button>
+
+          {/* Same pencil/checkmark toggle as Layout.tsx's sidebar header and
+              LayoutTemplatesView.tsx's per-row button — one-click access to
+              editing this page's real regions without hunting for the
+              sidebar pencil separately. */}
+          <button
+            type="button"
+            onClick={() => setEditingWidgets(!editingWidgets())}
+            aria-pressed={editingWidgets()}
+            class="p-1.5 rounded-md transition-colors"
+            classList={{
+              "bg-accent text-accent-fg": editingWidgets(),
+              "text-muted hover:text-txt hover:bg-elevated": !editingWidgets(),
+            }}
+            aria-label={editingWidgets() ? t("widgets.done_editing") : t("widgets.edit_layout")}
+            title={editingWidgets() ? t("widgets.done_editing") : t("widgets.edit_layout")}
+          >
+            <Show when={editingWidgets()} fallback={<MdOutlineEdit size={14} />}>
+              <MdFillCheck size={14} />
+            </Show>
+          </button>
+        </div>
+
+        <Show when={creatingTemplate()}>
+          <TemplateNameForm
+            onCancel={() => setCreatingTemplate(false)}
+            onSubmit={async (name) => {
+              const id = await createTemplate(name);
+              setCreatingTemplate(false);
+              if (id) {
+                setLayoutTemplate(id);
+                setJustCreatedTemplate(true);
+              }
+            }}
+          />
+        </Show>
+
+        <Show when={justCreatedTemplate()}>
+          <p class="text-xs text-muted">{t("webpages.template_created_hint")}</p>
+        </Show>
+      </div>
 
       {/* Editor */}
       <div ref={wiring.wrapperRef}>

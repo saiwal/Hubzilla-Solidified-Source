@@ -4,6 +4,7 @@ import { initBackground, type BgFit } from "../lib/background";
 import { initTheme } from "../lib/useTheme";
 import { applyCornerRadius, type CornerRadius } from "../lib/corner-radius";
 import { initWidgetLayout } from "./widget-layout";
+import { initWidgetTemplates } from "./widget-templates";
 import { initNavOrder } from "./nav-order";
 import { initNsfwWords } from "./nsfw-settings";
 import { THEMES, type ThemeId } from "../types/theme.types";
@@ -100,6 +101,7 @@ async function fetchAuthState(): Promise<AuthState> {
   // viewer layout — sync to the server value only for local users, otherwise
   // clear any stale cache so defaults apply.
   initWidgetLayout(isLocal ? data.spa?.widget_layout : undefined);
+  initWidgetTemplates(isLocal ? data.spa?.widget_templates : undefined);
   initNavOrder(isLocal ? data.spa?.nav_order : undefined);
   initNsfwWords(isLocal ? data.nsfw?.words : undefined);
 

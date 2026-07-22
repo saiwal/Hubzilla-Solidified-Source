@@ -101,6 +101,8 @@ export const widgets: RawDictionary["widgets"] = {
   empty_slot:    "Keine Widgets auf dieser Seite.",
   none_to_add:   "Keine weiteren Widgets für diese Seite verfügbar.",
   save_failed:   "Das Widget-Layout konnte nicht gespeichert werden.",
+  // Layout template editing (Slot.tsx, when templateId is set)
+  template_shared_notice: "Dieses Layout (\"{{name}}\") wird von {{count}} Seite(n) verwendet – Änderungen gelten überall dort, wo es verwendet wird.",
   // World clock (blocks.clock, mode "world")
   clock_mode_world: "Weltuhr",
   cfg_add_zone:     "Zeitzone hinzufügen",

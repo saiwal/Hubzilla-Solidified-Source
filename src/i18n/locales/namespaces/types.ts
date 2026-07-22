@@ -423,6 +423,8 @@ export type RawDictionary = {
     empty_slot:    string;
     none_to_add:   string;
     save_failed:   string;
+    // Layout template editing (Slot.tsx, when templateId is set)
+    template_shared_notice: string;
     // World clock (blocks.clock, mode "world")
     clock_mode_world: string;
     cfg_add_zone:     string;
@@ -1865,6 +1867,24 @@ export type RawDictionary = {
     submenu_hint:     string;
     save:             string;
     cancel:           string;
+    rename:           string;
+    // Layout templates
+    manage_layouts:           string;
+    layout_templates_title:  string;
+    layout_templates_desc:   string;
+    new_template:             string;
+    template_name_placeholder: string;
+    no_templates:             string;
+    widgets_label:            string;
+    layout_template_label:    string;
+    layout_template_default:  string;
+    template_unused:          string;
+    template_pages_label:     string;
+    delete_template_in_use_confirm: string;
+    template_created_hint:    string;
+    edit_widgets:             string;
+    editing_template_notice:  string;
+    done_editing_template:    string;
   };
   notepad: {
     title:            string;

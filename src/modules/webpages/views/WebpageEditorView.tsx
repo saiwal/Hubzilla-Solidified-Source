@@ -83,6 +83,7 @@ export default function WebpageEditorView() {
             allow_gid:     page()!.allow_gid,
             deny_cid:      page()!.deny_cid,
             deny_gid:      page()!.deny_gid,
+            layout_template: page()!.layout_template,
           }}
           onSaved={onSaved}
           onCancel={onCancel}

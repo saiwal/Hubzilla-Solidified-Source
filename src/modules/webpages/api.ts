@@ -29,6 +29,8 @@ export type WebPageDetail = {
   allow_gid: string[];
   deny_cid: string[];
   deny_gid: string[];
+  /** Assigned layout-template id, or null when this page uses the module default. */
+  layout_template: string | null;
 };
 
 export async function fetchWebpages(nick: string): Promise<WebPage[]> {
