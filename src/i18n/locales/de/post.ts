@@ -89,4 +89,5 @@ export const post: RawDictionary["post"] = {
   // unthreaded/flat listing: comment surfaced as a standalone item
   reply_badge:           "Antwort",
   reply_indicator:       "Dies ist eine Antwort, einzeln angezeigt, weil der Stream ungeordnet ist",
+  view_in_context:       "Im Kontext anzeigen",
 };

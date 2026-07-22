@@ -81,4 +81,5 @@ export const post: RawDictionary["post"] = {
   // unthreaded/flat listing: comment surfaced as a standalone item
   reply_badge:           "उत्तर",
   reply_indicator:       "यह एक उत्तर है, स्ट्रीम अनथ्रेडेड होने के कारण अलग से दिखाया गया है",
+  view_in_context:       "संदर्भ में देखें",
 };

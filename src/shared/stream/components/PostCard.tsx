@@ -55,6 +55,7 @@ import {
   MdOutlineCheck,
   MdFillPush_pin,
   MdOutlinePush_pin,
+  MdOutlineVisibility,
 } from "solid-icons/md";
 import { useI18n } from "@/i18n";
 import { BiRegularLinkExternal, BiSolidShareAlt, BiRegularEnvelope } from "solid-icons/bi";
@@ -188,6 +189,7 @@ export default function PostCard(props: {
   initiallyExpanded?: boolean;
   seamless?: boolean;
   expandAll?: boolean;
+  onViewContext?: () => void;
 }) {
   const threadMode = useThreadMode();
   const [replyOpen, setReplyOpen] = createSignal(false);
@@ -1503,23 +1505,6 @@ export default function PostCard(props: {
         (isFlatReply() ? " border-l-2 border-l-accent/50 bg-accent-muted/5" : "")
       }
     >
-      <Show when={isPinned()}>
-        <span
-          class="absolute top-3 right-3 z-10 flex items-center justify-center w-6 h-6 rounded-full bg-accent text-accent-fg leading-none"
-          title={t("post.pinned_indicator")}
-        >
-          <MdFillPush_pin size={13} />
-        </span>
-      </Show>
-      <Show when={isFlatReply()}>
-        <span
-          class="absolute top-3 right-3 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-accent-muted/40 text-muted leading-none"
-          title={t("post.reply_indicator")}
-        >
-          <MdOutlineReply size={11} />
-          <span>{t("post.reply_badge")}</span>
-        </span>
-      </Show>
       {/* Header */}
       <div class="flex items-start gap-3">
         <AuthorPopover
@@ -1619,7 +1604,24 @@ export default function PostCard(props: {
           </div>
         </div>
 
-        <div class="ml-auto flex items-center gap-2 shrink-0">
+        <div class="ml-auto flex items-center gap-2 shrink-0 flex-wrap justify-end">
+          <Show when={isPinned()}>
+            <span
+              class="flex items-center justify-center w-6 h-6 rounded-full bg-accent text-accent-fg leading-none"
+              title={t("post.pinned_indicator")}
+            >
+              <MdFillPush_pin size={13} />
+            </span>
+          </Show>
+          <Show when={isFlatReply()}>
+            <span
+              class="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-accent-muted/40 text-muted leading-none"
+              title={t("post.reply_indicator")}
+            >
+              <MdOutlineReply size={11} />
+              <span>{t("post.reply_badge")}</span>
+            </span>
+          </Show>
           <Show when={isExpired()}>
             <span
               class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-muted/30 text-muted leading-none"
@@ -1944,17 +1946,31 @@ export default function PostCard(props: {
           </button>
         </Show>
 
-        {/* ── Reply (pushes to right; spacer keeps alignment when hidden) ── */}
+        {/* ── Reply / View in context (pushes to right; spacer keeps alignment when hidden) ── */}
         <span class="ml-auto" />
         <Show when={canInteract() && props.post.canComment !== false}>
-          <button
-            onClick={openReply}
-            class="flex items-center px-2 py-1.5 rounded-lg text-sm font-medium
-                   text-muted hover:bg-overlay hover:text-txt transition-colors"
-            title={t("post.reply")}
+          <Show
+            when={isFlatReply() && props.onViewContext}
+            fallback={
+              <button
+                onClick={openReply}
+                class="flex items-center px-2 py-1.5 rounded-lg text-sm font-medium
+                       text-muted hover:bg-overlay hover:text-txt transition-colors"
+                title={t("post.reply")}
+              >
+                <MdOutlineReply size={17} />
+              </button>
+            }
           >
-            <MdOutlineReply size={17} />
-          </button>
+            <button
+              onClick={props.onViewContext}
+              class="flex items-center px-2 py-1.5 rounded-lg text-sm font-medium
+                     text-muted hover:bg-overlay hover:text-txt transition-colors"
+              title={t("post.view_in_context")}
+            >
+              <MdOutlineVisibility size={17} />
+            </button>
+          </Show>
         </Show>
 
         {/* ── More actions dropdown (vertical three dots, after Reply) ── */}

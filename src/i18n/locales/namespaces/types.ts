@@ -604,7 +604,7 @@ export type RawDictionary = {
     expires: string; expired_badge: string; expired_title: string;
     scheduled_badge: string; scheduled_title: string;
     dm_badge: string; dm_title: string;
-    reply_badge: string; reply_indicator: string;
+    reply_badge: string; reply_indicator: string; view_in_context: string;
   };
   editor: {
     // PostComposer

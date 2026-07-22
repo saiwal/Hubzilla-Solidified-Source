@@ -1,8 +1,9 @@
 // src/shared/stream/feedviews/FeedView.tsx
-import { For } from "solid-js";
+import { For, Show, createSignal } from "solid-js";
 import type { ThreadNode } from "@/shared/lib/thread";
 import type { StreamHandlers } from "../types";
 import PostCard from "../components/PostCard";
+import PostDetailModal from "@/shared/views/PostDetailModal";
 import { useI18n } from "@/i18n";
 
 export function FeedPlaceholder() {
@@ -34,14 +35,30 @@ export function FeedPlaceholder() {
 
 export default function FeedView(props: { posts: ThreadNode[]; handlers: StreamHandlers }) {
   const { t } = useI18n();
+  const [modalUuid, setModalUuid] = createSignal<string | null>(null);
   return (
     <div class="max-w-2xl mx-auto">
       <For
         each={props.posts}
         fallback={<p class="text-center py-16 text-muted text-sm">{t("network.all_caught_up")}</p>}
       >
-        {(post) => <PostCard post={post} handlers={props.handlers} />}
+        {(post) => (
+          <PostCard
+            post={post}
+            handlers={props.handlers}
+            onViewContext={() => setModalUuid(post.uuid)}
+          />
+        )}
       </For>
+      <Show when={modalUuid()}>
+        {(uuid) => (
+          <PostDetailModal
+            uuid={uuid()}
+            onClose={() => setModalUuid(null)}
+            handlers={props.handlers}
+          />
+        )}
+      </Show>
     </div>
   );
 }
